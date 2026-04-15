@@ -66,10 +66,16 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   background-size: cover; background-position: center;
   filter: grayscale(100%) brightness(0.75) contrast(1.1);
 }
-/* Tint con el color del club */
+/* Tint panel izquierdo — color primario */
 .hero-color-tint {
   position: absolute; inset: 0;
   background: var(--club-color);
+  opacity: 0.45;
+}
+/* Tint panel derecho — color secundario */
+.hero-color-tint2 {
+  position: absolute; inset: 0;
+  background: var(--club-color2);
   opacity: 0.45;
 }
 /* Gradiente oscuro para legibilidad del texto */
@@ -387,7 +393,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
     </div>
     <div class="hero-panel" onclick="openSection('scores')">
       <div class="hero-bg" style="background-image:url('fotos/bg-puntajes.png')"></div>
-      <div class="hero-color-tint"></div>
+      <div class="hero-color-tint2"></div>
       <div class="hero-overlay"></div>
       <div class="hero-content">
         <div class="hero-title">PONÉ TU PUNTAJE</div>
@@ -586,8 +592,9 @@ if (!CLUB) {
   throw new Error('Club not found: ' + CLUB_SLUG);
 }
 
-// ---- Aplicar color del club ----
+// ---- Aplicar colores del club ----
 document.documentElement.style.setProperty('--club-color', CLUB.color);
+document.documentElement.style.setProperty('--club-color2', CLUB.colorSecundario);
 document.title = `TribunApp — ${CLUB.nombre}`;
 
 // ---- Config dinámica de la fecha ----
