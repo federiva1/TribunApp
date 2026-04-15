@@ -103,12 +103,11 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 }
 .sec-btn {
   flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
-  font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 1px;
-  color: rgba(255,255,255,0.45); cursor: pointer;
+  font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 1px;
+  color: rgba(255,255,255,0.5); cursor: pointer;
   transition: color 0.2s, background 0.2s;
 }
 .sec-btn:hover { color: #fff; background: rgba(255,255,255,0.05); }
-.sec-btn + .sec-btn { border-left: 1px solid rgba(255,255,255,0.07); }
 
 /* ===== OVERLAY SCREENS ===== */
 .overlay-screen {
@@ -403,7 +402,6 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   </div>
   <div class="secondary-row">
     <div class="sec-btn" onclick="openSection('fechas')">📅 VER FECHAS</div>
-    <div class="sec-btn" onclick="openSection('tabla')">📊 VER TABLA</div>
   </div>
 </div>
 </div>
@@ -545,30 +543,6 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 </div>
 </div>
 
-<!-- ===== PANTALLA TABLA ===== -->
-<div class="overlay-screen" id="tabla-screen">
-<div class="overlay-inner" id="tabla-app">
-  <button class="back-btn" onclick="closeSection('tabla')">← Volver</button>
-  <div style="text-align:center;margin-bottom:14px;">
-    <h1 style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#fff;letter-spacing:2px;">📊 Liga Profesional 2026</h1>
-    <div style="font-size:11px;color:#888;margin-top:3px;">Apertura · Datos en tiempo real</div>
-  </div>
-  <div class="tab-bar">
-    <button class="tab-btn active" data-tab="tabla" onclick="switchTablaTab('tabla',this)">Tabla</button>
-    <button class="tab-btn" data-tab="anual" onclick="switchTablaTab('anual',this)">Anual</button>
-    <button class="tab-btn" data-tab="promedios" onclick="switchTablaTab('promedios',this)">Promedios</button>
-  </div>
-  <div id="tab-tabla">
-    <div style="display:flex;gap:6px;margin-bottom:8px;">
-      <button class="zona-btn" id="zona-btn-A" onclick="switchZona('A')">Zona A</button>
-      <button class="zona-btn active" id="zona-btn-B" onclick="switchZona('B')">Zona B</button>
-    </div>
-    <div id="tabla-content"><div style="text-align:center;color:#555;padding:30px;font-size:13px;">Cargando...</div></div>
-  </div>
-  <div id="tab-anual" style="display:none;"><div id="anual-content"><div style="text-align:center;color:#555;padding:30px;font-size:13px;">Cargando...</div></div></div>
-  <div id="tab-promedios" style="display:none;"><div id="promedios-content"><div style="text-align:center;color:#555;padding:30px;font-size:13px;">Cargando...</div></div></div>
-</div>
-</div>
 
 <div id="toast"></div>
 
@@ -652,11 +626,10 @@ function showToast(msg) { toast.textContent = msg; toast.classList.add('show'); 
 // ---- Navegación ----
 function openSection(section) {
   document.getElementById('home-screen').style.display = 'none';
-  ['formation', 'scores', 'fechas', 'tabla'].forEach(s => {
+  ['formation', 'scores', 'fechas'].forEach(s => {
     const el = document.getElementById(s + '-screen');
     if (el) el.style.display = s === section ? 'block' : 'none';
   });
-  if (section === 'tabla' && !tablaData) loadTabla();
   if (section === 'fechas') renderFechas();
   if (section === 'scores') {
     if (!SCORES_ENABLED) {
@@ -1265,154 +1238,6 @@ async function openPrevFecha(f) {
       });
     }
   } catch(e) { document.getElementById('prev-fecha-formations').innerHTML = '<div style="color:#555;text-align:center;padding:20px;">Error al cargar.</div>'; }
-}
-
-// ============================================================
-// TABLA
-// ============================================================
-let tablaData = null, tablaZona = 'B';
-
-function escudoImgT(id, size = 22) {
-  const img = document.createElement('img');
-  img.style.cssText = `width:${size}px;height:${size}px;object-fit:contain;flex-shrink:0;`;
-  img.src = `escudos/${ESCUDO_MAP[id] || 'argentinosjuniors'}.png`;
-  img.onerror = () => { img.style.display = 'none'; };
-  return img;
-}
-
-function formChips(form) {
-  const wrap = document.createElement('div'); wrap.style.cssText = 'display:flex;gap:2px;justify-content:center;';
-  (form || '').split('').forEach(c => {
-    const chip = document.createElement('div');
-    const bg = c === 'W' ? '#2e7d32' : c === 'D' ? '#555' : '#b71c1c';
-    const label = c === 'W' ? 'G' : c === 'D' ? 'E' : 'P';
-    chip.style.cssText = `width:16px;height:16px;border-radius:3px;background:${bg};display:flex;align-items:center;justify-content:center;font-family:"Bebas Neue",sans-serif;font-size:10px;color:#fff;flex-shrink:0;`;
-    chip.textContent = label; wrap.appendChild(chip);
-  }); return wrap;
-}
-
-function renderTablaT(teams, container) {
-  container.innerHTML = '';
-  const cols = '20px 22px 1fr 22px 22px 22px 22px 28px 28px 86px 28px';
-  const head = document.createElement('div'); head.style.cssText = `display:grid;grid-template-columns:${cols};gap:2px;padding:5px 8px;font-family:"Barlow Condensed",sans-serif;font-size:9px;letter-spacing:1px;color:rgba(255,255,255,0.35);text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,0.06);`;
-  head.innerHTML = '<div>#</div><div></div><div>Equipo</div><div style="text-align:center">PJ</div><div style="text-align:center">G</div><div style="text-align:center">E</div><div style="text-align:center">P</div><div style="text-align:center">+/-</div><div style="text-align:center">DG</div><div style="text-align:center">Forma</div><div style="text-align:right">Pts</div>';
-  container.appendChild(head);
-  teams.forEach((t, i) => {
-    if (i === 8) { const d = document.createElement('div'); d.style.cssText = 'border-top:1px dashed rgba(229,57,53,0.4);margin:2px 0;'; container.appendChild(d); }
-    const isThisClub = t.team.id === CLUB.id;
-    const bgRow = isThisClub ? 'rgba(229,57,53,0.12)' : i < 8 ? 'rgba(229,57,53,0.04)' : 'transparent';
-    const borderLeft = isThisClub ? 'border-left:2px solid var(--club-color);' : '';
-    const row = document.createElement('div'); row.style.cssText = `display:grid;grid-template-columns:${cols};gap:2px;padding:5px 8px;align-items:center;border-bottom:1px solid rgba(255,255,255,0.04);background:${bgRow};${borderLeft}`;
-    const rank = document.createElement('div'); rank.style.cssText = `font-family:"Bebas Neue",sans-serif;font-size:12px;color:${i < 3 ? '#f5c518' : 'rgba(255,255,255,0.3)'};text-align:center;`; rank.textContent = i + 1;
-    const escWrap = document.createElement('div'); escWrap.style.cssText = 'display:flex;align-items:center;justify-content:center;'; escWrap.appendChild(escudoImgT(t.team.id, 20));
-    const name = document.createElement('div'); name.style.cssText = `font-size:11px;color:${isThisClub ? '#fff' : '#ccc'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:${isThisClub ? '700' : '400'};`; name.textContent = NOMBRE_CORTO_T[t.team.id] || t.team.name;
-    const mk = (val) => { const d = document.createElement('div'); d.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:12px;text-align:center;color:#aaa;'; d.textContent = val; return d; };
-    const dg = t.goalsDiff; const dgEl = document.createElement('div'); dgEl.style.cssText = `font-family:"Bebas Neue",sans-serif;font-size:12px;text-align:center;color:${dg > 0 ? '#4caf50' : dg < 0 ? '#e53935' : '#888'};`; dgEl.textContent = dg > 0 ? `+${dg}` : dg;
-    const goles = document.createElement('div'); goles.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:10px;text-align:center;color:#888;white-space:nowrap;'; goles.textContent = `${t.all.goals.for}-${t.all.goals.against}`;
-    const formaWrap = document.createElement('div'); formaWrap.style.cssText = 'display:flex;align-items:center;justify-content:center;'; formaWrap.appendChild(formChips(t.form));
-    const pts = document.createElement('div'); pts.style.cssText = `font-family:"Bebas Neue",sans-serif;font-size:15px;text-align:right;color:${isThisClub ? 'var(--club-color)' : '#fff'};font-weight:700;`; pts.textContent = t.points;
-    row.appendChild(rank); row.appendChild(escWrap); row.appendChild(name);
-    row.appendChild(mk(t.all.played)); row.appendChild(mk(t.all.win)); row.appendChild(mk(t.all.draw)); row.appendChild(mk(t.all.lose));
-    row.appendChild(goles); row.appendChild(dgEl); row.appendChild(formaWrap); row.appendChild(pts);
-    container.appendChild(row);
-  });
-}
-
-async function loadTabla() {
-  const container = document.getElementById('tabla-content');
-  try {
-    const res = await fetch(`https://v3.football.api-sports.io/standings?league=128&season=2026`, { headers: { 'x-apisports-key': API_KEY_TABLA } });
-    const data = await res.json();
-    tablaData = data.response[0].league.standings;
-    // Verificar orden de zonas
-    const firstGroup = (tablaData[0][0]?.group || '').toLowerCase();
-    if (firstGroup.includes('b')) tablaData = [tablaData[1], tablaData[0]];
-    switchZona(tablaZona);
-  } catch(e) { container.innerHTML = '<div style="text-align:center;color:#555;padding:30px;font-size:13px;">Error al cargar tabla.</div>'; }
-}
-
-function switchZona(zona) {
-  tablaZona = zona;
-  document.getElementById('zona-btn-A').classList.toggle('active', zona === 'A');
-  document.getElementById('zona-btn-B').classList.toggle('active', zona === 'B');
-  if (!tablaData) return;
-  const teams = tablaData[zona === 'A' ? 0 : 1];
-  renderTablaT(teams, document.getElementById('tabla-content'));
-}
-
-function switchTablaTab(tab, btn) {
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  ['tabla', 'anual', 'promedios'].forEach(t => { const el = document.getElementById('tab-' + t); if (el) el.style.display = t === tab ? 'block' : 'none'; });
-  if (tab === 'anual' && !anualLoaded) loadAnual();
-  if (tab === 'promedios' && !promediosLoaded) loadPromedios();
-}
-
-let anualLoaded = false, promediosLoaded = false;
-
-async function loadAnual() {
-  anualLoaded = true;
-  const cont = document.getElementById('anual-content');
-  try {
-    const res = await fetch(`https://v3.football.api-sports.io/standings?league=128&season=2026`, { headers: { 'x-apisports-key': API_KEY_TABLA } });
-    const data = await res.json();
-    const allTeams = (data.response[0]?.league?.standings || []).flat();
-    allTeams.sort((a, b) => b.points - a.points || b.goalsDiff - a.goalsDiff);
-    cont.innerHTML = '';
-    const cols = '20px 22px 1fr 22px 22px 22px 22px 28px 28px 28px';
-    const head = document.createElement('div');
-    head.style.cssText = `display:grid;grid-template-columns:${cols};gap:2px;padding:5px 8px;font-family:"Barlow Condensed",sans-serif;font-size:9px;letter-spacing:1px;color:rgba(255,255,255,0.35);text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,0.06);`;
-    head.innerHTML = '<div>#</div><div></div><div>Equipo</div><div style="text-align:center">PJ</div><div style="text-align:center">G</div><div style="text-align:center">E</div><div style="text-align:center">P</div><div style="text-align:center">+/-</div><div style="text-align:center">DG</div><div style="text-align:right">Pts</div>';
-    cont.appendChild(head);
-    allTeams.forEach((t, i) => {
-      const isThisClub = t.team.id === CLUB.id;
-      const row = document.createElement('div');
-      row.style.cssText = `display:grid;grid-template-columns:${cols};gap:2px;padding:5px 8px;align-items:center;border-bottom:1px solid rgba(255,255,255,0.04);background:${isThisClub ? 'rgba(229,57,53,0.12)' : 'transparent'};${isThisClub ? 'border-left:2px solid var(--club-color);' : ''}`;
-      const mk = v => { const d=document.createElement('div'); d.style.cssText='font-family:"Bebas Neue",sans-serif;font-size:12px;text-align:center;color:#aaa;'; d.textContent=v; return d; };
-      const rankEl = document.createElement('div'); rankEl.style.cssText = `font-family:"Bebas Neue",sans-serif;font-size:12px;color:${i<3?'#f5c518':'rgba(255,255,255,0.3)'};text-align:center;`; rankEl.textContent = i+1;
-      const escWrap = document.createElement('div'); escWrap.style.cssText='display:flex;align-items:center;justify-content:center;'; escWrap.appendChild(escudoImgT(t.team.id,20));
-      const name = document.createElement('div'); name.style.cssText=`font-size:11px;color:${isThisClub?'#fff':'#ccc'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:${isThisClub?'700':'400'};`; name.textContent=NOMBRE_CORTO_T[t.team.id]||t.team.name;
-      const dg=t.goalsDiff; const dgEl=document.createElement('div'); dgEl.style.cssText=`font-family:"Bebas Neue",sans-serif;font-size:12px;text-align:center;color:${dg>0?'#4caf50':dg<0?'#e53935':'#888'};`; dgEl.textContent=dg>0?`+${dg}`:dg;
-      const goles=document.createElement('div'); goles.style.cssText='font-family:"Bebas Neue",sans-serif;font-size:10px;text-align:center;color:#888;white-space:nowrap;'; goles.textContent=`${t.all.goals.for}-${t.all.goals.against}`;
-      const pts=document.createElement('div'); pts.style.cssText=`font-family:"Bebas Neue",sans-serif;font-size:15px;text-align:right;color:${isThisClub?'var(--club-color)':'#fff'};font-weight:700;`; pts.textContent=t.points;
-      row.appendChild(rankEl); row.appendChild(escWrap); row.appendChild(name);
-      row.appendChild(mk(t.all.played)); row.appendChild(mk(t.all.win)); row.appendChild(mk(t.all.draw)); row.appendChild(mk(t.all.lose));
-      row.appendChild(goles); row.appendChild(dgEl); row.appendChild(pts);
-      cont.appendChild(row);
-    });
-  } catch(e) { cont.innerHTML='<div style="text-align:center;color:#555;padding:30px;font-size:13px;">Error al cargar.</div>'; }
-}
-
-async function loadPromedios() {
-  promediosLoaded = true;
-  const cont = document.getElementById('promedios-content');
-  try {
-    // Promedios: usa league=129 (Liga Profesional - Promedio) si existe, sino calculamos de standings
-    // api-sports no tiene endpoint de promedios directamente; mostramos tabla anual como promedios
-    const res = await fetch(`https://v3.football.api-sports.io/standings?league=128&season=2026`, { headers: { 'x-apisports-key': API_KEY_TABLA } });
-    const data = await res.json();
-    const allTeams = (data.response[0]?.league?.standings || []).flat();
-    // Promedio = pts / PJ (puntos por partido)
-    const withProm = allTeams.map(t => ({ ...t, prom: t.all.played > 0 ? (t.points / t.all.played) : 0 })).sort((a, b) => b.prom - a.prom);
-    cont.innerHTML = '';
-    const cols = '20px 22px 1fr 22px 40px';
-    const head = document.createElement('div');
-    head.style.cssText = `display:grid;grid-template-columns:${cols};gap:2px;padding:5px 8px;font-family:"Barlow Condensed",sans-serif;font-size:9px;letter-spacing:1px;color:rgba(255,255,255,0.35);text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,0.06);`;
-    head.innerHTML = '<div>#</div><div></div><div>Equipo</div><div style="text-align:center">PJ</div><div style="text-align:right">Promedio</div>';
-    cont.appendChild(head);
-    withProm.forEach((t, i) => {
-      const isThisClub = t.team.id === CLUB.id;
-      const row = document.createElement('div');
-      row.style.cssText = `display:grid;grid-template-columns:${cols};gap:2px;padding:5px 8px;align-items:center;border-bottom:1px solid rgba(255,255,255,0.04);background:${isThisClub?'rgba(229,57,53,0.12)':'transparent'};${isThisClub?'border-left:2px solid var(--club-color);':''}`;
-      const rankEl = document.createElement('div'); rankEl.style.cssText=`font-family:"Bebas Neue",sans-serif;font-size:12px;color:${i<3?'#f5c518':'rgba(255,255,255,0.3)'};text-align:center;`; rankEl.textContent=i+1;
-      const escWrap = document.createElement('div'); escWrap.style.cssText='display:flex;align-items:center;justify-content:center;'; escWrap.appendChild(escudoImgT(t.team.id,20));
-      const name = document.createElement('div'); name.style.cssText=`font-size:11px;color:${isThisClub?'#fff':'#ccc'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;`; name.textContent=NOMBRE_CORTO_T[t.team.id]||t.team.name;
-      const pj = document.createElement('div'); pj.style.cssText='font-family:"Bebas Neue",sans-serif;font-size:12px;text-align:center;color:#aaa;'; pj.textContent=t.all.played;
-      const promEl = document.createElement('div'); promEl.style.cssText=`font-family:"Bebas Neue",sans-serif;font-size:16px;text-align:right;color:${isThisClub?'var(--club-color)':'#fff'};`; promEl.textContent=t.prom.toFixed(2);
-      row.appendChild(rankEl); row.appendChild(escWrap); row.appendChild(name); row.appendChild(pj); row.appendChild(promEl);
-      cont.appendChild(row);
-    });
-  } catch(e) { cont.innerHTML='<div style="text-align:center;color:#555;padding:30px;font-size:13px;">Error al cargar.</div>'; }
 }
 
 // ---- formation-download-btn ----
