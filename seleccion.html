@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TribunApp — Selección Argentina</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --celeste: #74b9ff;
+  --celeste-dark: #1565c0;
+  --dark:  #0d0d1a;
+  --dark2: #1a1a2e;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: var(--dark); color: #fff; overflow-x: hidden; }
+
+/* ===== HEADER ===== */
+#site-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px 12px;
+  background: linear-gradient(180deg, rgba(21,101,192,0.25) 0%, transparent 100%);
+  border-bottom: 1px solid rgba(116,185,255,0.15);
+  position: sticky; top: 0; z-index: 50; backdrop-filter: blur(10px);
+}
+.back-link { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 1px; color: rgba(255,255,255,0.5); text-decoration: none; display: flex; align-items: center; gap: 4px; }
+.back-link:hover { color: #fff; }
+.header-flag { font-size: 28px; line-height: 1; }
+.header-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; color: #fff; flex: 1; }
+.header-sub { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 1px; color: var(--celeste); }
+
+/* ===== TABS ===== */
+#main { max-width: 480px; margin: 0 auto; padding: 0 0 40px; background: var(--dark2); min-height: calc(100vh - 64px); }
+.tab-bar {
+  display: flex; gap: 4px; background: rgba(255,255,255,0.04);
+  border-radius: 10px; padding: 4px; margin: 14px 14px 0;
+}
+.tab-btn {
+  flex: 1; font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 1px;
+  border: none; background: transparent; color: rgba(255,255,255,0.4);
+  border-radius: 7px; padding: 9px 4px; cursor: pointer; transition: all 0.2s;
+}
+.tab-btn.active { background: var(--celeste-dark); color: #fff; }
+
+/* ===== CONVOCATORIA ===== */
+#conv-section { padding: 14px; }
+.section-title {
+  font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 2px;
+  color: #fff; margin-bottom: 4px;
+}
+.section-sub { font-size: 11px; color: rgba(255,255,255,0.4); margin-bottom: 14px; line-height: 1.5; }
+
+/* Selector de jugadores */
+.jugador-row {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 10px; padding: 8px 10px; margin-bottom: 6px;
+  cursor: pointer; transition: all 0.15s;
+}
+.jugador-row:hover { background: rgba(116,185,255,0.1); border-color: rgba(116,185,255,0.3); }
+.jugador-row.selected { background: rgba(21,101,192,0.25); border-color: rgba(116,185,255,0.6); }
+.jugador-check {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.25);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; flex-shrink: 0; transition: all 0.15s;
+}
+.jugador-row.selected .jugador-check { background: var(--celeste-dark); border-color: var(--celeste); }
+.jugador-avatar {
+  width: 36px; height: 36px; border-radius: 50%; overflow: hidden;
+  background: var(--celeste-dark); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid rgba(255,255,255,0.15);
+}
+.jugador-avatar img { width: 100%; height: 100%; object-fit: cover; object-position: top; display: none; }
+.jugador-avatar .av-fb { font-family: 'Bebas Neue', sans-serif; font-size: 13px; color: #fff; }
+.jugador-info { flex: 1; }
+.jugador-nombre { font-size: 13px; color: #fff; }
+.jugador-pos { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 1px; color: rgba(255,255,255,0.4); }
+.jugador-club { font-size: 10px; color: rgba(255,255,255,0.3); }
+
+/* Posiciones header */
+.pos-group-title { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 2px; color: var(--celeste); text-transform: uppercase; margin: 14px 0 6px; }
+
+/* Barra de selección */
+#conv-counter-bar {
+  position: sticky; bottom: 0; z-index: 20;
+  background: rgba(13,13,26,0.95); border-top: 1px solid rgba(116,185,255,0.2);
+  padding: 10px 14px; display: flex; align-items: center; gap: 12px;
+  backdrop-filter: blur(8px);
+}
+.conv-count { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--celeste); line-height: 1; }
+.conv-count-label { font-size: 11px; color: rgba(255,255,255,0.4); flex: 1; }
+.conv-action-btns { display: flex; gap: 6px; }
+.conv-btn {
+  font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 1px;
+  border-radius: 8px; padding: 8px 14px; cursor: pointer; border: none;
+  transition: opacity 0.2s;
+}
+.conv-btn.primary { background: var(--celeste-dark); color: #fff; }
+.conv-btn.secondary { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.7); }
+.conv-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* ===== CONVOCATORIA VISUAL (imagen) ===== */
+#conv-preview {
+  position: fixed; inset: 0; z-index: 500;
+  background: rgba(10,10,20,0.97); display: none;
+  flex-direction: column; align-items: center; overflow-y: auto; padding: 20px;
+}
+#conv-preview-inner {
+  background: var(--celeste-dark);
+  width: 340px; max-width: 100%; border-radius: 16px; overflow: hidden;
+}
+.conv-preview-header {
+  background: linear-gradient(135deg, #003087 0%, var(--celeste-dark) 100%);
+  padding: 16px; text-align: center;
+}
+.conv-preview-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 3px; color: #fff; }
+.conv-preview-sub { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 2px; color: rgba(255,255,255,0.5); }
+.conv-preview-flag { font-size: 32px; margin-bottom: 6px; }
+.conv-preview-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 8px; padding: 14px; background: #0d1a3a;
+}
+.conv-preview-player { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.conv-preview-avatar {
+  width: 52px; height: 52px; border-radius: 50%; overflow: hidden;
+  background: var(--celeste-dark); border: 2px solid rgba(255,255,255,0.3);
+  display: flex; align-items: center; justify-content: center;
+}
+.conv-preview-avatar img { width: 100%; height: 100%; object-fit: cover; object-position: top; display: none; }
+.conv-preview-avatar .fb { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: #fff; }
+.conv-preview-nombre { font-family: 'Barlow Condensed', sans-serif; font-size: 9px; color: #fff; text-align: center; line-height: 1.2; }
+.conv-preview-pos { font-size: 8px; color: var(--celeste); font-family: 'Barlow Condensed', sans-serif; }
+#conv-preview-btns { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; justify-content: center; }
+
+/* ===== CANCHA (sección 2) ===== */
+#form-section { padding: 14px; }
+#pitch {
+  width: 100%; aspect-ratio: 0.82;
+  background: #2d7a3a; border-radius: 8px;
+  border: 2px solid rgba(255,255,255,0.15);
+  position: relative; overflow: hidden;
+}
+.stripe { position: absolute; top: 0; bottom: 0; width: 12.5%; }
+.stripe:nth-child(odd) { background: rgba(0,0,0,0.07); }
+.pl { position: absolute; border: 1.5px solid rgba(255,255,255,0.5); }
+.pc { position: absolute; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.5); }
+
+#player-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 5px; max-height: 210px; overflow-y: auto;
+  padding: 4px; border: 1.5px dashed transparent;
+  border-radius: 8px; transition: border-color 0.2s, background 0.2s;
+}
+#player-grid.drag-over { border-color: var(--celeste-dark); background: rgba(21,101,192,0.1); }
+
+.player-chip {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px; padding: 6px 4px; cursor: grab;
+  transition: background 0.15s, opacity 0.15s;
+  min-height: 60px; gap: 3px; position: relative;
+}
+.player-chip.used { opacity: 0.25; cursor: default; pointer-events: none; }
+.chip-num { font-size: 11px; color: var(--celeste); font-weight: 500; line-height: 1; }
+.chip-name { font-size: 8px; color: #ccc; text-align: center; line-height: 1.2; word-break: break-word; }
+
+.player-on-pitch {
+  position: absolute; display: flex; flex-direction: column; align-items: center;
+  cursor: grab; transform: translate(-50%, -50%); z-index: 10; touch-action: none;
+}
+.player-bubble {
+  width: var(--ps, 44px); height: var(--ps, 44px);
+  border-radius: 50%; border: 2.5px solid #fff; overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+  background: var(--celeste-dark); display: flex; align-items: center; justify-content: center;
+}
+.player-bubble img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: none; }
+.player-bubble .fallback-num { font-family: 'Bebas Neue', sans-serif; font-size: var(--pfs, 16px); color: #fff; }
+.player-numtag {
+  font-size: var(--ntfs, 10px); color: #fff;
+  background: var(--celeste-dark); border: 1.5px solid #fff;
+  border-radius: 8px; padding: 1px 5px; margin-top: 2px; line-height: 1.3; white-space: nowrap;
+}
+.player-on-pitch .xbtn {
+  position: absolute; top: -5px; right: -5px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #c62828; border: none; color: #fff;
+  font-size: 9px; cursor: pointer; display: none;
+  align-items: center; justify-content: center; z-index: 5;
+}
+.player-on-pitch:hover .xbtn { display: flex; }
+
+/* Toast */
+#toast {
+  position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+  background: #111; color: #fff; font-size: 13px; padding: 9px 18px;
+  border-radius: 8px; opacity: 0; transition: opacity 0.3s;
+  pointer-events: none; z-index: 9999; white-space: nowrap;
+}
+#toast.show { opacity: 1; }
+
+@keyframes pulse-btn { 0%{transform:scale(1)} 50%{transform:scale(1.04)} 100%{transform:scale(1)} }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header id="site-header">
+  <a class="back-link" href="index.html">← Inicio</a>
+  <div class="header-flag">🇦🇷</div>
+  <div>
+    <div class="header-title">SELECCIÓN ARGENTINA</div>
+    <div class="header-sub">App Fan Engagement</div>
+  </div>
+</header>
+
+<main id="main">
+  <!-- TABS -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('convocatoria', this)">🏆 Armá tu convocatoria</button>
+    <button class="tab-btn" onclick="switchTab('formacion', this)">⚽ Armá tu formación</button>
+  </div>
+
+  <!-- ===== SECCIÓN 1: CONVOCATORIA ===== -->
+  <div id="conv-section">
+    <div style="margin-top:14px;">
+      <div class="section-title">ARMÁ TU CONVOCATORIA</div>
+      <div class="section-sub">Elegí 26 jugadores de los últimos partidos de Argentina. Podés descargar la imagen o enviarla a encuesta.</div>
+    </div>
+
+    <div id="jugadores-loading" style="text-align:center;padding:40px;color:rgba(255,255,255,0.3);font-family:'Barlow Condensed',sans-serif;font-size:14px;letter-spacing:2px;">
+      Cargando jugadores recientes...
+    </div>
+    <div id="jugadores-list" style="display:none;"></div>
+
+    <!-- Barra inferior sticky -->
+    <div id="conv-counter-bar">
+      <div>
+        <div class="conv-count"><span id="conv-count">0</span>/26</div>
+        <div class="conv-count-label">jugadores seleccionados</div>
+      </div>
+      <div class="conv-action-btns">
+        <button class="conv-btn secondary" onclick="convReset()">Limpiar</button>
+        <button class="conv-btn primary" id="conv-preview-btn" onclick="openConvPreview()" disabled>Ver convocatoria</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SECCIÓN 2: FORMACIÓN ===== -->
+  <div id="form-section" style="display:none;">
+    <div style="margin-bottom:10px;text-align:center;">
+      <div class="section-title">ARMÁ TU FORMACIÓN</div>
+      <div style="font-size:11px;color:#888;">Arrastrá jugadores de la convocatoria a la cancha</div>
+    </div>
+
+    <div id="no-conv-msg" style="display:none;text-align:center;padding:30px;font-size:13px;color:#555;line-height:1.6;">
+      Primero armá tu convocatoria en la pestaña anterior.<br>Los 26 convocados aparecerán acá.
+    </div>
+
+    <div id="pitch-wrap" style="display:none;">
+      <div id="pitch">
+        <div class="stripe" style="left:0%"></div><div class="stripe" style="left:12.5%"></div>
+        <div class="stripe" style="left:25%"></div><div class="stripe" style="left:37.5%"></div>
+        <div class="stripe" style="left:50%"></div><div class="stripe" style="left:62.5%"></div>
+        <div class="stripe" style="left:75%"></div><div class="stripe" style="left:87.5%"></div>
+        <div class="pl" style="left:5%;right:5%;top:0;border-top:1.5px solid rgba(255,255,255,0.5);border-left:none;border-right:none;border-bottom:none;height:0"></div>
+        <div class="pl" style="left:5%;right:5%;bottom:0;border-bottom:1.5px solid rgba(255,255,255,0.5);border-left:none;border-right:none;border-top:none;height:0"></div>
+        <div class="pl" style="left:5%;top:0;bottom:0;width:0;border-left:1.5px solid rgba(255,255,255,0.5);"></div>
+        <div class="pl" style="right:5%;top:0;bottom:0;width:0;border-left:1.5px solid rgba(255,255,255,0.5);"></div>
+        <div class="pl" style="left:5%;right:5%;top:50%;height:0;border-top:1.5px solid rgba(255,255,255,0.5);border-left:none;border-right:none;border-bottom:none;"></div>
+        <div class="pc" style="left:50%;top:50%;width:18%;padding-top:18%;transform:translate(-50%,-50%);"></div>
+        <div class="pc" style="left:50%;top:50%;width:3%;padding-top:3%;transform:translate(-50%,-50%);background:rgba(255,255,255,0.5);border:none;"></div>
+        <div class="pl" style="left:21%;right:21%;top:0;height:18%;border:1.5px solid rgba(255,255,255,0.5);border-top:none;"></div>
+        <div class="pl" style="left:21%;right:21%;bottom:0;height:18%;border:1.5px solid rgba(255,255,255,0.5);border-bottom:none;"></div>
+        <div class="pl" style="left:33%;right:33%;top:0;height:9%;border:1.5px solid rgba(255,255,255,0.5);border-top:none;"></div>
+        <div class="pl" style="left:33%;right:33%;bottom:0;height:9%;border:1.5px solid rgba(255,255,255,0.5);border-bottom:none;"></div>
+      </div>
+
+      <div style="margin-top:10px;">
+        <div style="font-size:11px;color:#666;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;">
+          <span>Convocados · soltá acá para quitar</span>
+          <span><span style="color:var(--celeste);font-size:13px;font-weight:500;" id="count-form">0</span><span style="color:#555;font-size:11px;">/11</span></span>
+        </div>
+        <div id="player-grid"></div>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">
+        <div style="font-size:12px;color:#888;">Titulares: <b id="count2-form" style="color:var(--celeste);font-size:15px;">0</b>/11</div>
+        <div style="display:flex;gap:6px;">
+          <button id="download-formation-btn" style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:9px 14px;cursor:not-allowed;opacity:0.3;transition:opacity 0.3s;" disabled>Descargar</button>
+          <button id="confirm-form-btn" style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;background:var(--celeste-dark);color:#fff;border:none;border-radius:8px;padding:9px 14px;cursor:not-allowed;opacity:0.3;transition:opacity 0.3s;" disabled>Enviar a encuesta</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- PREVIEW CONVOCATORIA -->
+<div id="conv-preview" onclick="closeConvPreview(event)">
+  <div id="conv-preview-inner">
+    <div class="conv-preview-header">
+      <div class="conv-preview-flag">🇦🇷</div>
+      <div class="conv-preview-title">MI CONVOCATORIA</div>
+      <div class="conv-preview-sub">SELECCIÓN ARGENTINA · TRIBUNAPP</div>
+    </div>
+    <div class="conv-preview-grid" id="conv-preview-grid"></div>
+  </div>
+  <div id="conv-preview-btns">
+    <button class="conv-btn primary" onclick="downloadConvocatoria(); event.stopPropagation();">⬇ Descargar imagen</button>
+    <button class="conv-btn secondary" onclick="closeConvPreview(event)">Cerrar</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+// ============================================================
+// CONFIG
+// ============================================================
+const API_KEY = 'b8bbfc856fd5cf12cd7d697b2b01887d';
+const ARG_TEAM_ID = 6;
+const FOTO_SEL = fid => `fotos/seleccion/${fid}.png`;
+const SUPABASE_URL = 'https://ieujdkthaoujtnndkiqo.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlldWpka3RoYW91anRubmRraXFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMTEwOTYsImV4cCI6MjA5MTc4NzA5Nn0.FDzVx-W3v48Eq9_hSzsghP1Q8ES4e70S7MN2koGT5wY';
+function getDeviceId() { let id=localStorage.getItem('tribunapp_device_id'); if(!id){id='dev_'+Math.random().toString(36).substr(2,12)+Date.now().toString(36);localStorage.setItem('tribunapp_device_id',id);} return id; }
+
+// ============================================================
+// ESTADO
+// ============================================================
+let allJugadores = []; // todos los jugadores de los últimos partidos
+let convocados = new Set(); // ids de jugadores seleccionados
+let onPitch = [], draggingNew = null, activePitchDrag = null, dragOffX = 0, dragOffY = 0;
+
+const toast = document.getElementById('toast');
+function showToast(msg) { toast.textContent = msg; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 3000); }
+
+// ============================================================
+// TABS
+// ============================================================
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('conv-section').style.display = tab === 'convocatoria' ? 'block' : 'none';
+  document.getElementById('form-section').style.display = tab === 'formacion' ? 'block' : 'none';
+  if (tab === 'formacion') refreshFormationSection();
+}
+
+// ============================================================
+// CARGAR JUGADORES DE LOS ÚLTIMOS PARTIDOS
+// ============================================================
+async function loadRecentPlayers() {
+  try {
+    // 1. Obtener últimos 5 fixtures de Argentina en todos los torneos
+    const fixtRes = await fetch(
+      `https://v3.football.api-sports.io/fixtures?team=${ARG_TEAM_ID}&last=5`,
+      { headers: { 'x-apisports-key': API_KEY } }
+    );
+    const fixtData = await fixtRes.json();
+    const fixtures = fixtData.response || [];
+    if (!fixtures.length) { showEmptyState(); return; }
+
+    // 2. Para cada fixture, obtener lineups
+    const playerMap = {}; // fid -> jugador
+    await Promise.all(fixtures.map(async f => {
+      try {
+        const lineupRes = await fetch(
+          `https://v3.football.api-sports.io/fixtures/lineups?fixture=${f.fixture.id}`,
+          { headers: { 'x-apisports-key': API_KEY } }
+        );
+        const lineupData = await lineupRes.json();
+        const argLineup = (lineupData.response || []).find(l => l.team.id === ARG_TEAM_ID);
+        if (!argLineup) return;
+        const allP = [...(argLineup.startXI || []).map(x => x.player), ...(argLineup.substitutes || []).map(x => x.player)];
+        allP.forEach(p => {
+          if (!playerMap[p.id]) {
+            playerMap[p.id] = { fid: p.id, name: p.name, pos: p.pos, number: p.number, partidos: 0 };
+          }
+          playerMap[p.id].partidos++;
+        });
+      } catch(e) {}
+    }));
+
+    allJugadores = Object.values(playerMap).sort((a, b) => {
+      const posOrder = { G: 0, D: 1, M: 2, F: 3 };
+      const pa = posOrder[a.pos] ?? 4; const pb = posOrder[b.pos] ?? 4;
+      if (pa !== pb) return pa - pb;
+      return b.partidos - a.partidos;
+    });
+
+    if (!allJugadores.length) { showEmptyState(); return; }
+    renderJugadoresList();
+  } catch(e) {
+    console.error(e);
+    document.getElementById('jugadores-loading').innerHTML = '<div style="color:rgba(255,100,100,0.7);text-align:center;padding:20px;font-size:13px;">Error al cargar jugadores. Verificá tu conexión.</div>';
+  }
+}
+
+function showEmptyState() {
+  document.getElementById('jugadores-loading').innerHTML = '<div style="text-align:center;color:#555;padding:30px;font-size:13px;">No hay partidos recientes disponibles en la API.</div>';
+}
+
+const POS_LABEL = { G: 'Arquero', D: 'Defensor', M: 'Mediocampista', F: 'Delantero' };
+const POS_GROUPS = ['G', 'D', 'M', 'F'];
+
+function renderJugadoresList() {
+  document.getElementById('jugadores-loading').style.display = 'none';
+  const list = document.getElementById('jugadores-list');
+  list.style.display = 'block';
+  list.innerHTML = '';
+
+  POS_GROUPS.forEach(pos => {
+    const inPos = allJugadores.filter(j => j.pos === pos);
+    if (!inPos.length) return;
+    const title = document.createElement('div'); title.className = 'pos-group-title'; title.textContent = POS_LABEL[pos] || pos;
+    list.appendChild(title);
+    inPos.forEach(j => {
+      const row = document.createElement('div');
+      row.className = 'jugador-row' + (convocados.has(j.fid) ? ' selected' : '');
+      row.dataset.fid = j.fid;
+
+      const check = document.createElement('div'); check.className = 'jugador-check'; check.textContent = convocados.has(j.fid) ? '✓' : '';
+
+      const av = document.createElement('div'); av.className = 'jugador-avatar';
+      const img = document.createElement('img'); img.src = FOTO_SEL(j.fid);
+      const fb = document.createElement('span'); fb.className = 'av-fb'; fb.textContent = j.number || '?';
+      img.onload = () => { img.style.display = 'block'; fb.style.display = 'none'; };
+      img.onerror = () => { img.style.display = 'none'; fb.style.display = 'block'; };
+      img.style.display = 'none'; av.appendChild(img); av.appendChild(fb);
+
+      const info = document.createElement('div'); info.className = 'jugador-info';
+      const nombre = document.createElement('div'); nombre.className = 'jugador-nombre'; nombre.textContent = j.name;
+      const posEl = document.createElement('div'); posEl.className = 'jugador-pos'; posEl.textContent = POS_LABEL[j.pos] || j.pos;
+      const partEl = document.createElement('div'); partEl.className = 'jugador-club'; partEl.textContent = `${j.partidos} partido${j.partidos !== 1 ? 's' : ''} reciente${j.partidos !== 1 ? 's' : ''}`;
+      info.appendChild(nombre); info.appendChild(posEl); info.appendChild(partEl);
+
+      row.appendChild(check); row.appendChild(av); row.appendChild(info);
+      row.addEventListener('click', () => toggleConvocado(j, row, check));
+      list.appendChild(row);
+    });
+  });
+}
+
+function toggleConvocado(j, row, check) {
+  if (convocados.has(j.fid)) {
+    convocados.delete(j.fid);
+    row.classList.remove('selected');
+    check.textContent = '';
+  } else {
+    if (convocados.size >= 26) { showToast('Ya seleccionaste 26 jugadores'); return; }
+    convocados.add(j.fid);
+    row.classList.add('selected');
+    check.textContent = '✓';
+  }
+  updateConvCounter();
+}
+
+function updateConvCounter() {
+  const n = convocados.size;
+  document.getElementById('conv-count').textContent = n;
+  document.getElementById('conv-preview-btn').disabled = n !== 26;
+}
+
+function convReset() {
+  convocados.clear();
+  document.querySelectorAll('.jugador-row.selected').forEach(r => { r.classList.remove('selected'); r.querySelector('.jugador-check').textContent = ''; });
+  updateConvCounter();
+}
+
+// ============================================================
+// PREVIEW CONVOCATORIA
+// ============================================================
+function openConvPreview() {
+  if (convocados.size !== 26) return;
+  const grid = document.getElementById('conv-preview-grid');
+  grid.innerHTML = '';
+  const selected = allJugadores.filter(j => convocados.has(j.fid));
+  // Ordenar: G, D, M, F
+  const sorted = [...selected].sort((a, b) => { const o = { G: 0, D: 1, M: 2, F: 3 }; return (o[a.pos] ?? 4) - (o[b.pos] ?? 4); });
+  sorted.forEach(j => {
+    const wrap = document.createElement('div'); wrap.className = 'conv-preview-player';
+    const av = document.createElement('div'); av.className = 'conv-preview-avatar';
+    const img = document.createElement('img'); img.src = FOTO_SEL(j.fid);
+    const fb = document.createElement('span'); fb.className = 'fb'; fb.textContent = j.number || '?';
+    img.onload = () => { img.style.display = 'block'; fb.style.display = 'none'; };
+    img.onerror = () => { img.style.display = 'none'; fb.style.display = 'block'; };
+    img.style.display = 'none'; av.appendChild(img); av.appendChild(fb);
+    const nombre = document.createElement('div'); nombre.className = 'conv-preview-nombre';
+    // Último apellido
+    const parts = j.name.trim().split(' ');
+    nombre.textContent = parts[parts.length - 1].toUpperCase();
+    const pos = document.createElement('div'); pos.className = 'conv-preview-pos'; pos.textContent = j.pos;
+    wrap.appendChild(av); wrap.appendChild(nombre); wrap.appendChild(pos);
+    grid.appendChild(wrap);
+  });
+  document.getElementById('conv-preview').style.display = 'flex';
+}
+
+function closeConvPreview(e) {
+  if (e.target === document.getElementById('conv-preview') || e.currentTarget === document.getElementById('conv-preview')) {
+    if (!e.target.closest('#conv-preview-inner') && !e.target.closest('#conv-preview-btns')) {
+      document.getElementById('conv-preview').style.display = 'none';
+    }
+  } else {
+    document.getElementById('conv-preview').style.display = 'none';
+  }
+}
+
+async function downloadConvocatoria() {
+  const btn = document.querySelector('#conv-preview-btns .conv-btn.primary');
+  btn.textContent = 'Generando...'; btn.disabled = true;
+  try {
+    const inner = document.getElementById('conv-preview-inner');
+    const canvas = await html2canvas(inner, { backgroundColor: '#0d1a3a', scale: 2, useCORS: true, logging: false });
+    const link = document.createElement('a'); link.download = 'mi-convocatoria-argentina.png'; link.href = canvas.toDataURL('image/png'); link.click();
+    showToast('¡Descargada! Compartila 🇦🇷');
+  } catch(e) { showToast('No se pudo generar la imagen.'); }
+  finally { btn.textContent = '⬇ Descargar imagen'; btn.disabled = false; }
+}
+
+// ============================================================
+// FORMACIÓN
+// ============================================================
+const pitch = document.getElementById('pitch');
+const grid = document.getElementById('player-grid');
+
+function updatePlayerSizes() {
+  if (!pitch) return;
+  const w = pitch.offsetWidth;
+  const size = Math.round(w * 0.09);
+  pitch.style.setProperty('--ps', size + 'px');
+  pitch.style.setProperty('--pfs', Math.round(size * 0.4) + 'px');
+  pitch.style.setProperty('--ntfs', Math.round(size * 0.27) + 'px');
+}
+const ro = new ResizeObserver(() => updatePlayerSizes());
+if (pitch) { ro.observe(pitch); updatePlayerSizes(); }
+
+function refreshFormationSection() {
+  const convList = allJugadores.filter(j => convocados.has(j.fid));
+  if (!convList.length) {
+    document.getElementById('no-conv-msg').style.display = 'block';
+    document.getElementById('pitch-wrap').style.display = 'none';
+  } else {
+    document.getElementById('no-conv-msg').style.display = 'none';
+    document.getElementById('pitch-wrap').style.display = 'block';
+    renderFormGrid(convList);
+  }
+}
+
+function makeAvatar(fid, num, size) {
+  const wrap = document.createElement('div');
+  wrap.style.cssText = `width:${size}px;height:${size}px;border-radius:50%;overflow:hidden;background:var(--celeste-dark);display:flex;align-items:center;justify-content:center;flex-shrink:0;`;
+  const img = document.createElement('img'); img.src = FOTO_SEL(fid);
+  img.style.cssText = 'width:100%;height:100%;object-fit:cover;object-position:top center;display:none;';
+  const fb = document.createElement('span'); fb.style.cssText = `font-family:'Bebas Neue',sans-serif;color:#fff;font-size:${Math.round(size * 0.38)}px;`; fb.textContent = num;
+  img.onload = () => { img.style.display = 'block'; fb.style.display = 'none'; };
+  img.onerror = () => { img.style.display = 'none'; fb.style.display = 'block'; };
+  wrap.appendChild(img); wrap.appendChild(fb); return wrap;
+}
+
+function renderFormGrid(players) {
+  grid.innerHTML = '';
+  players.forEach(p => {
+    const used = onPitch.find(x => x.fid === p.fid);
+    const chip = document.createElement('div');
+    chip.className = 'player-chip' + (used ? ' used' : '');
+    chip.appendChild(makeAvatar(p.fid, p.number || '?', 32));
+    const num = document.createElement('span'); num.className = 'chip-num'; num.textContent = p.number || '?'; chip.appendChild(num);
+    const nm = document.createElement('span'); nm.className = 'chip-name'; nm.textContent = p.name.split(' ').pop(); chip.appendChild(nm);
+    if (!used) {
+      chip.addEventListener('touchstart', e => { e.preventDefault(); draggingNew = p; }, { passive: false });
+      chip.addEventListener('mousedown', e => { e.preventDefault(); draggingNew = p; });
+    }
+    grid.appendChild(chip);
+  });
+}
+
+function removeFromPitch(fid) {
+  const idx = onPitch.findIndex(x => x.fid === fid);
+  if (idx === -1) return;
+  onPitch[idx].el.remove(); onPitch.splice(idx, 1);
+  updateFormCounter();
+  const convList = allJugadores.filter(j => convocados.has(j.fid));
+  renderFormGrid(convList);
+}
+
+function makePitchPlayer(p) {
+  const el = document.createElement('div'); el.className = 'player-on-pitch';
+  const bubble = document.createElement('div'); bubble.className = 'player-bubble';
+  const img = document.createElement('img'); img.src = FOTO_SEL(p.fid); img.alt = '';
+  img.style.cssText = 'width:100%;height:100%;object-fit:cover;object-position:top center;display:none;';
+  const fb = document.createElement('div'); fb.className = 'fallback-num'; fb.textContent = p.number || '?';
+  img.onload = () => { img.style.display = 'block'; fb.style.display = 'none'; };
+  img.onerror = () => { img.style.display = 'none'; fb.style.display = 'flex'; };
+  bubble.appendChild(img); bubble.appendChild(fb);
+  const numTag = document.createElement('div'); numTag.className = 'player-numtag';
+  numTag.textContent = (p.number || '?') + ' · ' + p.name.split(' ').pop();
+  el.appendChild(bubble); el.appendChild(numTag);
+  const xbtn = document.createElement('button'); xbtn.className = 'xbtn'; xbtn.textContent = '✕';
+  xbtn.addEventListener('click', e => { e.stopPropagation(); removeFromPitch(p.fid); });
+  el.appendChild(xbtn); return el;
+}
+
+function addToPitch(p, xPct, yPct) {
+  if (onPitch.find(x => x.fid === p.fid)) return;
+  const el = makePitchPlayer(p);
+  el.style.left = xPct + '%'; el.style.top = yPct + '%';
+  el.addEventListener('touchstart', ev => startPitchDrag(ev, el, p), { passive: false });
+  el.addEventListener('mousedown', ev => { if (!ev.target.classList.contains('xbtn')) startPitchDrag(ev, el, p); });
+  pitch.appendChild(el);
+  onPitch.push({ fid: p.fid, name: p.name, number: p.number, xPct, yPct, el });
+  updateFormCounter();
+  const convList = allJugadores.filter(j => convocados.has(j.fid));
+  renderFormGrid(convList);
+}
+
+function startPitchDrag(e, el, p) {
+  if (e.target.classList.contains('xbtn')) return;
+  e.preventDefault();
+  const touch = e.touches ? e.touches[0] : e;
+  const rect = pitch.getBoundingClientRect();
+  dragOffX = touch.clientX - rect.left - (parseFloat(el.style.left) / 100 * pitch.clientWidth);
+  dragOffY = touch.clientY - rect.top - (parseFloat(el.style.top) / 100 * pitch.clientHeight);
+  activePitchDrag = { el, p }; el.style.zIndex = 20;
+}
+
+function isOver(el, cx, cy) { const r = el.getBoundingClientRect(); return cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom; }
+
+function handleMove(cx, cy) {
+  if (activePitchDrag) {
+    const rect = pitch.getBoundingClientRect();
+    let px = Math.max(3, Math.min(97, ((cx - rect.left - dragOffX) / pitch.clientWidth) * 100));
+    let py = Math.max(3, Math.min(97, ((cy - rect.top - dragOffY) / pitch.clientHeight) * 100));
+    activePitchDrag.el.style.left = px + '%'; activePitchDrag.el.style.top = py + '%';
+    const obj = onPitch.find(o => o.fid === activePitchDrag.p.fid);
+    if (obj) { obj.xPct = px; obj.yPct = py; }
+    grid.classList.toggle('drag-over', isOver(grid, cx, cy));
+  }
+}
+
+function handleEnd(cx, cy) {
+  if (activePitchDrag) {
+    if (isOver(grid, cx, cy)) removeFromPitch(activePitchDrag.p.fid);
+    grid.classList.remove('drag-over'); activePitchDrag = null;
+  } else if (draggingNew) {
+    if (isOver(pitch, cx, cy) && onPitch.length < 11) {
+      const rect = pitch.getBoundingClientRect();
+      addToPitch(draggingNew, Math.max(3, Math.min(97, ((cx - rect.left) / pitch.clientWidth) * 100)), Math.max(3, Math.min(97, ((cy - rect.top) / pitch.clientHeight) * 100)));
+    }
+    draggingNew = null;
+  }
+}
+
+document.addEventListener('mousemove', e => handleMove(e.clientX, e.clientY));
+document.addEventListener('mouseup', e => handleEnd(e.clientX, e.clientY));
+document.addEventListener('touchmove', e => { if (activePitchDrag || draggingNew) e.preventDefault(); handleMove(e.touches[0].clientX, e.touches[0].clientY); }, { passive: false });
+document.addEventListener('touchend', e => handleEnd(e.changedTouches[0].clientX, e.changedTouches[0].clientY));
+
+function updateFormCounter() {
+  const n = onPitch.length;
+  document.getElementById('count-form').textContent = n;
+  document.getElementById('count2-form').textContent = n;
+  const isReady = n === 11;
+  const dlBtn = document.getElementById('download-formation-btn');
+  const cfBtn = document.getElementById('confirm-form-btn');
+  dlBtn.disabled = !isReady; dlBtn.style.opacity = isReady ? '1' : '0.3'; dlBtn.style.cursor = isReady ? 'pointer' : 'not-allowed';
+  cfBtn.disabled = !isReady; cfBtn.style.opacity = isReady ? '1' : '0.3'; cfBtn.style.cursor = isReady ? 'pointer' : 'not-allowed';
+}
+
+document.getElementById('download-formation-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('download-formation-btn');
+  if (onPitch.length !== 11) return;
+  btn.textContent = 'Generando...'; btn.disabled = true;
+  document.querySelectorAll('.xbtn').forEach(x => x.style.display = 'none');
+  try {
+    await new Promise(r => setTimeout(r, 150));
+    const canvas = await html2canvas(pitch, { backgroundColor: '#2d7a3a', scale: 2, useCORS: true, logging: false });
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.font = `bold ${Math.round(canvas.width * 0.04)}px sans-serif`; ctx.textAlign = 'right';
+    ctx.fillText('Mi formación - Selección Argentina', canvas.width - 12, canvas.height - 12);
+    const link = document.createElement('a'); link.download = 'mi-formacion-seleccion.png'; link.href = canvas.toDataURL('image/png'); link.click();
+    showToast('¡Descargada! Compartila 🇦🇷');
+  } catch(e) { showToast('No se pudo generar la imagen.'); }
+  finally { document.querySelectorAll('.xbtn').forEach(x => x.style.display = ''); btn.textContent = 'Descargar'; btn.disabled = false; updateFormCounter(); }
+});
+
+// ============================================================
+// ENVIAR FORMACIÓN A SUPABASE
+// ============================================================
+let sendingForm = false;
+const LS_FORM_SEL = 'seleccion_formacion';
+
+document.getElementById('confirm-form-btn').addEventListener('click', async () => {
+  if (onPitch.length !== 11 || sendingForm) return;
+  if (localStorage.getItem(LS_FORM_SEL)) { showToast('Ya enviaste tu formación'); return; }
+  sendingForm = true;
+  const btn = document.getElementById('confirm-form-btn');
+  btn.textContent = 'Enviando...'; btn.disabled = true; btn.style.opacity = '0.6';
+  const jugadores = onPitch.map(p => ({ fid: p.fid, name: p.name, number: p.number, x: Math.round(p.xPct), y: Math.round(p.yPct) }));
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/formaciones`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ jugadores, rival: 'Selección', club: 'seleccion', device_id: getDeviceId() })
+    });
+    if (res.ok || res.status === 201) {
+      try { localStorage.setItem(LS_FORM_SEL, '1'); } catch(e) {}
+      showToast('¡Formación enviada! Vamos Argentina 🇦🇷');
+      btn.textContent = 'Ya enviaste ✓'; btn.style.background = '#2e7d32'; btn.style.opacity = '1';
+    } else {
+      showToast('Error al enviar. Intentá de nuevo.');
+      btn.textContent = 'Enviar a encuesta'; btn.disabled = false; btn.style.opacity = '1';
+    }
+  } catch(e) {
+    showToast('Error de conexión.');
+    btn.textContent = 'Enviar a encuesta'; btn.disabled = false; btn.style.opacity = '1';
+  } finally { sendingForm = false; }
+});
+
+// ============================================================
+// INIT
+// ============================================================
+loadRecentPlayers();
+</script>
+</body>
+</html>

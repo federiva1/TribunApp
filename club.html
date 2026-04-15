@@ -1,0 +1,1393 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TribunApp</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --club-color: #e53935;
+  --club-color-dark: #b71c1c;
+  --dark:  #0d0d1a;
+  --dark2: #1a1a2e;
+  --acento: #1565c0;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: var(--dark); color: #fff; overflow-x: hidden; }
+
+/* ===== HOME SCREEN ===== */
+#home-screen { min-height: 100vh; background: var(--dark); }
+#home-app { background: var(--dark2); max-width: 480px; margin: 0 auto; min-height: 100vh; position: relative; }
+
+/* Header del club */
+.club-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 14px 14px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--club-color) 18%, transparent) 0%, transparent 100%);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  position: sticky; top: 0; z-index: 20; backdrop-filter: blur(10px);
+}
+.club-header-back {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 1px;
+  color: rgba(255,255,255,0.5); cursor: pointer; border: none; background: none;
+  padding: 0; display: flex; align-items: center; gap: 4px;
+}
+.club-header-back:hover { color: #fff; }
+.club-header-escudo { width: 40px; height: 40px; object-fit: contain; }
+.club-header-info { flex: 1; }
+.club-header-nombre {
+  font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 2px;
+  color: #fff; line-height: 1;
+}
+.club-header-sub {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 11px;
+  letter-spacing: 1px; color: rgba(255,255,255,0.4); margin-top: 2px;
+}
+
+/* Menú de secciones */
+.menu-section { padding: 20px 14px; }
+.menu-title {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 2px;
+  color: rgba(255,255,255,0.3); text-transform: uppercase; margin-bottom: 12px;
+}
+.menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.menu-card {
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px; padding: 18px 14px;
+  cursor: pointer; transition: background 0.18s, border-color 0.18s, transform 0.15s;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.menu-card:hover {
+  background: rgba(255,255,255,0.09);
+  border-color: var(--club-color);
+  transform: translateY(-2px);
+}
+.menu-card-icon { font-size: 28px; line-height: 1; }
+.menu-card-title { font-family: 'Bebas Neue', sans-serif; font-size: 17px; letter-spacing: 1px; color: #fff; }
+.menu-card-sub { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 0.5px; color: rgba(255,255,255,0.4); }
+
+/* ===== OVERLAY SCREENS ===== */
+.overlay-screen {
+  display: none; position: fixed; inset: 0; z-index: 100;
+  background: var(--dark); overflow-y: auto;
+}
+.overlay-inner { background: var(--dark2); max-width: 480px; margin: 0 auto; min-height: 100vh; position: relative; padding: 12px; }
+.back-btn {
+  display: flex; align-items: center; gap: 6px;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 1px;
+  color: rgba(255,255,255,0.5); cursor: pointer; margin-bottom: 14px;
+  border: none; background: none; padding: 0;
+}
+.back-btn:hover { color: #fff; }
+.screen-title {
+  font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px;
+  color: #fff; text-align: center; margin-bottom: 4px;
+}
+.screen-sub { font-size: 11px; color: #888; text-align: center; margin-bottom: 16px; }
+
+/* ===== CANCHA ===== */
+#pitch {
+  width: 100%; aspect-ratio: 0.82;
+  background: #2d7a3a; border-radius: 8px;
+  border: 2px solid rgba(255,255,255,0.15);
+  position: relative; overflow: hidden; flex: 1;
+}
+.stripe { position: absolute; top: 0; bottom: 0; width: 12.5%; }
+.stripe:nth-child(odd) { background: rgba(0,0,0,0.07); }
+.pl { position: absolute; border: 1.5px solid rgba(255,255,255,0.5); }
+.pc { position: absolute; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.5); }
+
+/* ===== PLAYER GRID ===== */
+#player-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 5px; max-height: 210px; overflow-y: auto;
+  padding: 4px; border: 1.5px dashed transparent;
+  border-radius: 8px; transition: border-color 0.2s, background 0.2s;
+}
+#player-grid.drag-over { border-color: var(--club-color); background: rgba(229,57,53,0.08); }
+#player-grid::-webkit-scrollbar { width: 3px; }
+#player-grid::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+
+.player-chip {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px; padding: 6px 4px; cursor: grab;
+  transition: background 0.15s, opacity 0.15s;
+  min-height: 60px; gap: 3px; position: relative;
+}
+.player-chip:active { background: rgba(255,255,255,0.15); }
+.player-chip.used { opacity: 0.25; cursor: default; pointer-events: none; }
+.player-chip.injured { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+.chip-num { font-size: 11px; color: var(--club-color); font-weight: 500; line-height: 1; }
+.chip-name { font-size: 8px; color: #ccc; text-align: center; line-height: 1.2; word-break: break-word; }
+.injury-badge {
+  position: absolute; top: -4px; right: -4px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #c62828; display: flex; align-items: center; justify-content: center;
+  font-size: 9px; border: 1.5px solid var(--dark2);
+}
+
+/* ===== JUGADOR EN CANCHA ===== */
+.player-on-pitch {
+  position: absolute; display: flex; flex-direction: column; align-items: center;
+  cursor: grab; transform: translate(-50%, -50%); z-index: 10; touch-action: none;
+}
+.player-bubble {
+  width: var(--ps, 44px); height: var(--ps, 44px);
+  border-radius: 50%; border: 2.5px solid #fff; overflow: hidden;
+  position: relative; box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+  background: var(--club-color); display: flex; align-items: center; justify-content: center;
+}
+.player-bubble img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: none; }
+.player-bubble .fallback-num { font-family: 'Bebas Neue', sans-serif; font-size: var(--pfs, 16px); color: #fff; }
+.player-numtag {
+  font-size: var(--ntfs, 10px); color: #fff; font-weight: 500;
+  background: var(--club-color); border: 1.5px solid #fff;
+  border-radius: 8px; padding: 1px 5px; margin-top: 2px;
+  line-height: 1.3; white-space: nowrap;
+}
+.player-on-pitch .xbtn {
+  position: absolute; top: -5px; right: -5px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #c62828; border: none; color: #fff;
+  font-size: 9px; cursor: pointer; display: none;
+  align-items: center; justify-content: center; z-index: 5;
+}
+.player-on-pitch:hover .xbtn { display: flex; }
+
+/* ===== BOTONES ===== */
+.btn-primary {
+  font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 1px;
+  background: var(--club-color); color: #fff; border: none;
+  border-radius: 8px; padding: 10px 0; cursor: pointer; width: 100%;
+}
+.btn-secondary {
+  font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 1px;
+  background: transparent; color: rgba(255,255,255,0.4);
+  border: 1px solid rgba(255,255,255,0.2); border-radius: 8px;
+  padding: 9px 0; cursor: pointer; width: 100%;
+}
+.btn-secondary:hover { color: #fff; border-color: rgba(255,255,255,0.4); }
+
+@keyframes pulse-btn { 0%{transform:scale(1);box-shadow:0 0 0 0 rgba(229,57,53,0.7)} 50%{transform:scale(1.06);box-shadow:0 0 0 10px rgba(229,57,53,0)} 100%{transform:scale(1);box-shadow:0 0 0 0 rgba(229,57,53,0)} }
+
+/* ===== FORMACIÓN: RESULTS ===== */
+#results-screen {
+  display: none; position: absolute; inset: 0;
+  background: var(--dark2); flex-direction: column;
+  z-index: 200; padding: 16px; overflow-y: auto;
+}
+#results-screen h2 { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: #fff; letter-spacing: 2px; text-align: center; margin-bottom: 4px; }
+.subtitle { font-size: 11px; color: #666; text-align: center; margin-bottom: 14px; }
+.tier-row { display: flex; align-items: stretch; margin-bottom: 6px; border-radius: 8px; overflow: hidden; min-height: 56px; }
+.tier-label { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 54px; padding: 6px 4px; font-family: 'Bebas Neue', sans-serif; font-size: 11px; letter-spacing: 1px; text-align: center; flex-shrink: 0; line-height: 1.2; }
+.tier-s .tier-label { background: #b71c1c; color: #fff; }
+.tier-a .tier-label { background: #c62828; color: #fff; }
+.tier-b .tier-label { background: #6a1515; color: #fff; }
+.tier-c .tier-label { background: #2a2a2a; color: #aaa; }
+.tier-d .tier-label { background: #1a1a1a; color: #555; }
+.tier-players { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; background: rgba(255,255,255,0.04); flex: 1; align-items: center; border: 1px solid rgba(255,255,255,0.06); border-left: none; border-radius: 0 8px 8px 0; }
+.tier-player { display: flex; flex-direction: row; align-items: center; gap: 6px; }
+.tier-player-name { font-size: 8px; color: #ccc; line-height: 1.2; white-space: nowrap; }
+
+/* ===== SUCCESS ===== */
+#formation-success {
+  display: none; position: absolute; inset: 0;
+  background: rgba(15,15,30,0.97); border-radius: 8px;
+  flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px; z-index: 50; padding: 20px; text-align: center;
+}
+#formation-success h2 { font-family: 'Bebas Neue', sans-serif; font-size: 30px; color: var(--club-color); letter-spacing: 3px; }
+#formation-success p { font-size: 13px; color: #ccc; line-height: 1.6; }
+
+/* ===== PUNTAJES ===== */
+.scores-section-title { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 2px; color: #555; text-transform: uppercase; margin: 14px 0 8px; }
+.score-player-row {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(255,255,255,0.04); border-radius: 10px;
+  padding: 8px 10px; margin-bottom: 6px;
+  border: 1px solid rgba(255,255,255,0.06); transition: border-color 0.2s;
+}
+.score-player-row.voted { border-color: rgba(229,57,53,0.3); }
+.score-avatar-wrap {
+  width: 36px; height: 36px; border-radius: 50%; overflow: hidden;
+  background: var(--club-color); display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; border: 2px solid rgba(255,255,255,0.15);
+}
+.score-avatar-wrap img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: none; }
+.score-avatar-wrap .av-fb { font-family: 'Bebas Neue', sans-serif; font-size: 13px; color: #fff; }
+.score-player-info { flex: 1; }
+.score-player-num { font-size: 11px; color: var(--club-color); font-weight: 500; }
+.score-player-name { font-size: 13px; color: #fff; }
+.score-btns { display: flex; gap: 3px; flex-wrap: wrap; justify-content: flex-end; }
+.score-btn {
+  width: 26px; height: 26px; border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05);
+  color: #aaa; font-size: 11px; font-weight: 500; cursor: pointer;
+  transition: all 0.15s; display: flex; align-items: center; justify-content: center;
+}
+.score-btn:hover { border-color: var(--club-color); color: #fff; }
+.score-btn.selected { background: var(--club-color); border-color: var(--club-color); color: #fff; }
+
+#scores-confirm-btn {
+  font-family: 'Bebas Neue', sans-serif; font-size: 17px; letter-spacing: 1px;
+  background: var(--club-color); color: #fff; border: none;
+  border-radius: 8px; padding: 12px; cursor: pointer; width: 100%;
+  margin-top: 16px; opacity: 0.3; transition: opacity 0.3s;
+}
+#scores-confirm-btn.ready { opacity: 1; animation: pulse-btn 1s ease-in-out 3; }
+
+#scores-success {
+  display: none; position: absolute; inset: 0;
+  background: rgba(15,15,30,0.97);
+  flex-direction: column; align-items: center; justify-content: center;
+  gap: 12px; padding: 20px; text-align: center; z-index: 50;
+}
+#scores-success h2 { font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: var(--club-color); letter-spacing: 3px; }
+#scores-success p { font-size: 13px; color: #ccc; line-height: 1.6; }
+
+#scores-results-screen {
+  display: none; position: absolute; inset: 0; background: var(--dark2);
+  flex-direction: column; z-index: 200; padding: 16px; overflow-y: auto;
+}
+#scores-results-screen h2 { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: #fff; letter-spacing: 2px; text-align: center; margin-bottom: 4px; }
+
+.score-result-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.score-result-num { font-size: 12px; color: var(--club-color); font-weight: 500; min-width: 20px; }
+.score-result-name { font-size: 13px; color: #fff; min-width: 80px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.score-result-bar-wrap { flex: 1; background: rgba(255,255,255,0.07); border-radius: 4px; height: 8px; overflow: hidden; }
+.score-result-bar { height: 100%; background: var(--club-color); border-radius: 4px; transition: width 0.6s ease; }
+.score-result-val { font-size: 13px; color: #fff; font-weight: 500; min-width: 28px; text-align: right; }
+
+/* ===== TABLA ===== */
+.tab-bar {
+  display: flex; gap: 4px; background: rgba(255,255,255,0.05);
+  border-radius: 10px; padding: 4px; margin-bottom: 14px;
+}
+.tab-btn {
+  flex: 1; font-family: 'Bebas Neue', sans-serif; font-size: 12px; letter-spacing: 1px;
+  border: none; background: transparent; color: rgba(255,255,255,0.4);
+  border-radius: 7px; padding: 8px 4px; cursor: pointer; transition: all 0.2s;
+}
+.tab-btn.active { background: var(--club-color); color: #fff; }
+.zona-btn {
+  flex: 1; font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 1px;
+  border: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.5);
+  background: transparent; border-radius: 8px; padding: 8px; cursor: pointer;
+}
+.zona-btn.active { background: rgba(229,57,53,0.15); border-color: var(--club-color); color: #fff; }
+
+/* ===== TOAST ===== */
+#toast {
+  position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+  background: #111; color: #fff; font-size: 13px; padding: 9px 18px;
+  border-radius: 8px; opacity: 0; transition: opacity 0.3s;
+  pointer-events: none; z-index: 9999; white-space: nowrap;
+}
+#toast.show { opacity: 1; }
+
+/* ===== FEED ===== */
+#feed-screen {
+  display: none; position: absolute; inset: 0; background: var(--dark2);
+  flex-direction: column; z-index: 300; overflow-y: auto;
+}
+.feed-top {
+  padding: 12px 16px 10px; display: flex; align-items: center; gap: 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  position: sticky; top: 0; background: var(--dark2); z-index: 10; backdrop-filter: blur(10px);
+}
+
+/* ===== FECHAS ===== */
+.fecha-card {
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px; padding: 14px 16px; margin-bottom: 10px;
+  cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 12px;
+}
+.fecha-card:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); }
+.fecha-card.current { border-color: var(--club-color); background: rgba(229,57,53,0.07); }
+.fecha-num-badge { font-family: 'Bebas Neue', sans-serif; font-size: 30px; color: rgba(255,255,255,0.15); min-width: 40px; text-align: center; line-height: 1; }
+.fecha-card.current .fecha-num-badge { color: var(--club-color); }
+.fecha-card-info { flex: 1; }
+.fecha-card-rival { font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: #fff; letter-spacing: 1px; }
+.fecha-card-sub { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 1px; margin-top: 3px; text-transform: uppercase; }
+.fecha-card.current .fecha-card-sub { color: var(--club-color); }
+.fecha-card:not(.current) .fecha-card-sub { color: #555; }
+
+/* ===== FORMACIONES DE FECHAS PASADAS ===== */
+#prev-fecha-formations .mini-form {
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px; margin-bottom: 10px; overflow: hidden;
+}
+</style>
+</head>
+<body>
+
+<!-- PANTALLA PRINCIPAL -->
+<div id="home-screen">
+<div id="home-app">
+  <!-- HEADER DINÁMICO -->
+  <header class="club-header">
+    <button class="club-header-back" onclick="window.location.href='index.html'">← Inicio</button>
+    <img class="club-header-escudo" id="club-escudo-header" src="" alt="" onerror="this.style.display='none'">
+    <div class="club-header-info">
+      <div class="club-header-nombre" id="club-nombre-header">Cargando...</div>
+      <div class="club-header-sub" id="club-sub-header">Liga Profesional Argentina 2026</div>
+    </div>
+  </header>
+
+  <!-- MENÚ PRINCIPAL -->
+  <div class="menu-section">
+    <div class="menu-title">¿Qué querés hacer?</div>
+    <div class="menu-grid">
+      <div class="menu-card" onclick="openSection('formation')">
+        <div class="menu-card-icon">⚽</div>
+        <div class="menu-card-title">ARMÁ TU FORMACIÓN</div>
+        <div class="menu-card-sub">Elegí los 11 titulares</div>
+      </div>
+      <div class="menu-card" onclick="openSection('scores')">
+        <div class="menu-card-icon">⭐</div>
+        <div class="menu-card-title">PUNTUÁ EL PARTIDO</div>
+        <div class="menu-card-sub">Nota del 1 al 10</div>
+      </div>
+      <div class="menu-card" onclick="openSection('fechas')">
+        <div class="menu-card-icon">📅</div>
+        <div class="menu-card-title">VER FECHAS</div>
+        <div class="menu-card-sub">Resultados y formaciones</div>
+      </div>
+      <div class="menu-card" onclick="openSection('tabla')">
+        <div class="menu-card-icon">📊</div>
+        <div class="menu-card-title">VER TABLA</div>
+        <div class="menu-card-sub">Posiciones en tiempo real</div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ===== PANTALLA FORMACIÓN ===== -->
+<div class="overlay-screen" id="formation-screen">
+<div class="overlay-inner" id="formation-app">
+  <button class="back-btn" onclick="closeSection('formation')">← Volver</button>
+
+  <!-- FEED de equipos -->
+  <div id="feed-screen">
+    <div class="feed-top">
+      <button id="back-feed-btn" style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1px;background:transparent;color:#aaa;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:6px 12px;cursor:pointer;">← Volver</button>
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:#fff;letter-spacing:2px;flex:1;">👥 EQUIPOS DE LA GENTE</span>
+      <span id="feed-count" style="font-size:11px;color:rgba(255,255,255,0.3);"></span>
+    </div>
+    <div id="feed-my-team-section"></div>
+    <div id="feed-others-label" style="display:none;font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.25);text-transform:uppercase;padding:14px 14px 4px;">Otros hinchas</div>
+    <div id="feed-list"></div>
+    <div style="height:24px;"></div>
+  </div>
+
+  <!-- RESULTADOS FORMACIÓN -->
+  <div id="results-screen">
+    <h2>⚽ Resultados</h2>
+    <div class="subtitle">¿A quién elegiría la gente?</div>
+    <div id="total-votes" style="font-size:11px;color:#555;text-align:center;margin-bottom:10px;"></div>
+    <div id="results-list"><div style="text-align:center;color:#666;padding:20px;font-size:13px;">Cargando...</div></div>
+    <button id="download-results-btn" style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;background:#2e7d32;color:#fff;border:2px solid #fff;border-radius:8px;padding:10px;cursor:pointer;width:100%;margin-top:8px;">⬇ Descargar resultados</button>
+    <button id="ver-feed-btn" style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;background:var(--club-color);color:#fff;border:2px solid #fff;border-radius:8px;padding:10px;cursor:pointer;width:100%;margin-top:8px;">👥 Ver equipos de la gente</button>
+    <button id="back-results-btn" style="font-family:'Bebas Neue',sans-serif;font-size:15px;color:#aaa;background:none;border:1px solid #333;border-radius:8px;padding:8px 20px;cursor:pointer;width:100%;margin-top:8px;">← Volver</button>
+  </div>
+
+  <!-- FORMACIÓN principal -->
+  <div id="formation-header" style="text-align:center;margin-bottom:10px;">
+    <h1 style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#fff;letter-spacing:2px;">⚽ Armá tu formación</h1>
+    <div id="formation-rival-tag" style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--club-color);letter-spacing:1px;margin-top:2px;"></div>
+    <p style="font-size:11px;color:#888;margin-top:4px;">Arrastrá jugadores del banco a la cancha</p>
+  </div>
+
+  <div id="pitch-row" style="display:flex;align-items:stretch;gap:6px;">
+    <div id="pitch">
+      <div class="stripe" style="left:0%"></div><div class="stripe" style="left:12.5%"></div>
+      <div class="stripe" style="left:25%"></div><div class="stripe" style="left:37.5%"></div>
+      <div class="stripe" style="left:50%"></div><div class="stripe" style="left:62.5%"></div>
+      <div class="stripe" style="left:75%"></div><div class="stripe" style="left:87.5%"></div>
+      <div class="pl" style="left:5%;right:5%;top:0;border-top:1.5px solid rgba(255,255,255,0.5);border-left:none;border-right:none;border-bottom:none;height:0"></div>
+      <div class="pl" style="left:5%;right:5%;bottom:0;border-bottom:1.5px solid rgba(255,255,255,0.5);border-left:none;border-right:none;border-top:none;height:0"></div>
+      <div class="pl" style="left:5%;top:0;bottom:0;width:0;border-left:1.5px solid rgba(255,255,255,0.5);"></div>
+      <div class="pl" style="right:5%;top:0;bottom:0;width:0;border-left:1.5px solid rgba(255,255,255,0.5);"></div>
+      <div class="pl" style="left:5%;right:5%;top:50%;height:0;border-top:1.5px solid rgba(255,255,255,0.5);border-left:none;border-right:none;border-bottom:none;"></div>
+      <div class="pc" style="left:50%;top:50%;width:18%;padding-top:18%;transform:translate(-50%,-50%);"></div>
+      <div class="pc" style="left:50%;top:50%;width:3%;padding-top:3%;transform:translate(-50%,-50%);background:rgba(255,255,255,0.5);border:none;"></div>
+      <div class="pl" style="left:21%;right:21%;top:0;height:18%;border:1.5px solid rgba(255,255,255,0.5);border-top:none;"></div>
+      <div class="pl" style="left:21%;right:21%;bottom:0;height:18%;border:1.5px solid rgba(255,255,255,0.5);border-bottom:none;"></div>
+      <div class="pl" style="left:33%;right:33%;top:0;height:9%;border:1.5px solid rgba(255,255,255,0.5);border-top:none;"></div>
+      <div class="pl" style="left:33%;right:33%;bottom:0;height:9%;border:1.5px solid rgba(255,255,255,0.5);border-bottom:none;"></div>
+      <div id="formation-success">
+        <h2 id="formation-success-title">¡Gracias!</h2>
+        <p id="formation-success-body">Tu formación fue registrada.</p>
+        <button class="btn-primary" id="formation-download-btn" style="max-width:220px;">Descargar mi formación</button>
+        <div id="generating-msg" style="font-size:11px;color:#888;min-height:16px;margin-top:4px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="bottom" style="margin-top:10px;">
+    <div style="font-size:11px;color:#666;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;">
+      <span>Banco · soltá acá para quitar</span>
+      <span><span style="color:var(--club-color);font-size:13px;font-weight:500;" id="count">0</span><span style="color:#555;font-size:11px;">/11</span></span>
+    </div>
+    <div id="player-grid"></div>
+  </div>
+
+  <div id="action-bar" style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">
+    <div style="font-size:12px;color:#888;">Titulares: <b id="count2" style="color:var(--club-color);font-size:15px;">0</b>/11</div>
+    <div style="display:flex;gap:6px;">
+      <button id="download-pitch-btn" style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:9px 14px;cursor:not-allowed;opacity:0.3;transition:opacity 0.3s;" disabled>Descargar</button>
+      <button id="confirm-btn" style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;background:var(--club-color);color:#fff;border:none;border-radius:8px;padding:9px 14px;cursor:not-allowed;opacity:0.3;transition:opacity 0.3s;" disabled>Enviar a encuesta</button>
+    </div>
+  </div>
+  <div style="margin-top:6px;">
+    <button id="ver-resultados-btn" style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1px;background:transparent;color:rgba(255,255,255,0.4);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px;cursor:pointer;width:100%;">Ver resultados →</button>
+  </div>
+</div>
+</div>
+
+<!-- ===== PANTALLA PUNTAJES ===== -->
+<div class="overlay-screen" id="scores-screen">
+<div class="overlay-inner" id="scores-app">
+  <button class="back-btn" onclick="closeSection('scores')">← Volver</button>
+  <div style="text-align:center;margin-bottom:16px;">
+    <h1 style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#fff;letter-spacing:2px;">⭐ Puntuá el partido</h1>
+    <div id="scores-rival-tag" style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--club-color);letter-spacing:1px;"></div>
+    <p style="font-size:11px;color:#888;margin-top:4px;">Poné tu nota del 1 al 10 a cada jugador</p>
+  </div>
+  <div id="scores-list"></div>
+  <button id="scores-confirm-btn">Confirmar puntajes</button>
+  <button id="scores-ver-resultados-btn" class="btn-secondary" style="margin-top:8px;">Ver resultados →</button>
+
+  <div id="scores-success">
+    <h2 id="scores-success-title">¡Gracias!</h2>
+    <p id="scores-success-body">Tus puntajes fueron registrados.</p>
+  </div>
+  <div id="scores-results-screen">
+    <h2>⭐ Puntajes</h2>
+    <div class="subtitle">Promedio de la gente</div>
+    <div id="scores-total-votes" style="font-size:11px;color:#555;text-align:center;margin-bottom:8px;"></div>
+    <div id="scores-results-list"><div style="color:#555;text-align:center;padding:20px;">Cargando...</div></div>
+    <button id="download-scores-results-btn" style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;background:#2e7d32;color:#fff;border:none;border-radius:8px;padding:10px;cursor:pointer;width:100%;margin-top:8px;">⬇ Descargar resultados</button>
+    <button id="back-scores-results-btn" class="btn-secondary" style="margin-top:8px;">← Volver</button>
+  </div>
+</div>
+</div>
+
+<!-- ===== PANTALLA FECHAS ===== -->
+<div class="overlay-screen" id="fechas-screen">
+<div class="overlay-inner">
+  <button class="back-btn" onclick="closeSection('fechas')">← Volver</button>
+  <div style="text-align:center;margin-bottom:18px;">
+    <h1 style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#fff;letter-spacing:2px;">📅 Apertura 2026</h1>
+    <div style="font-size:11px;color:#888;margin-top:3px;">Seleccioná una fecha</div>
+  </div>
+  <div id="fechas-list"></div>
+</div>
+</div>
+
+<!-- PANTALLA FECHA ANTERIOR -->
+<div id="prev-fecha-screen" style="display:none;position:fixed;inset:0;z-index:300;background:var(--dark);overflow-y:auto;">
+<div style="background:var(--dark2);padding:12px;max-width:480px;margin:0 auto;min-height:100vh;">
+  <button class="back-btn" id="back-prev-fecha-btn">← Volver</button>
+  <div id="prev-fecha-header" style="text-align:center;margin-bottom:14px;"></div>
+  <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2px;color:#555;text-transform:uppercase;margin:14px 0 8px;">⚽ Formaciones de la gente</div>
+  <div id="prev-fecha-formations"><div style="text-align:center;color:#555;padding:20px;font-size:13px;">Cargando...</div></div>
+  <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2px;color:#555;text-transform:uppercase;margin:20px 0 8px;">⭐ Puntajes de la gente</div>
+  <div id="prev-fecha-scores"><div style="text-align:center;color:#555;padding:20px;font-size:13px;">Cargando...</div></div>
+  <div style="height:24px;"></div>
+</div>
+</div>
+
+<!-- ===== PANTALLA TABLA ===== -->
+<div class="overlay-screen" id="tabla-screen">
+<div class="overlay-inner" id="tabla-app">
+  <button class="back-btn" onclick="closeSection('tabla')">← Volver</button>
+  <div style="text-align:center;margin-bottom:14px;">
+    <h1 style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#fff;letter-spacing:2px;">📊 Liga Profesional 2026</h1>
+    <div style="font-size:11px;color:#888;margin-top:3px;">Apertura · Datos en tiempo real</div>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="tabla" onclick="switchTablaTab('tabla',this)">Tabla</button>
+    <button class="tab-btn" data-tab="anual" onclick="switchTablaTab('anual',this)">Anual</button>
+    <button class="tab-btn" data-tab="promedios" onclick="switchTablaTab('promedios',this)">Promedios</button>
+  </div>
+  <div id="tab-tabla">
+    <div style="display:flex;gap:6px;margin-bottom:8px;">
+      <button class="zona-btn" id="zona-btn-A" onclick="switchZona('A')">Zona A</button>
+      <button class="zona-btn active" id="zona-btn-B" onclick="switchZona('B')">Zona B</button>
+    </div>
+    <div id="tabla-content"><div style="text-align:center;color:#555;padding:30px;font-size:13px;">Cargando...</div></div>
+  </div>
+  <div id="tab-anual" style="display:none;"><div id="anual-content"><div style="text-align:center;color:#555;padding:30px;font-size:13px;">Cargando...</div></div></div>
+  <div id="tab-promedios" style="display:none;"><div id="promedios-content"><div style="text-align:center;color:#555;padding:30px;font-size:13px;">Cargando...</div></div></div>
+</div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="js/clubes.js"></script>
+<script>
+// ============================================================
+// CONFIG GLOBAL
+// ============================================================
+const SUPABASE_URL = 'https://ieujdkthaoujtnndkiqo.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlldWpka3RoYW91anRubmRraXFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMTEwOTYsImV4cCI6MjA5MTc4NzA5Nn0.FDzVx-W3v48Eq9_hSzsghP1Q8ES4e70S7MN2koGT5wY';
+const API_KEY_TABLA = 'b8bbfc856fd5cf12cd7d697b2b01887d';
+
+// ---- Leer club desde URL ----
+const params = new URLSearchParams(window.location.search);
+const CLUB_SLUG = params.get('c') || '';
+const CLUB = CLUBES_CONFIG[CLUB_SLUG];
+
+if (!CLUB) {
+  document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:Bebas Neue,sans-serif;font-size:24px;color:#e53935;text-align:center;">Club no encontrado.<br><a href="index.html" style="font-size:16px;color:#aaa;text-decoration:none;">← Volver al inicio</a></div>';
+  throw new Error('Club not found: ' + CLUB_SLUG);
+}
+
+// ---- Aplicar color del club ----
+document.documentElement.style.setProperty('--club-color', CLUB.color);
+document.title = `TribunApp — ${CLUB.nombre}`;
+
+// ---- Config dinámica de la fecha ----
+// Estos datos se actualiza cada fecha. El squad de "quien jugó" se toma de CLUB.squad cuando exista playedSquad.
+// Por defecto se usa el squad completo del club.
+const RIVAL         = CLUB.rivalActual    || 'Por definir';
+const LS_KEY         = `${CLUB_SLUG}_formacion`;
+const LS_FORMATION_KEY = `${CLUB_SLUG}_formacion_data`;
+const LS_SCORES_KEY  = `${CLUB_SLUG}_puntajes`;
+const SCORES_ENABLED = CLUB.scoresEnabled !== undefined ? CLUB.scoresEnabled : false;
+const GOALKEEPERS    = CLUB.goalkeepers   || [];
+const INJURED        = CLUB.injured       || [];
+const SUSPENDED      = CLUB.suspended     || [];
+const playedSquad    = CLUB.playedSquad   || [];
+let squad            = [];
+const FECHAS         = CLUB.fechas        || [];
+
+const FOTO = fid => `fotos/${CLUB_SLUG}/${fid}.png`;
+
+// ---- Render header ----
+document.getElementById('club-escudo-header').src = `escudos/${CLUB_SLUG}.png`;
+document.getElementById('club-nombre-header').textContent = CLUB.nombre;
+document.getElementById('formation-rival-tag').textContent = RIVAL !== 'Por definir' ? `${CLUB.nombreCorto} vs ${RIVAL}` : '';
+document.getElementById('scores-rival-tag').textContent = RIVAL !== 'Por definir' ? `${CLUB.nombreCorto} vs ${RIVAL}` : '';
+document.getElementById('formation-success-body').textContent = `Tu formación fue registrada. ¡Vamos ${CLUB.nombreCorto}!`;
+document.getElementById('scores-success-body').textContent = `Tus puntajes fueron registrados. ¡Vamos ${CLUB.nombreCorto}!`;
+document.getElementById('formation-success-title').textContent = `¡Gracias, hincha!`;
+document.getElementById('scores-success-title').textContent = `¡Gracias, hincha!`;
+
+// ============================================================
+// ESTADO FORMACIÓN
+// ============================================================
+let onPitch = [], draggingNew = null, activePitchDrag = null;
+let dragOffX = 0, dragOffY = 0, sending = false, wasReady = false;
+let userScores = {}, scoresWasReady = false;
+
+const pitch = document.getElementById('pitch');
+const grid = document.getElementById('player-grid');
+const resultsScreen = document.getElementById('results-screen');
+const toast = document.getElementById('toast');
+
+// ---- Tamaños responsivos ----
+function updatePlayerSizes() {
+  const w = pitch.offsetWidth;
+  const size = Math.round(w * 0.09);
+  pitch.style.setProperty('--ps', size + 'px');
+  pitch.style.setProperty('--pfs', Math.round(size * 0.4) + 'px');
+  pitch.style.setProperty('--ntfs', Math.round(size * 0.27) + 'px');
+}
+const ro = new ResizeObserver(() => updatePlayerSizes());
+ro.observe(pitch); updatePlayerSizes();
+
+function showToast(msg) { toast.textContent = msg; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 3000); }
+
+// ---- Navegación ----
+function openSection(section) {
+  document.getElementById('home-screen').style.display = 'none';
+  ['formation', 'scores', 'fechas', 'tabla'].forEach(s => {
+    const el = document.getElementById(s + '-screen');
+    if (el) el.style.display = s === section ? 'block' : 'none';
+  });
+  if (section === 'tabla' && !tablaData) loadTabla();
+  if (section === 'fechas') renderFechas();
+  if (section === 'scores') {
+    if (!SCORES_ENABLED) {
+      document.getElementById('scores-list').innerHTML = '<div style="text-align:center;padding:30px;font-size:13px;color:#555;">Esta sección se habilita cuando termina el partido.</div>';
+    } else if (!localStorage.getItem(LS_SCORES_KEY)) {
+      renderScores();
+    } else {
+      const btn = document.getElementById('scores-confirm-btn');
+      btn.textContent = '⬇ Descargar puntajes';
+      btn.style.background = '#2e7d32'; btn.style.opacity = '1';
+    }
+  }
+}
+
+function closeSection(section) {
+  document.getElementById(section + '-screen').style.display = 'none';
+  document.getElementById('home-screen').style.display = 'block';
+}
+
+// ---- Utilidades ----
+function getDeviceId() {
+  let id = localStorage.getItem('tribunapp_device_id');
+  if (!id) { id = 'dev_' + Math.random().toString(36).substr(2, 12) + Date.now().toString(36); localStorage.setItem('tribunapp_device_id', id); }
+  return id;
+}
+function getFeedLikes() { try { return JSON.parse(localStorage.getItem(CLUB_SLUG + '_feed_likes') || '{}'); } catch(e) { return {}; } }
+function saveFeedLikes(obj) { try { localStorage.setItem(CLUB_SLUG + '_feed_likes', JSON.stringify(obj)); } catch(e) {} }
+
+function makeAvatar(src, num, size) {
+  const wrap = document.createElement('div');
+  wrap.style.cssText = `width:${size}px;height:${size}px;border-radius:50%;overflow:hidden;background:${CLUB.color};display:flex;align-items:center;justify-content:center;flex-shrink:0;`;
+  const img = document.createElement('img');
+  img.src = src;
+  img.style.cssText = 'width:100%;height:100%;object-fit:cover;object-position:top center;display:none;';
+  const fb = document.createElement('span');
+  fb.style.cssText = `font-family:'Bebas Neue',sans-serif;color:#fff;font-size:${Math.round(size * 0.38)}px;`;
+  fb.textContent = num;
+  img.onload = () => { img.style.display = 'block'; fb.style.display = 'none'; };
+  img.onerror = () => { img.style.display = 'none'; fb.style.display = 'block'; };
+  wrap.appendChild(img); wrap.appendChild(fb);
+  return wrap;
+}
+
+// ============================================================
+// FORMACIÓN — GRID DE JUGADORES
+// ============================================================
+function renderGrid() {
+  grid.innerHTML = '';
+  if (!squad.length) {
+    grid.innerHTML = '<div style="text-align:center;color:#555;padding:20px;font-size:12px;grid-column:1/-1;">El plantel aún no está cargado.</div>';
+    return;
+  }
+  squad.forEach(p => {
+    const used = onPitch.find(x => x.num === p.num);
+    const isInjured = INJURED.includes(p.num);
+    const isSuspended = SUSPENDED.includes(p.num);
+    const blocked = isInjured || isSuspended;
+    const chip = document.createElement('div');
+    chip.className = 'player-chip' + (used ? ' used' : '') + (blocked ? ' injured' : '');
+    chip.appendChild(makeAvatar(FOTO(p.fid), p.num, 32));
+    const num = document.createElement('span'); num.className = 'chip-num'; num.textContent = p.num; chip.appendChild(num);
+    const nm = document.createElement('span'); nm.className = 'chip-name'; nm.textContent = p.name; chip.appendChild(nm);
+    if (isInjured) { const b = document.createElement('div'); b.className = 'injury-badge'; b.textContent = '🏥'; chip.appendChild(b); }
+    if (isSuspended) { const b = document.createElement('div'); b.className = 'injury-badge'; b.style.background = '#f9a825'; b.textContent = '🟨'; chip.appendChild(b); }
+    if (!used && !blocked) {
+      chip.addEventListener('touchstart', e => { e.preventDefault(); draggingNew = p; }, { passive: false });
+      chip.addEventListener('mousedown', e => { e.preventDefault(); draggingNew = p; });
+    }
+    grid.appendChild(chip);
+  });
+}
+
+function removePlayer(num) {
+  const idx = onPitch.findIndex(x => x.num === num);
+  if (idx === -1) return;
+  onPitch[idx].el.remove(); onPitch.splice(idx, 1);
+  updateCounter(); renderGrid();
+}
+
+function makePitchPlayer(p) {
+  const el = document.createElement('div');
+  el.className = 'player-on-pitch';
+  const bubble = document.createElement('div'); bubble.className = 'player-bubble';
+  const img = document.createElement('img'); img.src = FOTO(p.fid); img.alt = '';
+  img.style.cssText = 'width:100%;height:100%;object-fit:cover;object-position:top center;display:none;';
+  const fb = document.createElement('div'); fb.className = 'fallback-num'; fb.textContent = p.num;
+  img.onload = () => { img.style.display = 'block'; fb.style.display = 'none'; };
+  img.onerror = () => { img.style.display = 'none'; fb.style.display = 'flex'; };
+  bubble.appendChild(img); bubble.appendChild(fb);
+  const numTag = document.createElement('div'); numTag.className = 'player-numtag';
+  numTag.textContent = `${p.num} · ${p.name}`;
+  el.appendChild(bubble); el.appendChild(numTag);
+  const xbtn = document.createElement('button'); xbtn.className = 'xbtn'; xbtn.textContent = '✕';
+  xbtn.addEventListener('click', e => { e.stopPropagation(); removePlayer(p.num); });
+  el.appendChild(xbtn);
+  return el;
+}
+
+function addToPitch(p, xPct, yPct, silent = false) {
+  if (onPitch.find(x => x.num === p.num)) return;
+  const el = makePitchPlayer(p);
+  el.style.left = xPct + '%'; el.style.top = yPct + '%';
+  el.addEventListener('touchstart', ev => startPitchDrag(ev, el, p), { passive: false });
+  el.addEventListener('mousedown', ev => { if (!ev.target.classList.contains('xbtn')) startPitchDrag(ev, el, p); });
+  pitch.appendChild(el);
+  onPitch.push({ num: p.num, name: p.name, fid: p.fid, xPct, yPct, el });
+  if (!silent) { updateCounter(); renderGrid(); }
+}
+
+function startPitchDrag(e, el, p) {
+  if (e.target.classList.contains('xbtn')) return;
+  e.preventDefault();
+  const touch = e.touches ? e.touches[0] : e;
+  const rect = pitch.getBoundingClientRect();
+  dragOffX = touch.clientX - rect.left - (parseFloat(el.style.left) / 100 * pitch.clientWidth);
+  dragOffY = touch.clientY - rect.top - (parseFloat(el.style.top) / 100 * pitch.clientHeight);
+  activePitchDrag = { el, p }; el.style.zIndex = 20;
+}
+
+function isOver(el, cx, cy) { const r = el.getBoundingClientRect(); return cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom; }
+
+function handleMove(cx, cy) {
+  if (activePitchDrag) {
+    const rect = pitch.getBoundingClientRect();
+    let px = Math.max(3, Math.min(97, ((cx - rect.left - dragOffX) / pitch.clientWidth) * 100));
+    let py = Math.max(3, Math.min(97, ((cy - rect.top - dragOffY) / pitch.clientHeight) * 100));
+    activePitchDrag.el.style.left = px + '%'; activePitchDrag.el.style.top = py + '%';
+    const obj = onPitch.find(o => o.num === activePitchDrag.p.num);
+    if (obj) { obj.xPct = px; obj.yPct = py; }
+    grid.classList.toggle('drag-over', isOver(grid, cx, cy));
+  }
+}
+
+function handleEnd(cx, cy) {
+  if (activePitchDrag) {
+    if (isOver(grid, cx, cy)) removePlayer(activePitchDrag.p.num);
+    grid.classList.remove('drag-over'); activePitchDrag = null;
+  } else if (draggingNew) {
+    if (isOver(pitch, cx, cy) && onPitch.length < 11) {
+      const rect = pitch.getBoundingClientRect();
+      addToPitch(draggingNew,
+        Math.max(3, Math.min(97, ((cx - rect.left) / pitch.clientWidth) * 100)),
+        Math.max(3, Math.min(97, ((cy - rect.top) / pitch.clientHeight) * 100))
+      );
+    }
+    draggingNew = null;
+  }
+}
+
+document.addEventListener('mousemove', e => handleMove(e.clientX, e.clientY));
+document.addEventListener('mouseup', e => handleEnd(e.clientX, e.clientY));
+document.addEventListener('touchmove', e => { if (activePitchDrag || draggingNew) e.preventDefault(); handleMove(e.touches[0].clientX, e.touches[0].clientY); }, { passive: false });
+document.addEventListener('touchend', e => handleEnd(e.changedTouches[0].clientX, e.changedTouches[0].clientY));
+
+function updateCounter() {
+  const n = onPitch.length;
+  document.getElementById('count').textContent = n;
+  document.getElementById('count2').textContent = n;
+  const isReady = n === 11;
+  const dlBtn = document.getElementById('download-pitch-btn');
+  const cfBtn = document.getElementById('confirm-btn');
+  const alreadyVoted = !!localStorage.getItem(LS_KEY);
+  dlBtn.disabled = !isReady;
+  dlBtn.style.opacity = isReady ? '1' : '0.3';
+  dlBtn.style.cursor = isReady ? 'pointer' : 'not-allowed';
+  if (alreadyVoted) {
+    cfBtn.disabled = true; cfBtn.style.opacity = '0.3'; cfBtn.style.cursor = 'not-allowed'; cfBtn.textContent = 'Ya enviaste ✓';
+  } else {
+    cfBtn.disabled = !isReady; cfBtn.style.opacity = isReady ? '1' : '0.3'; cfBtn.style.cursor = isReady ? 'pointer' : 'not-allowed';
+    cfBtn.textContent = 'Enviar a encuesta';
+    if (isReady && !wasReady) { cfBtn.style.animation = 'none'; void cfBtn.offsetWidth; cfBtn.style.animation = 'pulse-btn 1s ease-in-out 3'; }
+  }
+  if (!isReady) cfBtn.style.animation = '';
+  wasReady = isReady;
+}
+
+// Cargar plantel desde JSON y restaurar formación guardada
+async function initSquad() {
+  try {
+    const res = await fetch(`data/planteles/${CLUB_SLUG}.json`);
+    if (res.ok) {
+      const data = await res.json();
+      squad = data.sort((a, b) => (Number(a.num) || 0) - (Number(b.num) || 0));
+    }
+  } catch(e) {}
+  try {
+    const saved = localStorage.getItem(LS_FORMATION_KEY);
+    if (saved) {
+      JSON.parse(saved).forEach(j => { const p = squad.find(s => s.num === j.num); if (p) addToPitch(p, j.x, j.y, true); });
+      updateCounter();
+    }
+  } catch(e) {}
+  renderGrid(); updateCounter();
+}
+initSquad();
+
+// ---- Descargar formación ----
+document.getElementById('download-pitch-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('download-pitch-btn');
+  if (onPitch.length !== 11) return;
+  btn.textContent = 'Generando...'; btn.disabled = true;
+  document.querySelectorAll('.xbtn').forEach(x => x.style.display = 'none');
+  try {
+    await new Promise(r => setTimeout(r, 150));
+    const canvas = await html2canvas(pitch, { backgroundColor: '#2d7a3a', scale: 2, useCORS: true, allowTaint: false, logging: false });
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.font = `bold ${Math.round(canvas.width * 0.04)}px sans-serif`;
+    ctx.textAlign = 'right';
+    ctx.fillText(`Mi formación ${CLUB.nombreCorto}${RIVAL !== 'Por definir' ? ' vs ' + RIVAL : ''}`, canvas.width - 12, canvas.height - 12);
+    const link = document.createElement('a');
+    link.download = `mi-formacion-${CLUB_SLUG}.png`;
+    link.href = canvas.toDataURL('image/png'); link.click();
+    showToast('¡Descargada! Compartila 🔥');
+  } catch(e) { showToast('No se pudo generar la imagen.'); }
+  finally {
+    document.querySelectorAll('.xbtn').forEach(x => x.style.display = '');
+    btn.textContent = 'Descargar'; btn.disabled = false; updateCounter();
+  }
+});
+
+// ---- Enviar a encuesta ----
+document.getElementById('confirm-btn').addEventListener('click', async () => {
+  if (onPitch.length !== 11 || sending || localStorage.getItem(LS_KEY)) return;
+  sending = true;
+  const btn = document.getElementById('confirm-btn');
+  btn.textContent = 'Enviando...'; btn.disabled = true;
+  const gk = onPitch.find(p => GOALKEEPERS.includes(p.num));
+  let jugadores = onPitch.map(p => ({ num: p.num, name: p.name, fid: p.fid, x: Math.round(p.xPct), y: Math.round(p.yPct) }));
+  if (gk && gk.yPct < 50) jugadores = jugadores.map(p => ({ ...p, x: Math.round(100 - p.x), y: Math.round(100 - p.y) }));
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/formaciones`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ jugadores, rival: RIVAL, club: CLUB_SLUG, device_id: getDeviceId() })
+    });
+    if (res.ok || res.status === 201) {
+      try { localStorage.setItem(LS_KEY, '1'); localStorage.setItem(LS_FORMATION_KEY, JSON.stringify(jugadores)); } catch(e) {}
+      showToast(`¡Formación enviada! Vamos ${CLUB.nombreCorto} 🔥`);
+      updateCounter();
+      document.getElementById('formation-success').style.display = 'flex';
+    } else {
+      showToast('Error al guardar. Intentá de nuevo.');
+    }
+  } catch(e) { showToast('Error de conexión.'); }
+  finally { sending = false; }
+});
+
+// ---- Ver resultados ----
+document.getElementById('ver-resultados-btn').addEventListener('click', showResults);
+document.getElementById('back-results-btn').addEventListener('click', () => { resultsScreen.style.display = 'none'; });
+
+async function showResults() {
+  resultsScreen.style.display = 'flex';
+  const list = document.getElementById('results-list');
+  const totalEl = document.getElementById('total-votes');
+  list.innerHTML = '<div style="text-align:center;color:#666;padding:20px;font-size:13px;">Cargando...</div>'; totalEl.textContent = '';
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/formaciones?select=jugadores&rival=eq.${encodeURIComponent(RIVAL)}&club=eq.${CLUB_SLUG}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
+    const data = await res.json();
+    const total = data.length;
+    if (total === 0) { list.innerHTML = '<div style="text-align:center;color:#666;padding:20px;font-size:13px;">Todavía no hay formaciones enviadas.</div>'; return; }
+    const counts = {};
+    data.forEach(row => { (row.jugadores || []).forEach(j => { if (!counts[j.num]) { const sq = squad.find(s => s.num === j.num); counts[j.num] = { num: j.num, name: j.name, fid: j.fid || sq?.fid || 0, count: 0 }; } counts[j.num].count++; }); });
+    const players = Object.values(counts).map(p => ({ ...p, pct: Math.round((p.count / total) * 100) })).sort((a, b) => b.pct - a.pct);
+    totalEl.textContent = `${total} formación${total !== 1 ? 'es' : ''} enviada${total !== 1 ? 's' : ''}`;
+    list.innerHTML = '';
+    const tiers = [
+      { cls: 'tier-s', min: 81, max: 100 }, { cls: 'tier-a', min: 61, max: 80 },
+      { cls: 'tier-b', min: 41, max: 60 }, { cls: 'tier-c', min: 21, max: 40 }, { cls: 'tier-d', min: 0, max: 20 }
+    ];
+    tiers.forEach(tier => {
+      const inTier = players.filter(p => p.pct >= tier.min && p.pct <= tier.max);
+      if (!inTier.length) return;
+      const row = document.createElement('div'); row.className = `tier-row ${tier.cls}`;
+      const label = document.createElement('div'); label.className = 'tier-label'; label.textContent = tier.min + '-' + tier.max + '%';
+      row.appendChild(label);
+      const pDiv = document.createElement('div'); pDiv.className = 'tier-players';
+      inTier.forEach(p => {
+        const wrap = document.createElement('div'); wrap.className = 'tier-player';
+        wrap.appendChild(makeAvatar(FOTO(p.fid || 0), p.num, 36));
+        const info = document.createElement('div'); info.style.cssText = 'display:flex;flex-direction:column;gap:1px;';
+        const name = document.createElement('div'); name.className = 'tier-player-name'; name.textContent = p.name;
+        const pct = document.createElement('div'); pct.style.cssText = 'font-size:10px;color:var(--club-color);font-family:"Bebas Neue",sans-serif;'; pct.textContent = p.pct + '%';
+        info.appendChild(name); info.appendChild(pct); wrap.appendChild(info); pDiv.appendChild(wrap);
+      });
+      row.appendChild(pDiv); list.appendChild(row);
+    });
+  } catch(e) { list.innerHTML = '<div style="text-align:center;color:#666;padding:20px;font-size:13px;">Error al cargar resultados.</div>'; }
+}
+
+document.getElementById('download-results-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('download-results-btn');
+  btn.textContent = 'Generando...'; btn.disabled = true;
+  try {
+    const tmp = document.createElement('div');
+    tmp.style.cssText = 'background:#1a1a2e;padding:16px;width:320px;position:fixed;left:-9999px;top:0;font-family:"DM Sans",sans-serif;';
+    const title = document.createElement('div'); title.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:20px;color:#fff;text-align:center;margin-bottom:4px;letter-spacing:2px;'; title.textContent = 'RESULTADOS FORMACIÓN';
+    const sub = document.createElement('div'); sub.style.cssText = 'font-size:11px;color:#666;text-align:center;margin-bottom:12px;'; sub.textContent = `${CLUB.nombreCorto} vs ${RIVAL}`;
+    tmp.appendChild(title); tmp.appendChild(sub);
+    const listEl = document.getElementById('results-list'); const clone = listEl.cloneNode(true);
+    const origAvatars = listEl.querySelectorAll('img'); const cloneAvatars = clone.querySelectorAll('img');
+    origAvatars.forEach((img, i) => { if (img.complete && img.naturalWidth > 0) { cloneAvatars[i].src = img.src; cloneAvatars[i].style.display = 'block'; const fb = cloneAvatars[i].nextElementSibling; if (fb) fb.style.display = 'none'; } });
+    tmp.appendChild(clone); document.body.appendChild(tmp);
+    await new Promise(r => setTimeout(r, 300));
+    const canvas = await html2canvas(tmp, { backgroundColor: '#1a1a2e', scale: 2, logging: false, useCORS: true });
+    document.body.removeChild(tmp);
+    const link = document.createElement('a'); link.download = `resultados-${CLUB_SLUG}.png`; link.href = canvas.toDataURL('image/png'); link.click();
+    showToast('¡Descargado!');
+  } catch(e) { showToast('No se pudo generar.'); }
+  finally { btn.textContent = '⬇ Descargar resultados'; btn.disabled = false; }
+});
+
+// ---- Feed ----
+document.getElementById('ver-feed-btn').addEventListener('click', openFeed);
+document.getElementById('back-feed-btn').addEventListener('click', () => { document.getElementById('feed-screen').style.display = 'none'; });
+
+async function toggleLike(rowId, curLikes) {
+  const liked = getFeedLikes(); const wasLiked = !!liked[rowId]; let nl = curLikes;
+  if (wasLiked) { delete liked[rowId]; nl = Math.max(0, nl - 1); } else { liked[rowId] = true; nl++; }
+  saveFeedLikes(liked);
+  try { await fetch(`${SUPABASE_URL}/rest/v1/formaciones?id=eq.${rowId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' }, body: JSON.stringify({ likes: nl }) }); } catch(e) {}
+  return { likes: nl, isLiked: !!liked[rowId] };
+}
+
+function renderMiniPitch(jugadores, container) {
+  for (let i = 0; i < 8; i++) { const s = document.createElement('div'); s.className = 'stripe'; container.appendChild(s); }
+  jugadores.forEach(j => {
+    const el = document.createElement('div');
+    el.style.cssText = `position:absolute;left:${j.x}%;top:${j.y}%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:1px;z-index:2;`;
+    const bubble = document.createElement('div');
+    bubble.style.cssText = `width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,0.9);overflow:hidden;background:${CLUB.color};display:flex;align-items:center;justify-content:center;flex-shrink:0;`;
+    const img = document.createElement('img'); img.src = FOTO(j.fid || 0);
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;object-position:top;'; img.onerror = () => { img.style.display = 'none'; };
+    bubble.appendChild(img);
+    const num = document.createElement('div');
+    num.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:7px;color:#fff;background:#000;border:1px solid rgba(255,255,255,0.6);border-radius:3px;padding:0 3px;line-height:1.5;white-space:nowrap;text-align:center;max-width:40px;overflow:hidden;text-overflow:ellipsis;';
+    num.textContent = j.name || j.num;
+    el.appendChild(bubble); el.appendChild(num); container.appendChild(el);
+  });
+}
+
+function buildFeedCard(row, isMine, isTop) {
+  const liked = getFeedLikes(); const isLiked = !!liked[row.id]; let likes = row.likes || 0;
+  const card = document.createElement('div');
+  card.style.cssText = `margin:10px 14px 0;background:${isMine ? 'rgba(229,57,53,0.07)' : 'rgba(255,255,255,0.04)'};border:1px solid ${isMine ? 'rgba(229,57,53,0.5)' : 'rgba(255,255,255,0.07)'};border-radius:14px;overflow:hidden;position:relative;`;
+  const hdr = document.createElement('div'); hdr.style.cssText = 'display:flex;align-items:center;padding:10px 12px 4px;';
+  const lbl = document.createElement('div'); lbl.style.cssText = 'font-size:11px;color:rgba(255,255,255,0.3);font-family:"Barlow Condensed",sans-serif;letter-spacing:1px;flex:1;'; lbl.textContent = isMine ? 'Tu formación' : `Hincha ${CLUB.nombreCorto}`;
+  const fecha = document.createElement('div'); fecha.style.cssText = 'font-size:10px;color:rgba(255,255,255,0.15);';
+  if (row.created_at) { const d = new Date(row.created_at); fecha.textContent = `${d.getDate()}/${d.getMonth() + 1}`; }
+  hdr.appendChild(lbl); hdr.appendChild(fecha); card.appendChild(hdr);
+  const miniPitch = document.createElement('div');
+  miniPitch.style.cssText = 'width:100%;aspect-ratio:0.82;background:#2d7a3a;position:relative;overflow:hidden;';
+  if (row.jugadores && row.jugadores.length) renderMiniPitch(row.jugadores, miniPitch);
+  card.appendChild(miniPitch);
+  const footer = document.createElement('div'); footer.style.cssText = 'display:flex;align-items:center;padding:8px 12px;gap:10px;';
+  if (!isMine) {
+    const likeBtn = document.createElement('button');
+    likeBtn.style.cssText = `display:flex;align-items:center;gap:6px;background:${isLiked ? 'rgba(229,57,53,0.2)' : 'rgba(255,255,255,0.05)'};border:1px solid ${isLiked ? 'var(--club-color)' : 'rgba(255,255,255,0.1)'};border-radius:20px;padding:5px 14px;cursor:pointer;font-size:13px;color:${isLiked ? 'var(--club-color)' : '#aaa'};transition:all 0.15s;`;
+    const likeCount = document.createElement('span'); likeCount.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:14px;'; likeCount.textContent = likes;
+    likeBtn.appendChild(document.createTextNode('❤️ ')); likeBtn.appendChild(likeCount);
+    likeBtn.addEventListener('click', async () => { const res = await toggleLike(row.id, likes); likes = res.likes; likeBtn.style.borderColor = res.isLiked ? 'var(--club-color)' : 'rgba(255,255,255,0.1)'; likeCount.textContent = res.likes; });
+    footer.appendChild(likeBtn);
+  }
+  card.appendChild(footer);
+  return card;
+}
+
+async function openFeed() {
+  const screen = document.getElementById('feed-screen');
+  screen.style.display = 'flex'; screen.style.flexDirection = 'column';
+  const mySection = document.getElementById('feed-my-team-section'); const list = document.getElementById('feed-list'); const othersLabel = document.getElementById('feed-others-label'); const countEl = document.getElementById('feed-count');
+  mySection.innerHTML = ''; list.innerHTML = ''; othersLabel.style.display = 'none';
+  list.innerHTML = '<div style="text-align:center;color:#555;font-size:13px;padding:40px;">Cargando...</div>';
+  const deviceId = getDeviceId();
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/formaciones?select=id,jugadores,likes,device_id,created_at&order=likes.desc,created_at.desc&limit=80&rival=eq.${encodeURIComponent(RIVAL)}&club=eq.${CLUB_SLUG}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
+    const data = await res.json();
+    const valid = data.filter(r => r.jugadores && r.jugadores.length === 11);
+    countEl.textContent = `${valid.length} equipo${valid.length !== 1 ? 's' : ''}`;
+    const myRow = valid.find(r => r.device_id === deviceId);
+    if (myRow) { mySection.appendChild(buildFeedCard(myRow, true, false)); }
+    list.innerHTML = '';
+    const others = valid.filter(r => r.id !== myRow?.id);
+    if (others.length) { othersLabel.style.display = 'block'; others.forEach((row, i) => { list.appendChild(buildFeedCard(row, false, i === 0 && row.likes > 0)); }); }
+    else { list.innerHTML = '<div style="text-align:center;color:#555;font-size:13px;padding:20px;">Todavía no hay equipos de otros hinchas.</div>'; }
+  } catch(e) { list.innerHTML = '<div style="text-align:center;color:var(--club-color);font-size:12px;padding:20px;">Error al cargar.</div>'; }
+}
+
+// ============================================================
+// PUNTAJES
+// ============================================================
+function renderScores() {
+  const list = document.getElementById('scores-list');
+  list.innerHTML = '';
+  if (!playedSquad.length) { list.innerHTML = '<p style="color:#555;font-size:13px;text-align:center;padding:20px;">El DT aún no cargó los jugadores que jugaron.</p>'; return; }
+  const titulares = playedSquad.filter(p => p.tipo === 'titular');
+  const suplentes = playedSquad.filter(p => p.tipo === 'suplente');
+  function renderGroup(title, players) {
+    if (!players.length) return;
+    const t = document.createElement('div'); t.className = 'scores-section-title'; t.textContent = title; list.appendChild(t);
+    players.forEach(p => {
+      const row = document.createElement('div'); row.className = 'score-player-row'; row.dataset.num = p.num;
+      const avWrap = document.createElement('div'); avWrap.className = 'score-avatar-wrap';
+      const img = document.createElement('img'); img.src = FOTO(p.fid);
+      const fb = document.createElement('span'); fb.className = 'av-fb'; fb.textContent = p.num;
+      img.onload = () => { img.style.display = 'block'; fb.style.display = 'none'; };
+      img.onerror = () => { img.style.display = 'none'; fb.style.display = 'block'; };
+      img.style.display = 'none';
+      avWrap.appendChild(img); avWrap.appendChild(fb); row.appendChild(avWrap);
+      const info = document.createElement('div'); info.className = 'score-player-info';
+      const numEl = document.createElement('div'); numEl.className = 'score-player-num'; numEl.textContent = `#${p.num}`;
+      const nameEl = document.createElement('div'); nameEl.className = 'score-player-name'; nameEl.textContent = p.name;
+      info.appendChild(numEl); info.appendChild(nameEl); row.appendChild(info);
+      const btns = document.createElement('div'); btns.className = 'score-btns';
+      for (let i = 1; i <= 10; i++) {
+        const btn = document.createElement('button'); btn.className = 'score-btn'; btn.textContent = i;
+        btn.addEventListener('click', () => { userScores[p.num] = i; btns.querySelectorAll('.score-btn').forEach((b, idx) => b.classList.toggle('selected', idx + 1 === i)); row.classList.add('voted'); checkScoresReady(); });
+        btns.appendChild(btn);
+      }
+      row.appendChild(btns); list.appendChild(row);
+    });
+  }
+  renderGroup('TITULARES', titulares);
+  renderGroup('SUPLENTES QUE INGRESARON', suplentes);
+}
+
+function checkScoresReady() {
+  const isReady = Object.keys(userScores).length === playedSquad.length && playedSquad.length > 0;
+  const btn = document.getElementById('scores-confirm-btn');
+  if (isReady && !scoresWasReady) { btn.classList.remove('ready'); void btn.offsetWidth; btn.classList.add('ready'); }
+  else if (!isReady) btn.classList.remove('ready');
+  scoresWasReady = isReady;
+}
+
+function makeScoreCard(p, rank, avatarSize = 44, noMedal = false) {
+  const medals = ['🥇', '🥈', '🥉'];
+  const card = document.createElement('div');
+  card.style.cssText = 'background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:5px;position:relative;';
+  if (!noMedal && rank === 0) card.style.borderColor = 'rgba(229,57,53,0.4)';
+  const rankEl = document.createElement('div'); rankEl.style.cssText = 'position:absolute;top:6px;left:8px;font-family:"Bebas Neue",sans-serif;font-size:11px;color:rgba(255,255,255,0.3);'; rankEl.textContent = (!noMedal && rank < 3) ? medals[rank] : `${rank + 1}°`;
+  card.appendChild(rankEl); card.appendChild(makeAvatar(FOTO(p.fid), p.num, avatarSize));
+  const nameEl = document.createElement('div'); nameEl.style.cssText = 'font-size:11px;color:#ccc;text-align:center;line-height:1.2;'; nameEl.textContent = p.name; card.appendChild(nameEl);
+  const valEl = document.createElement('div'); valEl.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:22px;color:var(--club-color);line-height:1;'; valEl.textContent = typeof p.avg !== 'undefined' ? p.avg.toFixed(1) : p.val; card.appendChild(valEl);
+  return card;
+}
+
+function addGrid(container, players, cols, startRank, avatarSize, noMedal = false) {
+  const g = document.createElement('div'); g.style.cssText = `display:grid;grid-template-columns:repeat(${cols},1fr);gap:6px;margin-bottom:6px;`;
+  players.forEach((p, i) => g.appendChild(makeScoreCard(p, startRank + i, avatarSize, noMedal)));
+  container.appendChild(g);
+}
+
+document.getElementById('scores-confirm-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('scores-confirm-btn');
+  if (localStorage.getItem(LS_SCORES_KEY)) { downloadMyScores(); return; }
+  if (Object.keys(userScores).length !== playedSquad.length || !playedSquad.length) return;
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/puntajes`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' }, body: JSON.stringify({ rival: RIVAL, club: CLUB_SLUG, puntajes: userScores }) });
+    try { localStorage.setItem(LS_SCORES_KEY, '1'); } catch(e) {}
+    btn.textContent = '⬇ Descargar puntajes'; btn.style.background = '#2e7d32'; btn.style.opacity = '1'; btn.classList.remove('ready');
+    await showScoresResults();
+  } catch(e) { showToast('Error de conexión.'); }
+});
+
+document.getElementById('scores-ver-resultados-btn').addEventListener('click', showScoresResults);
+document.getElementById('back-scores-results-btn').addEventListener('click', () => { document.getElementById('scores-results-screen').style.display = 'none'; });
+
+async function showScoresResults() {
+  document.getElementById('scores-results-screen').style.display = 'flex';
+  const list = document.getElementById('scores-results-list');
+  list.innerHTML = '<div style="color:#555;text-align:center;padding:20px;">Cargando...</div>';
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/puntajes?select=puntajes&rival=eq.${encodeURIComponent(RIVAL)}&club=eq.${CLUB_SLUG}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
+    const data = await res.json();
+    if (!data.length) { list.innerHTML = '<div style="color:#555;text-align:center;padding:20px;">Sin resultados aún.</div>'; document.getElementById('scores-total-votes').textContent = ''; return; }
+    const totalVoters = data.length;
+    document.getElementById('scores-total-votes').textContent = `${totalVoters} hincha${totalVoters !== 1 ? 's' : ''} votaron`;
+    const totals = {}, counts2 = {};
+    data.forEach(row => { Object.entries(row.puntajes || {}).forEach(([num, val]) => { totals[num] = (totals[num] || 0) + Number(val); counts2[num] = (counts2[num] || 0) + 1; }); });
+    const results = Object.keys(totals).map(num => { const p = playedSquad.find(s => s.num === Number(num)); return { num: Number(num), name: p?.name || `#${num}`, fid: p?.fid || 0, avg: totals[num] / counts2[num] }; }).sort((a, b) => b.avg - a.avg);
+    list.innerHTML = '';
+    const suplNums = new Set(playedSquad.filter(s => s.tipo === 'suplente').map(s => s.num));
+    const titResults = results.filter(p => !suplNums.has(p.num));
+    const suplResults = results.filter(p => suplNums.has(p.num));
+    if (titResults[0]) addGrid(list, [titResults[0]], 1, 0, 52);
+    if (titResults.slice(1, 3).length) addGrid(list, titResults.slice(1, 3), 2, 1, 44);
+    if (titResults.slice(3, 7).length) addGrid(list, titResults.slice(3, 7), 4, 3, 36);
+    if (titResults.slice(7).length) addGrid(list, titResults.slice(7), 4, 7, 36);
+    if (suplResults.length) { const sep = document.createElement('div'); sep.className = 'scores-section-title'; sep.style.marginTop = '10px'; sep.textContent = 'SUPLENTES'; list.appendChild(sep); addGrid(list, suplResults, 3, 0, 36, true); }
+  } catch(e) { list.innerHTML = '<div style="color:#555">Error al cargar.</div>'; }
+}
+
+async function downloadMyScores() {
+  try {
+    const tmp = document.createElement('div'); tmp.style.cssText = 'background:#1a1a2e;padding:16px;width:320px;position:fixed;left:-9999px;top:0;';
+    const title = document.createElement('div'); title.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:20px;color:#fff;text-align:center;margin-bottom:4px;letter-spacing:2px;'; title.textContent = 'MIS PUNTAJES';
+    const sub = document.createElement('div'); sub.style.cssText = 'font-size:11px;color:#666;text-align:center;margin-bottom:12px;'; sub.textContent = `${CLUB.nombreCorto} vs ${RIVAL}`;
+    tmp.appendChild(title); tmp.appendChild(sub);
+    const suplNums = new Set(playedSquad.filter(s => s.tipo === 'suplente').map(s => s.num));
+    const sorted = Object.entries(userScores).map(([num, val]) => { const p = playedSquad.find(s => s.num === Number(num)); return { num: Number(num), name: p?.name || `#${num}`, fid: p?.fid || 0, val: Number(val) }; }).sort((a, b) => b.val - a.val);
+    const titSorted = sorted.filter(p => !suplNums.has(p.num)); const suplSorted = sorted.filter(p => suplNums.has(p.num));
+    if (titSorted[0]) addGrid(tmp, [titSorted[0]], 1, 0, 52);
+    if (titSorted.slice(1, 3).length) addGrid(tmp, titSorted.slice(1, 3), 2, 1, 44);
+    if (titSorted.slice(3, 7).length) addGrid(tmp, titSorted.slice(3, 7), 4, 3, 36);
+    if (titSorted.slice(7).length) addGrid(tmp, titSorted.slice(7), 4, 7, 36);
+    if (suplSorted.length) { const sep = document.createElement('div'); sep.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:13px;color:#555;letter-spacing:2px;text-align:center;margin:10px 0 6px;'; sep.textContent = 'SUPLENTES'; tmp.appendChild(sep); addGrid(tmp, suplSorted, 3, 0, 36, true); }
+    document.body.appendChild(tmp);
+    await new Promise(r => setTimeout(r, 200));
+    const canvas = await html2canvas(tmp, { backgroundColor: '#1a1a2e', scale: 2, logging: false }); document.body.removeChild(tmp);
+    const link = document.createElement('a'); link.download = `mis-puntajes-${CLUB_SLUG}.png`; link.href = canvas.toDataURL('image/png'); link.click();
+    showToast('Descargada!');
+  } catch(e) { showToast('No se pudo generar.'); }
+}
+
+document.getElementById('download-scores-results-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('download-scores-results-btn'); btn.textContent = 'Generando...'; btn.disabled = true;
+  try {
+    const tmp = document.createElement('div'); tmp.style.cssText = 'background:#1a1a2e;padding:16px;width:320px;position:fixed;left:-9999px;top:0;';
+    const title = document.createElement('div'); title.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:20px;color:#fff;text-align:center;margin-bottom:4px;letter-spacing:2px;'; title.textContent = 'PUNTAJES DE LA GENTE';
+    const sub = document.createElement('div'); sub.style.cssText = 'font-size:11px;color:#666;text-align:center;margin-bottom:12px;'; sub.textContent = `${CLUB.nombreCorto} vs ${RIVAL}`;
+    tmp.appendChild(title); tmp.appendChild(sub);
+    const listEl = document.getElementById('scores-results-list'); const clone = listEl.cloneNode(true);
+    const origAvatars = listEl.querySelectorAll('img'); const cloneAvatars = clone.querySelectorAll('img');
+    origAvatars.forEach((img, i) => { if (img.complete && img.naturalWidth > 0) { cloneAvatars[i].src = img.src; cloneAvatars[i].style.display = 'block'; const fb = cloneAvatars[i].nextElementSibling; if (fb) fb.style.display = 'none'; } });
+    tmp.appendChild(clone); document.body.appendChild(tmp);
+    await new Promise(r => setTimeout(r, 300));
+    const canvas = await html2canvas(tmp, { backgroundColor: '#1a1a2e', scale: 2, logging: false, useCORS: true }); document.body.removeChild(tmp);
+    const link = document.createElement('a'); link.download = `puntajes-${CLUB_SLUG}.png`; link.href = canvas.toDataURL('image/png'); link.click();
+    showToast('¡Descargado!');
+  } catch(e) { showToast('No se pudo generar.'); }
+  finally { btn.textContent = '⬇ Descargar resultados'; btn.disabled = false; }
+});
+
+// ============================================================
+// FECHAS
+// ============================================================
+function renderFechas() {
+  const list = document.getElementById('fechas-list');
+  list.innerHTML = '';
+  if (!FECHAS.length) {
+    list.innerHTML = '<div style="text-align:center;color:#555;padding:30px;font-size:13px;">Las fechas aún no están cargadas.</div>';
+    return;
+  }
+  FECHAS.forEach(f => {
+    const card = document.createElement('div');
+    card.className = 'fecha-card' + (f.isCurrent ? ' current' : '');
+    const badge = document.createElement('div'); badge.className = 'fecha-num-badge'; badge.textContent = f.num; card.appendChild(badge);
+    const info = document.createElement('div'); info.className = 'fecha-card-info';
+    const rival = document.createElement('div'); rival.className = 'fecha-card-rival'; rival.textContent = f.rival;
+    const sub = document.createElement('div'); sub.className = 'fecha-card-sub'; sub.textContent = f.isCurrent ? 'FECHA ACTUAL' : 'Ver formaciones y puntajes';
+    info.appendChild(rival); info.appendChild(sub); card.appendChild(info);
+    if (!f.isCurrent) {
+      card.addEventListener('click', () => openPrevFecha(f));
+      const arrow = document.createElement('div'); arrow.style.cssText = 'font-size:18px;color:rgba(255,255,255,0.25);'; arrow.textContent = '›'; card.appendChild(arrow);
+    }
+    list.appendChild(card);
+  });
+}
+
+async function openPrevFecha(f) {
+  document.getElementById('prev-fecha-screen').style.display = 'block';
+  document.getElementById('prev-fecha-header').innerHTML = `<div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:#fff;letter-spacing:2px;">FECHA ${f.num}</div><div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:rgba(255,255,255,0.5);letter-spacing:1px;">${CLUB.nombreCorto} vs ${f.rival}</div>`;
+  document.getElementById('prev-fecha-formations').innerHTML = '<div style="text-align:center;color:#555;padding:20px;font-size:13px;">Cargando...</div>';
+  document.getElementById('prev-fecha-scores').innerHTML = '<div style="text-align:center;color:#555;padding:20px;font-size:13px;">Cargando...</div>';
+  document.getElementById('back-prev-fecha-btn').onclick = () => { document.getElementById('prev-fecha-screen').style.display = 'none'; };
+  try {
+    const [fRes, sRes] = await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/formaciones?select=jugadores,likes,device_id,created_at&order=likes.desc,created_at.desc&limit=20&rival=eq.${encodeURIComponent(f.rival)}&club=eq.${CLUB_SLUG}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
+      fetch(`${SUPABASE_URL}/rest/v1/puntajes?select=puntajes&rival=eq.${encodeURIComponent(f.rival)}&club=eq.${CLUB_SLUG}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } })
+    ]);
+    const fData = await fRes.json(); const sData = await sRes.json();
+    // Formaciones
+    const fCont = document.getElementById('prev-fecha-formations');
+    fCont.innerHTML = '';
+    if (!fData.length) { fCont.innerHTML = '<div style="text-align:center;color:#555;padding:20px;font-size:13px;">Sin formaciones.</div>'; }
+    else {
+      fData.slice(0, 5).forEach(row => {
+        const card = document.createElement('div'); card.className = 'mini-form';
+        const miniP = document.createElement('div'); miniP.style.cssText = 'width:100%;aspect-ratio:0.82;background:#2d7a3a;position:relative;overflow:hidden;';
+        if (row.jugadores && row.jugadores.length) renderMiniPitch(row.jugadores, miniP);
+        card.appendChild(miniP);
+        const cardFoot = document.createElement('div'); cardFoot.style.cssText = 'padding:6px 10px;font-size:11px;color:#555;display:flex;justify-content:space-between;';
+        if (row.created_at) { const d = new Date(row.created_at); cardFoot.textContent = `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`; }
+        const likesEl = document.createElement('span'); likesEl.textContent = `❤️ ${row.likes || 0}`;
+        cardFoot.appendChild(likesEl); card.appendChild(cardFoot);
+        fCont.appendChild(card);
+      });
+    }
+    // Puntajes
+    const sCont = document.getElementById('prev-fecha-scores');
+    sCont.innerHTML = '';
+    if (!sData.length) { sCont.innerHTML = '<div style="text-align:center;color:#555;padding:20px;font-size:13px;">Sin puntajes.</div>'; }
+    else {
+      const totals = {}, counts2 = {};
+      sData.forEach(row => { Object.entries(row.puntajes || {}).forEach(([num, val]) => { totals[num] = (totals[num] || 0) + Number(val); counts2[num] = (counts2[num] || 0) + 1; }); });
+      const results = Object.keys(totals).map(num => { const ps = (f.playedSquad || []).find(s => s.num === Number(num)); return { num: Number(num), name: ps?.name || `#${num}`, fid: ps?.fid || 0, avg: totals[num] / counts2[num] }; }).sort((a, b) => b.avg - a.avg);
+      results.forEach(p => {
+        const row = document.createElement('div'); row.className = 'score-result-row';
+        const numEl = document.createElement('div'); numEl.className = 'score-result-num'; numEl.textContent = `#${p.num}`;
+        const nameEl = document.createElement('div'); nameEl.className = 'score-result-name'; nameEl.textContent = p.name;
+        const barWrap = document.createElement('div'); barWrap.className = 'score-result-bar-wrap';
+        const bar = document.createElement('div'); bar.className = 'score-result-bar'; bar.style.width = (p.avg / 10 * 100) + '%'; barWrap.appendChild(bar);
+        const valEl = document.createElement('div'); valEl.className = 'score-result-val'; valEl.textContent = p.avg.toFixed(1);
+        row.appendChild(numEl); row.appendChild(nameEl); row.appendChild(barWrap); row.appendChild(valEl); sCont.appendChild(row);
+      });
+    }
+  } catch(e) { document.getElementById('prev-fecha-formations').innerHTML = '<div style="color:#555;text-align:center;padding:20px;">Error al cargar.</div>'; }
+}
+
+// ============================================================
+// TABLA
+// ============================================================
+let tablaData = null, tablaZona = 'B';
+
+function escudoImgT(id, size = 22) {
+  const img = document.createElement('img');
+  img.style.cssText = `width:${size}px;height:${size}px;object-fit:contain;flex-shrink:0;`;
+  img.src = `escudos/${ESCUDO_MAP[id] || 'argentinosjuniors'}.png`;
+  img.onerror = () => { img.style.display = 'none'; };
+  return img;
+}
+
+function formChips(form) {
+  const wrap = document.createElement('div'); wrap.style.cssText = 'display:flex;gap:2px;justify-content:center;';
+  (form || '').split('').forEach(c => {
+    const chip = document.createElement('div');
+    const bg = c === 'W' ? '#2e7d32' : c === 'D' ? '#555' : '#b71c1c';
+    const label = c === 'W' ? 'G' : c === 'D' ? 'E' : 'P';
+    chip.style.cssText = `width:16px;height:16px;border-radius:3px;background:${bg};display:flex;align-items:center;justify-content:center;font-family:"Bebas Neue",sans-serif;font-size:10px;color:#fff;flex-shrink:0;`;
+    chip.textContent = label; wrap.appendChild(chip);
+  }); return wrap;
+}
+
+function renderTablaT(teams, container) {
+  container.innerHTML = '';
+  const cols = '20px 22px 1fr 22px 22px 22px 22px 28px 28px 86px 28px';
+  const head = document.createElement('div'); head.style.cssText = `display:grid;grid-template-columns:${cols};gap:2px;padding:5px 8px;font-family:"Barlow Condensed",sans-serif;font-size:9px;letter-spacing:1px;color:rgba(255,255,255,0.35);text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,0.06);`;
+  head.innerHTML = '<div>#</div><div></div><div>Equipo</div><div style="text-align:center">PJ</div><div style="text-align:center">G</div><div style="text-align:center">E</div><div style="text-align:center">P</div><div style="text-align:center">+/-</div><div style="text-align:center">DG</div><div style="text-align:center">Forma</div><div style="text-align:right">Pts</div>';
+  container.appendChild(head);
+  teams.forEach((t, i) => {
+    if (i === 8) { const d = document.createElement('div'); d.style.cssText = 'border-top:1px dashed rgba(229,57,53,0.4);margin:2px 0;'; container.appendChild(d); }
+    const isThisClub = t.team.id === CLUB.id;
+    const bgRow = isThisClub ? 'rgba(229,57,53,0.12)' : i < 8 ? 'rgba(229,57,53,0.04)' : 'transparent';
+    const borderLeft = isThisClub ? 'border-left:2px solid var(--club-color);' : '';
+    const row = document.createElement('div'); row.style.cssText = `display:grid;grid-template-columns:${cols};gap:2px;padding:5px 8px;align-items:center;border-bottom:1px solid rgba(255,255,255,0.04);background:${bgRow};${borderLeft}`;
+    const rank = document.createElement('div'); rank.style.cssText = `font-family:"Bebas Neue",sans-serif;font-size:12px;color:${i < 3 ? '#f5c518' : 'rgba(255,255,255,0.3)'};text-align:center;`; rank.textContent = i + 1;
+    const escWrap = document.createElement('div'); escWrap.style.cssText = 'display:flex;align-items:center;justify-content:center;'; escWrap.appendChild(escudoImgT(t.team.id, 20));
+    const name = document.createElement('div'); name.style.cssText = `font-size:11px;color:${isThisClub ? '#fff' : '#ccc'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:${isThisClub ? '700' : '400'};`; name.textContent = NOMBRE_CORTO_T[t.team.id] || t.team.name;
+    const mk = (val) => { const d = document.createElement('div'); d.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:12px;text-align:center;color:#aaa;'; d.textContent = val; return d; };
+    const dg = t.goalsDiff; const dgEl = document.createElement('div'); dgEl.style.cssText = `font-family:"Bebas Neue",sans-serif;font-size:12px;text-align:center;color:${dg > 0 ? '#4caf50' : dg < 0 ? '#e53935' : '#888'};`; dgEl.textContent = dg > 0 ? `+${dg}` : dg;
+    const goles = document.createElement('div'); goles.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:10px;text-align:center;color:#888;white-space:nowrap;'; goles.textContent = `${t.all.goals.for}-${t.all.goals.against}`;
+    const formaWrap = document.createElement('div'); formaWrap.style.cssText = 'display:flex;align-items:center;justify-content:center;'; formaWrap.appendChild(formChips(t.form));
+    const pts = document.createElement('div'); pts.style.cssText = `font-family:"Bebas Neue",sans-serif;font-size:15px;text-align:right;color:${isThisClub ? 'var(--club-color)' : '#fff'};font-weight:700;`; pts.textContent = t.points;
+    row.appendChild(rank); row.appendChild(escWrap); row.appendChild(name);
+    row.appendChild(mk(t.all.played)); row.appendChild(mk(t.all.win)); row.appendChild(mk(t.all.draw)); row.appendChild(mk(t.all.lose));
+    row.appendChild(goles); row.appendChild(dgEl); row.appendChild(formaWrap); row.appendChild(pts);
+    container.appendChild(row);
+  });
+}
+
+async function loadTabla() {
+  const container = document.getElementById('tabla-content');
+  try {
+    const res = await fetch(`https://v3.football.api-sports.io/standings?league=128&season=2026`, { headers: { 'x-apisports-key': API_KEY_TABLA } });
+    const data = await res.json();
+    tablaData = data.response[0].league.standings;
+    // Verificar orden de zonas
+    const firstGroup = (tablaData[0][0]?.group || '').toLowerCase();
+    if (firstGroup.includes('b')) tablaData = [tablaData[1], tablaData[0]];
+    switchZona(tablaZona);
+  } catch(e) { container.innerHTML = '<div style="text-align:center;color:#555;padding:30px;font-size:13px;">Error al cargar tabla.</div>'; }
+}
+
+function switchZona(zona) {
+  tablaZona = zona;
+  document.getElementById('zona-btn-A').classList.toggle('active', zona === 'A');
+  document.getElementById('zona-btn-B').classList.toggle('active', zona === 'B');
+  if (!tablaData) return;
+  const teams = tablaData[zona === 'A' ? 0 : 1];
+  renderTablaT(teams, document.getElementById('tabla-content'));
+}
+
+function switchTablaTab(tab, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  ['tabla', 'anual', 'promedios'].forEach(t => { const el = document.getElementById('tab-' + t); if (el) el.style.display = t === tab ? 'block' : 'none'; });
+  if (tab === 'anual' && !anualLoaded) loadAnual();
+  if (tab === 'promedios' && !promediosLoaded) loadPromedios();
+}
+
+let anualLoaded = false, promediosLoaded = false;
+
+async function loadAnual() {
+  anualLoaded = true;
+  const cont = document.getElementById('anual-content');
+  try {
+    const res = await fetch(`https://v3.football.api-sports.io/standings?league=128&season=2026`, { headers: { 'x-apisports-key': API_KEY_TABLA } });
+    const data = await res.json();
+    const allTeams = (data.response[0]?.league?.standings || []).flat();
+    allTeams.sort((a, b) => b.points - a.points || b.goalsDiff - a.goalsDiff);
+    cont.innerHTML = '';
+    const cols = '20px 22px 1fr 22px 22px 22px 22px 28px 28px 28px';
+    const head = document.createElement('div');
+    head.style.cssText = `display:grid;grid-template-columns:${cols};gap:2px;padding:5px 8px;font-family:"Barlow Condensed",sans-serif;font-size:9px;letter-spacing:1px;color:rgba(255,255,255,0.35);text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,0.06);`;
+    head.innerHTML = '<div>#</div><div></div><div>Equipo</div><div style="text-align:center">PJ</div><div style="text-align:center">G</div><div style="text-align:center">E</div><div style="text-align:center">P</div><div style="text-align:center">+/-</div><div style="text-align:center">DG</div><div style="text-align:right">Pts</div>';
+    cont.appendChild(head);
+    allTeams.forEach((t, i) => {
+      const isThisClub = t.team.id === CLUB.id;
+      const row = document.createElement('div');
+      row.style.cssText = `display:grid;grid-template-columns:${cols};gap:2px;padding:5px 8px;align-items:center;border-bottom:1px solid rgba(255,255,255,0.04);background:${isThisClub ? 'rgba(229,57,53,0.12)' : 'transparent'};${isThisClub ? 'border-left:2px solid var(--club-color);' : ''}`;
+      const mk = v => { const d=document.createElement('div'); d.style.cssText='font-family:"Bebas Neue",sans-serif;font-size:12px;text-align:center;color:#aaa;'; d.textContent=v; return d; };
+      const rankEl = document.createElement('div'); rankEl.style.cssText = `font-family:"Bebas Neue",sans-serif;font-size:12px;color:${i<3?'#f5c518':'rgba(255,255,255,0.3)'};text-align:center;`; rankEl.textContent = i+1;
+      const escWrap = document.createElement('div'); escWrap.style.cssText='display:flex;align-items:center;justify-content:center;'; escWrap.appendChild(escudoImgT(t.team.id,20));
+      const name = document.createElement('div'); name.style.cssText=`font-size:11px;color:${isThisClub?'#fff':'#ccc'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:${isThisClub?'700':'400'};`; name.textContent=NOMBRE_CORTO_T[t.team.id]||t.team.name;
+      const dg=t.goalsDiff; const dgEl=document.createElement('div'); dgEl.style.cssText=`font-family:"Bebas Neue",sans-serif;font-size:12px;text-align:center;color:${dg>0?'#4caf50':dg<0?'#e53935':'#888'};`; dgEl.textContent=dg>0?`+${dg}`:dg;
+      const goles=document.createElement('div'); goles.style.cssText='font-family:"Bebas Neue",sans-serif;font-size:10px;text-align:center;color:#888;white-space:nowrap;'; goles.textContent=`${t.all.goals.for}-${t.all.goals.against}`;
+      const pts=document.createElement('div'); pts.style.cssText=`font-family:"Bebas Neue",sans-serif;font-size:15px;text-align:right;color:${isThisClub?'var(--club-color)':'#fff'};font-weight:700;`; pts.textContent=t.points;
+      row.appendChild(rankEl); row.appendChild(escWrap); row.appendChild(name);
+      row.appendChild(mk(t.all.played)); row.appendChild(mk(t.all.win)); row.appendChild(mk(t.all.draw)); row.appendChild(mk(t.all.lose));
+      row.appendChild(goles); row.appendChild(dgEl); row.appendChild(pts);
+      cont.appendChild(row);
+    });
+  } catch(e) { cont.innerHTML='<div style="text-align:center;color:#555;padding:30px;font-size:13px;">Error al cargar.</div>'; }
+}
+
+async function loadPromedios() {
+  promediosLoaded = true;
+  const cont = document.getElementById('promedios-content');
+  try {
+    // Promedios: usa league=129 (Liga Profesional - Promedio) si existe, sino calculamos de standings
+    // api-sports no tiene endpoint de promedios directamente; mostramos tabla anual como promedios
+    const res = await fetch(`https://v3.football.api-sports.io/standings?league=128&season=2026`, { headers: { 'x-apisports-key': API_KEY_TABLA } });
+    const data = await res.json();
+    const allTeams = (data.response[0]?.league?.standings || []).flat();
+    // Promedio = pts / PJ (puntos por partido)
+    const withProm = allTeams.map(t => ({ ...t, prom: t.all.played > 0 ? (t.points / t.all.played) : 0 })).sort((a, b) => b.prom - a.prom);
+    cont.innerHTML = '';
+    const cols = '20px 22px 1fr 22px 40px';
+    const head = document.createElement('div');
+    head.style.cssText = `display:grid;grid-template-columns:${cols};gap:2px;padding:5px 8px;font-family:"Barlow Condensed",sans-serif;font-size:9px;letter-spacing:1px;color:rgba(255,255,255,0.35);text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,0.06);`;
+    head.innerHTML = '<div>#</div><div></div><div>Equipo</div><div style="text-align:center">PJ</div><div style="text-align:right">Promedio</div>';
+    cont.appendChild(head);
+    withProm.forEach((t, i) => {
+      const isThisClub = t.team.id === CLUB.id;
+      const row = document.createElement('div');
+      row.style.cssText = `display:grid;grid-template-columns:${cols};gap:2px;padding:5px 8px;align-items:center;border-bottom:1px solid rgba(255,255,255,0.04);background:${isThisClub?'rgba(229,57,53,0.12)':'transparent'};${isThisClub?'border-left:2px solid var(--club-color);':''}`;
+      const rankEl = document.createElement('div'); rankEl.style.cssText=`font-family:"Bebas Neue",sans-serif;font-size:12px;color:${i<3?'#f5c518':'rgba(255,255,255,0.3)'};text-align:center;`; rankEl.textContent=i+1;
+      const escWrap = document.createElement('div'); escWrap.style.cssText='display:flex;align-items:center;justify-content:center;'; escWrap.appendChild(escudoImgT(t.team.id,20));
+      const name = document.createElement('div'); name.style.cssText=`font-size:11px;color:${isThisClub?'#fff':'#ccc'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;`; name.textContent=NOMBRE_CORTO_T[t.team.id]||t.team.name;
+      const pj = document.createElement('div'); pj.style.cssText='font-family:"Bebas Neue",sans-serif;font-size:12px;text-align:center;color:#aaa;'; pj.textContent=t.all.played;
+      const promEl = document.createElement('div'); promEl.style.cssText=`font-family:"Bebas Neue",sans-serif;font-size:16px;text-align:right;color:${isThisClub?'var(--club-color)':'#fff'};`; promEl.textContent=t.prom.toFixed(2);
+      row.appendChild(rankEl); row.appendChild(escWrap); row.appendChild(name); row.appendChild(pj); row.appendChild(promEl);
+      cont.appendChild(row);
+    });
+  } catch(e) { cont.innerHTML='<div style="text-align:center;color:#555;padding:30px;font-size:13px;">Error al cargar.</div>'; }
+}
+
+// ---- formation-download-btn ----
+document.getElementById('formation-download-btn').addEventListener('click', async () => {
+  document.getElementById('formation-download-btn').textContent = 'Generando...';
+  document.querySelectorAll('.xbtn').forEach(x => x.style.display = 'none');
+  document.getElementById('formation-success').style.display = 'none';
+  try {
+    await new Promise(r => setTimeout(r, 100));
+    const canvas = await html2canvas(pitch, { backgroundColor: '#2d7a3a', scale: 2, useCORS: true, logging: false });
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.font = `bold ${Math.round(canvas.width * 0.04)}px sans-serif`; ctx.textAlign = 'right';
+    ctx.fillText(`Mi formación ${CLUB.nombreCorto}`, canvas.width - 12, canvas.height - 12);
+    const link = document.createElement('a'); link.download = `formacion-${CLUB_SLUG}.png`; link.href = canvas.toDataURL('image/png'); link.click();
+    showToast('¡Descargada!');
+  } catch(e) { showToast('No se pudo generar.'); }
+  finally { document.querySelectorAll('.xbtn').forEach(x => x.style.display = ''); document.getElementById('formation-success').style.display = 'flex'; document.getElementById('formation-download-btn').textContent = 'Descargar mi formación'; }
+});
+</script>
+</body>
+</html>

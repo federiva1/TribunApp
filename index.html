@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TribunApp — Liga Profesional Argentina</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --dark:  #0d0d1a;
+  --dark2: #1a1a2e;
+  --acento: #1565c0;
+  --acento-light: #42a5f5;
+  --gold: #f5c518;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: var(--dark); color: #fff; overflow-x: hidden; }
+
+/* ===== HEADER ===== */
+#site-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px 10px;
+  background: linear-gradient(180deg, rgba(21,101,192,0.18) 0%, transparent 100%);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  position: sticky; top: 0; z-index: 50; backdrop-filter: blur(10px);
+}
+.logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px; letter-spacing: 3px;
+  background: linear-gradient(135deg, #fff 0%, var(--acento-light) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.logo span { -webkit-text-fill-color: var(--acento-light); }
+
+/* ===== SELECCIÓN ARGENTINA (header derecha) ===== */
+#seleccion-card {
+  display: flex; align-items: center; gap: 10px;
+  background: linear-gradient(135deg, rgba(116,185,255,0.12) 0%, rgba(21,101,192,0.2) 100%);
+  border: 1px solid rgba(116,185,255,0.35);
+  border-radius: 12px; padding: 8px 14px;
+  cursor: pointer; text-decoration: none;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+}
+#seleccion-card:hover {
+  background: linear-gradient(135deg, rgba(116,185,255,0.22) 0%, rgba(21,101,192,0.35) 100%);
+  transform: translateY(-1px); box-shadow: 0 4px 18px rgba(21,101,192,0.3);
+}
+.seleccion-flag { font-size: 26px; line-height: 1; }
+.seleccion-info { display: flex; flex-direction: column; }
+.seleccion-label { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 2px; color: var(--acento-light); text-transform: uppercase; }
+.seleccion-nombre { font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 1px; color: #fff; line-height: 1.1; }
+
+/* ===== CONTENIDO PRINCIPAL ===== */
+#main { padding: 20px 16px 40px; max-width: 1100px; margin: 0 auto; }
+
+.loading-msg { text-align: center; padding: 60px 20px; color: rgba(255,255,255,0.3); font-family: 'Barlow Condensed', sans-serif; font-size: 14px; letter-spacing: 2px; }
+.loading-spinner { width: 32px; height: 32px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--acento); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 14px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ===== ZONAS ===== */
+.zonas-wrap {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+}
+@media (max-width: 700px) { .zonas-wrap { grid-template-columns: 1fr; } }
+
+.zona-section {}
+.zona-header {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid rgba(21,101,192,0.4);
+}
+.zona-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px; letter-spacing: 3px; color: #fff;
+}
+.zona-badge {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 10px; letter-spacing: 2px;
+  background: rgba(21,101,192,0.25);
+  border: 1px solid rgba(21,101,192,0.5);
+  color: var(--acento-light);
+  padding: 3px 8px; border-radius: 20px;
+}
+
+/* ===== GRILLA DE EQUIPOS ===== */
+.equipos-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+@media (max-width: 500px) { .equipos-grid { grid-template-columns: repeat(3, 1fr); } }
+
+.equipo-card {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px; padding: 12px 6px 10px;
+  cursor: pointer; text-decoration: none;
+  transition: background 0.18s, transform 0.15s, border-color 0.18s, box-shadow 0.18s;
+  position: relative; overflow: hidden;
+  gap: 7px; min-height: 88px;
+}
+.equipo-card:hover {
+  background: rgba(21,101,192,0.15);
+  border-color: rgba(21,101,192,0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(21,101,192,0.2);
+}
+.equipo-card.pos-top3 { border-color: rgba(245,197,24,0.25); }
+.equipo-card.pos-top3:hover { border-color: rgba(245,197,24,0.5); box-shadow: 0 6px 20px rgba(245,197,24,0.15); }
+
+.pos-badge {
+  position: absolute; top: 5px; left: 7px;
+  font-family: 'Bebas Neue', sans-serif; font-size: 11px;
+  color: rgba(255,255,255,0.25); line-height: 1;
+}
+.pos-top3 .pos-badge { color: var(--gold); }
+
+.escudo-img {
+  width: 38px; height: 38px; object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));
+}
+.equipo-nombre {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.5px;
+  color: rgba(255,255,255,0.8);
+  text-align: center; line-height: 1.2;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 100%;
+}
+.equipo-pts {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 13px; color: rgba(255,255,255,0.35); line-height: 1;
+}
+
+/* ===== ERROR ===== */
+.error-msg {
+  text-align: center; padding: 30px 20px;
+  color: rgba(229,57,53,0.7); font-size: 13px; line-height: 1.6;
+}
+.retry-btn {
+  margin-top: 12px; font-family: 'Bebas Neue', sans-serif; font-size: 14px;
+  letter-spacing: 1px; background: rgba(21,101,192,0.2); color: var(--acento-light);
+  border: 1px solid var(--acento); border-radius: 8px; padding: 8px 20px; cursor: pointer;
+}
+
+/* ===== FOOTER ===== */
+#site-footer {
+  text-align: center; padding: 18px;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 11px;
+  letter-spacing: 1px; color: rgba(255,255,255,0.2);
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header id="site-header">
+  <div class="logo">Tribun<span>App</span></div>
+  <a id="seleccion-card" href="seleccion.html">
+    <div class="seleccion-flag">🇦🇷</div>
+    <div class="seleccion-info">
+      <span class="seleccion-label">App especial</span>
+      <span class="seleccion-nombre">SELECCIÓN ARG</span>
+    </div>
+  </a>
+</header>
+
+<!-- CONTENIDO PRINCIPAL -->
+<main id="main">
+  <div id="loading-state">
+    <div class="loading-spinner"></div>
+    <div class="loading-msg">CARGANDO TABLA EN TIEMPO REAL...</div>
+  </div>
+  <div id="content" style="display:none;" class="zonas-wrap">
+    <section class="zona-section" id="zona-a-section">
+      <div class="zona-header">
+        <span class="zona-title">ZONA A</span>
+        <span class="zona-badge">15 EQUIPOS</span>
+      </div>
+      <div class="equipos-grid" id="zona-a-grid"></div>
+    </section>
+    <section class="zona-section" id="zona-b-section">
+      <div class="zona-header">
+        <span class="zona-title">ZONA B</span>
+        <span class="zona-badge">15 EQUIPOS</span>
+      </div>
+      <div class="equipos-grid" id="zona-b-grid"></div>
+    </section>
+  </div>
+  <div id="error-state" style="display:none;" class="error-msg">
+    <div>No se pudo cargar la tabla.<br>Verificá tu conexión.</div>
+    <button class="retry-btn" onclick="init()">REINTENTAR</button>
+  </div>
+</main>
+
+<footer id="site-footer">TribunApp · Liga Profesional Argentina 2026 · Datos en tiempo real</footer>
+
+<script src="js/clubes.js"></script>
+<script>
+const API_KEY  = 'b8bbfc856fd5cf12cd7d697b2b01887d';
+const LEAGUE   = 128;
+const SEASON   = 2026;
+
+// ---- Helpers ----
+function escudoSrc(apiId) {
+  const slug = ESCUDO_MAP[apiId];
+  return slug ? `escudos/${slug}.png` : null;
+}
+
+function nombreCorto(apiId, fallback) {
+  return NOMBRE_CORTO_T[apiId] || fallback || '#' + apiId;
+}
+
+function slugFromId(apiId) {
+  return ESCUDO_MAP[apiId] || null;
+}
+
+// ---- Renderizar zona ----
+function renderZona(teams, containerId) {
+  const grid = document.getElementById(containerId);
+  grid.innerHTML = '';
+  teams.forEach((t, i) => {
+    const slug = slugFromId(t.team.id);
+    if (!slug) return; // equipo desconocido, skip
+    const card = document.createElement('a');
+    card.className = 'equipo-card' + (i < 3 ? ' pos-top3' : '');
+    card.href = `club.html?c=${slug}`;
+
+    const pos = document.createElement('div');
+    pos.className = 'pos-badge';
+    pos.textContent = (i + 1) + '°';
+    card.appendChild(pos);
+
+    const escSrc = escudoSrc(t.team.id);
+    if (escSrc) {
+      const img = document.createElement('img');
+      img.className = 'escudo-img';
+      img.src = escSrc;
+      img.alt = t.team.name;
+      img.onerror = () => { img.style.display = 'none'; };
+      card.appendChild(img);
+    } else {
+      const ph = document.createElement('div');
+      ph.style.cssText = 'width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:22px;';
+      ph.textContent = '⚽';
+      card.appendChild(ph);
+    }
+
+    const nombre = document.createElement('div');
+    nombre.className = 'equipo-nombre';
+    nombre.textContent = nombreCorto(t.team.id, t.team.name);
+    card.appendChild(nombre);
+
+    const pts = document.createElement('div');
+    pts.className = 'equipo-pts';
+    pts.textContent = t.points + ' pts';
+    card.appendChild(pts);
+
+    grid.appendChild(card);
+  });
+}
+
+// ---- Fetch standings ----
+async function fetchStandings() {
+  const res = await fetch(
+    `https://v3.football.api-sports.io/standings?league=${LEAGUE}&season=${SEASON}`,
+    { headers: { 'x-apisports-key': API_KEY } }
+  );
+  if (!res.ok) throw new Error('API error ' + res.status);
+  const data = await res.json();
+  // data.response[0].league.standings es un array con [zonaA, zonaB]
+  const standings = data.response[0].league.standings;
+  return standings; // Array de 2 grupos (Zona A y Zona B)
+}
+
+// ---- Init ----
+async function init() {
+  document.getElementById('loading-state').style.display = 'block';
+  document.getElementById('content').style.display = 'none';
+  document.getElementById('error-state').style.display = 'none';
+  try {
+    const standings = await fetchStandings();
+    if (!standings || standings.length < 2) throw new Error('Datos incompletos');
+
+    // La API devuelve standings como array de grupos: [0]=Zona A, [1]=Zona B (u orden por nombre)
+    // Determinamos cuál es A y cuál es B por el campo group de los equipos
+    let zonaA = standings[0];
+    let zonaB = standings[1];
+
+    // Verificar que tengamos 15 equipos en cada zona (en la Liga Prof Argentina)
+    // Si la API los da en un solo grupo, dividir por cantidad
+    if (!zonaB) {
+      // Sólo un grupo: dividir en 15 y 15
+      zonaA = standings[0].slice(0, 15);
+      zonaB = standings[0].slice(15, 30);
+    }
+
+    // Verificar si hay info de group en el primer registro
+    const firstGroup = standings[0][0]?.group || '';
+    if (firstGroup.toLowerCase().includes('b')) {
+      // Los devolvió al revés
+      [zonaA, zonaB] = [zonaB, zonaA];
+    }
+
+    renderZona(zonaA, 'zona-a-grid');
+    renderZona(zonaB, 'zona-b-grid');
+
+    document.getElementById('loading-state').style.display = 'none';
+    document.getElementById('content').style.display = 'grid';
+  } catch (e) {
+    console.error(e);
+    document.getElementById('loading-state').style.display = 'none';
+    document.getElementById('error-state').style.display = 'block';
+  }
+}
+
+init();
+</script>
+</body>
+</html>
