@@ -974,80 +974,88 @@ function switchTTab(tab, btn) {
 }
 
 // ---- Cargar datos ----
+// La API de league=128 devuelve 4 grupos:
+//   [0]=Zona A Apertura, [1]=Zona B Apertura, [2]=Anual, [3]=Promedios
 async function loadTTabla() {
   try {
     const res = await fetch(`https://v3.football.api-sports.io/standings?league=128&season=2026`, { headers: { 'x-apisports-key': API_KEY } });
     const data = await res.json();
-    let standings = data.response[0].league.standings;
+    const standings = data.response[0].league.standings;
+    // Detectar y ordenar correctamente Zona A / Zona B (índices 0 y 1)
+    let zonaA = standings[0], zonaB = standings[1];
     const firstGroup = (standings[0][0]?.group || '').toLowerCase();
-    if (firstGroup.includes('b')) standings = [standings[1], standings[0]];
-    tTablaData = standings;
+    if (firstGroup.includes('b')) [zonaA, zonaB] = [zonaB, zonaA];
+    // Guardar todos los grupos: [0]=ZonaA, [1]=ZonaB, [2]=Anual, [3]=Promedios
+    tTablaData = [zonaA, zonaB, standings[2], standings[3]];
     renderTabla(tTablaData[tTablaZona === 'A' ? 0 : 1], document.getElementById('t-tabla-content'));
+    // Si los tabs ya estaban abiertos, renderizar
+    if (tAnualLoaded) renderAnual();
+    if (tPromediosLoaded) renderPromedios();
     initPlayoff();
   } catch (e) {
     document.getElementById('t-tabla-content').innerHTML = '<div style="text-align:center;color:#555;padding:30px;font-size:13px;">Error al cargar tabla.</div>';
   }
 }
 
-async function loadTAnual() {
-  tAnualLoaded = true;
+function renderAnual() {
+  const teams = tTablaData?.[2];
   const cont = document.getElementById('t-anual-content');
-  try {
-    const res = await fetch(`https://v3.football.api-sports.io/standings?league=128&season=2026`, { headers: { 'x-apisports-key': API_KEY } });
-    const data = await res.json();
-    const allTeams = (data.response[0]?.league?.standings || []).flat();
-    allTeams.sort((a, b) => b.points - a.points || b.goalsDiff - a.goalsDiff);
-    cont.innerHTML = '';
-    const cols = '20px 22px 1fr 22px 22px 22px 22px 28px 28px 28px';
-    const head = document.createElement('div');
-    head.style.cssText = `display:grid;grid-template-columns:${cols};gap:2px;padding:5px 8px;font-family:"Barlow Condensed",sans-serif;font-size:9px;letter-spacing:1px;color:rgba(255,255,255,0.35);text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,0.06);`;
-    head.innerHTML = '<div>#</div><div></div><div>Equipo</div><div style="text-align:center">PJ</div><div style="text-align:center">G</div><div style="text-align:center">E</div><div style="text-align:center">P</div><div style="text-align:center">+/-</div><div style="text-align:center">DG</div><div style="text-align:right">Pts</div>';
-    cont.appendChild(head);
-    allTeams.forEach((t, i) => {
-      const row = document.createElement('div');
-      row.style.cssText = `display:grid;grid-template-columns:${cols};gap:2px;padding:5px 8px;align-items:center;border-bottom:1px solid rgba(255,255,255,0.04);`;
-      const mk = v => { const d = document.createElement('div'); d.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:12px;text-align:center;color:#aaa;'; d.textContent = v; return d; };
-      const rankEl = document.createElement('div'); rankEl.style.cssText = `font-family:"Bebas Neue",sans-serif;font-size:12px;color:${i < 3 ? '#f5c518' : 'rgba(255,255,255,0.3)'};text-align:center;`; rankEl.textContent = i + 1;
-      const escWrap = document.createElement('div'); escWrap.style.cssText = 'display:flex;align-items:center;justify-content:center;'; escWrap.appendChild(escudoImgT(t.team.id, 20));
-      const name = document.createElement('div'); name.style.cssText = 'font-size:11px;color:#ccc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'; name.textContent = NOMBRE_CORTO_T[t.team.id] || t.team.name;
-      const dg = t.goalsDiff;
-      const dgEl = document.createElement('div'); dgEl.style.cssText = `font-family:"Bebas Neue",sans-serif;font-size:12px;text-align:center;color:${dg > 0 ? '#4caf50' : dg < 0 ? '#e53935' : '#888'};`; dgEl.textContent = dg > 0 ? `+${dg}` : dg;
-      const goles = document.createElement('div'); goles.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:10px;text-align:center;color:#888;white-space:nowrap;'; goles.textContent = `${t.all.goals.for}-${t.all.goals.against}`;
-      const pts = document.createElement('div'); pts.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:15px;text-align:right;color:#fff;font-weight:700;'; pts.textContent = t.points;
-      row.appendChild(rankEl); row.appendChild(escWrap); row.appendChild(name);
-      row.appendChild(mk(t.all.played)); row.appendChild(mk(t.all.win)); row.appendChild(mk(t.all.draw)); row.appendChild(mk(t.all.lose));
-      row.appendChild(goles); row.appendChild(dgEl); row.appendChild(pts);
-      cont.appendChild(row);
-    });
-  } catch (e) { cont.innerHTML = '<div style="text-align:center;color:#555;padding:30px;font-size:13px;">Error al cargar.</div>'; }
+  if (!teams || !teams.length) { cont.innerHTML = '<div style="text-align:center;color:#555;padding:30px;font-size:13px;">Sin datos.</div>'; return; }
+  cont.innerHTML = '';
+  const cols = '20px 22px 1fr 22px 22px 22px 22px 32px';
+  const head = document.createElement('div');
+  head.style.cssText = `display:grid;grid-template-columns:${cols};gap:2px;padding:5px 8px;font-family:"Barlow Condensed",sans-serif;font-size:9px;letter-spacing:1px;color:rgba(255,255,255,0.35);text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,0.06);`;
+  head.innerHTML = '<div>#</div><div></div><div>Equipo</div><div style="text-align:center">PJ</div><div style="text-align:center">G</div><div style="text-align:center">E</div><div style="text-align:center">P</div><div style="text-align:right">Pts</div>';
+  cont.appendChild(head);
+  teams.forEach((t, i) => {
+    const row = document.createElement('div');
+    row.style.cssText = `display:grid;grid-template-columns:${cols};gap:2px;padding:6px 8px;align-items:center;border-bottom:1px solid rgba(255,255,255,0.04);`;
+    const mk = v => { const d = document.createElement('div'); d.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:13px;text-align:center;color:#aaa;'; d.textContent = v; return d; };
+    const rankEl = document.createElement('div'); rankEl.style.cssText = `font-family:"Bebas Neue",sans-serif;font-size:13px;color:${i < 3 ? '#f5c518' : 'rgba(255,255,255,0.3)'};text-align:center;`; rankEl.textContent = t.rank || i + 1;
+    const escWrap = document.createElement('div'); escWrap.style.cssText = 'display:flex;align-items:center;justify-content:center;'; escWrap.appendChild(escudoImgT(t.team.id, 20));
+    const name = document.createElement('div'); name.style.cssText = 'font-size:11px;color:#ccc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'; name.textContent = NOMBRE_CORTO_T[t.team.id] || t.team.name;
+    const pts = document.createElement('div'); pts.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:16px;text-align:right;color:#fff;'; pts.textContent = t.points;
+    row.appendChild(rankEl); row.appendChild(escWrap); row.appendChild(name);
+    row.appendChild(mk(t.all.played)); row.appendChild(mk(t.all.win)); row.appendChild(mk(t.all.draw)); row.appendChild(mk(t.all.lose));
+    row.appendChild(pts);
+    cont.appendChild(row);
+  });
 }
 
-async function loadTPromedios() {
-  tPromediosLoaded = true;
+function renderPromedios() {
+  const teams = tTablaData?.[3];
   const cont = document.getElementById('t-promedios-content');
-  try {
-    const res = await fetch(`https://v3.football.api-sports.io/standings?league=128&season=2026`, { headers: { 'x-apisports-key': API_KEY } });
-    const data = await res.json();
-    const allTeams = (data.response[0]?.league?.standings || []).flat();
-    const withProm = allTeams.map(t => ({ ...t, prom: t.all.played > 0 ? (t.points / t.all.played) : 0 })).sort((a, b) => b.prom - a.prom);
-    cont.innerHTML = '';
-    const cols = '20px 22px 1fr 22px 40px';
-    const head = document.createElement('div');
-    head.style.cssText = `display:grid;grid-template-columns:${cols};gap:2px;padding:5px 8px;font-family:"Barlow Condensed",sans-serif;font-size:9px;letter-spacing:1px;color:rgba(255,255,255,0.35);text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,0.06);`;
-    head.innerHTML = '<div>#</div><div></div><div>Equipo</div><div style="text-align:center">PJ</div><div style="text-align:right">Prom.</div>';
-    cont.appendChild(head);
-    withProm.forEach((t, i) => {
-      const row = document.createElement('div');
-      row.style.cssText = `display:grid;grid-template-columns:${cols};gap:2px;padding:5px 8px;align-items:center;border-bottom:1px solid rgba(255,255,255,0.04);`;
-      const rankEl = document.createElement('div'); rankEl.style.cssText = `font-family:"Bebas Neue",sans-serif;font-size:12px;color:${i < 3 ? '#f5c518' : 'rgba(255,255,255,0.3)'};text-align:center;`; rankEl.textContent = i + 1;
-      const escWrap = document.createElement('div'); escWrap.style.cssText = 'display:flex;align-items:center;justify-content:center;'; escWrap.appendChild(escudoImgT(t.team.id, 20));
-      const name = document.createElement('div'); name.style.cssText = 'font-size:11px;color:#ccc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'; name.textContent = NOMBRE_CORTO_T[t.team.id] || t.team.name;
-      const pj = document.createElement('div'); pj.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:12px;text-align:center;color:#aaa;'; pj.textContent = t.all.played;
-      const promEl = document.createElement('div'); promEl.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:16px;text-align:right;color:#fff;'; promEl.textContent = t.prom.toFixed(2);
-      row.appendChild(rankEl); row.appendChild(escWrap); row.appendChild(name); row.appendChild(pj); row.appendChild(promEl);
-      cont.appendChild(row);
-    });
-  } catch (e) { cont.innerHTML = '<div style="text-align:center;color:#555;padding:30px;font-size:13px;">Error al cargar.</div>'; }
+  if (!teams || !teams.length) { cont.innerHTML = '<div style="text-align:center;color:#555;padding:30px;font-size:13px;">Sin datos.</div>'; return; }
+  cont.innerHTML = '';
+  const cols = '20px 22px 1fr 32px 52px';
+  const head = document.createElement('div');
+  head.style.cssText = `display:grid;grid-template-columns:${cols};gap:2px;padding:5px 8px;font-family:"Barlow Condensed",sans-serif;font-size:9px;letter-spacing:1px;color:rgba(255,255,255,0.35);text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,0.06);`;
+  head.innerHTML = '<div>#</div><div></div><div>Equipo</div><div style="text-align:center">PJ</div><div style="text-align:right">Promedio</div>';
+  cont.appendChild(head);
+  teams.forEach((t, i) => {
+    const avg = t.all.played > 0 ? (t.points / t.all.played).toFixed(3) : '—';
+    const row = document.createElement('div');
+    row.style.cssText = `display:grid;grid-template-columns:${cols};gap:2px;padding:6px 8px;align-items:center;border-bottom:1px solid rgba(255,255,255,0.04);`;
+    const rankEl = document.createElement('div'); rankEl.style.cssText = `font-family:"Bebas Neue",sans-serif;font-size:13px;color:${i < 3 ? '#f5c518' : 'rgba(255,255,255,0.3)'};text-align:center;`; rankEl.textContent = t.rank || i + 1;
+    const escWrap = document.createElement('div'); escWrap.style.cssText = 'display:flex;align-items:center;justify-content:center;'; escWrap.appendChild(escudoImgT(t.team.id, 20));
+    const name = document.createElement('div'); name.style.cssText = 'font-size:11px;color:#ccc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'; name.textContent = NOMBRE_CORTO_T[t.team.id] || t.team.name;
+    const pj = document.createElement('div'); pj.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:13px;text-align:center;color:#aaa;'; pj.textContent = t.all.played;
+    const promEl = document.createElement('div'); promEl.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:13px;text-align:right;color:#fff;'; promEl.textContent = avg;
+    row.appendChild(rankEl); row.appendChild(escWrap); row.appendChild(name); row.appendChild(pj); row.appendChild(promEl);
+    cont.appendChild(row);
+  });
+}
+
+function loadTAnual() {
+  tAnualLoaded = true;
+  if (tTablaData) renderAnual();
+  // si tTablaData aún no cargó, loadTTabla() llamará renderAnual() cuando termine
+}
+
+function loadTPromedios() {
+  tPromediosLoaded = true;
+  if (tTablaData) renderPromedios();
+  // si tTablaData aún no cargó, loadTTabla() llamará renderPromedios() cuando termine
 }
 </script>
 </body>
