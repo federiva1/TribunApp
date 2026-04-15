@@ -31,21 +31,44 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .header-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; color: #fff; flex: 1; }
 .header-sub { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 1px; color: var(--celeste); }
 
-/* ===== TABS ===== */
-#main { max-width: 480px; margin: 0 auto; padding: 0 0 40px; background: var(--dark2); min-height: calc(100vh - 64px); }
-.tab-bar {
-  display: flex; gap: 4px; background: rgba(255,255,255,0.04);
-  border-radius: 10px; padding: 4px; margin: 14px 14px 0;
+/* ===== MAIN ===== */
+#main { max-width: 480px; margin: 0 auto; background: var(--dark2); min-height: calc(100vh - 64px); }
+
+/* ===== HERO PANELS (home selección) ===== */
+#sel-home {
+  display: flex; flex-direction: column; height: calc(100vh - 64px);
 }
-.tab-btn {
-  flex: 1; font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 1px;
-  border: none; background: transparent; color: rgba(255,255,255,0.4);
-  border-radius: 7px; padding: 9px 4px; cursor: pointer; transition: all 0.2s;
+.sel-hero-panels {
+  display: flex; flex: 1;
 }
-.tab-btn.active { background: var(--celeste-dark); color: #fff; }
+.sel-hero-panel {
+  flex: 1; position: relative;
+  background-size: cover; background-position: center;
+  cursor: pointer; overflow: hidden;
+  transition: flex 0.35s ease;
+}
+.sel-hero-panel:hover { flex: 1.12; }
+.sel-hero-panel + .sel-hero-panel { border-left: 2px solid var(--celeste-dark); }
+.sel-hero-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, rgba(0,0,50,0.15) 0%, rgba(0,0,30,0.72) 65%, rgba(0,0,20,0.93) 100%);
+}
+.sel-hero-content {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 14px 12px 18px; z-index: 2;
+}
+.sel-hero-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px; letter-spacing: 2px; color: #fff; line-height: 1;
+}
+.sel-hero-sub {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px; letter-spacing: 1px;
+  color: rgba(255,255,255,0.5); margin-top: 5px;
+}
 
 /* ===== CONVOCATORIA ===== */
-#conv-section { padding: 14px; }
+#conv-section { display: none; padding: 0; }
 .section-title {
   font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 2px;
   color: #fff; margin-bottom: 4px;
@@ -220,14 +243,30 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 </header>
 
 <main id="main">
-  <!-- TABS -->
-  <div class="tab-bar">
-    <button class="tab-btn active" onclick="switchTab('convocatoria', this)">🏆 Armá tu convocatoria</button>
-    <button class="tab-btn" onclick="switchTab('formacion', this)">⚽ Armá tu formación</button>
+
+  <!-- ===== HOME: HERO PANELS ===== -->
+  <div id="sel-home">
+    <div class="sel-hero-panels">
+      <div class="sel-hero-panel" style="background-image:url('fotos/bg-puntajes.png')" onclick="openSelSection('convocatoria')">
+        <div class="sel-hero-overlay"></div>
+        <div class="sel-hero-content">
+          <div class="sel-hero-title">ARMÁ TU CONVOCATORIA</div>
+          <div class="sel-hero-sub">Elegí los 26 jugadores</div>
+        </div>
+      </div>
+      <div class="sel-hero-panel" style="background-image:url('fotos/bg-formacion.png')" onclick="openSelSection('formacion')">
+        <div class="sel-hero-overlay"></div>
+        <div class="sel-hero-content">
+          <div class="sel-hero-title">ARMÁ TU FORMACIÓN</div>
+          <div class="sel-hero-sub">Elegí los 11 titulares</div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- ===== SECCIÓN 1: CONVOCATORIA ===== -->
   <div id="conv-section">
+    <button onclick="closeSelSection()" style="font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:1px;color:rgba(255,255,255,0.5);cursor:pointer;border:none;background:none;padding:12px 14px 4px;display:flex;align-items:center;gap:4px;">← Volver</button>
     <div style="width:100%;height:110px;background:url('fotos/bg-puntajes.png') center/cover no-repeat;position:relative;overflow:hidden;margin-bottom:2px;">
       <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,20,80,0.3) 0%,rgba(13,13,26,0.9) 100%);display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;padding:12px 14px;gap:3px;">
         <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:#fff;line-height:1;">🏆 ARMÁ TU CONVOCATORIA</div>
@@ -256,7 +295,8 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   </div>
 
   <!-- ===== SECCIÓN 2: FORMACIÓN ===== -->
-  <div id="form-section" style="display:none;">
+  <div id="form-section" style="display:none;padding:12px;">
+    <button onclick="closeSelSection()" style="font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:1px;color:rgba(255,255,255,0.5);cursor:pointer;border:none;background:none;padding:0;margin-bottom:10px;display:flex;align-items:center;gap:4px;">← Volver</button>
     <div style="margin-bottom:10px;text-align:center;">
       <div class="section-title">ARMÁ TU FORMACIÓN</div>
       <div style="font-size:11px;color:#888;">Arrastrá jugadores de la convocatoria a la cancha</div>
@@ -345,14 +385,18 @@ const toast = document.getElementById('toast');
 function showToast(msg) { toast.textContent = msg; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 3000); }
 
 // ============================================================
-// TABS
+// NAVEGACIÓN HOME ↔ SECCIÓN
 // ============================================================
-function switchTab(tab, btn) {
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('conv-section').style.display = tab === 'convocatoria' ? 'block' : 'none';
-  document.getElementById('form-section').style.display = tab === 'formacion' ? 'block' : 'none';
-  if (tab === 'formacion') refreshFormationSection();
+function openSelSection(section) {
+  document.getElementById('sel-home').style.display = 'none';
+  document.getElementById('conv-section').style.display = section === 'convocatoria' ? 'block' : 'none';
+  document.getElementById('form-section').style.display = section === 'formacion' ? 'block' : 'none';
+  if (section === 'formacion') refreshFormationSection();
+}
+function closeSelSection() {
+  document.getElementById('sel-home').style.display = 'flex';
+  document.getElementById('conv-section').style.display = 'none';
+  document.getElementById('form-section').style.display = 'none';
 }
 
 // ============================================================

@@ -47,27 +47,54 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   letter-spacing: 1px; color: rgba(255,255,255,0.4); margin-top: 2px;
 }
 
-/* Menú de secciones */
-.menu-section { padding: 20px 14px; }
-.menu-title {
-  font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 2px;
-  color: rgba(255,255,255,0.3); text-transform: uppercase; margin-bottom: 12px;
+/* ===== HERO PANELS (menú principal) ===== */
+.hero-panels {
+  display: flex;
+  height: calc(100vh - 68px - 48px);
+  min-height: 280px;
 }
-.menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.menu-card {
-  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 14px; padding: 18px 14px;
-  cursor: pointer; transition: background 0.18s, border-color 0.18s, transform 0.15s;
-  display: flex; flex-direction: column; gap: 8px;
+.hero-panel {
+  flex: 1; position: relative;
+  background-size: cover; background-position: center;
+  cursor: pointer; overflow: hidden;
+  transition: flex 0.35s ease;
 }
-.menu-card:hover {
-  background: rgba(255,255,255,0.09);
-  border-color: var(--club-color);
-  transform: translateY(-2px);
+.hero-panel:hover { flex: 1.12; }
+.hero-panel + .hero-panel { border-left: 2px solid var(--club-color); }
+.hero-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.72) 65%, rgba(0,0,0,0.92) 100%);
+  transition: background 0.3s;
 }
-.menu-card-icon { font-size: 28px; line-height: 1; }
-.menu-card-title { font-family: 'Bebas Neue', sans-serif; font-size: 17px; letter-spacing: 1px; color: #fff; }
-.menu-card-sub { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 0.5px; color: rgba(255,255,255,0.4); }
+.hero-panel:hover .hero-overlay {
+  background: linear-gradient(to bottom, rgba(0,0,0,0.04) 0%, rgba(0,0,0,0.58) 65%, rgba(0,0,0,0.85) 100%);
+}
+.hero-content {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 14px 12px 18px; z-index: 2;
+}
+.hero-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 24px; letter-spacing: 2px; color: #fff; line-height: 1;
+}
+.hero-sub {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px; letter-spacing: 1px;
+  color: rgba(255,255,255,0.5); margin-top: 5px;
+}
+/* ===== SECONDARY ROW ===== */
+.secondary-row {
+  display: flex; height: 48px;
+  border-top: 1px solid rgba(255,255,255,0.07);
+}
+.sec-btn {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+  font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 1px;
+  color: rgba(255,255,255,0.45); cursor: pointer;
+  transition: color 0.2s, background 0.2s;
+}
+.sec-btn:hover { color: #fff; background: rgba(255,255,255,0.05); }
+.sec-btn + .sec-btn { border-left: 1px solid rgba(255,255,255,0.07); }
 
 /* ===== OVERLAY SCREENS ===== */
 .overlay-screen {
@@ -339,31 +366,26 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
     </div>
   </header>
 
-  <!-- MENÚ PRINCIPAL -->
-  <div class="menu-section">
-    <div class="menu-title">¿Qué querés hacer?</div>
-    <div class="menu-grid">
-      <div class="menu-card" onclick="openSection('formation')">
-        <div class="menu-card-icon">⚽</div>
-        <div class="menu-card-title">ARMÁ TU FORMACIÓN</div>
-        <div class="menu-card-sub">Elegí los 11 titulares</div>
-      </div>
-      <div class="menu-card" onclick="openSection('scores')">
-        <div class="menu-card-icon">⭐</div>
-        <div class="menu-card-title">PUNTUÁ EL PARTIDO</div>
-        <div class="menu-card-sub">Nota del 1 al 10</div>
-      </div>
-      <div class="menu-card" onclick="openSection('fechas')">
-        <div class="menu-card-icon">📅</div>
-        <div class="menu-card-title">VER FECHAS</div>
-        <div class="menu-card-sub">Resultados y formaciones</div>
-      </div>
-      <div class="menu-card" onclick="openSection('tabla')">
-        <div class="menu-card-icon">📊</div>
-        <div class="menu-card-title">VER TABLA</div>
-        <div class="menu-card-sub">Posiciones en tiempo real</div>
+  <!-- MENÚ PRINCIPAL — HERO PANELS -->
+  <div class="hero-panels">
+    <div class="hero-panel" style="background-image:url('fotos/bg-formacion.png')" onclick="openSection('formation')">
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <div class="hero-title">ARMÁ TU FORMACIÓN</div>
+        <div class="hero-sub">Elegí los 11 titulares</div>
       </div>
     </div>
+    <div class="hero-panel" style="background-image:url('fotos/bg-puntajes.png')" onclick="openSection('scores')">
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <div class="hero-title">PONÉ TU PUNTAJE</div>
+        <div class="hero-sub">Nota del 1 al 10</div>
+      </div>
+    </div>
+  </div>
+  <div class="secondary-row">
+    <div class="sec-btn" onclick="openSection('fechas')">📅 VER FECHAS</div>
+    <div class="sec-btn" onclick="openSection('tabla')">📊 VER TABLA</div>
   </div>
 </div>
 </div>
