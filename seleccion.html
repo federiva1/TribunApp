@@ -43,15 +43,24 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 }
 .sel-hero-panel {
   flex: 1; position: relative;
-  background-size: cover; background-position: center;
   cursor: pointer; overflow: hidden;
   transition: flex 0.35s ease;
 }
 .sel-hero-panel:hover { flex: 1.12; }
 .sel-hero-panel + .sel-hero-panel { border-left: 2px solid var(--celeste-dark); }
+.sel-hero-bg {
+  position: absolute; inset: 0;
+  background-size: cover; background-position: center;
+  filter: grayscale(100%) brightness(0.75) contrast(1.1);
+}
+.sel-hero-color-tint {
+  position: absolute; inset: 0;
+  background: var(--celeste-dark);
+  opacity: 0.5;
+}
 .sel-hero-overlay {
   position: absolute; inset: 0;
-  background: linear-gradient(to bottom, rgba(0,0,50,0.15) 0%, rgba(0,0,30,0.72) 65%, rgba(0,0,20,0.93) 100%);
+  background: linear-gradient(to bottom, transparent 25%, rgba(0,0,0,0.5) 65%, rgba(0,0,0,0.88) 100%);
 }
 .sel-hero-content {
   position: absolute; bottom: 0; left: 0; right: 0;
@@ -247,14 +256,18 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   <!-- ===== HOME: HERO PANELS ===== -->
   <div id="sel-home">
     <div class="sel-hero-panels">
-      <div class="sel-hero-panel" style="background-image:url('fotos/bg-puntajes.png')" onclick="openSelSection('convocatoria')">
+      <div class="sel-hero-panel" onclick="openSelSection('convocatoria')">
+        <div class="sel-hero-bg" style="background-image:url('fotos/bg-puntajes.png')"></div>
+        <div class="sel-hero-color-tint"></div>
         <div class="sel-hero-overlay"></div>
         <div class="sel-hero-content">
           <div class="sel-hero-title">ARMÁ TU CONVOCATORIA</div>
           <div class="sel-hero-sub">Elegí los 26 jugadores</div>
         </div>
       </div>
-      <div class="sel-hero-panel" style="background-image:url('fotos/bg-formacion.png')" onclick="openSelSection('formacion')">
+      <div class="sel-hero-panel" onclick="openSelSection('formacion')">
+        <div class="sel-hero-bg" style="background-image:url('fotos/bg-formacion.png')"></div>
+        <div class="sel-hero-color-tint"></div>
         <div class="sel-hero-overlay"></div>
         <div class="sel-hero-content">
           <div class="sel-hero-title">ARMÁ TU FORMACIÓN</div>

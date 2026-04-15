@@ -55,19 +55,27 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 }
 .hero-panel {
   flex: 1; position: relative;
-  background-size: cover; background-position: center;
   cursor: pointer; overflow: hidden;
   transition: flex 0.35s ease;
 }
 .hero-panel:hover { flex: 1.12; }
 .hero-panel + .hero-panel { border-left: 2px solid var(--club-color); }
+/* Imagen de fondo — desaturada */
+.hero-bg {
+  position: absolute; inset: 0;
+  background-size: cover; background-position: center;
+  filter: grayscale(100%) brightness(0.75) contrast(1.1);
+}
+/* Tint con el color del club */
+.hero-color-tint {
+  position: absolute; inset: 0;
+  background: var(--club-color);
+  opacity: 0.45;
+}
+/* Gradiente oscuro para legibilidad del texto */
 .hero-overlay {
   position: absolute; inset: 0;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.72) 65%, rgba(0,0,0,0.92) 100%);
-  transition: background 0.3s;
-}
-.hero-panel:hover .hero-overlay {
-  background: linear-gradient(to bottom, rgba(0,0,0,0.04) 0%, rgba(0,0,0,0.58) 65%, rgba(0,0,0,0.85) 100%);
+  background: linear-gradient(to bottom, transparent 25%, rgba(0,0,0,0.55) 65%, rgba(0,0,0,0.88) 100%);
 }
 .hero-content {
   position: absolute; bottom: 0; left: 0; right: 0;
@@ -368,14 +376,18 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 
   <!-- MENÚ PRINCIPAL — HERO PANELS -->
   <div class="hero-panels">
-    <div class="hero-panel" style="background-image:url('fotos/bg-formacion.png')" onclick="openSection('formation')">
+    <div class="hero-panel" onclick="openSection('formation')">
+      <div class="hero-bg" style="background-image:url('fotos/bg-formacion.png')"></div>
+      <div class="hero-color-tint"></div>
       <div class="hero-overlay"></div>
       <div class="hero-content">
         <div class="hero-title">ARMÁ TU FORMACIÓN</div>
         <div class="hero-sub">Elegí los 11 titulares</div>
       </div>
     </div>
-    <div class="hero-panel" style="background-image:url('fotos/bg-puntajes.png')" onclick="openSection('scores')">
+    <div class="hero-panel" onclick="openSection('scores')">
+      <div class="hero-bg" style="background-image:url('fotos/bg-puntajes.png')"></div>
+      <div class="hero-color-tint"></div>
       <div class="hero-overlay"></div>
       <div class="hero-content">
         <div class="hero-title">PONÉ TU PUNTAJE</div>
