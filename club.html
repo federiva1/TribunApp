@@ -60,23 +60,9 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 }
 .hero-panel:hover { flex: 1.12; }
 .hero-panel + .hero-panel { border-left: 2px solid var(--club-color); }
-/* Imagen de fondo — desaturada */
 .hero-bg {
   position: absolute; inset: 0;
   background-size: cover; background-position: center;
-  filter: grayscale(100%) brightness(0.75) contrast(1.1);
-}
-/* Tint panel izquierdo — color primario */
-.hero-color-tint {
-  position: absolute; inset: 0;
-  background: var(--club-color);
-  opacity: 0.45;
-}
-/* Tint panel derecho — color secundario */
-.hero-color-tint2 {
-  position: absolute; inset: 0;
-  background: var(--club-color2);
-  opacity: 0.45;
 }
 /* Gradiente oscuro para legibilidad del texto */
 .hero-overlay {
@@ -383,7 +369,6 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   <div class="hero-panels">
     <div class="hero-panel" onclick="openSection('formation')">
       <div class="hero-bg" style="background-image:url('fotos/bg-formacion.png')"></div>
-      <div class="hero-color-tint"></div>
       <div class="hero-overlay"></div>
       <div class="hero-content">
         <div class="hero-title">ARMÁ TU FORMACIÓN</div>
@@ -392,7 +377,6 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
     </div>
     <div class="hero-panel" onclick="openSection('scores')">
       <div class="hero-bg" style="background-image:url('fotos/bg-puntajes.png')"></div>
-      <div class="hero-color-tint2"></div>
       <div class="hero-overlay"></div>
       <div class="hero-content">
         <div class="hero-title">PONÉ TU PUNTAJE</div>
