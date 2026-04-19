@@ -361,7 +361,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 <div id="home-app">
   <!-- HEADER DINÁMICO -->
   <header class="club-header">
-    <button class="club-header-back" onclick="window.location.href='index.html'">← Inicio</button>
+    <button class="club-header-back" id="back-btn">← Inicio</button>
     <img class="club-header-escudo" id="club-escudo-header" src="" alt="" onerror="this.style.display='none'">
     <div class="club-header-info">
       <div class="club-header-nombre" id="club-nombre-header">Cargando...</div>
@@ -548,6 +548,7 @@ const API_KEY_TABLA = 'b8bbfc856fd5cf12cd7d697b2b01887d';
 // ---- Leer club desde URL ----
 const params = new URLSearchParams(window.location.search);
 const CLUB_SLUG = params.get('c') || '';
+const COPA      = params.get('copa') || '';  // 'libertadores' | 'sudamericana' | ''
 const CLUB = CLUBES_CONFIG[CLUB_SLUG];
 
 if (!CLUB) {
@@ -563,7 +564,11 @@ document.title = `TribunApp — ${CLUB.nombre}`;
 // ---- Config dinámica de la fecha ----
 // Estos datos se actualiza cada fecha. El squad de "quien jugó" se toma de CLUB.squad cuando exista playedSquad.
 // Por defecto se usa el squad completo del club.
-const RIVAL         = CLUB.rivalActual    || 'Por definir';
+const RIVAL = (
+  COPA === 'libertadores' ? CLUB.rivalLibertadores :
+  COPA === 'sudamericana' ? CLUB.rivalSudamericana :
+  CLUB.rivalActual
+) || 'Por definir';
 const LS_KEY         = `${CLUB_SLUG}_formacion`;
 const LS_FORMATION_KEY = `${CLUB_SLUG}_formacion_data`;
 const LS_SCORES_KEY  = `${CLUB_SLUG}_puntajes`;
@@ -578,6 +583,9 @@ const FECHAS         = CLUB.fechas        || [];
 const FOTO = fid => `fotos/${CLUB_SLUG}/${fid}.png`;
 
 // ---- Render header ----
+document.getElementById('back-btn').onclick = () => {
+  window.location.href = COPA ? 'copas.html' : 'index.html';
+};
 document.getElementById('club-escudo-header').src = `escudos/${CLUB_SLUG}.png`;
 document.getElementById('club-nombre-header').textContent = CLUB.nombre;
 (CLUB.colores || []).forEach(c => {

@@ -13,6 +13,7 @@ const CLUBES_CONFIG = {
     id: 450, nombre: 'Estudiantes de La Plata', nombreCorto: 'Estudiantes',
     color: '#e53935', colorSecundario: '#fff',
     colores: ['#e53935', '#fff'],
+    rivalLibertadores: 'Flamengo',
     rivalActual: 'Talleres',
     squad: []
   },
@@ -20,6 +21,7 @@ const CLUBES_CONFIG = {
     id: 451, nombre: 'Boca Juniors', nombreCorto: 'Boca',
     color: '#003087', colorSecundario: '#f5c518',
     colores: ['#003087', '#f5c518'],
+    rivalLibertadores: 'Cruzeiro',
     rivalActual: 'Def. Justicia',
     squad: []
   },
@@ -41,6 +43,7 @@ const CLUBES_CONFIG = {
     id: 446, nombre: 'Lanús', nombreCorto: 'Lanús',
     color: '#006847', colorSecundario: '#fff',
     colores: ['#7b1c1c'],
+    rivalLibertadores: 'LDU de Quito',
     rivalActual: 'Gimnasia M',
     squad: []
   },
@@ -62,6 +65,7 @@ const CLUBES_CONFIG = {
     id: 460, nombre: 'San Lorenzo', nombreCorto: 'San Lorenzo',
     color: '#003087', colorSecundario: '#e53935',
     colores: ['#003087', '#e53935'],
+    rivalSudamericana: 'Santos',
     rivalActual: 'Vélez',
     squad: []
   },
@@ -69,6 +73,7 @@ const CLUBES_CONFIG = {
     id: 1064, nombre: 'Platense', nombreCorto: 'Platense',
     color: '#003087', colorSecundario: '#f5c518',
     colores: ['#6d4c41', '#fff'],
+    rivalLibertadores: 'Santa Fe',
     rivalActual: 'Cen. Córdoba',
     squad: []
   },
@@ -97,6 +102,7 @@ const CLUBES_CONFIG = {
     id: 476, nombre: 'Deportivo Riestra', nombreCorto: 'Riestra',
     color: '#e53935', colorSecundario: '#fff',
     colores: ['#fff', '#1a1a1a'],
+    rivalSudamericana: 'Atletico Torque',
     rivalActual: 'Talleres',
     squad: []
   },
@@ -111,6 +117,7 @@ const CLUBES_CONFIG = {
     id: 473, nombre: 'Independiente Rivadavia', nombreCorto: 'Ind. Rivadavia',
     color: '#003087', colorSecundario: '#fff',
     colores: ['#1a237e', '#fff'],
+    rivalLibertadores: 'Deportivo La Guaira',
     rivalActual: 'Banfield',
     squad: []
   },
@@ -118,6 +125,7 @@ const CLUBES_CONFIG = {
     id: 435, nombre: 'River Plate', nombreCorto: 'River',
     color: '#e53935', colorSecundario: '#fff',
     colores: ['#e53935', '#fff'],
+    rivalSudamericana: 'RB Bragantino',
     rivalActual: 'Aldosivi',
     squad: []
   },
@@ -139,6 +147,7 @@ const CLUBES_CONFIG = {
     id: 436, nombre: 'Racing Club', nombreCorto: 'Racing',
     color: '#1a1a1a', colorSecundario: '#e53935',
     colores: ['#29b6f6', '#fff'],
+    rivalSudamericana: 'Caracas FC',
     rivalActual: 'Barracas C',
     squad: []
   },
@@ -146,6 +155,7 @@ const CLUBES_CONFIG = {
     id: 437, nombre: 'Rosario Central', nombreCorto: 'Rosario C',
     color: '#f5c518', colorSecundario: '#1a1a1a',
     colores: ['#003087', '#f5c518'],
+    rivalLibertadores: 'UCV',
     rivalActual: 'Sarmiento',
     squad: []
   },
@@ -153,6 +163,7 @@ const CLUBES_CONFIG = {
     id: 452, nombre: 'Tigre', nombreCorto: 'Tigre',
     color: '#e53935', colorSecundario: '#f5c518',
     colores: ['#e53935', '#003087'],
+    rivalSudamericana: 'America de Cali',
     rivalActual: 'Huracán',
     squad: []
   },
@@ -160,6 +171,7 @@ const CLUBES_CONFIG = {
     id: 2432, nombre: 'Barracas Central', nombreCorto: 'Barracas C',
     color: '#e53935', colorSecundario: '#fff',
     colores: ['#e53935', '#fff'],
+    rivalSudamericana: 'A. Italiano',
     rivalActual: 'Belgrano',
     squad: []
   },

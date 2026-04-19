@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TribunApp — Copas Internacionales</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --dark:  #0d0d1a;
+  --dark2: #1a1a2e;
+  --lib-color: #1b5e20;
+  --lib-light: #66bb6a;
+  --sud-color: #e65100;
+  --sud-light: #ffa726;
+  --gold: #f5c518;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: var(--dark); color: #fff; overflow-x: hidden; }
+
+/* ===== HEADER ===== */
+#site-header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  padding: 12px 16px 10px;
+  background: linear-gradient(180deg, rgba(27,94,32,0.18) 0%, transparent 100%);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  position: sticky; top: 0; z-index: 50; backdrop-filter: blur(10px);
+  gap: 10px;
+}
+.back-home {
+  display: flex; align-items: center; gap: 5px;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 1px;
+  color: rgba(255,255,255,0.45); cursor: pointer; text-decoration: none;
+  background: none; border: none; padding: 0;
+  transition: color 0.2s;
+}
+.back-home:hover { color: #fff; }
+.copas-title-wrap {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+}
+.copas-trophy { width: 32px; height: 32px; object-fit: contain; }
+.copas-heading {
+  font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 3px;
+  background: linear-gradient(135deg, var(--lib-light) 0%, var(--sud-light) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.header-spacer { width: 60px; }
+
+/* ===== MAIN ===== */
+#main { padding: 20px 16px 40px; max-width: 800px; margin: 0 auto; }
+
+/* ===== SECCIÓN DE COPA ===== */
+.copa-section { margin-bottom: 36px; }
+.copa-header {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 16px; padding-bottom: 12px;
+  border-bottom: 2px solid;
+}
+.copa-header.lib { border-color: rgba(27,94,32,0.6); }
+.copa-header.sud { border-color: rgba(230,81,0,0.6); }
+
+.copa-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px; letter-spacing: 3px; color: #fff;
+}
+.copa-badge {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 10px; letter-spacing: 2px;
+  padding: 3px 10px; border-radius: 20px;
+}
+.copa-badge.lib {
+  background: rgba(27,94,32,0.3); border: 1px solid rgba(102,187,106,0.4);
+  color: var(--lib-light);
+}
+.copa-badge.sud {
+  background: rgba(230,81,0,0.2); border: 1px solid rgba(255,167,38,0.4);
+  color: var(--sud-light);
+}
+
+/* ===== GRILLA ===== */
+.equipos-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+@media (max-width: 500px) { .equipos-grid { grid-template-columns: repeat(2, 1fr); } }
+
+.equipo-card {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px; padding: 16px 8px 14px;
+  cursor: pointer; text-decoration: none;
+  transition: background 0.18s, transform 0.15s, border-color 0.18s, box-shadow 0.18s;
+  gap: 9px;
+}
+.equipo-card.lib:hover {
+  background: rgba(27,94,32,0.2);
+  border-color: rgba(102,187,106,0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(27,94,32,0.25);
+}
+.equipo-card.sud:hover {
+  background: rgba(230,81,0,0.15);
+  border-color: rgba(255,167,38,0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(230,81,0,0.2);
+}
+.escudo-img {
+  width: 44px; height: 44px; object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));
+}
+.equipo-nombre {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12px; font-weight: 600; letter-spacing: 0.5px;
+  color: rgba(255,255,255,0.85); text-align: center; line-height: 1.2;
+}
+.equipo-rival {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 10px; letter-spacing: 0.5px;
+  color: rgba(255,255,255,0.3); text-align: center; line-height: 1.2;
+}
+</style>
+</head>
+<body>
+
+<header id="site-header">
+  <a class="back-home" href="index.html">← Inicio</a>
+  <div class="copas-title-wrap">
+    <img class="copas-trophy" src="fotos/copas.png" alt="Copas">
+    <span class="copas-heading">COPAS INTERNACIONALES</span>
+  </div>
+  <div class="header-spacer"></div>
+</header>
+
+<main id="main">
+
+  <!-- LIBERTADORES -->
+  <section class="copa-section">
+    <div class="copa-header lib">
+      <span class="copa-title">🏆 COPA LIBERTADORES</span>
+      <span class="copa-badge lib">2026</span>
+    </div>
+    <div class="equipos-grid" id="lib-grid"></div>
+  </section>
+
+  <!-- SUDAMERICANA -->
+  <section class="copa-section">
+    <div class="copa-header sud">
+      <span class="copa-title">🥈 COPA SUDAMERICANA</span>
+      <span class="copa-badge sud">2026</span>
+    </div>
+    <div class="equipos-grid" id="sud-grid"></div>
+  </section>
+
+</main>
+
+<script src="js/clubes.js"></script>
+<script>
+const LIBERTADORES = ['estudiantes','independienterivadavia','bocajuniors','clubatleticoplatense','lanus','rosariocentral'];
+const SUDAMERICANA = ['tigre','sanlorenzo','racingclub','deportivoriestra','riverplate','barracascentral'];
+
+function renderGrid(slugs, containerId, copa) {
+  const grid = document.getElementById(containerId);
+  slugs.forEach(slug => {
+    const club = CLUBES_CONFIG[slug];
+    if (!club) return;
+    const rival = copa === 'libertadores' ? club.rivalLibertadores : club.rivalSudamericana;
+    const card = document.createElement('a');
+    card.className = `equipo-card ${copa === 'libertadores' ? 'lib' : 'sud'}`;
+    card.href = `club.html?c=${slug}&copa=${copa}`;
+    card.innerHTML = `
+      <img class="escudo-img" src="escudos/${slug}.png" alt="${club.nombreCorto}" onerror="this.style.opacity=0.3">
+      <div class="equipo-nombre">${club.nombreCorto}</div>
+      ${rival ? `<div class="equipo-rival">vs ${rival}</div>` : ''}
+    `;
+    grid.appendChild(card);
+  });
+}
+
+renderGrid(LIBERTADORES, 'lib-grid', 'libertadores');
+renderGrid(SUDAMERICANA, 'sud-grid', 'sudamericana');
+</script>
+</body>
+</html>

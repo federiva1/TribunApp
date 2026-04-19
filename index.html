@@ -21,7 +21,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 /* ===== HEADER ===== */
 #site-header {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: 1fr auto auto 1fr;
   align-items: center;
   padding: 12px 16px 10px;
   background: linear-gradient(180deg, rgba(21,101,192,0.18) 0%, transparent 100%);
@@ -56,6 +56,21 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .seleccion-info { display: flex; flex-direction: column; }
 .seleccion-label { font-family: 'Barlow Condensed', sans-serif; font-size: 9px; letter-spacing: 2px; color: var(--acento-light); text-transform: uppercase; }
 .seleccion-nombre { font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 1px; color: #fff; line-height: 1.1; }
+
+/* ===== COPAS (header) ===== */
+#copas-card {
+  display: flex; align-items: center; gap: 8px;
+  background: linear-gradient(135deg, rgba(245,197,24,0.1) 0%, rgba(27,94,32,0.18) 100%);
+  border: 1px solid rgba(245,197,24,0.3);
+  border-radius: 12px; padding: 6px 12px;
+  cursor: pointer; text-decoration: none;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  justify-self: center;
+}
+#copas-card:hover {
+  background: linear-gradient(135deg, rgba(245,197,24,0.2) 0%, rgba(27,94,32,0.3) 100%);
+  transform: translateY(-1px); box-shadow: 0 4px 18px rgba(245,197,24,0.2);
+}
 
 /* ===== BOTÓN TABLA (header derecha) ===== */
 #tabla-header-btn {
@@ -237,6 +252,14 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
     <div class="seleccion-info">
       <span class="seleccion-label">App especial</span>
       <span class="seleccion-nombre">SELECCIÓN ARG</span>
+    </div>
+  </a>
+
+  <a id="copas-card" href="copas.html">
+    <img src="fotos/copas.png" alt="Copas" style="width:22px;height:22px;object-fit:contain;">
+    <div class="seleccion-info">
+      <span class="seleccion-label">Internacional</span>
+      <span class="seleccion-nombre">COPAS</span>
     </div>
   </a>
 
