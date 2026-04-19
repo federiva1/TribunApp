@@ -50,19 +50,19 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 /* ===== HERO PANELS (menú principal) ===== */
 .hero-panels {
   display: flex;
-  height: calc(100vh - 68px - 48px);
-  min-height: 280px;
+  flex-direction: column;
 }
 .hero-panel {
-  flex: 1; position: relative;
+  position: relative;
   cursor: pointer; overflow: hidden;
-  transition: flex 0.35s ease;
+  aspect-ratio: 16/9;
+  transition: opacity 0.2s ease;
 }
-.hero-panel:hover { flex: 1.12; }
-.hero-panel + .hero-panel { border-left: 2px solid var(--club-color); }
+.hero-panel:hover { opacity: 0.92; }
+.hero-panel + .hero-panel { border-top: 2px solid var(--club-color); }
 .hero-bg {
   position: absolute; inset: 0;
-  background-size: contain; background-position: center; background-repeat: no-repeat;
+  background-size: cover; background-position: center;
 }
 /* Gradiente oscuro para legibilidad del texto */
 .hero-overlay {
