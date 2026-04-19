@@ -35,13 +35,10 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   display: flex; align-items: center; gap: 5px;
   font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 1px;
   color: rgba(255,255,255,0.45); cursor: pointer; text-decoration: none;
-  background: none; border: none; padding: 0;
-  transition: color 0.2s;
+  background: none; border: none; padding: 0; transition: color 0.2s;
 }
 .back-home:hover { color: #fff; }
-.copas-title-wrap {
-  display: flex; align-items: center; justify-content: center; gap: 10px;
-}
+.copas-title-wrap { display: flex; align-items: center; justify-content: center; gap: 10px; }
 .copas-trophy { width: 32px; height: 32px; object-fit: contain; }
 .copas-heading {
   font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 3px;
@@ -61,7 +58,6 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 @media (max-width: 600px) { .copas-wrap { grid-template-columns: 1fr; } }
 
 /* ===== SECCIÓN DE COPA ===== */
-.copa-section { }
 .copa-header {
   display: flex; align-items: center; gap: 10px;
   margin-bottom: 16px; padding-bottom: 12px;
@@ -69,67 +65,68 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 }
 .copa-header.lib { border-color: rgba(27,94,32,0.6); }
 .copa-header.sud { border-color: rgba(230,81,0,0.6); }
-
-.copa-title {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 22px; letter-spacing: 3px; color: #fff;
-}
+.copa-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 3px; color: #fff; }
 .copa-badge {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 10px; letter-spacing: 2px;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 2px;
   padding: 3px 10px; border-radius: 20px;
 }
-.copa-badge.lib {
-  background: rgba(27,94,32,0.3); border: 1px solid rgba(102,187,106,0.4);
-  color: var(--lib-light);
-}
-.copa-badge.sud {
-  background: rgba(230,81,0,0.2); border: 1px solid rgba(255,167,38,0.4);
-  color: var(--sud-light);
-}
+.copa-badge.lib { background: rgba(27,94,32,0.3); border: 1px solid rgba(102,187,106,0.4); color: var(--lib-light); }
+.copa-badge.sud { background: rgba(230,81,0,0.2); border: 1px solid rgba(255,167,38,0.4); color: var(--sud-light); }
 
-/* ===== GRILLA ===== */
-.equipos-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-}
-
+/* ===== GRILLA DE EQUIPOS ===== */
+.equipos-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 28px; }
 .equipo-card {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
   border-radius: 14px; padding: 16px 8px 14px;
   cursor: pointer; text-decoration: none;
   transition: background 0.18s, transform 0.15s, border-color 0.18s, box-shadow 0.18s;
   gap: 9px;
 }
-.equipo-card.lib:hover {
-  background: rgba(27,94,32,0.2);
-  border-color: rgba(102,187,106,0.5);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(27,94,32,0.25);
+.equipo-card.lib:hover { background: rgba(27,94,32,0.2); border-color: rgba(102,187,106,0.5); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(27,94,32,0.25); }
+.equipo-card.sud:hover { background: rgba(230,81,0,0.15); border-color: rgba(255,167,38,0.5); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(230,81,0,0.2); }
+.escudo-img { width: 44px; height: 44px; object-fit: contain; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5)); }
+.equipo-nombre { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0.5px; color: rgba(255,255,255,0.85); text-align: center; line-height: 1.2; }
+.equipo-rival { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; color: rgba(255,255,255,0.3); text-align: center; }
+
+/* ===== GRUPOS ===== */
+.grupos-section-title {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 2px;
+  color: rgba(255,255,255,0.3); text-transform: uppercase; margin-bottom: 10px;
 }
-.equipo-card.sud:hover {
-  background: rgba(230,81,0,0.15);
-  border-color: rgba(255,167,38,0.5);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(230,81,0,0.2);
+.grupo-block { margin-bottom: 14px; }
+.grupo-label {
+  font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 2px;
+  padding: 4px 8px; border-radius: 6px; display: inline-block; margin-bottom: 6px;
 }
-.escudo-img {
-  width: 44px; height: 44px; object-fit: contain;
-  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));
+.grupo-label.lib { background: rgba(27,94,32,0.3); color: var(--lib-light); }
+.grupo-label.sud { background: rgba(230,81,0,0.2); color: var(--sud-light); }
+
+.grupo-table { width: 100%; border-collapse: collapse; }
+.grupo-table th {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 9px; letter-spacing: 1px;
+  color: rgba(255,255,255,0.25); text-transform: uppercase; text-align: center;
+  padding: 2px 4px; border-bottom: 1px solid rgba(255,255,255,0.05);
 }
-.equipo-nombre {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 12px; font-weight: 600; letter-spacing: 0.5px;
-  color: rgba(255,255,255,0.85); text-align: center; line-height: 1.2;
+.grupo-table th.left { text-align: left; }
+.grupo-table td {
+  font-family: 'DM Sans', sans-serif; font-size: 11px; color: rgba(255,255,255,0.65);
+  padding: 5px 4px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.04);
 }
-.equipo-rival {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 10px; letter-spacing: 0.5px;
-  color: rgba(255,255,255,0.3); text-align: center; line-height: 1.2;
+.grupo-table td.team-name {
+  text-align: left; font-size: 11px; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; max-width: 110px;
 }
+.grupo-table td.pts { font-family: 'Bebas Neue', sans-serif; font-size: 13px; color: #fff; }
+.grupo-table tr.argentina td { color: #fff; }
+.grupo-table tr.argentina td.team-name { font-weight: 600; }
+.grupo-table tr.argentina.lib td { background: rgba(27,94,32,0.18); }
+.grupo-table tr.argentina.sud td { background: rgba(230,81,0,0.12); }
+.grupo-table tr.clasificado td.pos { color: var(--gold); font-weight: 700; }
+.grupo-table td.pos { font-family: 'Bebas Neue', sans-serif; font-size: 12px; width: 16px; }
+.escudo-mini { width: 14px; height: 14px; object-fit: contain; vertical-align: middle; margin-right: 4px; }
+
+.grupos-loading { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 1px; color: rgba(255,255,255,0.25); text-align: center; padding: 20px 0; }
 </style>
 </head>
 <body>
@@ -153,6 +150,8 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
         <span class="copa-badge lib">2026</span>
       </div>
       <div class="equipos-grid" id="lib-grid"></div>
+      <div class="grupos-section-title">FASE DE GRUPOS</div>
+      <div id="lib-grupos"><div class="grupos-loading">Cargando grupos...</div></div>
     </section>
 
     <!-- SUDAMERICANA -->
@@ -162,6 +161,8 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
         <span class="copa-badge sud">2026</span>
       </div>
       <div class="equipos-grid" id="sud-grid"></div>
+      <div class="grupos-section-title">FASE DE GRUPOS</div>
+      <div id="sud-grupos"><div class="grupos-loading">Cargando grupos...</div></div>
     </section>
 
   </div>
@@ -169,9 +170,15 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 
 <script src="js/clubes.js"></script>
 <script>
-const LIBERTADORES = ['estudiantes','independienterivadavia','bocajuniors','clubatleticoplatense','lanus','rosariocentral'];
-const SUDAMERICANA = ['tigre','sanlorenzo','racingclub','deportivoriestra','riverplate','barracascentral'];
+const API_KEY = 'b8bbfc856fd5cf12cd7d697b2b01887d';
 
+const LIBERTADORES_SLUGS = ['estudiantes','independienterivadavia','bocajuniors','clubatleticoplatense','lanus','rosariocentral'];
+const SUDAMERICANA_SLUGS = ['tigre','sanlorenzo','racingclub','deportivoriestra','riverplate','barracascentral'];
+
+// API-sports IDs de equipos argentinos para detectarlos en la tabla
+const ARG_IDS = new Set(Object.values(CLUBES_CONFIG).map(c => c.id));
+
+// ── Grillas de equipos ──────────────────────────────────────────────────────
 function renderGrid(slugs, containerId, copa) {
   const grid = document.getElementById(containerId);
   slugs.forEach(slug => {
@@ -190,8 +197,83 @@ function renderGrid(slugs, containerId, copa) {
   });
 }
 
-renderGrid(LIBERTADORES, 'lib-grid', 'libertadores');
-renderGrid(SUDAMERICANA, 'sud-grid', 'sudamericana');
+// ── Grupos en vivo ──────────────────────────────────────────────────────────
+async function fetchStandings(leagueId) {
+  const res = await fetch(`https://v3.football.api-sports.io/standings?league=${leagueId}&season=2026`, {
+    headers: { 'x-apisports-key': API_KEY }
+  });
+  const d = await res.json();
+  return d.response?.[0]?.league?.standings || [];
+}
+
+function groupLetter(groupName) {
+  const m = groupName.match(/Group ([A-Z])$/i);
+  return m ? m[1] : groupName;
+}
+
+function escudoSlug(teamId) {
+  return ESCUDO_MAP[teamId] || null;
+}
+
+function renderGrupos(groups, containerId, tipo) {
+  const wrap = document.getElementById(containerId);
+  wrap.innerHTML = '';
+  groups.forEach(group => {
+    const letra = groupLetter(group[0].group);
+    const block = document.createElement('div');
+    block.className = 'grupo-block';
+    block.innerHTML = `<div class="grupo-label ${tipo}">GRUPO ${letra}</div>`;
+
+    const table = document.createElement('table');
+    table.className = 'grupo-table';
+    table.innerHTML = `<thead><tr>
+      <th class="left" style="width:16px"></th>
+      <th class="left">Equipo</th>
+      <th>PJ</th><th>G</th><th>E</th><th>P</th><th>DG</th><th>Pts</th>
+    </tr></thead>`;
+    const tbody = document.createElement('tbody');
+
+    group.forEach(t => {
+      const isArg = ARG_IDS.has(t.team.id);
+      const slug = escudoSlug(t.team.id);
+      const dg = t.goalsDiff >= 0 ? `+${t.goalsDiff}` : t.goalsDiff;
+      const tr = document.createElement('tr');
+      if (isArg) tr.classList.add('argentina', tipo);
+      if (t.rank <= 2) tr.classList.add('clasificado');
+      tr.innerHTML = `
+        <td class="pos">${t.rank}</td>
+        <td class="team-name">
+          ${slug ? `<img class="escudo-mini" src="escudos/${slug}.png" onerror="this.style.display='none'">` : ''}
+          ${t.team.name}
+        </td>
+        <td>${t.all.played}</td>
+        <td>${t.all.win}</td>
+        <td>${t.all.draw}</td>
+        <td>${t.all.lose}</td>
+        <td>${dg}</td>
+        <td class="pts">${t.points}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    table.appendChild(tbody);
+    block.appendChild(table);
+    wrap.appendChild(block);
+  });
+}
+
+// ── Init ────────────────────────────────────────────────────────────────────
+renderGrid(LIBERTADORES_SLUGS, 'lib-grid', 'libertadores');
+renderGrid(SUDAMERICANA_SLUGS, 'sud-grid', 'sudamericana');
+
+(async () => {
+  const [libGroups, sudGroups] = await Promise.all([
+    fetchStandings(13),
+    fetchStandings(11)
+  ]);
+  renderGrupos(libGroups, 'lib-grupos', 'lib');
+  renderGrupos(sudGroups, 'sud-grupos', 'sud');
+})();
 </script>
 </body>
 </html>
