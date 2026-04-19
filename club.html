@@ -40,7 +40,11 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .club-header-info { flex: 1; }
 .club-header-nombre {
   font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 2px;
-  color: #fff; line-height: 1;
+  color: #fff; line-height: 1; display: flex; align-items: center; gap: 7px;
+}
+.club-color-dot {
+  width: 13px; height: 13px; border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.25); flex-shrink: 0;
 }
 .club-header-sub {
   font-family: 'Barlow Condensed', sans-serif; font-size: 11px;
@@ -363,6 +367,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
       <div class="club-header-nombre" id="club-nombre-header">Cargando...</div>
       <div class="club-header-sub" id="club-sub-header">Liga Profesional Argentina 2026</div>
     </div>
+    <div id="club-color-dots" style="display:flex;gap:5px;align-items:center;margin-left:4px;"></div>
   </header>
 
   <!-- MENÚ PRINCIPAL — HERO PANELS -->
@@ -575,6 +580,12 @@ const FOTO = fid => `fotos/${CLUB_SLUG}/${fid}.png`;
 // ---- Render header ----
 document.getElementById('club-escudo-header').src = `escudos/${CLUB_SLUG}.png`;
 document.getElementById('club-nombre-header').textContent = CLUB.nombre;
+(CLUB.colores || []).forEach(c => {
+  const d = document.createElement('span');
+  d.className = 'club-color-dot';
+  d.style.background = c;
+  document.getElementById('club-color-dots').appendChild(d);
+});
 document.getElementById('formation-rival-tag').textContent = RIVAL !== 'Por definir' ? `${CLUB.nombreCorto} vs ${RIVAL}` : '';
 document.getElementById('scores-rival-tag').textContent = RIVAL !== 'Por definir' ? `${CLUB.nombreCorto} vs ${RIVAL}` : '';
 document.getElementById('formation-success-body').textContent = `Tu formación fue registrada. ¡Vamos ${CLUB.nombreCorto}!`;

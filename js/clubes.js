@@ -5,180 +5,210 @@ const CLUBES_CONFIG = {
   velezsarsfield: {
     id: 438, nombre: 'Vélez Sarsfield', nombreCorto: 'Vélez',
     color: '#003087', colorSecundario: '#fff',
+    colores: ['#fff', '#003087'],
     rivalActual: 'San Lorenzo',
     squad: []
   },
   estudiantes: {
     id: 450, nombre: 'Estudiantes de La Plata', nombreCorto: 'Estudiantes',
     color: '#e53935', colorSecundario: '#fff',
+    colores: ['#e53935', '#fff'],
     rivalActual: 'Talleres',
     squad: []
   },
   bocajuniors: {
     id: 451, nombre: 'Boca Juniors', nombreCorto: 'Boca',
     color: '#003087', colorSecundario: '#f5c518',
+    colores: ['#003087', '#f5c518'],
     rivalActual: 'Def. Justicia',
     squad: []
   },
   defensayjusticia: {
     id: 442, nombre: 'Defensa y Justicia', nombreCorto: 'Def. Justicia',
     color: '#f5c518', colorSecundario: '#003087',
+    colores: ['#2e7d32', '#f5c518'],
     rivalActual: 'Boca',
     squad: []
   },
   union: {
     id: 441, nombre: 'Unión de Santa Fe', nombreCorto: 'Unión SF',
     color: '#e53935', colorSecundario: '#fff',
+    colores: ['#e53935', '#fff'],
     rivalActual: 'Vélez',
     squad: []
   },
   lanus: {
     id: 446, nombre: 'Lanús', nombreCorto: 'Lanús',
     color: '#006847', colorSecundario: '#fff',
+    colores: ['#7b1c1c'],
     rivalActual: 'Gimnasia M',
     squad: []
   },
   talleres: {
     id: 456, nombre: 'Talleres de Córdoba', nombreCorto: 'Talleres',
     color: '#003087', colorSecundario: '#fff',
+    colores: ['#1a237e', '#fff'],
     rivalActual: 'Riestra',
     squad: []
   },
   independiente: {
     id: 453, nombre: 'Independiente', nombreCorto: 'Independiente',
     color: '#e53935', colorSecundario: '#fff',
+    colores: ['#e53935'],
     rivalActual: 'Riestra',
     squad: []
   },
   sanlorenzo: {
     id: 460, nombre: 'San Lorenzo', nombreCorto: 'San Lorenzo',
     color: '#003087', colorSecundario: '#e53935',
+    colores: ['#003087', '#e53935'],
     rivalActual: 'Vélez',
     squad: []
   },
   clubatleticoplatense: {
     id: 1064, nombre: 'Platense', nombreCorto: 'Platense',
     color: '#003087', colorSecundario: '#f5c518',
+    colores: ['#6d4c41', '#fff'],
     rivalActual: 'Cen. Córdoba',
     squad: []
   },
   gimnasiamendoza: {
     id: 1066, nombre: 'Gimnasia y Esgrima de Mendoza', nombreCorto: 'Gimnasia M',
     color: '#2e7d32', colorSecundario: '#fff',
+    colores: ['#1a1a1a', '#fff'],
     rivalActual: 'Lanús',
     squad: []
   },
   centralcordobadesantiago: {
     id: 1065, nombre: 'Central Córdoba de Santiago', nombreCorto: 'Cen. Córdoba',
     color: '#1a1a1a', colorSecundario: '#e53935',
+    colores: ['#1a1a1a', '#e53935'],
     rivalActual: 'Platense',
     squad: []
   },
   instituto: {
     id: 478, nombre: 'Instituto de Córdoba', nombreCorto: 'Instituto',
     color: '#003087', colorSecundario: '#e53935',
+    colores: ['#e53935', '#fff'],
     rivalActual: 'Newell\'s',
     squad: []
   },
   deportivoriestra: {
     id: 476, nombre: 'Deportivo Riestra', nombreCorto: 'Riestra',
     color: '#e53935', colorSecundario: '#fff',
+    colores: ['#fff', '#1a1a1a'],
     rivalActual: 'Talleres',
     squad: []
   },
   newellsoldboys: {
     id: 457, nombre: "Newell's Old Boys", nombreCorto: "Newell's",
     color: '#e53935', colorSecundario: '#000',
+    colores: ['#e53935', '#1a1a1a'],
     rivalActual: 'Instituto',
     squad: []
   },
   independienterivadavia: {
     id: 473, nombre: 'Independiente Rivadavia', nombreCorto: 'Ind. Rivadavia',
     color: '#003087', colorSecundario: '#fff',
+    colores: ['#1a237e', '#fff'],
     rivalActual: 'Banfield',
     squad: []
   },
   riverplate: {
     id: 435, nombre: 'River Plate', nombreCorto: 'River',
     color: '#e53935', colorSecundario: '#fff',
+    colores: ['#e53935', '#fff'],
     rivalActual: 'Aldosivi',
     squad: []
   },
   argentinosjuniors: {
     id: 458, nombre: 'Argentinos Juniors', nombreCorto: 'Argentinos',
     color: '#e53935', colorSecundario: '#fff',
+    colores: ['#e53935', '#fff'],
     rivalActual: 'Huracán',
     squad: []
   },
   belgrano: {
     id: 440, nombre: 'Belgrano', nombreCorto: 'Belgrano',
     color: '#003087', colorSecundario: '#fff',
+    colores: ['#29b6f6'],
     rivalActual: 'Barracas C',
     squad: []
   },
   racingclub: {
     id: 436, nombre: 'Racing Club', nombreCorto: 'Racing',
     color: '#1a1a1a', colorSecundario: '#e53935',
+    colores: ['#29b6f6', '#fff'],
     rivalActual: 'Barracas C',
     squad: []
   },
   rosariocentral: {
     id: 437, nombre: 'Rosario Central', nombreCorto: 'Rosario C',
     color: '#f5c518', colorSecundario: '#1a1a1a',
+    colores: ['#003087', '#f5c518'],
     rivalActual: 'Sarmiento',
     squad: []
   },
   tigre: {
     id: 452, nombre: 'Tigre', nombreCorto: 'Tigre',
     color: '#e53935', colorSecundario: '#f5c518',
+    colores: ['#e53935', '#003087'],
     rivalActual: 'Huracán',
     squad: []
   },
   barracascentral: {
     id: 2432, nombre: 'Barracas Central', nombreCorto: 'Barracas C',
     color: '#e53935', colorSecundario: '#fff',
+    colores: ['#e53935', '#fff'],
     rivalActual: 'Belgrano',
     squad: []
   },
   sarmiento: {
     id: 474, nombre: 'Sarmiento de Junín', nombreCorto: 'Sarmiento',
     color: '#2e7d32', colorSecundario: '#fff',
+    colores: ['#2e7d32'],
     rivalActual: 'Rosario C',
     squad: []
   },
   huracan: {
     id: 445, nombre: 'Huracán', nombreCorto: 'Huracán',
     color: '#e53935', colorSecundario: '#fff',
+    colores: ['#fff', '#e53935'],
     rivalActual: 'Tigre',
     squad: []
   },
   gimnasialp: {
     id: 434, nombre: 'Gimnasia y Esgrima LP', nombreCorto: 'Gimnasia LP',
     color: '#003087', colorSecundario: '#fff',
+    colores: ['#003087', '#fff'],
     rivalActual: 'Belgrano',
     squad: []
   },
   banfield: {
     id: 449, nombre: 'Banfield', nombreCorto: 'Banfield',
     color: '#2e7d32', colorSecundario: '#fff',
+    colores: ['#2e7d32', '#fff'],
     rivalActual: 'Ind. Rivadavia',
     squad: []
   },
   atleticotucuman: {
     id: 455, nombre: 'Atlético Tucumán', nombreCorto: 'Atl. Tucumán',
     color: '#003087', colorSecundario: '#fff',
+    colores: ['#29b6f6', '#fff'],
     rivalActual: 'Banfield',
     squad: []
   },
   aldosivi: {
     id: 463, nombre: 'Aldosivi', nombreCorto: 'Aldosivi',
     color: '#006847', colorSecundario: '#f5c518',
+    colores: ['#2e7d32', '#f5c518'],
     rivalActual: 'River',
     squad: []
   },
   estudiantesderiocuarto: {
     id: 2424, nombre: 'Estudiantes de Río Cuarto', nombreCorto: 'Est. Río Cuarto',
     color: '#e53935', colorSecundario: '#000',
+    colores: ['#29b6f6', '#fff'],
     rivalActual: 'Rosario C',
     squad: []
   }
