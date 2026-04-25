@@ -374,6 +374,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 <div id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="js/config.js"></script>
 <script>
 // ============================================================
 // CONFIG
@@ -381,8 +382,6 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 const API_KEY = 'b8bbfc856fd5cf12cd7d697b2b01887d';
 const ARG_TEAM_ID = 6;
 const FOTO_SEL = fid => `fotos/seleccion/${fid}.png`;
-const SUPABASE_URL = 'https://ieujdkthaoujtnndkiqo.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlldWpka3RoYW91anRubmRraXFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMTEwOTYsImV4cCI6MjA5MTc4NzA5Nn0.FDzVx-W3v48Eq9_hSzsghP1Q8ES4e70S7MN2koGT5wY';
 function getDeviceId() { let id=localStorage.getItem('tribunapp_device_id'); if(!id){id='dev_'+Math.random().toString(36).substr(2,12)+Date.now().toString(36);localStorage.setItem('tribunapp_device_id',id);} return id; }
 
 // ============================================================
