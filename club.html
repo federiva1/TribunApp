@@ -571,7 +571,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 <div class="overlay-inner">
   <button class="back-btn" onclick="closeSection('fechas')">← Volver</button>
   <div style="text-align:center;margin-bottom:18px;">
-    <h1 style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#fff;letter-spacing:2px;">📅 Apertura 2026</h1>
+    <h1 id="fechas-screen-title" style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#fff;letter-spacing:2px;">📅 Apertura 2026</h1>
     <div style="font-size:11px;color:#888;margin-top:3px;">Seleccioná una fecha</div>
   </div>
   <div id="fechas-list"></div>
@@ -597,8 +597,8 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 <div class="overlay-inner">
   <button class="back-btn" onclick="closeSection('fixture')">← Volver</button>
   <div style="text-align:center;margin-bottom:18px;">
-    <h1 style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#fff;letter-spacing:2px;">📋 FIXTURE 2026</h1>
-    <div style="font-size:11px;color:#888;margin-top:3px;">Apertura · Liga Profesional</div>
+    <h1 id="fixture-screen-title" style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#fff;letter-spacing:2px;">📋 FIXTURE 2026</h1>
+    <div id="fixture-screen-sub" style="font-size:11px;color:#888;margin-top:3px;">Apertura · Liga Profesional</div>
   </div>
   <div id="fixture-list"><div style="text-align:center;color:#555;padding:30px;font-size:13px;">Cargando...</div></div>
 </div>
@@ -642,6 +642,13 @@ if (!CLUB) {
 document.documentElement.style.setProperty('--club-color', CLUB.color);
 document.documentElement.style.setProperty('--club-color2', CLUB.colorSecundario);
 document.title = `TribunApp — ${CLUB.nombre}`;
+const COMPETENCIA_LABEL = COPA === 'libertadores' ? 'Copa Libertadores 2026' : COPA === 'sudamericana' ? 'Copa Sudamericana 2026' : 'Liga Profesional Argentina 2026';
+const COMPETENCIA_SHORT = COPA === 'libertadores' ? 'Copa Libertadores' : COPA === 'sudamericana' ? 'Copa Sudamericana' : 'Apertura · Liga Profesional';
+document.getElementById('club-sub-header').textContent = COMPETENCIA_LABEL;
+document.getElementById('fechas-screen-title').textContent = '📅 ' + COMPETENCIA_LABEL.replace(' 2026','') + ' 2026';
+document.getElementById('fixture-screen-title').textContent = '📋 FIXTURE 2026';
+document.getElementById('fixture-screen-sub').textContent = COMPETENCIA_SHORT;
+document.getElementById('stats-season-label').textContent = COMPETENCIA_SHORT + ' · Temporada 2026';
 
 // ---- Config dinámica de la fecha ----
 // Estos datos se actualiza cada fecha. El squad de "quien jugó" se toma de CLUB.squad cuando exista playedSquad.
@@ -1373,7 +1380,7 @@ async function renderFechas() {
   const today = new Date().toISOString().split('T')[0];
   fixtures.forEach((f, i) => {
     const played = f.fecha <= today && f.goles !== null;
-    const isCurrent = f.rival === CLUB.rivalActual;
+    const isCurrent = f.rival === RIVAL;
     const card = document.createElement('div');
     card.className = 'fecha-card' + (isCurrent ? ' current' : '');
 
@@ -1420,7 +1427,7 @@ async function renderFechas() {
 // ---- VER FECHAS para invitados (solo fecha actual) ----
 async function renderCurrentFechaGuest() {
   const list = document.getElementById('fechas-list');
-  const rival = CLUB.rivalActual || '';
+  const rival = RIVAL || '';
   if (!rival) {
     list.innerHTML = '<div style="text-align:center;color:#555;padding:30px;font-size:13px;">No hay fecha actual configurada.</div>';
     return;
