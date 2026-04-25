@@ -70,22 +70,20 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   transform: translateY(-1px); box-shadow: 0 4px 18px rgba(245,197,24,0.2);
 }
 
-/* ===== BOTÓN TABLA (header centro) ===== */
+/* ===== BOTÓN TABLAS (header centro) ===== */
 #tabla-header-btn {
-  display: flex; align-items: center; gap: 6px;
-  background: rgba(255,255,255,0.06);
+  display: flex; align-items: center; gap: 8px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.03) 100%);
   border: 1px solid rgba(255,255,255,0.15);
   border-radius: 12px; padding: 6px 12px;
-  cursor: pointer; font-family: 'Bebas Neue', sans-serif;
-  font-size: 13px; letter-spacing: 1px; color: rgba(255,255,255,0.65);
-  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
-  white-space: nowrap;
+  cursor: pointer; text-decoration: none;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
 }
 #tabla-header-btn:hover {
-  background: rgba(255,255,255,0.12); color: #fff;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+  background: linear-gradient(135deg, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0.07) 100%);
+  transform: translateY(-1px); box-shadow: 0 4px 18px rgba(0,0,0,0.3);
 }
-#tabla-header-btn .tbtn-icon { font-size: 16px; }
+#tabla-header-btn .tbtn-icon { font-size: 20px; line-height: 1; flex-shrink: 0; }
 
 /* ===== CONTENIDO PRINCIPAL ===== */
 #main { padding: 20px 16px 40px; max-width: 1100px; margin: 0 auto; }
@@ -247,7 +245,11 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 
   <div style="display:flex;align-items:center;justify-content:center;gap:8px;">
     <button id="tabla-header-btn" onclick="openTablaOverlay()">
-      <span class="tbtn-icon">📊</span> TABLA
+      <span class="tbtn-icon">📊</span>
+      <div class="seleccion-info">
+        <span class="seleccion-label">Liga Profesional</span>
+        <span class="seleccion-nombre">TABLAS</span>
+      </div>
     </button>
 
     <a id="seleccion-card" href="seleccion.html">
@@ -259,7 +261,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
     </a>
 
     <a id="copas-card" href="copas.html">
-      <img src="fotos/copas.png" alt="Copas" style="width:22px;height:22px;object-fit:contain;">
+      <img src="fotos/copas.png" alt="Copas" style="width:22px;height:22px;object-fit:contain;flex-shrink:0;">
       <div class="seleccion-info">
         <span class="seleccion-label">Internacional</span>
         <span class="seleccion-nombre">COPAS</span>
@@ -267,7 +269,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
     </a>
   </div>
 
-  <div id="auth-btn-container" style="justify-self:end;"></div>
+  <button id="auth-header-btn" style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:6px 12px;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1px;color:rgba(255,255,255,0.65);white-space:nowrap;justify-self:end;">Ingresar</button>
 </header>
 
 <!-- CONTENIDO PRINCIPAL -->
@@ -1086,7 +1088,7 @@ function loadTPromedios() {
 <script src="js/auth.js"></script>
 <script src="js/auth-ui.js"></script>
 <script>
-initAuthHeaderBtn('auth-btn-container');
+initAuthHeaderBtn();
 initAuth();
 </script>
 </body>

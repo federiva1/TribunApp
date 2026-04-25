@@ -255,25 +255,18 @@
     return msg;
   }
 
-  // ---- Crear botón de header ----
-  // Se llama desde cada página con el ID del contenedor donde insertar el botón
-  window.initAuthHeaderBtn = function(containerId) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
+  // ---- Inicializar botón de header ----
+  // El botón ya existe en el HTML — este método solo adjunta handlers y actualiza apariencia
+  window.initAuthHeaderBtn = function() {
+    const btn = document.getElementById('auth-header-btn');
+    if (!btn) return;
 
-    const btn = document.createElement('button');
-    btn.id = 'auth-header-btn';
     btn.addEventListener('click', () => {
-      if (currentUser) {
-        _showUserMenu(btn);
-      } else {
-        openAuthModal('login');
-      }
+      if (currentUser) _showUserMenu(btn);
+      else openAuthModal('login');
     });
-    container.appendChild(btn);
 
     _renderAuthBtn();
-
     onAuthChange(() => _renderAuthBtn());
   };
 
