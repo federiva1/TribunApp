@@ -658,6 +658,21 @@ const RIVAL = (
   COPA === 'sudamericana' ? CLUB.rivalSudamericana :
   CLUB.rivalActual
 ) || 'Por definir';
+
+// Fecha del partido actual — se resuelve async desde el fixture JSON
+// para poder distinguir partidos contra el mismo rival (copa grupos, playoffs)
+let FECHA_ACTUAL = '';
+(async () => {
+  try {
+    const suffix = COPA ? `_${COPA}` : '';
+    const r = await fetch(`data/fixtures/${CLUB_SLUG}${suffix}.json`);
+    if (!r.ok) return;
+    const fixtures = await r.json();
+    const match = fixtures.find(f => f.rival === RIVAL && f.goles === null);
+    if (match) FECHA_ACTUAL = match.fecha;
+  } catch(e) {}
+})();
+
 const LS_KEY         = `${CLUB_SLUG}_formacion`;
 const LS_FORMATION_KEY = `${CLUB_SLUG}_formacion_data`;
 const LS_SCORES_KEY  = `${CLUB_SLUG}_puntajes`;
@@ -974,6 +989,7 @@ document.getElementById('confirm-btn').addEventListener('click', async () => {
   if (gk && gk.yPct < 50) jugadores = jugadores.map(p => ({ ...p, x: Math.round(100 - p.x), y: Math.round(100 - p.y) }));
   try {
     const payload = { jugadores, rival: RIVAL, club: CLUB_SLUG };
+    if (FECHA_ACTUAL) payload.match_date = FECHA_ACTUAL;
     if (currentUser) {
       payload.user_id = currentUser.id;
       payload.equipo_hincha = currentUser.equipoHincha || null;
@@ -1038,6 +1054,7 @@ async function showResults() {
   list.innerHTML = '<div style="text-align:center;color:#666;padding:20px;font-size:13px;">Cargando...</div>'; totalEl.textContent = '';
   try {
     let url = `${SUPABASE_URL}/rest/v1/formaciones?select=jugadores&rival=eq.${encodeURIComponent(RIVAL)}&club=eq.${CLUB_SLUG}`;
+    if (FECHA_ACTUAL) url += `&match_date=eq.${FECHA_ACTUAL}`;
     if (_resultsFilter === 'hinchas') url += `&equipo_hincha=eq.${CLUB_SLUG}`;
     const res = await fetch(url, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
     const data = await res.json();
@@ -1157,7 +1174,8 @@ async function openFeed() {
   list.innerHTML = '<div style="text-align:center;color:#555;font-size:13px;padding:40px;">Cargando...</div>';
   const deviceId = getDeviceId();
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/formaciones?select=id,jugadores,likes,device_id,created_at&order=likes.desc,created_at.desc&limit=80&rival=eq.${encodeURIComponent(RIVAL)}&club=eq.${CLUB_SLUG}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
+    const feedDateFilter = FECHA_ACTUAL ? `&match_date=eq.${FECHA_ACTUAL}` : '';
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/formaciones?select=id,jugadores,likes,device_id,created_at&order=likes.desc,created_at.desc&limit=80&rival=eq.${encodeURIComponent(RIVAL)}&club=eq.${CLUB_SLUG}${feedDateFilter}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
     const data = await res.json();
     const valid = data.filter(r => r.jugadores && r.jugadores.length === 11);
     countEl.textContent = `${valid.length} equipo${valid.length !== 1 ? 's' : ''}`;
@@ -1240,6 +1258,7 @@ document.getElementById('scores-confirm-btn').addEventListener('click', async ()
   if (Object.keys(userScores).length !== playedSquad.length || !playedSquad.length) return;
   try {
     const scoresPayload = { rival: RIVAL, club: CLUB_SLUG, puntajes: userScores };
+    if (FECHA_ACTUAL) scoresPayload.match_date = FECHA_ACTUAL;
     if (currentUser) {
       scoresPayload.user_id = currentUser.id;
       scoresPayload.equipo_hincha = currentUser.equipoHincha || null;
@@ -1272,6 +1291,7 @@ async function showScoresResults() {
   list.innerHTML = '<div style="color:#555;text-align:center;padding:20px;">Cargando...</div>';
   try {
     let url = `${SUPABASE_URL}/rest/v1/puntajes?select=puntajes&rival=eq.${encodeURIComponent(RIVAL)}&club=eq.${CLUB_SLUG}`;
+    if (FECHA_ACTUAL) url += `&match_date=eq.${FECHA_ACTUAL}`;
     if (_scoresFilter === 'hinchas') url += `&equipo_hincha=eq.${CLUB_SLUG}`;
     const res = await fetch(url, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
     const data = await res.json();
@@ -1413,7 +1433,7 @@ async function renderFechas() {
     card.appendChild(info);
 
     if (played && !isCurrent) {
-      card.addEventListener('click', () => openPrevFecha({ num: f.num, rival: f.rival }));
+      card.addEventListener('click', () => openPrevFecha({ num: f.num, rival: f.rival, fecha: f.fecha }));
       const arrow = document.createElement('div');
       arrow.style.cssText = 'font-size:18px;color:rgba(255,255,255,0.25);flex-shrink:0;';
       arrow.textContent = '›';
@@ -1450,8 +1470,8 @@ async function renderCurrentFechaGuest() {
   `;
   try {
     const [fRes, sRes] = await Promise.all([
-      fetch(`${SUPABASE_URL}/rest/v1/formaciones?select=jugadores,likes,created_at&order=likes.desc,created_at.desc&limit=5&rival=eq.${encodeURIComponent(rival)}&club=eq.${CLUB_SLUG}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
-      fetch(`${SUPABASE_URL}/rest/v1/puntajes?select=puntajes&rival=eq.${encodeURIComponent(rival)}&club=eq.${CLUB_SLUG}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } })
+      fetch(`${SUPABASE_URL}/rest/v1/formaciones?select=jugadores,likes,created_at&order=likes.desc,created_at.desc&limit=5&rival=eq.${encodeURIComponent(rival)}&club=eq.${CLUB_SLUG}${FECHA_ACTUAL ? '&match_date=eq.' + FECHA_ACTUAL : ''}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
+      fetch(`${SUPABASE_URL}/rest/v1/puntajes?select=puntajes&rival=eq.${encodeURIComponent(rival)}&club=eq.${CLUB_SLUG}${FECHA_ACTUAL ? '&match_date=eq.' + FECHA_ACTUAL : ''}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } })
     ]);
     const fData = await fRes.json();
     const sData = await sRes.json();
@@ -1622,9 +1642,10 @@ async function openPrevFecha(f) {
   document.getElementById('prev-fecha-scores').innerHTML = '<div style="text-align:center;color:#555;padding:20px;font-size:13px;">Cargando...</div>';
   document.getElementById('back-prev-fecha-btn').onclick = () => { document.getElementById('prev-fecha-screen').style.display = 'none'; };
   try {
+    const dateFilter = f.fecha ? `&match_date=eq.${f.fecha}` : '';
     const [fRes, sRes] = await Promise.all([
-      fetch(`${SUPABASE_URL}/rest/v1/formaciones?select=jugadores,likes,device_id,created_at&order=likes.desc,created_at.desc&limit=20&rival=eq.${encodeURIComponent(f.rival)}&club=eq.${CLUB_SLUG}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
-      fetch(`${SUPABASE_URL}/rest/v1/puntajes?select=puntajes&rival=eq.${encodeURIComponent(f.rival)}&club=eq.${CLUB_SLUG}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } })
+      fetch(`${SUPABASE_URL}/rest/v1/formaciones?select=jugadores,likes,device_id,created_at&order=likes.desc,created_at.desc&limit=20&rival=eq.${encodeURIComponent(f.rival)}&club=eq.${CLUB_SLUG}${dateFilter}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
+      fetch(`${SUPABASE_URL}/rest/v1/puntajes?select=puntajes&rival=eq.${encodeURIComponent(f.rival)}&club=eq.${CLUB_SLUG}${dateFilter}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } })
     ]);
     const fData = await fRes.json(); const sData = await sRes.json();
     // Formaciones
