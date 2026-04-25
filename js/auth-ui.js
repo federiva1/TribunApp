@@ -163,8 +163,8 @@
   document.body.appendChild(overlay);
 
   // Cerrar con click fuera o botón ✕
-  overlay.addEventListener('click', e => { if (e.target === overlay) closeAuthModal(); });
-  document.getElementById('auth-modal-close').addEventListener('click', closeAuthModal);
+  overlay.addEventListener('click', e => { if (e.target === overlay) window.closeAuthModal(); });
+  document.getElementById('auth-modal-close').addEventListener('click', () => window.closeAuthModal());
 
   // Enter en inputs de login
   document.getElementById('auth-login-pass').addEventListener('keydown', e => { if (e.key === 'Enter') authDoLogin(); });
