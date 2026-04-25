@@ -673,10 +673,22 @@ let FECHA_ACTUAL = '';
   } catch(e) {}
 })();
 
+// Estado de puntajes — controlado por data/estado.json (solo liga)
+let PUNTAJES_OPEN = false;
+if (!COPA) {
+  (async () => {
+    try {
+      const r = await fetch('data/estado.json', { cache: 'no-store' });
+      if (!r.ok) return;
+      const estado = await r.json();
+      PUNTAJES_OPEN = estado[CLUB_SLUG]?.puntajesOpen === true;
+    } catch(e) {}
+  })();
+}
+
 const LS_KEY         = `${CLUB_SLUG}_formacion`;
 const LS_FORMATION_KEY = `${CLUB_SLUG}_formacion_data`;
 const LS_SCORES_KEY  = `${CLUB_SLUG}_puntajes`;
-const SCORES_ENABLED = CLUB.scoresEnabled !== undefined ? CLUB.scoresEnabled : false;
 const GOALKEEPERS    = CLUB.goalkeepers   || [];
 const INJURED        = CLUB.injured       || [];
 const SUSPENDED      = CLUB.suspended     || [];
@@ -755,7 +767,7 @@ function openSection(section) {
     const scoresLsKey = currentUser
       ? LS_SCORES_KEY + '_user_' + currentUser.id
       : LS_SCORES_KEY;
-    if (!SCORES_ENABLED) {
+    if (!PUNTAJES_OPEN) {
       document.getElementById('scores-list').innerHTML = '<div style="text-align:center;padding:30px;font-size:13px;color:#555;">Esta sección se habilita cuando termina el partido.</div>';
     } else if (!localStorage.getItem(scoresLsKey)) {
       renderScores();
