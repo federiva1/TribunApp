@@ -63,7 +63,10 @@ async function _buildUser(supaUser) {
 // ---- Registro ----
 async function signUp(email, password, equipoSlug) {
   const sb = getSupabaseClient();
-  const { data, error } = await sb.auth.signUp({ email, password });
+  const redirectTo = window.location.protocol === 'file:'
+    ? 'https://federiva1.github.io/TribunApp/'
+    : window.location.origin + '/';
+  const { data, error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: redirectTo } });
   if (error) throw error;
   // Crear perfil con equipo_hincha
   if (data.user) {
