@@ -1358,7 +1358,8 @@ async function renderFechas() {
 
   let fixtures = [];
   try {
-    const r = await fetch(`data/fixtures/${CLUB_SLUG}.json`);
+    const suffix = COPA ? `_${COPA}` : '';
+    const r = await fetch(`data/fixtures/${CLUB_SLUG}${suffix}.json`);
     if (r.ok) fixtures = await r.json();
   } catch(e) {}
 
@@ -1477,8 +1478,9 @@ async function renderFixture() {
   const cont = document.getElementById('fixture-list');
   if (_fixtureCache) { _renderFixtureList(_fixtureCache, cont); return; }
   cont.innerHTML = '<div style="text-align:center;color:#555;padding:30px;font-size:13px;">Cargando...</div>';
+  const leagueId = COPA === 'libertadores' ? 13 : COPA === 'sudamericana' ? 11 : 128;
   try {
-    const res = await fetch(`https://v3.football.api-sports.io/fixtures?team=${CLUB.id}&season=2026&league=128`, { headers: { 'x-apisports-key': API_KEY_TABLA } });
+    const res = await fetch(`https://v3.football.api-sports.io/fixtures?team=${CLUB.id}&season=2026&league=${leagueId}`, { headers: { 'x-apisports-key': API_KEY_TABLA } });
     const d = await res.json();
     _fixtureCache = d.response || [];
     _renderFixtureList(_fixtureCache, cont);
@@ -1538,8 +1540,9 @@ async function renderStats() {
   const cont = document.getElementById('stats-content');
   if (_statsCache) { _renderStatsContent(_statsCache, cont); return; }
   cont.innerHTML = '<div style="text-align:center;color:#555;padding:30px;font-size:13px;">Cargando...</div>';
+  const leagueId = COPA === 'libertadores' ? 13 : COPA === 'sudamericana' ? 11 : 128;
   try {
-    const res = await fetch(`https://v3.football.api-sports.io/teams/statistics?team=${CLUB.id}&season=2026&league=128`, { headers: { 'x-apisports-key': API_KEY_TABLA } });
+    const res = await fetch(`https://v3.football.api-sports.io/teams/statistics?team=${CLUB.id}&season=2026&league=${leagueId}`, { headers: { 'x-apisports-key': API_KEY_TABLA } });
     const d = await res.json();
     if (!d.response) throw new Error('sin datos');
     _statsCache = d.response;
