@@ -30,12 +30,11 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   gap: 12px;
 }
 .logo {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 26px; letter-spacing: 3px;
-  background: linear-gradient(135deg, #fff 0%, var(--acento-light) 100%);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  background-clip: text;
   justify-self: start;
+  display: flex; align-items: center;
+}
+.logo img {
+  height: 36px; width: auto; object-fit: contain;
 }
 
 /* ===== SELECCIÓN ARGENTINA (header centro) ===== */
@@ -241,7 +240,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 
 <!-- HEADER -->
 <header id="site-header">
-  <div class="logo">Tribun<span style="-webkit-text-fill-color:var(--acento-light);">App</span></div>
+  <div class="logo"><img src="Logo.png" alt="TribunApp"></div>
 
   <div style="display:flex;align-items:center;justify-content:center;gap:8px;">
     <button id="tabla-header-btn" onclick="openTablaOverlay()">
