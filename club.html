@@ -348,10 +348,60 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .fecha-card:not(.current) .fecha-card-sub { color: #555; }
 
 /* ===== FORMACIONES DE FECHAS PASADAS ===== */
-#prev-fecha-formations .mini-form {
+#prev-fecha-formations .mini-form,
+#guest-fechas-formations .mini-form {
   background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
   border-radius: 10px; margin-bottom: 10px; overflow: hidden;
 }
+
+/* ===== FIXTURE ===== */
+.fixture-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 4px; border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.fixture-date {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 1px;
+  color: rgba(255,255,255,0.3); width: 44px; flex-shrink: 0; text-align: center;
+}
+.fixture-teams { flex: 1; }
+.fixture-teams-main {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 600; color: #fff; line-height: 1.2;
+}
+.fixture-loc {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 9px; letter-spacing: 1px;
+  color: rgba(255,255,255,0.25); margin-top: 2px;
+}
+.fixture-score {
+  font-family: 'Bebas Neue', sans-serif; font-size: 20px; min-width: 38px; text-align: right; flex-shrink: 0;
+}
+.fixture-score.win  { color: #66bb6a; }
+.fixture-score.lose { color: #e57373; }
+.fixture-score.draw { color: rgba(255,255,255,0.45); }
+.fixture-score.next { font-family: 'Barlow Condensed', sans-serif; font-size: 9px; letter-spacing: 1px; color: rgba(255,255,255,0.2); }
+
+/* ===== ESTADÍSTICAS ===== */
+.stats-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px;
+}
+.stat-card {
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px; padding: 14px 10px; text-align: center;
+}
+.stat-card-val {
+  font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: #fff; line-height: 1;
+}
+.stat-card-label {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 1.5px;
+  color: rgba(255,255,255,0.3); text-transform: uppercase; margin-top: 5px;
+}
+.form-dots { display: flex; gap: 5px; justify-content: center; flex-wrap: wrap; }
+.form-dot {
+  width: 28px; height: 28px; border-radius: 50%; font-family: 'Bebas Neue', sans-serif;
+  font-size: 13px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.form-dot.W { background: #2e7d32; }
+.form-dot.D { background: rgba(255,255,255,0.12); }
+.form-dot.L { background: #b71c1c; }
 </style>
 </head>
 <body>
@@ -390,7 +440,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
       </div>
     </div>
   </div>
-  <div class="secondary-row">
+  <div class="secondary-row" id="secondary-row">
     <div class="sec-btn" onclick="openSection('fechas')">📅 VER FECHAS</div>
   </div>
 </div>
@@ -542,6 +592,30 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 </div>
 
 
+<!-- PANTALLA FIXTURE -->
+<div class="overlay-screen" id="fixture-screen">
+<div class="overlay-inner">
+  <button class="back-btn" onclick="closeSection('fixture')">← Volver</button>
+  <div style="text-align:center;margin-bottom:18px;">
+    <h1 style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#fff;letter-spacing:2px;">📋 FIXTURE 2026</h1>
+    <div style="font-size:11px;color:#888;margin-top:3px;">Apertura · Liga Profesional</div>
+  </div>
+  <div id="fixture-list"><div style="text-align:center;color:#555;padding:30px;font-size:13px;">Cargando...</div></div>
+</div>
+</div>
+
+<!-- PANTALLA ESTADÍSTICAS -->
+<div class="overlay-screen" id="stats-screen">
+<div class="overlay-inner">
+  <button class="back-btn" onclick="closeSection('stats')">← Volver</button>
+  <div style="text-align:center;margin-bottom:18px;">
+    <h1 style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#fff;letter-spacing:2px;">📊 ESTADÍSTICAS</h1>
+    <div id="stats-season-label" style="font-size:11px;color:#888;margin-top:3px;">Temporada 2026</div>
+  </div>
+  <div id="stats-content"><div style="text-align:center;color:#555;padding:30px;font-size:13px;">Cargando...</div></div>
+</div>
+</div>
+
 <div id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -640,13 +714,12 @@ function showToast(msg) { toast.textContent = msg; toast.classList.add('show'); 
 // ---- Navegación ----
 function openSection(section) {
   document.getElementById('home-screen').style.display = 'none';
-  ['formation', 'scores', 'fechas'].forEach(s => {
+  ['formation', 'scores', 'fechas', 'fixture', 'stats'].forEach(s => {
     const el = document.getElementById(s + '-screen');
     if (el) el.style.display = s === section ? 'block' : 'none';
   });
   if (section === 'fechas') {
     renderFechas();
-    // Re-render si el usuario se loguea mientras está en esta pantalla
     if (typeof onAuthChange === 'function') {
       onAuthChange(() => {
         const screen = document.getElementById('fechas-screen');
@@ -654,6 +727,8 @@ function openSection(section) {
       });
     }
   }
+  if (section === 'fixture') renderFixture();
+  if (section === 'stats') renderStats();
   if (section === 'scores') {
     const scoresLsKey = currentUser
       ? LS_SCORES_KEY + '_user_' + currentUser.id
@@ -1253,50 +1328,281 @@ document.getElementById('download-scores-results-btn').addEventListener('click',
 });
 
 // ============================================================
-// FECHAS
+// FECHAS / FIXTURE / ESTADÍSTICAS
 // ============================================================
 
-function renderPremiumPlaceholder(containerId) {
-  const el = document.getElementById(containerId);
-  if (!el) return;
-  el.innerHTML = `
-    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;text-align:center;gap:16px;">
-      <div style="width:56px;height:56px;border-radius:50%;background:rgba(21,101,192,0.12);border:1.5px solid rgba(21,101,192,0.3);display:flex;align-items:center;justify-content:center;font-size:26px;">🔒</div>
-      <div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff;margin-bottom:6px;">CONTENIDO PREMIUM</div>
-        <div style="font-size:13px;color:rgba(255,255,255,0.4);line-height:1.6;max-width:220px;margin:0 auto;">Creá tu cuenta o ingresá para acceder al historial completo de fechas.</div>
-      </div>
-      <button onclick="openAuthModal('register')" style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;background:#1565c0;color:#fff;border:none;border-radius:8px;padding:10px 24px;cursor:pointer;">CREAR CUENTA GRATIS</button>
-      <button onclick="openAuthModal('login')" style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1px;background:transparent;color:rgba(255,255,255,0.4);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 20px;cursor:pointer;">Ya tengo cuenta</button>
-    </div>
-  `;
+// ---- Barra inferior dinámica ----
+function renderSecondaryRow() {
+  const row = document.getElementById('secondary-row');
+  if (!row) return;
+  if (currentUser) {
+    row.innerHTML = `
+      <div class="sec-btn" onclick="openSection('fixture')">📋 FIXTURE</div>
+      <div class="sec-btn" onclick="openSection('fechas')">📅 VER FECHAS</div>
+      <div class="sec-btn" onclick="openSection('stats')">📊 ESTADÍSTICAS</div>
+    `;
+  } else {
+    row.innerHTML = `<div class="sec-btn" onclick="openSection('fechas')">📅 VER FECHAS</div>`;
+  }
 }
 
-function renderFechas() {
+// ---- VER FECHAS ----
+async function renderFechas() {
   const list = document.getElementById('fechas-list');
-  list.innerHTML = '';
+  list.innerHTML = '<div style="text-align:center;color:#555;padding:30px;font-size:13px;">Cargando...</div>';
+
   if (!currentUser) {
-    renderPremiumPlaceholder('fechas-list');
+    renderCurrentFechaGuest();
     return;
   }
-  if (!FECHAS.length) {
+
+  let fixtures = [];
+  try {
+    const r = await fetch(`data/fixtures/${CLUB_SLUG}.json`);
+    if (r.ok) fixtures = await r.json();
+  } catch(e) {}
+
+  list.innerHTML = '';
+
+  if (!fixtures.length) {
     list.innerHTML = '<div style="text-align:center;color:#555;padding:30px;font-size:13px;">Las fechas aún no están cargadas.</div>';
     return;
   }
-  FECHAS.forEach(f => {
+
+  const today = new Date().toISOString().split('T')[0];
+  fixtures.forEach((f, i) => {
+    const played = f.fecha <= today && f.goles !== null;
+    const isCurrent = f.rival === CLUB.rivalActual;
     const card = document.createElement('div');
-    card.className = 'fecha-card' + (f.isCurrent ? ' current' : '');
-    const badge = document.createElement('div'); badge.className = 'fecha-num-badge'; badge.textContent = f.num; card.appendChild(badge);
-    const info = document.createElement('div'); info.className = 'fecha-card-info';
-    const rival = document.createElement('div'); rival.className = 'fecha-card-rival'; rival.textContent = f.rival;
-    const sub = document.createElement('div'); sub.className = 'fecha-card-sub'; sub.textContent = f.isCurrent ? 'FECHA ACTUAL' : 'Ver formaciones y puntajes';
-    info.appendChild(rival); info.appendChild(sub); card.appendChild(info);
-    if (!f.isCurrent) {
-      card.addEventListener('click', () => openPrevFecha(f));
-      const arrow = document.createElement('div'); arrow.style.cssText = 'font-size:18px;color:rgba(255,255,255,0.25);'; arrow.textContent = '›'; card.appendChild(arrow);
+    card.className = 'fecha-card' + (isCurrent ? ' current' : '');
+
+    const badge = document.createElement('div');
+    badge.className = 'fecha-num-badge';
+    badge.textContent = f.num;
+    card.appendChild(badge);
+
+    const info = document.createElement('div');
+    info.className = 'fecha-card-info';
+
+    const rivalEl = document.createElement('div');
+    rivalEl.className = 'fecha-card-rival';
+    rivalEl.textContent = (f.local ? 'vs ' : 'en ') + f.rival;
+
+    const sub = document.createElement('div');
+    sub.className = 'fecha-card-sub';
+    if (isCurrent) {
+      sub.textContent = 'FECHA ACTUAL';
+    } else if (played) {
+      const [gA, gR] = f.goles;
+      const tag = gA > gR ? 'G' : gA < gR ? 'P' : 'E';
+      sub.textContent = `${gA} - ${gR} (${tag}) · Ver formaciones`;
+    } else {
+      sub.textContent = new Date(f.fecha + 'T12:00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'short' });
     }
+
+    info.appendChild(rivalEl);
+    info.appendChild(sub);
+    card.appendChild(info);
+
+    if (played && !isCurrent) {
+      card.addEventListener('click', () => openPrevFecha({ num: f.num, rival: f.rival }));
+      const arrow = document.createElement('div');
+      arrow.style.cssText = 'font-size:18px;color:rgba(255,255,255,0.25);flex-shrink:0;';
+      arrow.textContent = '›';
+      card.appendChild(arrow);
+    }
+
     list.appendChild(card);
   });
+}
+
+// ---- VER FECHAS para invitados (solo fecha actual) ----
+async function renderCurrentFechaGuest() {
+  const list = document.getElementById('fechas-list');
+  const rival = CLUB.rivalActual || '';
+  if (!rival) {
+    list.innerHTML = '<div style="text-align:center;color:#555;padding:30px;font-size:13px;">No hay fecha actual configurada.</div>';
+    return;
+  }
+  list.innerHTML = `
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-bottom:6px;">Fecha actual</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff;">${CLUB.nombreCorto} vs ${rival}</div>
+    </div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:2px;color:#555;text-transform:uppercase;margin:0 0 8px;">⚽ Formaciones de la gente</div>
+    <div id="guest-fechas-formations"><div style="text-align:center;color:#555;padding:16px;font-size:13px;">Cargando...</div></div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:2px;color:#555;text-transform:uppercase;margin:18px 0 8px;">⭐ Puntajes de la gente</div>
+    <div id="guest-fechas-scores"><div style="text-align:center;color:#555;padding:16px;font-size:13px;">Cargando...</div></div>
+    <div style="margin-top:24px;padding:16px;background:rgba(21,101,192,0.08);border:1px solid rgba(21,101,192,0.2);border-radius:12px;text-align:center;">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;color:#fff;margin-bottom:4px;">Ver fechas anteriores</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:12px;">Accedé al historial completo con una cuenta gratuita</div>
+      <button onclick="openAuthModal('register')" style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;background:#1565c0;color:#fff;border:none;border-radius:8px;padding:9px 20px;cursor:pointer;margin-right:8px;">CREAR CUENTA</button>
+      <button onclick="openAuthModal('login')" style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1px;background:transparent;color:rgba(255,255,255,0.4);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 16px;cursor:pointer;">Ingresar</button>
+    </div>
+  `;
+  try {
+    const [fRes, sRes] = await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/formaciones?select=jugadores,likes,created_at&order=likes.desc,created_at.desc&limit=5&rival=eq.${encodeURIComponent(rival)}&club=eq.${CLUB_SLUG}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
+      fetch(`${SUPABASE_URL}/rest/v1/puntajes?select=puntajes&rival=eq.${encodeURIComponent(rival)}&club=eq.${CLUB_SLUG}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } })
+    ]);
+    const fData = await fRes.json();
+    const sData = await sRes.json();
+    const fCont = document.getElementById('guest-fechas-formations');
+    fCont.innerHTML = '';
+    if (!fData.length) { fCont.innerHTML = '<div style="text-align:center;color:#555;padding:16px;font-size:13px;">Sin formaciones aún.</div>'; }
+    else { fData.slice(0, 3).forEach(row => { const card = document.createElement('div'); card.className = 'mini-form'; const miniP = document.createElement('div'); miniP.style.cssText = 'width:100%;aspect-ratio:0.82;background:#2d7a3a;position:relative;overflow:hidden;'; if (row.jugadores && row.jugadores.length) renderMiniPitch(row.jugadores, miniP); card.appendChild(miniP); fCont.appendChild(card); }); }
+    const sCont = document.getElementById('guest-fechas-scores');
+    sCont.innerHTML = '';
+    if (!sData.length) { sCont.innerHTML = '<div style="text-align:center;color:#555;padding:16px;font-size:13px;">Sin puntajes aún.</div>'; }
+    else {
+      const totals = {}, counts2 = {};
+      sData.forEach(row => { Object.entries(row.puntajes || {}).forEach(([n, v]) => { totals[n] = (totals[n] || 0) + Number(v); counts2[n] = (counts2[n] || 0) + 1; }); });
+      Object.keys(totals).map(n => ({ num: Number(n), name: (CLUB.squad || []).find(s => s.num === Number(n))?.name || `#${n}`, avg: totals[n] / counts2[n] }))
+        .sort((a, b) => b.avg - a.avg).slice(0, 6).forEach(p => {
+          const row = document.createElement('div'); row.className = 'score-result-row';
+          const numEl = document.createElement('div'); numEl.className = 'score-result-num'; numEl.textContent = `#${p.num}`;
+          const nameEl = document.createElement('div'); nameEl.className = 'score-result-name'; nameEl.textContent = p.name;
+          const barWrap = document.createElement('div'); barWrap.className = 'score-result-bar-wrap';
+          const bar = document.createElement('div'); bar.className = 'score-result-bar'; bar.style.width = (p.avg / 10 * 100) + '%'; barWrap.appendChild(bar);
+          const valEl = document.createElement('div'); valEl.className = 'score-result-val'; valEl.textContent = p.avg.toFixed(1);
+          row.appendChild(numEl); row.appendChild(nameEl); row.appendChild(barWrap); row.appendChild(valEl); sCont.appendChild(row);
+        });
+    }
+  } catch(e) { const el = document.getElementById('guest-fechas-formations'); if (el) el.innerHTML = '<div style="color:#555;text-align:center;padding:16px;">Error al cargar.</div>'; }
+}
+
+// ---- FIXTURE ----
+let _fixtureCache = null;
+async function renderFixture() {
+  const cont = document.getElementById('fixture-list');
+  if (_fixtureCache) { _renderFixtureList(_fixtureCache, cont); return; }
+  cont.innerHTML = '<div style="text-align:center;color:#555;padding:30px;font-size:13px;">Cargando...</div>';
+  try {
+    const res = await fetch(`https://v3.football.api-sports.io/fixtures?team=${CLUB.id}&season=2026&league=128`, { headers: { 'x-apisports-key': API_KEY_TABLA } });
+    const d = await res.json();
+    _fixtureCache = d.response || [];
+    _renderFixtureList(_fixtureCache, cont);
+  } catch(e) { cont.innerHTML = '<div style="text-align:center;color:#555;padding:30px;">Error al cargar el fixture.</div>'; }
+}
+
+function _renderFixtureList(fixtures, cont) {
+  cont.innerHTML = '';
+  if (!fixtures.length) { cont.innerHTML = '<div style="text-align:center;color:#555;padding:30px;">Sin partidos.</div>'; return; }
+  const sorted = [...fixtures].sort((a, b) => new Date(a.fixture.date) - new Date(b.fixture.date));
+  sorted.forEach(f => {
+    const isHome = f.teams.home.id === CLUB.id;
+    const opp = isHome ? f.teams.away : f.teams.home;
+    const st = f.fixture.status.short;
+    const played = ['FT','AET','PEN'].includes(st);
+    const row = document.createElement('div');
+    row.className = 'fixture-row';
+
+    const dateEl = document.createElement('div');
+    dateEl.className = 'fixture-date';
+    const dd = new Date(f.fixture.date);
+    dateEl.textContent = `${dd.getDate()}/${dd.getMonth() + 1}`;
+    row.appendChild(dateEl);
+
+    const teamsEl = document.createElement('div');
+    teamsEl.className = 'fixture-teams';
+    const main = document.createElement('div');
+    main.className = 'fixture-teams-main';
+    main.innerHTML = isHome
+      ? `<span style="color:var(--club-color);">${CLUB.nombreCorto}</span> vs ${opp.name}`
+      : `${opp.name} vs <span style="color:var(--club-color);">${CLUB.nombreCorto}</span>`;
+    const loc = document.createElement('div');
+    loc.className = 'fixture-loc';
+    loc.textContent = isHome ? '🏠 Local' : '✈️ Visitante';
+    teamsEl.appendChild(main);
+    teamsEl.appendChild(loc);
+    row.appendChild(teamsEl);
+
+    const scoreEl = document.createElement('div');
+    if (played) {
+      const gA = isHome ? f.goals.home : f.goals.away;
+      const gR = isHome ? f.goals.away : f.goals.home;
+      scoreEl.className = 'fixture-score ' + (gA > gR ? 'win' : gA < gR ? 'lose' : 'draw');
+      scoreEl.textContent = `${gA}-${gR}`;
+    } else {
+      scoreEl.className = 'fixture-score next';
+      scoreEl.textContent = 'PRÓXIMO';
+    }
+    row.appendChild(scoreEl);
+    cont.appendChild(row);
+  });
+}
+
+// ---- ESTADÍSTICAS ----
+let _statsCache = null;
+async function renderStats() {
+  const cont = document.getElementById('stats-content');
+  if (_statsCache) { _renderStatsContent(_statsCache, cont); return; }
+  cont.innerHTML = '<div style="text-align:center;color:#555;padding:30px;font-size:13px;">Cargando...</div>';
+  try {
+    const res = await fetch(`https://v3.football.api-sports.io/teams/statistics?team=${CLUB.id}&season=2026&league=128`, { headers: { 'x-apisports-key': API_KEY_TABLA } });
+    const d = await res.json();
+    if (!d.response) throw new Error('sin datos');
+    _statsCache = d.response;
+    _renderStatsContent(_statsCache, cont);
+  } catch(e) { cont.innerHTML = '<div style="text-align:center;color:#555;padding:30px;">Error al cargar estadísticas.</div>'; }
+}
+
+function _renderStatsContent(s, cont) {
+  const f = s.fixtures; const g = s.goals;
+  const form = (s.form || '').split('');
+  const played = f.played.total;
+  const wins = f.wins.total; const draws = f.draws.total; const losses = f.loses.total;
+  const ppg = played ? ((wins * 3 + draws) / played).toFixed(1) : '0.0';
+  cont.innerHTML = '';
+
+  if (form.length) {
+    const formSec = document.createElement('div');
+    formSec.style.cssText = 'margin-bottom:20px;';
+    formSec.innerHTML = '<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-bottom:10px;">Últimos resultados</div>';
+    const dots = document.createElement('div'); dots.className = 'form-dots';
+    form.slice(-10).forEach(r => {
+      const dot = document.createElement('div'); dot.className = `form-dot ${r}`;
+      dot.textContent = r === 'W' ? 'G' : r === 'D' ? 'E' : 'P';
+      dots.appendChild(dot);
+    });
+    formSec.appendChild(dots); cont.appendChild(formSec);
+  }
+
+  const grid = document.createElement('div'); grid.className = 'stats-grid';
+  [
+    { val: `${wins}-${draws}-${losses}`, label: 'G · E · P' },
+    { val: played,                        label: 'Partidos jugados' },
+    { val: g.for.total.total,             label: 'Goles a favor' },
+    { val: g.against.total.total,         label: 'Goles en contra' },
+    { val: ppg,                           label: 'Puntos por partido' },
+    { val: g.for.total.total - g.against.total.total >= 0 ? `+${g.for.total.total - g.against.total.total}` : g.for.total.total - g.against.total.total, label: 'Diferencia de goles' },
+    { val: `${f.wins.home}-${f.wins.away}`,  label: 'Victorias L/V' },
+    { val: s.cleanSheets?.total ?? '-',   label: 'Vallas invictas' },
+  ].forEach(c => {
+    const card = document.createElement('div'); card.className = 'stat-card';
+    card.innerHTML = `<div class="stat-card-val">${c.val}</div><div class="stat-card-label">${c.label}</div>`;
+    grid.appendChild(card);
+  });
+  cont.appendChild(grid);
+
+  const breakdown = document.createElement('div');
+  breakdown.style.cssText = 'background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:14px;margin-top:4px;';
+  breakdown.innerHTML = `
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-bottom:12px;">Local vs Visitante</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:center;">
+      <div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.3);margin-bottom:6px;">🏠 LOCAL</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:#fff;">${f.wins.home}G ${f.draws.home}E ${f.loses.home}P</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:3px;">${g.for.total.home} goles a favor</div>
+      </div>
+      <div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.3);margin-bottom:6px;">✈️ VISITANTE</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:#fff;">${f.wins.away}G ${f.draws.away}E ${f.loses.away}P</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:3px;">${g.for.total.away} goles a favor</div>
+      </div>
+    </div>
+  `;
+  cont.appendChild(breakdown);
 }
 
 async function openPrevFecha(f) {
@@ -1371,6 +1677,8 @@ document.getElementById('formation-download-btn').addEventListener('click', asyn
 <script src="js/auth-ui.js"></script>
 <script>
 initAuthHeaderBtn();
+renderSecondaryRow();
+onAuthChange(() => renderSecondaryRow());
 initAuth();
 </script>
 </body>
