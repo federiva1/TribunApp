@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh auth *)",
+      "Bash(gh --version)",
+      "Bash(python3 -c \"import sys,base64,json; p=sys.stdin.read\\(\\).strip\\(\\); p+='=='*\\(\\(4-len\\(p\\)%4\\)%4\\); print\\(json.loads\\(base64.urlsafe_b64decode\\(p\\)\\)\\)\")",
+      "Bash(gh api *)",
+      "Bash(grep -iE \"\\\\.\\(png|jpg|jpeg\\)$\")"
+    ]
+  }
+}
