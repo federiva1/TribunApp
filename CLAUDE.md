@@ -77,9 +77,16 @@ The single source of truth for all 30 clubs. Defines three globals:
 - **Community data**: read/written to Supabase. The `club` column (slug) differentiates the 30 teams.
 
 ### Supabase tables
-- `formaciones(id, club, rival, jugadores, likes, dislikes, device_id, user_id, equipo_hincha)` — `jugadores` is a JSON array of player objects placed on pitch. Logged-in users populate `user_id` + `equipo_hincha`; guests use `device_id` (localStorage UUID).
-- `puntajes(id, club, rival, puntajes, user_id, equipo_hincha)` — `puntajes` is a JSON object mapping player num → score 1-10.
+- `formaciones(id, club, rival, match_date, jugadores, likes, dislikes, device_id, user_id, equipo_hincha)` — `jugadores` is a JSON array of player objects placed on pitch. Logged-in users populate `user_id` + `equipo_hincha`; guests use `device_id` (localStorage UUID).
+- `puntajes(id, club, rival, match_date, puntajes, user_id, equipo_hincha)` — `puntajes` is a JSON object mapping player num → score 1-10.
 - `perfiles(id, equipo_hincha)` — one row per Supabase user, `id` matches `auth.users.id`.
+
+`match_date` (type `date`) was added via:
+```sql
+ALTER TABLE formaciones ADD COLUMN IF NOT EXISTS match_date date;
+ALTER TABLE puntajes    ADD COLUMN IF NOT EXISTS match_date date;
+```
+All queries filter by `club + rival + match_date` so the same two teams can meet multiple times (copa group stage, liga playoffs) without mixing data. `match_date` is resolved at runtime from `data/fixtures/{slug}.json` — the first entry where `rival === RIVAL && goles === null` gives the current match date (`FECHA_ACTUAL`). It is optional in queries (falls back to rival-only filter for rows inserted before this column existed).
 
 ### Auth-gated sections in club.html
 `renderSecondaryRow()` controls the bottom nav bar and re-runs on every auth change:
