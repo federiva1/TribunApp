@@ -296,7 +296,7 @@
       btn.className = '';
       btn.style.cssText = 'display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:6px 12px;cursor:pointer;font-family:"Bebas Neue",sans-serif;font-size:13px;letter-spacing:1px;color:rgba(255,255,255,0.65);transition:background 0.2s,color 0.2s;white-space:nowrap;';
       const label = document.createElement('span');
-      label.textContent = 'Ingresar';
+      label.textContent = 'Ingresar / Registrarse';
       btn.appendChild(label);
     }
   }

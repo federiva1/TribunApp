@@ -19,9 +19,9 @@ function getSupabaseClient() {
 // Callbacks registrados para cambios de sesión
 const _authListeners = [];
 
-function onAuthChange(fn) {
+window.onAuthChange = function onAuthChange(fn) {
   _authListeners.push(fn);
-}
+};
 
 function _notifyListeners(user) {
   _authListeners.forEach(fn => { try { fn(user); } catch(e) {} });
