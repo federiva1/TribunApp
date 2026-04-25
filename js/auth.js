@@ -13,9 +13,8 @@ function getSupabaseClient() {
   return _supabase;
 }
 
-// Estado global del usuario autenticado
+// Estado global del usuario autenticado — declarado en config.js para disponibilidad temprana
 // { id, email, equipoHincha } | null
-let currentUser = null;
 
 // Callbacks registrados para cambios de sesión
 const _authListeners = [];
