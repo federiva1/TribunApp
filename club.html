@@ -644,9 +644,12 @@ function openSection(section) {
     }
   }
   if (section === 'scores') {
+    const scoresLsKey = currentUser
+      ? LS_SCORES_KEY + '_user_' + currentUser.id
+      : LS_SCORES_KEY;
     if (!SCORES_ENABLED) {
       document.getElementById('scores-list').innerHTML = '<div style="text-align:center;padding:30px;font-size:13px;color:#555;">Esta sección se habilita cuando termina el partido.</div>';
-    } else if (!localStorage.getItem(LS_SCORES_KEY)) {
+    } else if (!localStorage.getItem(scoresLsKey)) {
       renderScores();
     } else {
       const btn = document.getElementById('scores-confirm-btn');
@@ -803,7 +806,11 @@ function updateCounter() {
   const isReady = n === 11;
   const dlBtn = document.getElementById('download-pitch-btn');
   const cfBtn = document.getElementById('confirm-btn');
-  const alreadyVoted = !!localStorage.getItem(LS_KEY);
+  // Logueados: anti-duplicado por user_id (clave en LS con sufijo _user)
+  const lsKeyUser = LS_KEY + '_user_' + (currentUser?.id || '');
+  const alreadyVoted = currentUser
+    ? !!localStorage.getItem(lsKeyUser)
+    : !!localStorage.getItem(LS_KEY);
   dlBtn.disabled = !isReady;
   dlBtn.style.opacity = isReady ? '1' : '0.3';
   dlBtn.style.cursor = isReady ? 'pointer' : 'not-allowed';
@@ -873,13 +880,27 @@ document.getElementById('confirm-btn').addEventListener('click', async () => {
   let jugadores = onPitch.map(p => ({ num: p.num, name: p.name, fid: p.fid, x: Math.round(p.xPct), y: Math.round(p.yPct) }));
   if (gk && gk.yPct < 50) jugadores = jugadores.map(p => ({ ...p, x: Math.round(100 - p.x), y: Math.round(100 - p.y) }));
   try {
+    const payload = { jugadores, rival: RIVAL, club: CLUB_SLUG };
+    if (currentUser) {
+      payload.user_id = currentUser.id;
+      payload.equipo_hincha = currentUser.equipoHincha || null;
+    } else {
+      payload.device_id = getDeviceId();
+    }
     const res = await fetch(`${SUPABASE_URL}/rest/v1/formaciones`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ jugadores, rival: RIVAL, club: CLUB_SLUG, device_id: getDeviceId() })
+      body: JSON.stringify(payload)
     });
     if (res.ok || res.status === 201) {
-      try { localStorage.setItem(LS_KEY, '1'); localStorage.setItem(LS_FORMATION_KEY, JSON.stringify(jugadores)); } catch(e) {}
+      try {
+        if (currentUser) {
+          localStorage.setItem(LS_KEY + '_user_' + currentUser.id, '1');
+        } else {
+          localStorage.setItem(LS_KEY, '1');
+        }
+        localStorage.setItem(LS_FORMATION_KEY, JSON.stringify(jugadores));
+      } catch(e) {}
       showToast(`¡Formación enviada! Vamos ${CLUB.nombreCorto} 🔥`);
       updateCounter();
       document.getElementById('formation-success').style.display = 'flex';
@@ -1100,8 +1121,19 @@ document.getElementById('scores-confirm-btn').addEventListener('click', async ()
   if (localStorage.getItem(LS_SCORES_KEY)) { downloadMyScores(); return; }
   if (Object.keys(userScores).length !== playedSquad.length || !playedSquad.length) return;
   try {
-    await fetch(`${SUPABASE_URL}/rest/v1/puntajes`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' }, body: JSON.stringify({ rival: RIVAL, club: CLUB_SLUG, puntajes: userScores }) });
-    try { localStorage.setItem(LS_SCORES_KEY, '1'); } catch(e) {}
+    const scoresPayload = { rival: RIVAL, club: CLUB_SLUG, puntajes: userScores };
+    if (currentUser) {
+      scoresPayload.user_id = currentUser.id;
+      scoresPayload.equipo_hincha = currentUser.equipoHincha || null;
+    }
+    await fetch(`${SUPABASE_URL}/rest/v1/puntajes`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' }, body: JSON.stringify(scoresPayload) });
+    try {
+      if (currentUser) {
+        localStorage.setItem(LS_SCORES_KEY + '_user_' + currentUser.id, '1');
+      } else {
+        localStorage.setItem(LS_SCORES_KEY, '1');
+      }
+    } catch(e) {}
     btn.textContent = '⬇ Descargar puntajes'; btn.style.background = '#2e7d32'; btn.style.opacity = '1'; btn.classList.remove('ready');
     await showScoresResults();
   } catch(e) { showToast('Error de conexión.'); }
