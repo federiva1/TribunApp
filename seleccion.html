@@ -249,6 +249,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
     <span style="width:13px;height:13px;border-radius:50%;background:#74b9ff;border:1.5px solid rgba(255,255,255,0.25);flex-shrink:0;display:inline-block;"></span>
     <span style="width:13px;height:13px;border-radius:50%;background:#fff;border:1.5px solid rgba(255,255,255,0.25);flex-shrink:0;display:inline-block;"></span>
   </div>
+  <div id="auth-btn-container" style="flex-shrink:0;"></div>
 </header>
 
 <main id="main">
@@ -784,6 +785,13 @@ document.getElementById('confirm-form-btn').addEventListener('click', async () =
 // INIT
 // ============================================================
 loadRecentPlayers();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/clubes.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/auth-ui.js"></script>
+<script>
+initAuth().then(() => initAuthHeaderBtn('auth-btn-container'));
 </script>
 </body>
 </html>

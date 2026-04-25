@@ -368,6 +368,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
       <div class="club-header-sub" id="club-sub-header">Liga Profesional Argentina 2026</div>
     </div>
     <div id="club-color-dots" style="display:flex;gap:5px;align-items:center;margin-left:4px;"></div>
+    <div id="auth-btn-container" style="margin-left:auto;flex-shrink:0;"></div>
   </header>
 
   <!-- MENÚ PRINCIPAL — HERO PANELS -->
@@ -1258,6 +1259,12 @@ document.getElementById('formation-download-btn').addEventListener('click', asyn
   } catch(e) { showToast('No se pudo generar.'); }
   finally { document.querySelectorAll('.xbtn').forEach(x => x.style.display = ''); document.getElementById('formation-success').style.display = 'flex'; document.getElementById('formation-download-btn').textContent = 'Descargar mi formación'; }
 });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/auth.js"></script>
+<script src="js/auth-ui.js"></script>
+<script>
+initAuth().then(() => initAuthHeaderBtn('auth-btn-container'));
 </script>
 </body>
 </html>
