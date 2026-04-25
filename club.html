@@ -418,6 +418,10 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   <div id="results-screen">
     <h2>⚽ Resultados</h2>
     <div class="subtitle">¿A quién elegiría la gente?</div>
+    <div id="results-filter-bar" style="display:flex;gap:4px;background:rgba(255,255,255,0.05);border-radius:10px;padding:4px;margin-bottom:10px;">
+      <button class="res-filter-btn active" data-filter="todos" onclick="switchResultsFilter('todos',this)" style="flex:1;font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:1px;border:none;border-radius:7px;padding:7px 4px;cursor:pointer;background:#1565c0;color:#fff;">Todos</button>
+      <button class="res-filter-btn" data-filter="hinchas" onclick="switchResultsFilter('hinchas',this)" style="flex:1;font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:1px;border:none;border-radius:7px;padding:7px 4px;cursor:pointer;background:transparent;color:rgba(255,255,255,0.4);" id="results-hinchas-btn">Hinchas de <span id="results-club-label"></span></button>
+    </div>
     <div id="total-votes" style="font-size:11px;color:#555;text-align:center;margin-bottom:10px;"></div>
     <div id="results-list"><div style="text-align:center;color:#666;padding:20px;font-size:13px;">Cargando...</div></div>
     <button id="download-results-btn" style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;background:#2e7d32;color:#fff;border:2px solid #fff;border-radius:8px;padding:10px;cursor:pointer;width:100%;margin-top:8px;">⬇ Descargar resultados</button>
@@ -500,6 +504,10 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   <div id="scores-results-screen">
     <h2>⭐ Puntajes</h2>
     <div class="subtitle">Promedio de la gente</div>
+    <div id="scores-filter-bar" style="display:flex;gap:4px;background:rgba(255,255,255,0.05);border-radius:10px;padding:4px;margin-bottom:10px;">
+      <button class="scr-filter-btn active" data-filter="todos" onclick="switchScoresFilter('todos',this)" style="flex:1;font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:1px;border:none;border-radius:7px;padding:7px 4px;cursor:pointer;background:#1565c0;color:#fff;">Todos</button>
+      <button class="scr-filter-btn" data-filter="hinchas" onclick="switchScoresFilter('hinchas',this)" style="flex:1;font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:1px;border:none;border-radius:7px;padding:7px 4px;cursor:pointer;background:transparent;color:rgba(255,255,255,0.4);">Hinchas de <span id="scores-club-label"></span></button>
+    </div>
     <div id="scores-total-votes" style="font-size:11px;color:#555;text-align:center;margin-bottom:8px;"></div>
     <div id="scores-results-list"><div style="color:#555;text-align:center;padding:20px;">Cargando...</div></div>
     <button id="download-scores-results-btn" style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;background:#2e7d32;color:#fff;border:none;border-radius:8px;padding:10px;cursor:pointer;width:100%;margin-top:8px;">⬇ Descargar resultados</button>
@@ -596,6 +604,9 @@ document.getElementById('club-nombre-header').textContent = CLUB.nombre;
 });
 document.getElementById('formation-rival-tag').textContent = RIVAL !== 'Por definir' ? `${CLUB.nombreCorto} vs ${RIVAL}` : '';
 document.getElementById('scores-rival-tag').textContent = RIVAL !== 'Por definir' ? `${CLUB.nombreCorto} vs ${RIVAL}` : '';
+// Labels de filtro en resultados
+const _rlbl = document.getElementById('results-club-label'); if (_rlbl) _rlbl.textContent = CLUB.nombreCorto;
+const _slbl = document.getElementById('scores-club-label');  if (_slbl) _slbl.textContent = CLUB.nombreCorto;
 document.getElementById('formation-success-body').textContent = `Tu formación fue registrada. ¡Vamos ${CLUB.nombreCorto}!`;
 document.getElementById('scores-success-body').textContent = `Tus puntajes fueron registrados. ¡Vamos ${CLUB.nombreCorto}!`;
 document.getElementById('formation-success-title').textContent = `¡Gracias, hincha!`;
@@ -912,7 +923,30 @@ document.getElementById('confirm-btn').addEventListener('click', async () => {
 });
 
 // ---- Ver resultados ----
-document.getElementById('ver-resultados-btn').addEventListener('click', showResults);
+let _resultsFilter = 'todos';
+let _scoresFilter  = 'todos';
+
+function switchResultsFilter(filter, btn) {
+  _resultsFilter = filter;
+  document.querySelectorAll('.res-filter-btn').forEach(b => { b.style.background = 'transparent'; b.style.color = 'rgba(255,255,255,0.4)'; });
+  if (btn) { btn.style.background = '#1565c0'; btn.style.color = '#fff'; }
+  showResults();
+}
+
+function switchScoresFilter(filter, btn) {
+  _scoresFilter = filter;
+  document.querySelectorAll('.scr-filter-btn').forEach(b => { b.style.background = 'transparent'; b.style.color = 'rgba(255,255,255,0.4)'; });
+  if (btn) { btn.style.background = '#1565c0'; btn.style.color = '#fff'; }
+  showScoresResults();
+}
+
+document.getElementById('ver-resultados-btn').addEventListener('click', () => {
+  _resultsFilter = 'todos';
+  document.querySelectorAll('.res-filter-btn').forEach((b, i) => { b.style.background = i === 0 ? '#1565c0' : 'transparent'; b.style.color = i === 0 ? '#fff' : 'rgba(255,255,255,0.4)'; });
+  const clubLabelEl = document.getElementById('results-club-label');
+  if (clubLabelEl) clubLabelEl.textContent = CLUB.nombreCorto;
+  showResults();
+});
 document.getElementById('back-results-btn').addEventListener('click', () => { resultsScreen.style.display = 'none'; });
 
 async function showResults() {
@@ -921,7 +955,9 @@ async function showResults() {
   const totalEl = document.getElementById('total-votes');
   list.innerHTML = '<div style="text-align:center;color:#666;padding:20px;font-size:13px;">Cargando...</div>'; totalEl.textContent = '';
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/formaciones?select=jugadores&rival=eq.${encodeURIComponent(RIVAL)}&club=eq.${CLUB_SLUG}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
+    let url = `${SUPABASE_URL}/rest/v1/formaciones?select=jugadores&rival=eq.${encodeURIComponent(RIVAL)}&club=eq.${CLUB_SLUG}`;
+    if (_resultsFilter === 'hinchas') url += `&equipo_hincha=eq.${CLUB_SLUG}`;
+    const res = await fetch(url, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
     const data = await res.json();
     const total = data.length;
     if (total === 0) { list.innerHTML = '<div style="text-align:center;color:#666;padding:20px;font-size:13px;">Todavía no hay formaciones enviadas.</div>'; return; }
@@ -1139,7 +1175,13 @@ document.getElementById('scores-confirm-btn').addEventListener('click', async ()
   } catch(e) { showToast('Error de conexión.'); }
 });
 
-document.getElementById('scores-ver-resultados-btn').addEventListener('click', showScoresResults);
+document.getElementById('scores-ver-resultados-btn').addEventListener('click', () => {
+  _scoresFilter = 'todos';
+  document.querySelectorAll('.scr-filter-btn').forEach((b, i) => { b.style.background = i === 0 ? '#1565c0' : 'transparent'; b.style.color = i === 0 ? '#fff' : 'rgba(255,255,255,0.4)'; });
+  const clubLabelEl = document.getElementById('scores-club-label');
+  if (clubLabelEl) clubLabelEl.textContent = CLUB.nombreCorto;
+  showScoresResults();
+});
 document.getElementById('back-scores-results-btn').addEventListener('click', () => { document.getElementById('scores-results-screen').style.display = 'none'; });
 
 async function showScoresResults() {
@@ -1147,7 +1189,9 @@ async function showScoresResults() {
   const list = document.getElementById('scores-results-list');
   list.innerHTML = '<div style="color:#555;text-align:center;padding:20px;">Cargando...</div>';
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/puntajes?select=puntajes&rival=eq.${encodeURIComponent(RIVAL)}&club=eq.${CLUB_SLUG}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
+    let url = `${SUPABASE_URL}/rest/v1/puntajes?select=puntajes&rival=eq.${encodeURIComponent(RIVAL)}&club=eq.${CLUB_SLUG}`;
+    if (_scoresFilter === 'hinchas') url += `&equipo_hincha=eq.${CLUB_SLUG}`;
+    const res = await fetch(url, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
     const data = await res.json();
     if (!data.length) { list.innerHTML = '<div style="color:#555;text-align:center;padding:20px;">Sin resultados aún.</div>'; document.getElementById('scores-total-votes').textContent = ''; return; }
     const totalVoters = data.length;
