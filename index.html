@@ -21,13 +21,13 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 /* ===== HEADER ===== */
 #site-header {
   display: grid;
-  grid-template-columns: 1fr auto auto 1fr;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
   padding: 12px 16px 10px;
   background: linear-gradient(180deg, rgba(21,101,192,0.18) 0%, transparent 100%);
   border-bottom: 1px solid rgba(255,255,255,0.07);
   position: sticky; top: 0; z-index: 50; backdrop-filter: blur(10px);
-  gap: 8px;
+  gap: 12px;
 }
 .logo {
   font-family: 'Bebas Neue', sans-serif;
@@ -46,7 +46,6 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   border-radius: 12px; padding: 6px 12px;
   cursor: pointer; text-decoration: none;
   transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
-  justify-self: center;
 }
 #seleccion-card:hover {
   background: linear-gradient(135deg, rgba(116,185,255,0.22) 0%, rgba(21,101,192,0.35) 100%);
@@ -65,14 +64,13 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   border-radius: 12px; padding: 6px 12px;
   cursor: pointer; text-decoration: none;
   transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
-  justify-self: center;
 }
 #copas-card:hover {
   background: linear-gradient(135deg, rgba(245,197,24,0.2) 0%, rgba(27,94,32,0.3) 100%);
   transform: translateY(-1px); box-shadow: 0 4px 18px rgba(245,197,24,0.2);
 }
 
-/* ===== BOTÓN TABLA (header derecha) ===== */
+/* ===== BOTÓN TABLA (header centro) ===== */
 #tabla-header-btn {
   display: flex; align-items: center; gap: 6px;
   background: rgba(255,255,255,0.06);
@@ -81,7 +79,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   cursor: pointer; font-family: 'Bebas Neue', sans-serif;
   font-size: 13px; letter-spacing: 1px; color: rgba(255,255,255,0.65);
   transition: background 0.2s, color 0.2s, box-shadow 0.2s;
-  justify-self: end; white-space: nowrap;
+  white-space: nowrap;
 }
 #tabla-header-btn:hover {
   background: rgba(255,255,255,0.12); color: #fff;
@@ -247,28 +245,29 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 <header id="site-header">
   <div class="logo">Tribun<span style="-webkit-text-fill-color:var(--acento-light);">App</span></div>
 
-  <a id="seleccion-card" href="seleccion.html">
-    <div class="seleccion-flag"><img src="escudos/argentina.png" alt="Argentina"></div>
-    <div class="seleccion-info">
-      <span class="seleccion-label">App especial</span>
-      <span class="seleccion-nombre">SELECCIÓN ARG</span>
-    </div>
-  </a>
-
-  <a id="copas-card" href="copas.html">
-    <img src="fotos/copas.png" alt="Copas" style="width:22px;height:22px;object-fit:contain;">
-    <div class="seleccion-info">
-      <span class="seleccion-label">Internacional</span>
-      <span class="seleccion-nombre">COPAS</span>
-    </div>
-  </a>
-
-  <div style="display:flex;align-items:center;gap:8px;justify-self:end;">
+  <div style="display:flex;align-items:center;justify-content:center;gap:8px;">
     <button id="tabla-header-btn" onclick="openTablaOverlay()">
       <span class="tbtn-icon">📊</span> TABLA
     </button>
-    <div id="auth-btn-container"></div>
+
+    <a id="seleccion-card" href="seleccion.html">
+      <div class="seleccion-flag"><img src="escudos/argentina.png" alt="Argentina"></div>
+      <div class="seleccion-info">
+        <span class="seleccion-label">App especial</span>
+        <span class="seleccion-nombre">SELECCIÓN ARG</span>
+      </div>
+    </a>
+
+    <a id="copas-card" href="copas.html">
+      <img src="fotos/copas.png" alt="Copas" style="width:22px;height:22px;object-fit:contain;">
+      <div class="seleccion-info">
+        <span class="seleccion-label">Internacional</span>
+        <span class="seleccion-nombre">COPAS</span>
+      </div>
+    </a>
   </div>
+
+  <div id="auth-btn-container" style="justify-self:end;"></div>
 </header>
 
 <!-- CONTENIDO PRINCIPAL -->
