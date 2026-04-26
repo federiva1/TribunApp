@@ -380,28 +380,109 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .fixture-score.next { font-family: 'Barlow Condensed', sans-serif; font-size: 9px; letter-spacing: 1px; color: rgba(255,255,255,0.2); }
 
 /* ===== ESTADÍSTICAS ===== */
-.stats-grid {
-  display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px;
+.stats-tabs {
+  display: flex; gap: 4px; background: rgba(255,255,255,0.04); border-radius: 10px;
+  padding: 4px; margin-bottom: 14px;
 }
-.stat-card {
+.stats-tab {
+  flex: 1; text-align: center; padding: 9px 6px; border-radius: 7px; cursor: pointer;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 1.5px;
+  color: rgba(255,255,255,0.5); text-transform: uppercase; transition: all 0.15s;
+  user-select: none;
+}
+.stats-tab.active { background: var(--club-color); color: #fff; }
+.stats-fecha-bar {
+  display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 14px;
+  scrollbar-width: none;
+}
+.stats-fecha-bar::-webkit-scrollbar { display: none; }
+.stats-fecha-pill {
+  flex: 0 0 auto; padding: 7px 12px; border-radius: 16px; cursor: pointer;
   background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 12px; padding: 14px 10px; text-align: center;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 1px;
+  color: rgba(255,255,255,0.55); white-space: nowrap; transition: all 0.15s;
 }
-.stat-card-val {
-  font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: #fff; line-height: 1;
+.stats-fecha-pill.active {
+  background: var(--club-color); border-color: var(--club-color); color: #fff;
 }
-.stat-card-label {
+.stats-section-title {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 2px;
+  color: rgba(255,255,255,0.35); text-transform: uppercase; margin: 18px 0 10px;
+}
+.stats-match-header {
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px; padding: 11px 12px; margin-bottom: 14px; text-align: center;
+}
+.stats-match-rival {
+  font-family: 'Bebas Neue', sans-serif; font-size: 17px; color: #fff; letter-spacing: 1px;
+}
+.stats-match-meta {
   font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 1.5px;
-  color: rgba(255,255,255,0.3); text-transform: uppercase; margin-top: 5px;
+  color: rgba(255,255,255,0.4); margin-top: 3px; text-transform: uppercase;
 }
-.form-dots { display: flex; gap: 5px; justify-content: center; flex-wrap: wrap; }
-.form-dot {
-  width: 28px; height: 28px; border-radius: 50%; font-family: 'Bebas Neue', sans-serif;
-  font-size: 13px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+.stats-match-result {
+  font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--club-color);
+  margin-top: 4px;
 }
-.form-dot.W { background: #2e7d32; }
-.form-dot.D { background: rgba(255,255,255,0.12); }
-.form-dot.L { background: #b71c1c; }
+.stats-row {
+  display: flex; align-items: center; gap: 10px; padding: 8px 4px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.stats-row-name {
+  flex: 1; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; color: #fff;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.stats-row-bar-wrap {
+  flex: 0 0 90px; height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px;
+  overflow: hidden;
+}
+.stats-row-bar { height: 100%; background: var(--club-color); border-radius: 3px; }
+.stats-row-count {
+  flex: 0 0 48px; text-align: right; font-family: 'Bebas Neue', sans-serif;
+  font-size: 13px; color: rgba(255,255,255,0.7);
+}
+.stats-compare-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+}
+.stats-compare-col {
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px; padding: 10px 8px;
+}
+.stats-compare-head {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 1.5px;
+  color: rgba(255,255,255,0.4); text-transform: uppercase; margin-bottom: 8px;
+  text-align: center;
+}
+.stats-compare-item {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 12px; color: #ddd;
+  padding: 5px 6px; border-radius: 5px; margin-bottom: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.stats-compare-item.match { background: rgba(76,175,80,0.18); color: #aed581; }
+.stats-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.stats-table {
+  width: 100%; border-collapse: collapse; font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12px;
+}
+.stats-table th {
+  font-size: 9px; letter-spacing: 1px; color: rgba(255,255,255,0.4);
+  text-transform: uppercase; text-align: right; padding: 7px 5px; cursor: pointer;
+  border-bottom: 1px solid rgba(255,255,255,0.1); white-space: nowrap; user-select: none;
+}
+.stats-table th.name-col { text-align: left; }
+.stats-table th.sorted { color: var(--club-color); }
+.stats-table th.sorted::after { content: ' ▾'; font-size: 10px; }
+.stats-table th.sorted.asc::after { content: ' ▴'; }
+.stats-table td {
+  padding: 7px 5px; text-align: right; color: #ddd;
+  border-bottom: 1px solid rgba(255,255,255,0.04); white-space: nowrap;
+}
+.stats-table td.name-col { text-align: left; color: #fff; max-width: 130px; overflow: hidden; text-overflow: ellipsis; }
+.stats-table tr.didnt-play td { color: rgba(255,255,255,0.25); }
+.stats-empty {
+  text-align: center; color: rgba(255,255,255,0.4); padding: 28px 16px;
+  font-size: 13px; font-family: 'Barlow Condensed', sans-serif; letter-spacing: 0.5px;
+}
 </style>
 </head>
 <body>
@@ -1574,77 +1655,322 @@ function _renderFixtureList(fixtures, cont) {
 }
 
 // ---- ESTADÍSTICAS ----
-let _statsCache = null;
-async function renderStats() {
-  const cont = document.getElementById('stats-content');
-  if (_statsCache) { _renderStatsContent(_statsCache, cont); return; }
-  cont.innerHTML = '<div style="text-align:center;color:#555;padding:30px;font-size:13px;">Cargando...</div>';
-  const leagueId = COPA === 'libertadores' ? 13 : COPA === 'sudamericana' ? 11 : 128;
-  try {
-    const res = await fetch(`https://v3.football.api-sports.io/teams/statistics?team=${CLUB.id}&season=2026&league=${leagueId}`, { headers: { 'x-apisports-key': API_KEY_TABLA } });
-    const d = await res.json();
-    if (!d.response) throw new Error('sin datos');
-    _statsCache = d.response;
-    _renderStatsContent(_statsCache, cont);
-  } catch(e) { cont.innerHTML = '<div style="text-align:center;color:#555;padding:30px;">Error al cargar estadísticas.</div>'; }
+// Estado del módulo: caché de JSON + formaciones + tab/fecha activos.
+const _stats = {
+  data: null,        // JSON de data/estadisticas/{slug}.json
+  formaciones: null, // filas de Supabase (todas las formaciones del club)
+  tab: 'web',        // 'web' | 'equipo'
+  fechaSel: 'acum',  // 'acum' | número de fecha
+  sortKey: 'minutos',
+  sortAsc: false,
+};
+
+function _statsNorm(s) {
+  return (s || '').toString().normalize('NFKD').replace(/\p{Diacritic}/gu, '')
+    .toLowerCase().trim().replace(/\s+/g, ' ');
 }
 
-function _renderStatsContent(s, cont) {
-  const f = s.fixtures; const g = s.goals;
-  const form = (s.form || '').split('');
-  const played = f.played.total;
-  const wins = f.wins.total; const draws = f.draws.total; const losses = f.loses.total;
-  const ppg = played ? ((wins * 3 + draws) / played).toFixed(1) : '0.0';
-  cont.innerHTML = '';
-
-  if (form.length) {
-    const formSec = document.createElement('div');
-    formSec.style.cssText = 'margin-bottom:20px;';
-    formSec.innerHTML = '<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-bottom:10px;">Últimos resultados</div>';
-    const dots = document.createElement('div'); dots.className = 'form-dots';
-    form.slice(-10).forEach(r => {
-      const dot = document.createElement('div'); dot.className = `form-dot ${r}`;
-      dot.textContent = r === 'W' ? 'G' : r === 'D' ? 'E' : 'P';
-      dots.appendChild(dot);
+// Devuelve la entrada del squad que más se parece a `nombre` (de la stats data).
+function _statsMatchSquad(nombre, squad) {
+  const n = _statsNorm(nombre);
+  let hit = squad.find(p => _statsNorm(p.name) === n);
+  if (hit) return hit;
+  // Match por primer + último token
+  const tk = n.split(' ').filter(Boolean);
+  if (tk.length >= 2) {
+    const first = tk[0], last = tk[tk.length - 1];
+    hit = squad.find(p => {
+      const sn = _statsNorm(p.name).split(' ').filter(Boolean);
+      return sn.length >= 2 && sn[0] === first && sn[sn.length - 1] === last;
     });
-    formSec.appendChild(dots); cont.appendChild(formSec);
+    if (hit) return hit;
+    // Match solo por apellido (último token)
+    hit = squad.find(p => {
+      const sn = _statsNorm(p.name).split(' ').filter(Boolean);
+      return sn[sn.length - 1] === last;
+    });
+    if (hit) return hit;
+  }
+  return null;
+}
+
+function _statsFmt(v) {
+  if (v === null || v === undefined) return '—';
+  if (typeof v === 'number') return Number.isInteger(v) ? String(v) : v.toFixed(2);
+  return String(v);
+}
+
+async function renderStats() {
+  const cont = document.getElementById('stats-content');
+
+  // Gate por club: solo argentinosjuniors está habilitado por ahora
+  if (CLUB_SLUG !== 'argentinosjuniors') {
+    cont.innerHTML = `<div class="stats-empty">📊<br><br>Estadísticas detalladas de <b style="color:#fff;">${CLUB.nombre}</b><br>próximamente.</div>`;
+    return;
   }
 
-  const grid = document.createElement('div'); grid.className = 'stats-grid';
-  [
-    { val: `${wins}-${draws}-${losses}`, label: 'G · E · P' },
-    { val: played,                        label: 'Partidos jugados' },
-    { val: g.for.total.total,             label: 'Goles a favor' },
-    { val: g.against.total.total,         label: 'Goles en contra' },
-    { val: ppg,                           label: 'Puntos por partido' },
-    { val: g.for.total.total - g.against.total.total >= 0 ? `+${g.for.total.total - g.against.total.total}` : g.for.total.total - g.against.total.total, label: 'Diferencia de goles' },
-    { val: `${f.wins.home}-${f.wins.away}`,  label: 'Victorias L/V' },
-    { val: s.cleanSheets?.total ?? '-',   label: 'Vallas invictas' },
-  ].forEach(c => {
-    const card = document.createElement('div'); card.className = 'stat-card';
-    card.innerHTML = `<div class="stat-card-val">${c.val}</div><div class="stat-card-label">${c.label}</div>`;
-    grid.appendChild(card);
+  if (_stats.data) { _renderStatsLayout(); return; }
+  cont.innerHTML = '<div style="text-align:center;color:#555;padding:30px;font-size:13px;">Cargando...</div>';
+
+  try {
+    const [statsRes, formRes] = await Promise.all([
+      fetch(`data/estadisticas/${CLUB_SLUG}.json`, { cache: 'no-store' }),
+      fetch(`${SUPABASE_URL}/rest/v1/formaciones?select=jugadores,rival,match_date&club=eq.${CLUB_SLUG}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
+    ]);
+    if (!statsRes.ok) throw new Error('json no encontrado');
+    _stats.data = await statsRes.json();
+    _stats.formaciones = formRes.ok ? await formRes.json() : [];
+    _renderStatsLayout();
+  } catch(e) {
+    cont.innerHTML = '<div class="stats-empty">Error al cargar estadísticas.</div>';
+  }
+}
+
+function _renderStatsLayout() {
+  const cont = document.getElementById('stats-content');
+  cont.innerHTML = '';
+
+  // Tabs
+  const tabsEl = document.createElement('div'); tabsEl.className = 'stats-tabs';
+  [['web', 'Estadísticas de la web'], ['equipo', 'Estadísticas del equipo']].forEach(([id, label]) => {
+    const t = document.createElement('div');
+    t.className = 'stats-tab' + (_stats.tab === id ? ' active' : '');
+    t.textContent = label;
+    t.onclick = () => { _stats.tab = id; _renderStatsLayout(); };
+    tabsEl.appendChild(t);
   });
+  cont.appendChild(tabsEl);
+
+  // Selector de fecha (compartido entre tabs)
+  const bar = document.createElement('div'); bar.className = 'stats-fecha-bar';
+  const mkPill = (id, label) => {
+    const p = document.createElement('div');
+    p.className = 'stats-fecha-pill' + (_stats.fechaSel == id ? ' active' : '');
+    p.textContent = label;
+    p.onclick = () => { _stats.fechaSel = id; _renderStatsLayout(); };
+    return p;
+  };
+  bar.appendChild(mkPill('acum', 'Acumulado'));
+  _stats.data.partidos.forEach(p => bar.appendChild(mkPill(p.fecha, `F${p.fecha} · ${p.rival.split(' ')[0]}`)));
+  cont.appendChild(bar);
+
+  // Body
+  const body = document.createElement('div');
+  if (_stats.tab === 'web') _renderStatsTabWeb(body);
+  else _renderStatsTabEquipo(body);
+  cont.appendChild(body);
+}
+
+// ---- TAB 1: estadísticas de la web (votos de Supabase) ----
+function _renderStatsTabWeb(cont) {
+  const squad = CLUB.squad || [];
+  const data = _stats.data;
+  const formaciones = _stats.formaciones || [];
+
+  if (_stats.fechaSel === 'acum') {
+    // Vista acumulada del torneo: cuántas veces cada jugador fue elegido titular.
+    const totalFechas = data.partidos.length;
+    // Mapa nombreNorm -> {nombre display, fechas en las que apareció en al menos 1 formación}
+    const playerFechas = new Map();
+    data.partidos.forEach(partido => {
+      const formsFecha = formaciones.filter(f => f.rival === partido.rival && (!f.match_date || f.match_date === partido.date));
+      if (!formsFecha.length) return;
+      // Set de jugadores que aparecieron al menos una vez en alguna formación de esa fecha
+      const seenInFecha = new Set();
+      formsFecha.forEach(row => (row.jugadores || []).forEach(j => {
+        const sq = squad.find(s => s.num == j.num) || j;
+        const key = _statsNorm(sq.name || j.name);
+        seenInFecha.add(key);
+        if (!playerFechas.has(key)) playerFechas.set(key, { name: sq.name || j.name, fechas: 0 });
+      }));
+      seenInFecha.forEach(k => { playerFechas.get(k).fechas += 1; });
+    });
+
+    const sectTitle = document.createElement('div');
+    sectTitle.className = 'stats-section-title';
+    sectTitle.textContent = `Acumulado del torneo · ${totalFechas} fechas`;
+    cont.appendChild(sectTitle);
+
+    const list = [...playerFechas.values()].sort((a, b) => b.fechas - a.fechas);
+    if (!list.length) {
+      const e = document.createElement('div'); e.className = 'stats-empty';
+      e.textContent = 'Aún no hay formaciones cargadas.';
+      cont.appendChild(e); return;
+    }
+    list.forEach(p => {
+      const row = document.createElement('div'); row.className = 'stats-row';
+      const name = document.createElement('div'); name.className = 'stats-row-name'; name.textContent = p.name;
+      const barWrap = document.createElement('div'); barWrap.className = 'stats-row-bar-wrap';
+      const fill = document.createElement('div'); fill.className = 'stats-row-bar';
+      fill.style.width = (p.fechas / totalFechas * 100) + '%';
+      barWrap.appendChild(fill);
+      const cnt = document.createElement('div'); cnt.className = 'stats-row-count';
+      cnt.textContent = `${p.fechas}/${totalFechas}`;
+      row.appendChild(name); row.appendChild(barWrap); row.appendChild(cnt);
+      cont.appendChild(row);
+    });
+    return;
+  }
+
+  // Vista por fecha: comparación TribunApp vs Real
+  const partido = data.partidos.find(p => p.fecha == _stats.fechaSel);
+  if (!partido) { cont.innerHTML = '<div class="stats-empty">Fecha no encontrada.</div>'; return; }
+
+  cont.appendChild(_statsMatchHeader(partido));
+
+  // Equipo TribunApp: contar apariciones por jugador en formaciones de esta fecha
+  const formsFecha = formaciones.filter(f => f.rival === partido.rival && (!f.match_date || f.match_date === partido.date));
+  const counts = {};
+  formsFecha.forEach(row => (row.jugadores || []).forEach(j => {
+    const sq = squad.find(s => s.num == j.num);
+    const name = sq?.name || j.name;
+    const key = _statsNorm(name);
+    if (!counts[key]) counts[key] = { name, count: 0 };
+    counts[key].count += 1;
+  }));
+  const tribunTop = Object.values(counts).sort((a, b) => b.count - a.count).slice(0, 11);
+
+  // Equipo real: jugadores con jugo=true
+  const real = partido.jugadores.filter(j => j.jugo).map(j => ({ name: j.nombre, key: _statsNorm(j.nombre) }));
+
+  const tribunKeys = new Set(tribunTop.map(x => _statsNorm(x.name)));
+  const realKeys = new Set(real.map(x => x.key));
+
+  const grid = document.createElement('div'); grid.className = 'stats-compare-grid';
+
+  const colT = document.createElement('div'); colT.className = 'stats-compare-col';
+  colT.innerHTML = '<div class="stats-compare-head">Equipo TribunApp</div>';
+  if (!tribunTop.length) {
+    const e = document.createElement('div'); e.className = 'stats-empty'; e.style.padding = '14px';
+    e.textContent = 'Sin formaciones.';
+    colT.appendChild(e);
+  } else {
+    tribunTop.forEach(p => {
+      const it = document.createElement('div'); it.className = 'stats-compare-item';
+      if (realKeys.has(_statsNorm(p.name))) it.classList.add('match');
+      it.textContent = `${p.name} · ${p.count}`;
+      colT.appendChild(it);
+    });
+  }
+  grid.appendChild(colT);
+
+  const colR = document.createElement('div'); colR.className = 'stats-compare-col';
+  colR.innerHTML = '<div class="stats-compare-head">Equipo real</div>';
+  if (!real.length) {
+    const e = document.createElement('div'); e.className = 'stats-empty'; e.style.padding = '14px';
+    e.textContent = 'Sin datos.';
+    colR.appendChild(e);
+  } else {
+    real.forEach(p => {
+      const it = document.createElement('div'); it.className = 'stats-compare-item';
+      if (tribunKeys.has(p.key)) it.classList.add('match');
+      it.textContent = p.name;
+      colR.appendChild(it);
+    });
+  }
+  grid.appendChild(colR);
   cont.appendChild(grid);
 
-  const breakdown = document.createElement('div');
-  breakdown.style.cssText = 'background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:14px;margin-top:4px;';
-  breakdown.innerHTML = `
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-bottom:12px;">Local vs Visitante</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:center;">
-      <div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.3);margin-bottom:6px;">🏠 LOCAL</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:#fff;">${f.wins.home}G ${f.draws.home}E ${f.loses.home}P</div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:3px;">${g.for.total.home} goles a favor</div>
-      </div>
-      <div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.3);margin-bottom:6px;">✈️ VISITANTE</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:#fff;">${f.wins.away}G ${f.draws.away}E ${f.loses.away}P</div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:3px;">${g.for.total.away} goles a favor</div>
-      </div>
-    </div>
+  const matched = real.filter(r => tribunKeys.has(r.key)).length;
+  const summary = document.createElement('div');
+  summary.style.cssText = 'text-align:center;font-family:Barlow Condensed,sans-serif;font-size:11px;letter-spacing:1px;color:rgba(255,255,255,0.4);margin-top:12px;text-transform:uppercase;';
+  summary.innerHTML = `Coincidencias: <b style="color:#aed581;">${matched}</b> / 11`;
+  cont.appendChild(summary);
+}
+
+// ---- TAB 2: estadísticas del equipo (JSON) ----
+function _renderStatsTabEquipo(cont) {
+  const data = _stats.data;
+  const COLS = [
+    { key: 'nombre',         label: 'Jugador',  className: 'name-col' },
+    { key: 'partidos',       label: 'PJ',       acumOnly: true },
+    { key: 'minutos',        label: 'Min' },
+    { key: 'goles',          label: 'G' },
+    { key: 'asistencias',    label: 'A' },
+    { key: 'xG',             label: 'xG' },
+    { key: 'xA',             label: 'xA' },
+    { key: 'disparos',       label: 'Disp' },
+    { key: 'toques',         label: 'Toq' },
+    { key: 'pasesAcertados', label: 'Pases', custom: r => (r.pasesAcertados !== null && r.pasesAcertados !== undefined) ? `${r.pasesAcertados}${r.pasesIntentados !== null ? '/'+r.pasesIntentados : ''}` : '—' },
+    { key: 'accDefensivas',  label: 'Def' },
+  ];
+
+  if (_stats.fechaSel === 'acum') {
+    const sectTitle = document.createElement('div');
+    sectTitle.className = 'stats-section-title';
+    sectTitle.textContent = 'Acumulado del torneo';
+    cont.appendChild(sectTitle);
+    cont.appendChild(_statsBuildTable(data.acumulado, COLS, true));
+    return;
+  }
+
+  const partido = data.partidos.find(p => p.fecha == _stats.fechaSel);
+  if (!partido) { cont.innerHTML = '<div class="stats-empty">Fecha no encontrada.</div>'; return; }
+  cont.appendChild(_statsMatchHeader(partido));
+  const onlyPlayed = partido.jugadores.filter(j => j.jugo);
+  cont.appendChild(_statsBuildTable(onlyPlayed, COLS, false));
+}
+
+function _statsMatchHeader(partido) {
+  const h = document.createElement('div'); h.className = 'stats-match-header';
+  h.innerHTML = `
+    <div class="stats-match-rival">${CLUB.nombreCorto} vs ${partido.rival}</div>
+    <div class="stats-match-meta">F${partido.fecha} · ${partido.date} · ${partido.condicion}</div>
+    <div class="stats-match-result">${partido.resultado}</div>
   `;
-  cont.appendChild(breakdown);
+  return h;
+}
+
+function _statsBuildTable(rows, cols, isAcum) {
+  const wrap = document.createElement('div'); wrap.className = 'stats-table-wrap';
+  const table = document.createElement('table'); table.className = 'stats-table';
+  const visibleCols = cols.filter(c => isAcum || !c.acumOnly);
+
+  // Default sort: by sortKey desc; if not present, fallback to minutos
+  const sortable = rows.slice().sort((a, b) => {
+    const k = _stats.sortKey;
+    let va = a[k], vb = b[k];
+    if (k === 'nombre') {
+      va = _statsNorm(va); vb = _statsNorm(vb);
+      return _stats.sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+    }
+    va = (va === null || va === undefined) ? -Infinity : va;
+    vb = (vb === null || vb === undefined) ? -Infinity : vb;
+    return _stats.sortAsc ? va - vb : vb - va;
+  });
+
+  const thead = document.createElement('thead'); const trh = document.createElement('tr');
+  visibleCols.forEach(c => {
+    const th = document.createElement('th');
+    if (c.className) th.className = c.className;
+    th.textContent = c.label;
+    if (_stats.sortKey === c.key) {
+      th.classList.add('sorted');
+      if (_stats.sortAsc) th.classList.add('asc');
+    }
+    th.onclick = () => {
+      if (_stats.sortKey === c.key) _stats.sortAsc = !_stats.sortAsc;
+      else { _stats.sortKey = c.key; _stats.sortAsc = (c.key === 'nombre'); }
+      _renderStatsLayout();
+    };
+    trh.appendChild(th);
+  });
+  thead.appendChild(trh); table.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  sortable.forEach(r => {
+    const tr = document.createElement('tr');
+    if (!isAcum && r.jugo === false) tr.classList.add('didnt-play');
+    visibleCols.forEach(c => {
+      const td = document.createElement('td');
+      if (c.className) td.className = c.className;
+      td.textContent = c.custom ? c.custom(r) : _statsFmt(r[c.key]);
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody); wrap.appendChild(table);
+  return wrap;
 }
 
 async function openPrevFecha(f) {
