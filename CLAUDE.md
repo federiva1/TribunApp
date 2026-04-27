@@ -113,10 +113,10 @@ When `COPA` URL param is set (`'libertadores'` or `'sudamericana'`), las seccion
 
 #### ESTADÍSTICAS (`renderStats()` en club.html)
 Gateada por `CLUB_SLUG`: solo `argentinosjuniors` carga datos; el resto muestra "próximamente" sin fetch. Dos tabs sincronizados por un selector de fecha único (`Acumulado` + 12 fechas):
-- **Estadísticas de la web** — agrega de la tabla `formaciones` de Supabase. Vista acumulada: cuántas fechas cada jugador fue elegido titular (barra "X/12"). Vista por fecha: comparación lado a lado *Equipo TribunApp* (top 11 más votados) vs *Equipo real* (jugadores con `jugo:true` del JSON), con coincidencias resaltadas en verde y contador.
+- **Estadísticas de la web** — agrega de las tablas `formaciones` y `puntajes` de Supabase. Vista acumulada: cuántas fechas cada jugador fue elegido titular (barra "X/12"). Vista por fecha: dos bloques apilados estilo Formaaajcion — (a) tier list de formaciones (5 niveles por % de votos, 81-100% a 0-20%), donde los chips de jugadores con `jugo:true` en el JSON llevan ring verde para preservar la comparación TribunApp/real; (b) podio de puntajes 1/2/4/4 con medallas 🥇🥈🥉. Reutiliza el CSS `.tier-*` y las funciones `makeScoreCard`/`addGrid` que ya existen en `club.html` (originalmente del flujo `puntajes` hero).
 - **Estadísticas del equipo** — del JSON. Vista acumulada: tabla ordenable de todos los jugadores. Vista por fecha: header del partido + tabla solo de los que jugaron.
 
-Estado del módulo en el global `_stats = { data, formaciones, tab, fechaSel, sortKey, sortAsc }`. JSON cacheado al primer load. Matching de nombres entre el JSON estadísticas y el squad usa `_statsNorm()` (strip accents + lowercase) con fallback por primer+último apellido — necesario porque el Excel a veces escribe nombres distinto al `data/planteles/{slug}.json` (ej: "Erik Fernando Godoy" vs "Érik Godoy", "Gonzalo Siri Payer" vs "Gonzalo Siri").
+Estado del módulo en el global `_stats = { data, formaciones, puntajes, tab, fechaSel, sortKey, sortAsc }`. Las tres fuentes (JSON, formaciones, puntajes) se cargan en paralelo en el primer abrir y quedan cacheadas en memoria. Matching de nombres entre el JSON estadísticas y el squad usa `_statsNorm()` (strip accents + lowercase) con fallback por primer+último apellido — necesario porque el Excel a veces escribe nombres distinto al `data/planteles/{slug}.json` (ej: "Erik Fernando Godoy" vs "Érik Godoy", "Gonzalo Siri Payer" vs "Gonzalo Siri").
 
 ### Puntajes automation (`data/estado.json` + GitHub Actions)
 
