@@ -1850,12 +1850,10 @@ async function renderStats() {
   }
 }
 
-// Default = última fecha jugada según el tab activo
+// Default = última fecha jugada con stats_partido cargado
 function _statsResolveDefaultFecha() {
   if (_stats.fechaSel !== null) return;
-  const partidos = _stats.tab === 'equipo'
-    ? _stats.data.partidos.filter(p => p.stats_partido)
-    : _stats.data.partidos;
+  const partidos = _stats.data.partidos.filter(p => p.stats_partido);
   if (partidos.length) {
     _stats.fechaSel = String(Math.max(...partidos.map(p => p.fecha)));
   } else {
@@ -1863,19 +1861,19 @@ function _statsResolveDefaultFecha() {
   }
 }
 
-// Cambiar tab: si la fecha actual no es válida en el nuevo, resetear al default
+// Cambiar tab — la lista de fechas válidas es la misma en ambos tabs.
 function _statsSwitchTab(newTab) {
   if (_stats.tab === newTab) return;
   _stats.tab = newTab;
-  const validFechas = newTab === 'equipo'
-    ? _stats.data.partidos.filter(p => p.stats_partido).map(p => String(p.fecha))
-    : _stats.data.partidos.map(p => String(p.fecha));
-  const valid = new Set(['acum', ...validFechas]);
-  if (!valid.has(String(_stats.fechaSel))) {
-    _stats.fechaSel = null;
-    _statsResolveDefaultFecha();
-  }
   _renderStatsLayout();
+}
+
+// Devuelve true si una fila de Supabase pertenece a este partido.
+// Preferimos match_date (canónico), con fallback a rival normalizado por si
+// quedó alguna fila vieja sin match_date.
+function _statsRowMatchesPartido(row, partido) {
+  if (row.match_date && partido.date) return row.match_date === partido.date;
+  return _statsNorm(row.rival) === _statsNorm(partido.rival);
 }
 
 function _renderStatsLayout() {
@@ -1905,9 +1903,9 @@ function _renderStatsLayout() {
     return p;
   };
   bar.appendChild(mkPill('acum', 'Acumulado'));
-  const partidosVisibles = _stats.tab === 'equipo'
-    ? _stats.data.partidos.filter(p => p.stats_partido)
-    : _stats.data.partidos;
+  // Ambos tabs muestran solo las fechas con stats_partido (datos reales del partido)
+  // — son las únicas que tienen también votos completos en Supabase.
+  const partidosVisibles = _stats.data.partidos.filter(p => p.stats_partido);
   partidosVisibles.forEach(p => bar.appendChild(mkPill(p.fecha, `F${p.fecha} · ${p.rival.split(' ')[0]}`)));
   cont.appendChild(bar);
 
@@ -1926,11 +1924,13 @@ function _renderStatsTabWeb(cont) {
 
   if (_stats.fechaSel === 'acum') {
     // Vista acumulada del torneo: cuántas veces cada jugador fue elegido titular.
-    const totalFechas = data.partidos.length;
+    // Solo contamos sobre las fechas con stats_partido (las que tienen votos cargados).
+    const partidosCount = data.partidos.filter(p => p.stats_partido);
+    const totalFechas = partidosCount.length;
     // Mapa nombreNorm -> {nombre display, fechas en las que apareció en al menos 1 formación}
     const playerFechas = new Map();
-    data.partidos.forEach(partido => {
-      const formsFecha = formaciones.filter(f => f.rival === partido.rival && (!f.match_date || f.match_date === partido.date));
+    partidosCount.forEach(partido => {
+      const formsFecha = formaciones.filter(f => _statsRowMatchesPartido(f, partido));
       if (!formsFecha.length) return;
       // Set de jugadores que aparecieron al menos una vez en alguna formación de esa fecha
       const seenInFecha = new Set();
@@ -1979,7 +1979,7 @@ function _renderStatsTabWeb(cont) {
   const realKeys = new Set(partido.jugadores.filter(j => j.jugo).map(j => _statsNorm(j.nombre)));
 
   // === FORMACIONES (tier list al estilo Formaaajcion) ===
-  const formsFecha = formaciones.filter(f => f.rival === partido.rival && (!f.match_date || f.match_date === partido.date));
+  const formsFecha = formaciones.filter(f => _statsRowMatchesPartido(f, partido));
   const formsTitle = document.createElement('div');
   formsTitle.className = 'stats-section-title';
   formsTitle.textContent = `Equipo de la gente · ${formsFecha.length} formación${formsFecha.length !== 1 ? 'es' : ''}`;
@@ -2032,7 +2032,7 @@ function _renderStatsTabWeb(cont) {
   }
 
   // === PUNTAJES (podio 1/2/4/4 al estilo Formaaajcion) ===
-  const punts = (_stats.puntajes || []).filter(p => p.rival === partido.rival && (!p.match_date || p.match_date === partido.date));
+  const punts = (_stats.puntajes || []).filter(row => _statsRowMatchesPartido(row, partido));
   const puntsTitle = document.createElement('div');
   puntsTitle.className = 'stats-section-title';
   puntsTitle.style.marginTop = '20px';

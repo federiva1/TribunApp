@@ -61,50 +61,66 @@ def to_num(v):
         return None
 
 
-def extract_players(nd: dict) -> list[dict]:
-    """De __NEXT_DATA__ de un match a la lista de jugadores AAAJ."""
+def _player_entry(p: dict) -> dict:
+    """Aplana stats de un jugador FotMob al schema TribunApp."""
+    flat = {}
+    for section in p.get("stats", []):
+        for stat_name, stat_obj in (section.get("stats") or {}).items():
+            if stat_name == "Shotmap":
+                continue
+            stat = (stat_obj or {}).get("stat", {})
+            if stat_name not in flat:
+                flat[stat_name] = (stat.get("value"), stat.get("total"))
+
+    minutos = to_int(flat.get("Minutes played", (None, None))[0]) or 0
+    jugo = minutos > 0
+
+    def f(key):
+        return flat.get(key, (None, None))[0]
+
+    pases_v, pases_t = flat.get("Accurate passes", (None, None))
+
+    return {
+        "nombre":           (p.get("name") or "").strip(),
+        "jugo":             jugo,
+        "minutos":          minutos if jugo else 0,
+        "goles":            to_int(f("Goals")),
+        "asistencias":      to_int(f("Assists")),
+        "xG":               to_num(f("Expected goals (xG)")),
+        "xA":               to_num(f("Expected assists (xA)")),
+        "xGxA":             to_num(f("xG + xA")),
+        "accDefensivas":    to_int(f("Defensive actions")),
+        "disparos":         to_int(f("Shots on target")),
+        "toques":           to_int(f("Touches")),
+        "pasesAcertados":   to_int(pases_v),
+        "pasesIntentados":  to_int(pases_t),
+    }
+
+
+def extract_players(nd: dict) -> tuple[list[dict], list[dict], int]:
+    """De __NEXT_DATA__ de un match: jugadores AAAJ, jugadores rival, rival_team_id."""
     ps = nd["props"]["pageProps"]["content"]["playerStats"]
-    out = []
+    aaaj, rival = [], []
+    rival_id = None
     for pid, p in ps.items():
-        if str(p.get("teamId", "")) != str(TEAM_ID):
-            continue
-        flat = {}
-        for section in p.get("stats", []):
-            for stat_name, stat_obj in (section.get("stats") or {}).items():
-                if stat_name == "Shotmap":
-                    continue
-                stat = (stat_obj or {}).get("stat", {})
-                if stat_name not in flat:
-                    flat[stat_name] = (stat.get("value"), stat.get("total"))
+        tid = p.get("teamId")
+        entry = _player_entry(p)
+        if str(tid) == str(TEAM_ID):
+            aaaj.append(entry)
+        else:
+            rival.append(entry)
+            if rival_id is None and tid is not None:
+                rival_id = int(tid)
 
-        minutos = to_int(flat.get("Minutes played", (None, None))[0]) or 0
-        jugo = minutos > 0
+    sort_key = lambda x: (-1 if x["jugo"] else 0, -(x["minutos"] or 0), x["nombre"])
+    aaaj.sort(key=sort_key)
+    rival.sort(key=sort_key)
+    return aaaj, rival, rival_id
 
-        def f(key):
-            return flat.get(key, (None, None))[0]
 
-        pases_v, pases_t = flat.get("Accurate passes", (None, None))
-
-        entry = {
-            "nombre":           (p.get("name") or "").strip(),
-            "jugo":             jugo,
-            "minutos":          minutos if jugo else 0,
-            "goles":            to_int(f("Goals")),
-            "asistencias":      to_int(f("Assists")),
-            "xG":               to_num(f("Expected goals (xG)")),
-            "xA":               to_num(f("Expected assists (xA)")),
-            "xGxA":             to_num(f("xG + xA")),
-            "accDefensivas":    to_int(f("Defensive actions")),
-            "disparos":         to_int(f("Shots on target")),
-            "toques":           to_int(f("Touches")),
-            "pasesAcertados":   to_int(pases_v),
-            "pasesIntentados":  to_int(pases_t),
-        }
-        out.append(entry)
-
-    # Ordenar: jugaron primero (por minutos desc), luego no jugaron por nombre
-    out.sort(key=lambda x: (-1 if x["jugo"] else 0, -(x["minutos"] or 0), x["nombre"]))
-    return out
+def sum_xg(jugadores: list[dict]) -> float | None:
+    vals = [j.get("xG") for j in jugadores if j.get("jugo") and j.get("xG") is not None]
+    return round(sum(vals), 2) if vals else None
 
 
 def main() -> int:
@@ -151,11 +167,25 @@ def main() -> int:
                     json.dumps(nd, ensure_ascii=False, indent=2),
                     encoding="utf-8",
                 )
-                jugadores = extract_players(nd)
-                jugaron = sum(1 for j in jugadores if j["jugo"])
-                print(f"  {len(jugadores)} jugadores extraídos ({jugaron} jugaron)")
+                aaaj, rival_jug, rival_id = extract_players(nd)
+                jugaron_aaaj = sum(1 for j in aaaj if j["jugo"])
+                jugaron_rival = sum(1 for j in rival_jug if j["jugo"])
+                print(f"  AAAJ: {len(aaaj)} jugadores ({jugaron_aaaj} jugaron)")
+                print(f"  Rival (id={rival_id}): {len(rival_jug)} jugadores ({jugaron_rival} jugaron)")
                 if date in by_date:
-                    by_date[date]["jugadores"] = jugadores
+                    target = by_date[date]
+                    target["jugadores"] = aaaj
+                    target["jugadoresRival"] = rival_jug
+                    # Recomputar xG sumando individual (mas confiable que api-sports en LPF)
+                    if "stats_partido" in target:
+                        sp = target["stats_partido"]
+                        new_eq_xg = sum_xg(aaaj)
+                        new_rv_xg = sum_xg(rival_jug)
+                        if new_eq_xg is not None:
+                            sp["equipo"]["xG"] = new_eq_xg
+                        if new_rv_xg is not None:
+                            sp["rival"]["xG"] = new_rv_xg
+                        print(f"  xG: AAAJ={new_eq_xg} rival={new_rv_xg}")
                     print(f"  -> partido actualizado en JSON")
                 else:
                     print(f"  WARN: no encontre partido con date={date} en el JSON; skip")
