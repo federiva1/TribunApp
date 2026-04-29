@@ -1938,7 +1938,9 @@ function _renderStatsTabWeb(cont) {
     cont.appendChild(sectTitle);
 
     _statsRenderTierList(cont, formsAll);
-    _statsRenderPodio(cont, puntsAll);
+    // Cutoff acumulado: jugó al menos la mitad de las fechas (mín. 2)
+    const minFechas = Math.max(2, Math.ceil(partidosConDatos.length / 2));
+    _statsRenderPodio(cont, puntsAll, partidosConDatos, minFechas);
     return;
   }
 
@@ -1952,7 +1954,8 @@ function _renderStatsTabWeb(cont) {
   _statsRenderTierList(cont, formsFecha);
 
   const punts = puntajes.filter(row => _statsRowMatchesPartido(row, partido));
-  _statsRenderPodio(cont, punts);
+  // Por fecha: solo los que jugaron ESE partido (excluye votos a no-convocados)
+  _statsRenderPodio(cont, punts, [partido], 1);
 }
 
 // Tier list (formaciones agregadas) — `forms` es el array bruto de filas de Supabase.
@@ -1970,10 +1973,18 @@ function _statsRenderTierList(cont, forms) {
     return;
   }
 
+  // Para evitar líos de #num duplicado en el squad (ej #23 = Verón y López),
+  // priorizamos name/fid de la formacion original (snapshot del vote) sobre
+  // squad.find. Si no hay name en la fila, recurrimos al squad.
   const counts = {};
   forms.forEach(row => (row.jugadores || []).forEach(j => {
-    const sq = squad.find(s => s.num == j.num);
-    if (!counts[j.num]) counts[j.num] = { num: j.num, name: sq?.name || j.name, fid: sq?.fid || j.fid || 0, count: 0 };
+    const sq = j.name ? null : squad.find(s => s.num == j.num);
+    if (!counts[j.num]) counts[j.num] = {
+      num: j.num,
+      name: j.name || sq?.name || `#${j.num}`,
+      fid: j.fid || sq?.fid || 0,
+      count: 0,
+    };
     counts[j.num].count += 1;
   }));
   const players = Object.values(counts)
@@ -2008,12 +2019,20 @@ function _statsRenderTierList(cont, forms) {
   });
 }
 
-// Podio de puntajes (1/2/4/4) — `punts` es el array bruto de filas de Supabase.
-function _statsRenderPodio(cont, punts) {
+// Podio de puntajes (1/2/4/4) — solo cuenta puntajes de jugadores que
+// realmente jugaron (jugo: true en el JSON de stats). Aplica cutoff por
+// cantidad mínima de fechas jugadas en el scope.
+//
+// punts: filas crudas de Supabase
+// partidosScope: array de partidos del JSON sobre los que cuenta el podio
+// minFechas: mínimo de fechas que el jugador debe haber jugado
+function _statsRenderPodio(cont, punts, partidosScope, minFechas) {
   const title = document.createElement('div');
   title.className = 'stats-section-title';
   title.style.marginTop = '20px';
-  title.textContent = `Puntajes de la gente · ${punts.length} hincha${punts.length !== 1 ? 's' : ''} votó`;
+  let titleTxt = `Puntajes de la gente · ${punts.length} hincha${punts.length !== 1 ? 's' : ''} votó`;
+  if ((minFechas || 0) > 1) titleTxt += ` · mín. ${minFechas} fechas jugadas`;
+  title.textContent = titleTxt;
   cont.appendChild(title);
 
   if (!punts.length) {
@@ -2022,15 +2041,51 @@ function _statsRenderPodio(cont, punts) {
     cont.appendChild(e);
     return;
   }
-  const totals = {}, voteCounts = {};
-  punts.forEach(row => Object.entries(row.puntajes || {}).forEach(([num, val]) => {
-    totals[num] = (totals[num] || 0) + Number(val);
-    voteCounts[num] = (voteCounts[num] || 0) + 1;
-  }));
-  const results = Object.keys(totals).map(num => {
-    const sq = squad.find(s => s.num == num);
-    return { num: Number(num), name: sq?.name || `#${num}`, fid: sq?.fid || 0, avg: totals[num] / voteCounts[num] };
-  }).sort((a, b) => b.avg - a.avg);
+
+  // Para cada num en el scope, identificar al jugador que REALMENTE jugó.
+  // El squad tiene nums duplicados (ej #23 = Verón y López). Resolvemos vía
+  // FotMob: el nombre en partido.jugadores es la fuente de verdad.
+  // numToPlayer[num] = { name, fid, dates: Set(date jugadas) }
+  const numToPlayer = {};
+  (partidosScope || []).forEach(p => {
+    (p.jugadores || []).filter(j => j.jugo).forEach(j => {
+      const sq = _statsMatchSquad(j.nombre, squad);
+      if (!sq) return;
+      const num = sq.num;
+      if (!numToPlayer[num]) numToPlayer[num] = { name: sq.name, fid: sq.fid, dates: new Set() };
+      numToPlayer[num].dates.add(p.date);
+    });
+  });
+
+  const totals = {}, voteCounts = {}, votedDates = {};
+  punts.forEach(row => {
+    const date = row.match_date;
+    Object.entries(row.puntajes || {}).forEach(([num, val]) => {
+      const p = numToPlayer[num];
+      if (!p) return;                              // num no jugó en ningún partido del scope
+      if (date && !p.dates.has(date)) return;      // jugador no jugó esta fecha específica
+      totals[num] = (totals[num] || 0) + Number(val);
+      voteCounts[num] = (voteCounts[num] || 0) + 1;
+      if (!votedDates[num]) votedDates[num] = new Set();
+      if (date) votedDates[num].add(date);
+    });
+  });
+
+  const cutoff = Math.max(1, minFechas || 1);
+  const results = Object.keys(totals)
+    .filter(num => (votedDates[num]?.size || 0) >= cutoff)
+    .map(num => {
+      const p = numToPlayer[num];
+      return { num: Number(num), name: p.name, fid: p.fid, avg: totals[num] / voteCounts[num] };
+    })
+    .sort((a, b) => b.avg - a.avg);
+
+  if (!results.length) {
+    const e = document.createElement('div'); e.className = 'stats-empty';
+    e.textContent = 'Sin jugadores con datos suficientes.';
+    cont.appendChild(e);
+    return;
+  }
 
   if (results[0])                  addGrid(cont, [results[0]],          1, 0,  52);
   if (results.slice(1, 3).length)  addGrid(cont, results.slice(1, 3),   2, 1,  44);
