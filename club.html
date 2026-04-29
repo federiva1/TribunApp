@@ -425,6 +425,77 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--club-color);
   margin-top: 4px;
 }
+.ts-scoreboard {
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+  gap: 14px; padding: 14px 12px; margin-bottom: 14px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+}
+.ts-sb-escudo { width: 56px; height: 56px; object-fit: contain; }
+.ts-sb-escudo.left  { justify-self: end; }
+.ts-sb-escudo.right { justify-self: start; }
+.ts-sb-center { text-align: center; }
+.ts-sb-result {
+  font-family: 'Bebas Neue', sans-serif; font-size: 28px;
+  color: #fff; letter-spacing: 2px;
+}
+.ts-sb-meta {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 10px;
+  letter-spacing: 1.5px; color: rgba(255,255,255,0.4);
+  margin-top: 4px; text-transform: uppercase;
+}
+.ts-block { padding: 4px 0 14px; }
+.ts-title {
+  text-align: center;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 12px;
+  letter-spacing: 2px; color: rgba(255,255,255,0.75);
+  text-transform: uppercase; margin: 4px 0 14px;
+  font-weight: 600;
+}
+.ts-poss { padding: 6px 0 16px; }
+.ts-poss-label {
+  text-align: center;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 11px;
+  letter-spacing: 1.5px; color: rgba(255,255,255,0.55);
+  text-transform: uppercase; margin-bottom: 8px;
+}
+.ts-poss-bar {
+  display: flex; height: 30px; border-radius: 16px; overflow: hidden;
+}
+.ts-poss-side {
+  display: flex; align-items: center;
+  font-family: 'Bebas Neue', sans-serif; font-size: 14px; color: #fff;
+  letter-spacing: 1px; min-width: 0;
+}
+.ts-poss-left  { justify-content: flex-start; padding: 0 14px; }
+.ts-poss-right { justify-content: flex-end;   padding: 0 14px; }
+.ts-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 8px 4px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.ts-row:last-child { border-bottom: none; }
+.ts-val {
+  flex: 0 0 auto;
+  font-family: 'Bebas Neue', sans-serif; font-size: 17px;
+  color: rgba(255,255,255,0.65); letter-spacing: 1px;
+  padding: 4px 8px; min-width: 40px; text-align: center;
+}
+.ts-val-left  { text-align: left;  padding-left: 4px; }
+.ts-val-right { text-align: right; padding-right: 4px; }
+.ts-val.winner {
+  color: #fff; padding: 5px 14px; border-radius: 14px; text-align: center;
+}
+.ts-label {
+  flex: 1; text-align: center;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 12px;
+  letter-spacing: 0.5px; color: rgba(255,255,255,0.55);
+}
+.ts-empty-stats {
+  text-align: center; color: rgba(255,255,255,0.35); padding: 18px 12px;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 12px;
+  letter-spacing: 0.5px;
+}
 .stats-row {
   display: flex; align-items: center; gap: 10px; padding: 8px 4px;
   border-bottom: 1px solid rgba(255,255,255,0.05);
@@ -1709,8 +1780,8 @@ const _stats = {
   data: null,        // JSON de data/estadisticas/{slug}.json
   formaciones: null, // filas de Supabase (todas las formaciones del club)
   puntajes: null,    // filas de Supabase (todos los puntajes del club)
-  tab: 'web',        // 'web' | 'equipo'
-  fechaSel: 'acum',  // 'acum' | número de fecha
+  tab: 'equipo',     // 'equipo' (real del partido) | 'web' (votos)
+  fechaSel: null,    // se setea al cargar a la última fecha jugada
   sortKey: 'minutos',
   sortAsc: false,
 };
@@ -1772,28 +1843,59 @@ async function renderStats() {
     _stats.data = await statsRes.json();
     _stats.formaciones = formRes.ok ? await formRes.json() : [];
     _stats.puntajes = puntRes.ok ? await puntRes.json() : [];
+    _statsResolveDefaultFecha();
     _renderStatsLayout();
   } catch(e) {
     cont.innerHTML = '<div class="stats-empty">Error al cargar estadísticas.</div>';
   }
 }
 
+// Default = última fecha jugada según el tab activo
+function _statsResolveDefaultFecha() {
+  if (_stats.fechaSel !== null) return;
+  const partidos = _stats.tab === 'equipo'
+    ? _stats.data.partidos.filter(p => p.stats_partido)
+    : _stats.data.partidos;
+  if (partidos.length) {
+    _stats.fechaSel = String(Math.max(...partidos.map(p => p.fecha)));
+  } else {
+    _stats.fechaSel = 'acum';
+  }
+}
+
+// Cambiar tab: si la fecha actual no es válida en el nuevo, resetear al default
+function _statsSwitchTab(newTab) {
+  if (_stats.tab === newTab) return;
+  _stats.tab = newTab;
+  const validFechas = newTab === 'equipo'
+    ? _stats.data.partidos.filter(p => p.stats_partido).map(p => String(p.fecha))
+    : _stats.data.partidos.map(p => String(p.fecha));
+  const valid = new Set(['acum', ...validFechas]);
+  if (!valid.has(String(_stats.fechaSel))) {
+    _stats.fechaSel = null;
+    _statsResolveDefaultFecha();
+  }
+  _renderStatsLayout();
+}
+
 function _renderStatsLayout() {
   const cont = document.getElementById('stats-content');
   cont.innerHTML = '';
 
-  // Tabs
+  // Tabs — Equipo (real del partido) primero, Página (votos) segundo
   const tabsEl = document.createElement('div'); tabsEl.className = 'stats-tabs';
-  [['web', 'Estadísticas de la web'], ['equipo', 'Estadísticas del equipo']].forEach(([id, label]) => {
+  [['equipo', 'Equipo'], ['web', 'Página']].forEach(([id, label]) => {
     const t = document.createElement('div');
     t.className = 'stats-tab' + (_stats.tab === id ? ' active' : '');
     t.textContent = label;
-    t.onclick = () => { _stats.tab = id; _renderStatsLayout(); };
+    t.onclick = () => _statsSwitchTab(id);
     tabsEl.appendChild(t);
   });
   cont.appendChild(tabsEl);
 
-  // Selector de fecha (compartido entre tabs)
+  // Selector de fecha — pills filtrados según el tab
+  // Tab Equipo: solo fechas con stats_partido (datos reales cargados)
+  // Tab Página: todas las fechas del JSON
   const bar = document.createElement('div'); bar.className = 'stats-fecha-bar';
   const mkPill = (id, label) => {
     const p = document.createElement('div');
@@ -1803,7 +1905,10 @@ function _renderStatsLayout() {
     return p;
   };
   bar.appendChild(mkPill('acum', 'Acumulado'));
-  _stats.data.partidos.forEach(p => bar.appendChild(mkPill(p.fecha, `F${p.fecha} · ${p.rival.split(' ')[0]}`)));
+  const partidosVisibles = _stats.tab === 'equipo'
+    ? _stats.data.partidos.filter(p => p.stats_partido)
+    : _stats.data.partidos;
+  partidosVisibles.forEach(p => bar.appendChild(mkPill(p.fecha, `F${p.fecha} · ${p.rival.split(' ')[0]}`)));
   cont.appendChild(bar);
 
   // Body
@@ -1956,7 +2061,7 @@ function _renderStatsTabWeb(cont) {
   if (results.slice(11).length)    addGrid(cont, results.slice(11),     4, 11, 32, true);
 }
 
-// ---- TAB 2: estadísticas del equipo (JSON) ----
+// ---- TAB 2: estadísticas del equipo (JSON + stats globales del partido) ----
 function _renderStatsTabEquipo(cont) {
   const data = _stats.data;
   const COLS = [
@@ -1984,9 +2089,139 @@ function _renderStatsTabEquipo(cont) {
 
   const partido = data.partidos.find(p => p.fecha == _stats.fechaSel);
   if (!partido) { cont.innerHTML = '<div class="stats-empty">Fecha no encontrada.</div>'; return; }
-  cont.appendChild(_statsMatchHeader(partido));
-  const onlyPlayed = partido.jugadores.filter(j => j.jugo);
-  cont.appendChild(_statsBuildTable(onlyPlayed, COLS, false));
+
+  // Header scoreboard con escudos + resultado
+  cont.appendChild(_statsScoreboard(partido));
+
+  // Top estadísticas del partido (datos globales)
+  if (partido.stats_partido) {
+    cont.appendChild(_statsTopBlock(partido));
+  }
+
+  // Jugadores del partido — empty state si todavía no se cargaron
+  const playersTitle = document.createElement('div');
+  playersTitle.className = 'stats-section-title';
+  playersTitle.textContent = 'Jugadores';
+  cont.appendChild(playersTitle);
+
+  const onlyPlayed = (partido.jugadores || []).filter(j => j.jugo);
+  if (!onlyPlayed.length) {
+    const e = document.createElement('div'); e.className = 'stats-empty';
+    e.textContent = 'Stats individuales en proceso.';
+    cont.appendChild(e);
+  } else {
+    cont.appendChild(_statsBuildTable(onlyPlayed, COLS, false));
+  }
+}
+
+function _statsScoreboard(partido) {
+  const wrap = document.createElement('div'); wrap.className = 'ts-scoreboard';
+  const left = document.createElement('img');
+  left.className = 'ts-sb-escudo left';
+  left.src = `escudos/${CLUB_SLUG}.png`; left.alt = '';
+  left.onerror = () => { left.style.display = 'none'; };
+
+  const center = document.createElement('div'); center.className = 'ts-sb-center';
+  const result = document.createElement('div'); result.className = 'ts-sb-result';
+  result.textContent = partido.resultado || '—';
+  const meta = document.createElement('div'); meta.className = 'ts-sb-meta';
+  const [yy, mm, dd] = (partido.date || '').split('-');
+  const condicion = partido.condicion ? ' · ' + partido.condicion.toUpperCase() : '';
+  meta.textContent = `Fecha ${partido.fecha} · ${dd}/${mm}${condicion}`;
+  center.appendChild(result); center.appendChild(meta);
+
+  const right = document.createElement('img');
+  right.className = 'ts-sb-escudo right';
+  const rivalSlug = partido.rivalSlug || (typeof ESCUDO_MAP !== 'undefined' ? ESCUDO_MAP[partido.rivalId] : '');
+  right.src = rivalSlug ? `escudos/${rivalSlug}.png` : '';
+  right.alt = '';
+  right.onerror = () => { right.style.display = 'none'; };
+
+  wrap.appendChild(left); wrap.appendChild(center); wrap.appendChild(right);
+  return wrap;
+}
+
+function _statsTopBlock(partido) {
+  const { equipo, rival } = partido.stats_partido;
+  const rivalSlug = partido.rivalSlug || (typeof ESCUDO_MAP !== 'undefined' ? ESCUDO_MAP[partido.rivalId] : '');
+  const rivalCfg = (rivalSlug && CLUBES_CONFIG[rivalSlug]) || {};
+  const rivalColor = rivalCfg.color || '#7d7d7d';
+
+  const wrap = document.createElement('div'); wrap.className = 'ts-block';
+  const title = document.createElement('div'); title.className = 'ts-title';
+  title.textContent = 'Top estadísticas';
+  wrap.appendChild(title);
+
+  // Posesión (barra horizontal full-width)
+  if (equipo.posesion != null && rival.posesion != null) {
+    const possWrap = document.createElement('div'); possWrap.className = 'ts-poss';
+    const possLabel = document.createElement('div'); possLabel.className = 'ts-poss-label';
+    possLabel.textContent = 'Posesión';
+    possWrap.appendChild(possLabel);
+    const bar = document.createElement('div'); bar.className = 'ts-poss-bar';
+    const lside = document.createElement('div');
+    lside.className = 'ts-poss-side ts-poss-left';
+    lside.style.width = equipo.posesion + '%';
+    lside.style.background = 'var(--club-color)';
+    lside.textContent = equipo.posesion + ' %';
+    const rside = document.createElement('div');
+    rside.className = 'ts-poss-side ts-poss-right';
+    rside.style.width = rival.posesion + '%';
+    rside.style.background = rivalColor;
+    rside.textContent = rival.posesion + ' %';
+    bar.appendChild(lside); bar.appendChild(rside);
+    possWrap.appendChild(bar);
+    wrap.appendChild(possWrap);
+  }
+
+  // Filas de stats — pill al lado con mayor valor
+  const ROWS = [
+    { key: 'xG',             label: 'Goles esperados (xG)', fmt: v => v == null ? '—' : Number(v).toFixed(2) },
+    { key: 'tiros',          label: 'Tiros totales' },
+    { key: 'tirosAlArco',    label: 'Disparos a puerta' },
+    { key: 'pasesAcertados', label: 'Pases precisos', fmt: (v, s) => {
+        if (v == null) return '—';
+        if (s.pasesIntentados) {
+          const pct = Math.round(v / s.pasesIntentados * 100);
+          return `${v} (${pct} %)`;
+        }
+        return String(v);
+    }, cmpKey: 'pasesAcertados' },
+    { key: 'faltas',         label: 'Faltas' },
+    { key: 'corners',        label: 'Saques de esquina' },
+    { key: 'amarillas',      label: 'Tarjetas amarillas' },
+    { key: 'rojas',          label: 'Tarjetas rojas' },
+  ];
+
+  ROWS.forEach(r => {
+    const fmt = r.fmt || (v => v == null ? '—' : String(v));
+    const eqV = equipo[r.key];
+    const rvV = rival[r.key];
+    const eqText = fmt(eqV, equipo);
+    const rvText = fmt(rvV, rival);
+
+    // Comparar numéricamente sólo si ambos son números válidos
+    let eqWin = false, rvWin = false;
+    if (typeof eqV === 'number' && typeof rvV === 'number' && eqV !== rvV) {
+      if (eqV > rvV) eqWin = true; else rvWin = true;
+    }
+
+    const row = document.createElement('div'); row.className = 'ts-row';
+    const lv = document.createElement('div');
+    lv.className = 'ts-val ts-val-left' + (eqWin ? ' winner' : '');
+    if (eqWin) lv.style.background = 'var(--club-color)';
+    lv.textContent = eqText;
+    const lab = document.createElement('div'); lab.className = 'ts-label';
+    lab.textContent = r.label;
+    const rv = document.createElement('div');
+    rv.className = 'ts-val ts-val-right' + (rvWin ? ' winner' : '');
+    if (rvWin) rv.style.background = rivalColor;
+    rv.textContent = rvText;
+    row.appendChild(lv); row.appendChild(lab); row.appendChild(rv);
+    wrap.appendChild(row);
+  });
+
+  return wrap;
 }
 
 function _statsMatchHeader(partido) {
