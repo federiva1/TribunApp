@@ -35,6 +35,7 @@ DATE_MAP = {
     "Banfield": "2026-04-06",
     "Independiente Rivadavia": "2026-04-11",
     "Atlético Tucumán": "2026-04-19",
+    "Huracán": "2026-04-28",
 }
 
 
