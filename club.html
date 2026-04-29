@@ -682,6 +682,10 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
     <h1 id="fixture-screen-title" style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#fff;letter-spacing:2px;">📋 FIXTURE 2026</h1>
     <div id="fixture-screen-sub" style="font-size:11px;color:#888;margin-top:3px;">Apertura · Liga Profesional</div>
   </div>
+  <div id="fixture-torneo-toggle" class="stats-tabs" style="max-width:280px;margin:0 auto 14px;display:none;">
+    <div class="stats-tab" data-torneo="apertura" onclick="_setFixtureTorneo('apertura')">APERTURA</div>
+    <div class="stats-tab" data-torneo="clausura" onclick="_setFixtureTorneo('clausura')">CLAUSURA</div>
+  </div>
   <div id="fixture-list"><div style="text-align:center;color:#555;padding:30px;font-size:13px;">Cargando...</div></div>
 </div>
 </div>
@@ -1595,17 +1599,61 @@ async function renderCurrentFechaGuest() {
 
 // ---- FIXTURE ----
 let _fixtureCache = null;
+let _fixtureTorneo = null; // 'apertura' | 'clausura' — se decide en el primer render
+
+function _detectTorneo(f) {
+  const round = ((f.league && f.league.round) || '').toLowerCase();
+  if (round.includes('apertura')) return 'apertura';
+  if (round.includes('clausura')) return 'clausura';
+  // Fallback: por mes del partido (Apertura ene–jun, Clausura jul–dic)
+  const m = new Date(f.fixture.date).getMonth() + 1;
+  return m <= 6 ? 'apertura' : 'clausura';
+}
+
+function _defaultTorneo() {
+  // Torneo en curso según la fecha de hoy (Argentina: Apertura ene–jun, Clausura jul–dic)
+  const m = new Date().getMonth() + 1;
+  return m <= 6 ? 'apertura' : 'clausura';
+}
+
+function _setFixtureTorneo(t) {
+  if (_fixtureTorneo === t) return;
+  _fixtureTorneo = t;
+  renderFixture();
+}
+
 async function renderFixture() {
   const cont = document.getElementById('fixture-list');
-  if (_fixtureCache) { _renderFixtureList(_fixtureCache, cont); return; }
+  if (_fixtureTorneo === null) _fixtureTorneo = _defaultTorneo();
+
+  // Toggle Apertura/Clausura — solo en liga, no en copa
+  const toggle = document.getElementById('fixture-torneo-toggle');
+  if (toggle) {
+    toggle.style.display = COPA ? 'none' : 'flex';
+    toggle.querySelectorAll('.stats-tab').forEach(t => {
+      t.classList.toggle('active', t.dataset.torneo === _fixtureTorneo);
+    });
+  }
+  // Subtítulo dinámico (solo liga)
+  if (!COPA) {
+    const sub = document.getElementById('fixture-screen-sub');
+    if (sub) sub.textContent = (_fixtureTorneo === 'apertura' ? 'Apertura' : 'Clausura') + ' · Liga Profesional';
+  }
+
+  if (_fixtureCache) { _renderFixtureList(_filterByTorneo(_fixtureCache), cont); return; }
   cont.innerHTML = '<div style="text-align:center;color:#555;padding:30px;font-size:13px;">Cargando...</div>';
   const leagueId = COPA === 'libertadores' ? 13 : COPA === 'sudamericana' ? 11 : 128;
   try {
     const res = await fetch(`https://v3.football.api-sports.io/fixtures?team=${CLUB.id}&season=2026&league=${leagueId}`, { headers: { 'x-apisports-key': API_KEY_TABLA } });
     const d = await res.json();
     _fixtureCache = d.response || [];
-    _renderFixtureList(_fixtureCache, cont);
+    _renderFixtureList(_filterByTorneo(_fixtureCache), cont);
   } catch(e) { cont.innerHTML = '<div style="text-align:center;color:#555;padding:30px;">Error al cargar el fixture.</div>'; }
+}
+
+function _filterByTorneo(fixtures) {
+  if (COPA) return fixtures;
+  return fixtures.filter(f => _detectTorneo(f) === _fixtureTorneo);
 }
 
 function _renderFixtureList(fixtures, cont) {
