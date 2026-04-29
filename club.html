@@ -1824,22 +1824,23 @@ function _statsFmt(v) {
 async function renderStats() {
   const cont = document.getElementById('stats-content');
 
-  // Gate por club: solo argentinosjuniors está habilitado por ahora
-  if (CLUB_SLUG !== 'argentinosjuniors') {
-    cont.innerHTML = `<div class="stats-empty">📊<br><br>Estadísticas detalladas de <b style="color:#fff;">${CLUB.nombre}</b><br>próximamente.</div>`;
-    return;
-  }
-
   if (_stats.data) { _renderStatsLayout(); return; }
   cont.innerHTML = '<div style="text-align:center;color:#555;padding:30px;font-size:13px;">Cargando...</div>';
 
+  // El JSON puede ser {slug}.json (liga) o {slug}_libertadores.json /
+  // {slug}_sudamericana.json (copa). Si el archivo no existe, mostramos
+  // "próximamente" en vez del error.
+  const suffix = COPA ? `_${COPA}` : '';
   try {
-    const [statsRes, formRes, puntRes] = await Promise.all([
-      fetch(`data/estadisticas/${CLUB_SLUG}.json`, { cache: 'no-store' }),
+    const statsRes = await fetch(`data/estadisticas/${CLUB_SLUG}${suffix}.json`, { cache: 'no-store' });
+    if (!statsRes.ok) {
+      cont.innerHTML = `<div class="stats-empty">📊<br><br>Estadísticas detalladas de <b style="color:#fff;">${CLUB.nombre}</b><br>próximamente.</div>`;
+      return;
+    }
+    const [formRes, puntRes] = await Promise.all([
       fetch(`${SUPABASE_URL}/rest/v1/formaciones?select=jugadores,rival,match_date&club=eq.${CLUB_SLUG}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
       fetch(`${SUPABASE_URL}/rest/v1/puntajes?select=puntajes,rival,match_date&club=eq.${CLUB_SLUG}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
     ]);
-    if (!statsRes.ok) throw new Error('json no encontrado');
     _stats.data = await statsRes.json();
     _stats.formaciones = formRes.ok ? await formRes.json() : [];
     _stats.puntajes = puntRes.ok ? await puntRes.json() : [];
