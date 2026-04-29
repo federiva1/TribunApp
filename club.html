@@ -1917,131 +1917,108 @@ function _renderStatsLayout() {
 }
 
 // ---- TAB 1: estadísticas de la web (votos de Supabase) ----
+// Usa la global `squad` cargada por initSquad() (CLUB.squad nunca se completa).
 function _renderStatsTabWeb(cont) {
-  const squad = CLUB.squad || [];
   const data = _stats.data;
   const formaciones = _stats.formaciones || [];
+  const puntajes = _stats.puntajes || [];
+  const partidosConDatos = data.partidos.filter(p => p.stats_partido);
 
   if (_stats.fechaSel === 'acum') {
-    // Vista acumulada del torneo: cuántas veces cada jugador fue elegido titular.
-    // Solo contamos sobre las fechas con stats_partido (las que tienen votos cargados).
-    const partidosCount = data.partidos.filter(p => p.stats_partido);
-    const totalFechas = partidosCount.length;
-    // Mapa nombreNorm -> {nombre display, fechas en las que apareció en al menos 1 formación}
-    const playerFechas = new Map();
-    partidosCount.forEach(partido => {
-      const formsFecha = formaciones.filter(f => _statsRowMatchesPartido(f, partido));
-      if (!formsFecha.length) return;
-      // Set de jugadores que aparecieron al menos una vez en alguna formación de esa fecha
-      const seenInFecha = new Set();
-      formsFecha.forEach(row => (row.jugadores || []).forEach(j => {
-        const sq = squad.find(s => s.num == j.num) || j;
-        const key = _statsNorm(sq.name || j.name);
-        seenInFecha.add(key);
-        if (!playerFechas.has(key)) playerFechas.set(key, { name: sq.name || j.name, fechas: 0 });
-      }));
-      seenInFecha.forEach(k => { playerFechas.get(k).fechas += 1; });
-    });
+    // Acumulado: sumamos votos sobre TODAS las fechas con datos y calculamos
+    // porcentajes globales (idéntico look a la vista por fecha).
+    const formsAll = [];
+    partidosConDatos.forEach(p => formaciones.filter(f => _statsRowMatchesPartido(f, p)).forEach(f => formsAll.push(f)));
+    const puntsAll = [];
+    partidosConDatos.forEach(p => puntajes.filter(pr => _statsRowMatchesPartido(pr, p)).forEach(pr => puntsAll.push(pr)));
 
     const sectTitle = document.createElement('div');
     sectTitle.className = 'stats-section-title';
-    sectTitle.textContent = `Acumulado del torneo · ${totalFechas} fechas`;
+    sectTitle.textContent = `Acumulado · ${partidosConDatos.length} fechas`;
     cont.appendChild(sectTitle);
 
-    const list = [...playerFechas.values()].sort((a, b) => b.fechas - a.fechas);
-    if (!list.length) {
-      const e = document.createElement('div'); e.className = 'stats-empty';
-      e.textContent = 'Aún no hay formaciones cargadas.';
-      cont.appendChild(e); return;
-    }
-    list.forEach(p => {
-      const row = document.createElement('div'); row.className = 'stats-row';
-      const name = document.createElement('div'); name.className = 'stats-row-name'; name.textContent = p.name;
-      const barWrap = document.createElement('div'); barWrap.className = 'stats-row-bar-wrap';
-      const fill = document.createElement('div'); fill.className = 'stats-row-bar';
-      fill.style.width = (p.fechas / totalFechas * 100) + '%';
-      barWrap.appendChild(fill);
-      const cnt = document.createElement('div'); cnt.className = 'stats-row-count';
-      cnt.textContent = `${p.fechas}/${totalFechas}`;
-      row.appendChild(name); row.appendChild(barWrap); row.appendChild(cnt);
-      cont.appendChild(row);
-    });
+    _statsRenderTierList(cont, formsAll);
+    _statsRenderPodio(cont, puntsAll);
     return;
   }
 
-  // Vista por fecha: tier list de formaciones + podio de puntajes
+  // Vista por fecha: tier list + podio del partido seleccionado
   const partido = data.partidos.find(p => p.fecha == _stats.fechaSel);
   if (!partido) { cont.innerHTML = '<div class="stats-empty">Fecha no encontrada.</div>'; return; }
 
   cont.appendChild(_statsMatchHeader(partido));
 
-  // Set de jugadores que jugaron (nombres normalizados) — para marcar el tier list
-  const realKeys = new Set(partido.jugadores.filter(j => j.jugo).map(j => _statsNorm(j.nombre)));
-
-  // === FORMACIONES (tier list al estilo Formaaajcion) ===
   const formsFecha = formaciones.filter(f => _statsRowMatchesPartido(f, partido));
-  const formsTitle = document.createElement('div');
-  formsTitle.className = 'stats-section-title';
-  formsTitle.textContent = `Equipo de la gente · ${formsFecha.length} formación${formsFecha.length !== 1 ? 'es' : ''}`;
-  cont.appendChild(formsTitle);
+  _statsRenderTierList(cont, formsFecha);
 
-  if (!formsFecha.length) {
+  const punts = puntajes.filter(row => _statsRowMatchesPartido(row, partido));
+  _statsRenderPodio(cont, punts);
+}
+
+// Tier list (formaciones agregadas) — `forms` es el array bruto de filas de Supabase.
+function _statsRenderTierList(cont, forms) {
+  const total = forms.length;
+  const title = document.createElement('div');
+  title.className = 'stats-section-title';
+  title.textContent = `Equipo de la gente · ${total} formación${total !== 1 ? 'es' : ''}`;
+  cont.appendChild(title);
+
+  if (!total) {
     const e = document.createElement('div'); e.className = 'stats-empty';
-    e.textContent = 'Sin formaciones enviadas para este partido.';
+    e.textContent = 'Sin formaciones enviadas.';
     cont.appendChild(e);
-  } else {
-    const total = formsFecha.length;
-    const counts = {};
-    formsFecha.forEach(row => (row.jugadores || []).forEach(j => {
-      const sq = squad.find(s => s.num == j.num);
-      if (!counts[j.num]) counts[j.num] = { num: j.num, name: sq?.name || j.name, fid: sq?.fid || j.fid || 0, count: 0 };
-      counts[j.num].count += 1;
-    }));
-    const players = Object.values(counts)
-      .map(p => ({ ...p, pct: Math.round((p.count / total) * 100) }))
-      .sort((a, b) => b.pct - a.pct);
-    const tiers = [
-      { cls: 'tier-s', min: 81, max: 100 },
-      { cls: 'tier-a', min: 61, max: 80 },
-      { cls: 'tier-b', min: 41, max: 60 },
-      { cls: 'tier-c', min: 21, max: 40 },
-      { cls: 'tier-d', min: 0, max: 20 },
-    ];
-    tiers.forEach(tier => {
-      const inTier = players.filter(p => p.pct >= tier.min && p.pct <= tier.max);
-      if (!inTier.length) return;
-      const row = document.createElement('div'); row.className = `tier-row ${tier.cls}`;
-      const label = document.createElement('div'); label.className = 'tier-label'; label.textContent = tier.min + '-' + tier.max + '%';
-      row.appendChild(label);
-      const pDiv = document.createElement('div'); pDiv.className = 'tier-players';
-      inTier.forEach(p => {
-        const wrap = document.createElement('div'); wrap.className = 'tier-player';
-        if (realKeys.has(_statsNorm(p.name))) wrap.classList.add('played');
-        wrap.appendChild(makeAvatar(FOTO(p.fid || 0), p.num, 36));
-        const info = document.createElement('div'); info.style.cssText = 'display:flex;flex-direction:column;gap:1px;';
-        const nm = document.createElement('div'); nm.className = 'tier-player-name'; nm.textContent = p.name;
-        const pct = document.createElement('div'); pct.style.cssText = 'font-size:10px;color:var(--club-color);font-family:"Bebas Neue",sans-serif;'; pct.textContent = p.pct + '%';
-        info.appendChild(nm); info.appendChild(pct); wrap.appendChild(info); pDiv.appendChild(wrap);
-      });
-      row.appendChild(pDiv); cont.appendChild(row);
-    });
-    const leg = document.createElement('div');
-    leg.style.cssText = 'text-align:center;font-family:Barlow Condensed,sans-serif;font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.35);margin-top:8px;text-transform:uppercase;';
-    leg.innerHTML = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#aed581;margin-right:5px;vertical-align:middle;"></span>jugó el partido';
-    cont.appendChild(leg);
+    return;
   }
 
-  // === PUNTAJES (podio 1/2/4/4 al estilo Formaaajcion) ===
-  const punts = (_stats.puntajes || []).filter(row => _statsRowMatchesPartido(row, partido));
-  const puntsTitle = document.createElement('div');
-  puntsTitle.className = 'stats-section-title';
-  puntsTitle.style.marginTop = '20px';
-  puntsTitle.textContent = `Puntajes de la gente · ${punts.length} hincha${punts.length !== 1 ? 's' : ''} votó`;
-  cont.appendChild(puntsTitle);
+  const counts = {};
+  forms.forEach(row => (row.jugadores || []).forEach(j => {
+    const sq = squad.find(s => s.num == j.num);
+    if (!counts[j.num]) counts[j.num] = { num: j.num, name: sq?.name || j.name, fid: sq?.fid || j.fid || 0, count: 0 };
+    counts[j.num].count += 1;
+  }));
+  const players = Object.values(counts)
+    .map(p => ({ ...p, pct: Math.round((p.count / total) * 100) }))
+    .sort((a, b) => b.pct - a.pct);
+
+  const tiers = [
+    { cls: 'tier-s', min: 81, max: 100 },
+    { cls: 'tier-a', min: 61, max: 80 },
+    { cls: 'tier-b', min: 41, max: 60 },
+    { cls: 'tier-c', min: 21, max: 40 },
+    { cls: 'tier-d', min: 0, max: 20 },
+  ];
+  tiers.forEach(tier => {
+    const inTier = players.filter(p => p.pct >= tier.min && p.pct <= tier.max);
+    if (!inTier.length) return;
+    const row = document.createElement('div'); row.className = `tier-row ${tier.cls}`;
+    const label = document.createElement('div'); label.className = 'tier-label';
+    label.textContent = tier.min + '-' + tier.max + '%';
+    row.appendChild(label);
+    const pDiv = document.createElement('div'); pDiv.className = 'tier-players';
+    inTier.forEach(p => {
+      const wrap = document.createElement('div'); wrap.className = 'tier-player';
+      wrap.appendChild(makeAvatar(FOTO(p.fid || 0), p.num, 36));
+      const info = document.createElement('div'); info.style.cssText = 'display:flex;flex-direction:column;gap:1px;';
+      const nm = document.createElement('div'); nm.className = 'tier-player-name'; nm.textContent = p.name;
+      const pct = document.createElement('div'); pct.style.cssText = 'font-size:10px;color:var(--club-color);font-family:"Bebas Neue",sans-serif;';
+      pct.textContent = p.pct + '%';
+      info.appendChild(nm); info.appendChild(pct); wrap.appendChild(info); pDiv.appendChild(wrap);
+    });
+    row.appendChild(pDiv); cont.appendChild(row);
+  });
+}
+
+// Podio de puntajes (1/2/4/4) — `punts` es el array bruto de filas de Supabase.
+function _statsRenderPodio(cont, punts) {
+  const title = document.createElement('div');
+  title.className = 'stats-section-title';
+  title.style.marginTop = '20px';
+  title.textContent = `Puntajes de la gente · ${punts.length} hincha${punts.length !== 1 ? 's' : ''} votó`;
+  cont.appendChild(title);
 
   if (!punts.length) {
     const e = document.createElement('div'); e.className = 'stats-empty';
-    e.textContent = 'Sin puntajes enviados para este partido.';
+    e.textContent = 'Sin puntajes enviados.';
     cont.appendChild(e);
     return;
   }
@@ -2054,6 +2031,7 @@ function _renderStatsTabWeb(cont) {
     const sq = squad.find(s => s.num == num);
     return { num: Number(num), name: sq?.name || `#${num}`, fid: sq?.fid || 0, avg: totals[num] / voteCounts[num] };
   }).sort((a, b) => b.avg - a.avg);
+
   if (results[0])                  addGrid(cont, [results[0]],          1, 0,  52);
   if (results.slice(1, 3).length)  addGrid(cont, results.slice(1, 3),   2, 1,  44);
   if (results.slice(3, 7).length)  addGrid(cont, results.slice(3, 7),   4, 3,  36);
