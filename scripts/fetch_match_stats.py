@@ -131,19 +131,43 @@ def fetch_target_fixtures(team_id: int, league: int, target_rivals: set[int] | N
 
 def build_partido_entry(fx: dict, team_id: int, existing: dict | None,
                         rival_slug_map: dict[int, str] | None) -> dict:
-    """Construye/actualiza la entrada de partido en el JSON."""
+    """Construye/actualiza la entrada de partido en el JSON. Si el partido
+    todavía no se jugó (status != FT/AET/PEN), genera entry minimalista sin
+    resultado ni stats_partido para no mostrar datos falsos en la UI."""
     fid = fx['fixture']['id']
     is_home = fx['teams']['home']['id'] == team_id
     opp = fx['teams']['away' if is_home else 'home']
     opp_id = opp['id']
+    fecha_num = fecha_from_round(fx['league'].get('round', ''), 0)
+    date_str = fx['fixture']['date'][:10]
+    st = fx['fixture']['status']['short']
+    finished = st in ('FT', 'AET', 'PEN')
+    rival_slug = (rival_slug_map or {}).get(opp_id)
+
+    base = {
+        'fecha': fecha_num,
+        'rival': (existing or {}).get('rival') or opp['name'],
+        'date': date_str,
+        'condicion': 'Local' if is_home else 'Visitante',
+        'rivalId': opp_id,
+    }
+    if rival_slug:
+        base['rivalSlug'] = rival_slug
+
+    if not finished:
+        # Partido aún no jugado: solo header básico, sin stats ni resultado
+        if existing:
+            entry = dict(existing)
+            entry.update(base)
+            return entry
+        return {**base, 'jugadores': []}
+
+    # Partido finalizado — bajar stats globales
     g_home = fx['goals']['home'] or 0
     g_away = fx['goals']['away'] or 0
     g_arg = g_home if is_home else g_away
     g_riv = g_away if is_home else g_home
-    fecha_num = fecha_from_round(fx['league'].get('round', ''), 0)
-    date_str = fx['fixture']['date'][:10]
 
-    # Stats por equipo
     print(f'  GET fixtures/statistics fixture={fid} (vs {opp["name"]})')
     sdata = api_get('fixtures/statistics', {'fixture': fid})
     teams = sdata.get('response', [])
@@ -152,41 +176,25 @@ def build_partido_entry(fx: dict, team_id: int, existing: dict | None,
     eq_stats = stats_to_dict(eq_raw['statistics'] if eq_raw else [])
     rv_stats = stats_to_dict(rv_raw['statistics'] if rv_raw else [])
 
-    # Fallback xG: sumar xG individual del JSON existente
     if eq_stats.get('xG') is None and existing:
         eq_stats['xG'] = sum_player_xg(existing.get('jugadores', []))
     if rv_stats.get('xG') is None and existing:
         rv_stats['xG'] = sum_player_xg(existing.get('jugadoresRival', []))
 
-    rival_slug = (rival_slug_map or {}).get(opp_id)
-
     if existing:
         entry = dict(existing)
-        entry['fecha'] = fecha_num
-        entry['rival'] = existing.get('rival') or opp['name']
-        entry['date'] = date_str
-        entry['condicion'] = 'Local' if is_home else 'Visitante'
+        entry.update(base)
         entry['resultado'] = existing.get('resultado') or f'{g_arg} - {g_riv}'
-        entry['rivalId'] = opp_id
-        if rival_slug:
-            entry['rivalSlug'] = rival_slug
         entry['stats_partido'] = {'equipo': eq_stats, 'rival': rv_stats}
         entry.setdefault('jugadores', [])
         return entry
 
-    new_entry = {
-        'fecha': fecha_num,
-        'rival': opp['name'],
-        'date': date_str,
-        'condicion': 'Local' if is_home else 'Visitante',
+    return {
+        **base,
         'resultado': f'{g_arg} - {g_riv}',
-        'rivalId': opp_id,
         'stats_partido': {'equipo': eq_stats, 'rival': rv_stats},
         'jugadores': [],
     }
-    if rival_slug:
-        new_entry['rivalSlug'] = rival_slug
-    return new_entry
 
 
 def main() -> int:
