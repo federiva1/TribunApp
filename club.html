@@ -1938,8 +1938,8 @@ function _renderStatsTabWeb(cont) {
     cont.appendChild(sectTitle);
 
     _statsRenderTierList(cont, formsAll);
-    // Cutoff acumulado: jugó al menos la mitad de las fechas (mín. 2)
-    const minFechas = Math.max(2, Math.ceil(partidosConDatos.length / 2));
+    // Cutoff acumulado: puntuado en al menos el 50% de los partidos del scope
+    const minFechas = Math.ceil(partidosConDatos.length / 2);
     _statsRenderPodio(cont, puntsAll, partidosConDatos, minFechas);
     return;
   }
@@ -2031,7 +2031,8 @@ function _statsRenderPodio(cont, punts, partidosScope, minFechas) {
   title.className = 'stats-section-title';
   title.style.marginTop = '20px';
   let titleTxt = `Puntajes de la gente · ${punts.length} hincha${punts.length !== 1 ? 's' : ''} votó`;
-  if ((minFechas || 0) > 1) titleTxt += ` · mín. ${minFechas} fechas jugadas`;
+  const totalScope = (partidosScope || []).length;
+  if ((minFechas || 0) > 1) titleTxt += ` · mín. ${minFechas} de ${totalScope} partidos`;
   title.textContent = titleTxt;
   cont.appendChild(title);
 
