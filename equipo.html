@@ -387,6 +387,49 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   text-transform: uppercase; margin: 16px 0 8px;
 }
 
+/* ===== ACUMULADO TABLE ===== */
+.acumulado-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.acc-loading {
+  padding: 16px; text-align: center;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12px; color: rgba(255,255,255,.3);
+}
+.acc-header {
+  display: flex; align-items: center; gap: 0;
+  padding: 8px 14px;
+  background: rgba(255,255,255,.04);
+  border-bottom: 1px solid rgba(255,255,255,.07);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 9px; letter-spacing: 1.5px;
+  color: rgba(255,255,255,.3); text-transform: uppercase;
+}
+.acc-header span:first-child { flex: 1; }
+.acc-col { width: 36px; text-align: center; flex-shrink: 0; }
+.acc-rows { max-height: 320px; overflow-y: auto; }
+.acc-row {
+  display: flex; align-items: center;
+  padding: 7px 14px;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+}
+.acc-row:last-child { border-bottom: none; }
+.acc-nombre {
+  flex: 1; font-family: 'DM Sans', sans-serif;
+  font-size: 13px; color: #fff;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.acc-num {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 14px; color: rgba(255,255,255,.5); text-align: center;
+}
+.acc-gol { color: #66bb6a; font-weight: 700; }
+.acc-asi { color: #64b5f6; font-weight: 700; }
+
 /* ===== TOAST ===== */
 #toast {
   position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
@@ -1303,22 +1346,61 @@ async function loadPartidosStats() {
       return;
     }
 
-    // Card acumulado (si hay más de 1 partido)
-    if (misPartidos.length >= 1) {
-      const acc = document.createElement('div');
-      acc.innerHTML = `<div class="stats-section-title">Acumulado</div>`;
-      wrap.appendChild(acc);
+    // Card acumulado — agregar stats de todos los partidos
+    {
+      const accTit = document.createElement('div');
+      accTit.innerHTML = `<div class="stats-section-title">Acumulado</div>`;
+      wrap.appendChild(accTit);
 
       const accCard = document.createElement('div');
-      accCard.className = 'partido-card acumulado';
-      accCard.innerHTML = `
-        <div class="pc-icon">📊</div>
-        <div class="pc-info">
-          <div class="pc-resultado">Torneo completo</div>
-          <div class="pc-comp">${misPartidos.length} partido${misPartidos.length!==1?'s':''} jugado${misPartidos.length!==1?'s':''}</div>
-        </div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1px;color:rgba(255,255,255,.2);text-transform:uppercase;">Próximamente</div>`;
+      accCard.className = 'acumulado-card';
+      accCard.innerHTML = `<div class="acc-loading">Cargando…</div>`;
       wrap.appendChild(accCard);
+
+      // Fetch todos los JSONs de partido en paralelo y agregar
+      Promise.all(misPartidos.map(p =>
+        fetch(`data/partidos/${p.id}.json?v=${Date.now()}`).then(r=>r.json()).catch(()=>null)
+      )).then(jsons => {
+        // Mapa acumulado por jugador
+        const mapa = {};
+        jsons.forEach(data => {
+          if (!data) return;
+          const esLocal = data.partido.local === slug;
+          const jugadores = esLocal ? data.jugadores[data.partido.local] : data.jugadores[data.partido.visitante];
+          if (!jugadores) return;
+          jugadores.forEach(j => {
+            const k = j.nombre;
+            if (!mapa[k]) mapa[k] = { nombre:k, min:0, goles:0, asist:0, partidos:0 };
+            mapa[k].min    += j.min    || 0;
+            mapa[k].goles  += j.goles  || 0;
+            mapa[k].asist  += j.asist  || 0;
+            mapa[k].partidos++;
+          });
+        });
+
+        const jugadores = Object.values(mapa).sort((a,b)=> b.goles-a.goles || b.asist-a.asist || b.min-a.min);
+
+        if (!jugadores.length) { accCard.innerHTML = '<div class="acc-loading">Sin datos</div>'; return; }
+
+        accCard.innerHTML = `
+          <div class="acc-header">
+            <span>JUGADOR</span>
+            <span class="acc-col">PJ</span>
+            <span class="acc-col">MIN</span>
+            <span class="acc-col">⚽</span>
+            <span class="acc-col">🅰️</span>
+          </div>
+          <div class="acc-rows">
+            ${jugadores.map(j=>`
+              <div class="acc-row">
+                <span class="acc-nombre">${j.nombre}</span>
+                <span class="acc-col acc-num">${j.partidos}</span>
+                <span class="acc-col acc-num">${j.min}'</span>
+                <span class="acc-col acc-num ${j.goles?'acc-gol':''}">${j.goles||'—'}</span>
+                <span class="acc-col acc-num ${j.asist?'acc-asi':''}">${j.asist||'—'}</span>
+              </div>`).join('')}
+          </div>`;
+      });
     }
 
     // Cards de partidos individuales
