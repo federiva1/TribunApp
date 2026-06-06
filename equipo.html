@@ -1242,6 +1242,9 @@ async function init() {
       .map(j => ({ num: j.numero, name: j.nombre, fid: j.fid, posicion: j.posicion || 'DEL' }))
       .sort((a, b) => (a.num ?? 99) - (b.num ?? 99));
 
+    // Deep-link: ?s=estadisticas abre la sección directamente
+    if (params.get('s') === 'estadisticas') openSection('estadisticas');
+
   } catch(e) {
     document.getElementById('club-nombre').textContent = 'Error';
     console.error(e);

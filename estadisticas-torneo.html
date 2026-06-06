@@ -334,7 +334,7 @@ function renderEquipos(equipos, conStats, filtro=''){
     const row = tieneStats ? document.createElement('a') : document.createElement('div');
     row.className = 'equipo-row' + (tieneStats?'':' sin-stats');
     if(tieneStats){
-      row.href = `equipo.html?c=${eq.slug}`;
+      row.href = `equipo.html?c=${eq.slug}&s=estadisticas`;
       row.style.textDecoration='none';
       row.style.color='inherit';
       row.style.display='flex';
