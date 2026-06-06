@@ -13,50 +13,187 @@
     }
   },
   "top_stats": [
-    { "label": "Posesión", "local": "55%", "visitante": "45%", "tipo": "posesion", "local_val": 55, "visitante_val": 45 },
-    { "label": "Tiros totales",               "local": "20",        "visitante": "16",        "tipo": "numero" },
-    { "label": "Disparos a puerta",            "local": "12",        "visitante": "9",         "tipo": "numero" },
-    { "label": "Toques en el área rival",      "local": "39",        "visitante": "11",        "tipo": "numero" },
-    { "label": "Gran probabilidad",            "local": "6",         "visitante": "0",         "tipo": "numero" },
-    { "label": "Pases precisos",               "local": "510 (88%)", "visitante": "394 (86%)", "tipo": "texto" },
-    { "label": "Saques de esquina",            "local": "1",         "visitante": "1",         "tipo": "numero" },
-    { "label": "Faltas",                       "local": "14",        "visitante": "5",         "tipo": "numero" }
+    { "label": "Posesión",             "local": "55%",        "visitante": "45%",        "tipo": "posesion", "local_val": 55, "visitante_val": 45 },
+    { "label": "Tiros totales",        "local": "20",         "visitante": "16",         "tipo": "numero" },
+    { "label": "Disparos a puerta",    "local": "12",         "visitante": "9",          "tipo": "numero" },
+    { "label": "Toques en área rival", "local": "39",         "visitante": "11",         "tipo": "numero" },
+    { "label": "Gran probabilidad",    "local": "6",          "visitante": "0",          "tipo": "numero" },
+    { "label": "Pases precisos",       "local": "510 (88%)",  "visitante": "394 (86%)",  "tipo": "texto"  },
+    { "label": "Saques de esquina",    "local": "1",          "visitante": "1",          "tipo": "numero" },
+    { "label": "Faltas",               "local": "14",         "visitante": "5",          "tipo": "numero" }
   ],
   "jugadores": {
     "brazil": [
-      { "nombre": "Lucas Paquetá",     "rating": 8.6, "mvp": true,  "min": 45, "goles": 1, "asist": 1, "acc_def": 1, "tiros": 2, "disp_puerta": 1, "oport": 4 },
-      { "nombre": "Igor Thiago",       "rating": 8.6, "mvp": false, "min": 45, "goles": 1, "asist": 1, "acc_def": 2, "tiros": 2, "disp_puerta": 2, "oport": 2 },
-      { "nombre": "Casemiro",          "rating": 8.5, "mvp": false, "min": 45, "goles": 1, "asist": 1, "acc_def": 3, "tiros": 1, "disp_puerta": 1, "oport": 1 },
-      { "nombre": "Vinícius Júnior",   "rating": 8.4, "mvp": false, "min": 45, "goles": 1, "asist": 1, "acc_def": 0, "tiros": 3, "disp_puerta": 2, "oport": 2 },
-      { "nombre": "Danilo",            "rating": 7.9, "mvp": false, "min": 45, "goles": 1, "asist": 0, "acc_def": 4, "tiros": 2, "disp_puerta": 1, "oport": 2 },
-      { "nombre": "Rayan",             "rating": 7.8, "mvp": false, "min": 45, "goles": 1, "asist": 0, "acc_def": 0, "tiros": 3, "disp_puerta": 2, "oport": 0 },
-      { "nombre": "Douglas Santos",    "rating": 7.7, "mvp": false, "min": 45, "goles": 0, "asist": 1, "acc_def": 1, "tiros": 0, "disp_puerta": 0, "oport": 1 },
-      { "nombre": "Carlos Harvey",     "rating": 7.6, "mvp": false, "min": 84, "goles": 1, "asist": 0, "acc_def": 3, "tiros": 1, "disp_puerta": 1, "oport": 2 },
-      { "nombre": "Raphinha",          "rating": 7.1, "mvp": false, "min": 45, "goles": 0, "asist": 0, "acc_def": 3, "tiros": 3, "disp_puerta": 1, "oport": 1 },
-      { "nombre": "José L. Rodríguez", "rating": 7.1, "mvp": false, "min": 66, "goles": 0, "asist": 0, "acc_def": 0, "tiros": 2, "disp_puerta": 2, "oport": 1 },
-      { "nombre": "Ederson",           "rating": 7.0, "mvp": false, "min": 45, "goles": 0, "asist": 0, "acc_def": 1, "tiros": 0, "disp_puerta": 0, "oport": 0 },
-      { "nombre": "Alisson Becker",    "rating": 6.9, "mvp": false, "min": 45, "goles": 0, "asist": 0, "acc_def": 0, "tiros": 0, "disp_puerta": 0, "oport": 0 },
-      { "nombre": "Wesley",            "rating": 6.8, "mvp": false, "min": 45, "goles": 0, "asist": 0, "acc_def": 6, "tiros": 0, "disp_puerta": 0, "oport": 0 },
-      { "nombre": "Fabinho",           "rating": 6.8, "mvp": false, "min": 45, "goles": 0, "asist": 0, "acc_def": 4, "tiros": 0, "disp_puerta": 0, "oport": 0 },
-      { "nombre": "Alex Sandro",       "rating": 6.7, "mvp": false, "min": 45, "goles": 0, "asist": 0, "acc_def": 4, "tiros": 0, "disp_puerta": 0, "oport": 1 },
-      { "nombre": "Gleison Bremer",    "rating": 6.7, "mvp": false, "min": 45, "goles": 0, "asist": 0, "acc_def": 3, "tiros": 0, "disp_puerta": 0, "oport": 0 },
-      { "nombre": "Bruno Guimarães",   "rating": 6.5, "mvp": false, "min": 45, "goles": 0, "asist": 0, "acc_def": 1, "tiros": 1, "disp_puerta": 0, "oport": 1 },
-      { "nombre": "Luiz Henrique",     "rating": 6.3, "mvp": false, "min": 45, "goles": 0, "asist": 0, "acc_def": 0, "tiros": 0, "disp_puerta": 0, "oport": 0 },
-      { "nombre": "Léo Pereira",       "rating": 6.2, "mvp": false, "min": 90, "goles": 0, "asist": 0, "acc_def": 5, "tiros": 0, "disp_puerta": 0, "oport": 0 },
-      { "nombre": "Endrick",           "rating": 6.1, "mvp": false, "min": 45, "goles": 0, "asist": 0, "acc_def": 0, "tiros": 3, "disp_puerta": 2, "oport": 0 },
-      { "nombre": "Matheus Cunha",     "rating": 5.6, "mvp": false, "min": 45, "goles": 0, "asist": 0, "acc_def": 2, "tiros": 0, "disp_puerta": 0, "oport": 1 }
-    ],
-    "panama": [
-      { "nombre": "José Fajardo",      "rating": 6.5, "mvp": false, "min": 45, "goles": 0, "asist": 0, "acc_def": 0, "tiros": 2, "disp_puerta": 1, "oport": 2 },
-      { "nombre": "Kadir Barría",      "rating": 6.5, "mvp": false, "min": 24, "goles": 0, "asist": 0, "acc_def": 0, "tiros": 1, "disp_puerta": 0, "oport": 1 },
-      { "nombre": "Cristian Martínez", "rating": 6.4, "mvp": false, "min": 45, "goles": 0, "asist": 0, "acc_def": 3, "tiros": 0, "disp_puerta": 0, "oport": 0 },
-      { "nombre": "Cecilio Waterman",  "rating": 6.4, "mvp": false, "min": 45, "goles": 0, "asist": 0, "acc_def": 1, "tiros": 1, "disp_puerta": 1, "oport": 1 },
-      { "nombre": "Ismael Díaz",       "rating": 5.9, "mvp": false, "min": 45, "goles": 0, "asist": 0, "acc_def": 1, "tiros": 2, "disp_puerta": 1, "oport": 0 },
-      { "nombre": "Yoel Bárcenas",     "rating": 5.6, "mvp": false, "min": 65, "goles": 0, "asist": 0, "acc_def": 4, "tiros": 1, "disp_puerta": 1, "oport": 1 },
-      { "nombre": "Carlos Harvey",     "rating": 7.6, "mvp": false, "min": 84, "goles": 1, "asist": 0, "acc_def": 3, "tiros": 1, "disp_puerta": 1, "oport": 2 },
-      { "nombre": "Fidel Escobar",     "rating": 5.5, "mvp": false, "min": 65, "goles": 0, "asist": 0, "acc_def": 6, "tiros": 1, "disp_puerta": 1, "oport": 0 },
-      { "nombre": "Amir Murillo",      "rating": 4.8, "mvp": false, "min": 84, "goles": 0, "asist": 0, "acc_def": 2, "tiros": 2, "disp_puerta": 0, "oport": 2 },
-      { "nombre": "Orlando Mosquera",  "rating": 3.9, "mvp": false, "min": 90, "goles": 0, "asist": 0, "acc_def": 2, "tiros": 0, "disp_puerta": 0, "oport": 0 }
+      {
+        "nombre": "Lucas Paquetá", "id": 766435, "rating": 8.58, "mvp": true, "portero": false,
+        "min": 45, "goles": 1, "asist": 1,
+        "top":    { "tiros_totales": 2,  "disparos_puerta": 1, "oport_creadas": 4, "grandes_oport": 3, "acc_defensivas": 1, "pases_precisos": "40/42" },
+        "ataque": { "toques": 51, "toques_area": 2, "regates": "1/1", "pases_ultimo_tercio": 4, "tiros_largos": "0/1", "perdida_balon": 0 },
+        "defensa":{ "acc_defensivas": 1, "entradas": 1, "interceptaciones": 0, "recuperaciones": 3, "despejes": 0, "bloqueos": 0, "regateado": 1 },
+        "duelos": { "ganados": 3, "perdidos": 3, "terrestres": "3/6", "aereos": "0/0", "faltas": 2, "faltas_recibidas": 1 }
+      },
+      {
+        "nombre": "Igor Thiago", "id": 1302005, "rating": 8.57, "mvp": false, "portero": false,
+        "min": 45, "goles": 1, "asist": 1,
+        "top":    { "tiros_totales": 2, "disparos_puerta": 2, "oport_creadas": 2, "grandes_oport": null, "acc_defensivas": 2, "pases_precisos": "11/13" },
+        "ataque": { "toques": 26, "toques_area": 5, "regates": "1/2", "pases_ultimo_tercio": null, "tiros_largos": null, "perdida_balon": 1 },
+        "defensa":{ "acc_defensivas": 2, "entradas": 0, "interceptaciones": 2, "recuperaciones": 1, "despejes": 0, "bloqueos": 0, "regateado": 0 },
+        "duelos": { "ganados": 3, "perdidos": 2, "terrestres": "2/4", "aereos": "1/1", "faltas": 1, "faltas_recibidas": 3 }
+      },
+      {
+        "nombre": "Casemiro", "id": 267826, "rating": 8.48, "mvp": false, "portero": false,
+        "min": 45, "goles": 1, "asist": 1,
+        "top":    { "tiros_totales": 1, "disparos_puerta": 1, "oport_creadas": 1, "grandes_oport": 1, "acc_defensivas": 3, "pases_precisos": "29/31" },
+        "ataque": { "toques": 39, "toques_area": 2, "regates": "0/0", "pases_ultimo_tercio": 2, "tiros_largos": "2/3", "perdida_balon": 0 },
+        "defensa":{ "acc_defensivas": 3, "entradas": 3, "interceptaciones": 0, "recuperaciones": 2, "despejes": 0, "bloqueos": 0, "regateado": 0 },
+        "duelos": { "ganados": 4, "perdidos": 1, "terrestres": "3/4", "aereos": "1/1", "faltas": 0, "faltas_recibidas": 1 }
+      },
+      {
+        "nombre": "Vinícius Júnior", "id": 863098, "rating": 8.44, "mvp": false, "portero": false,
+        "min": 45, "goles": 1, "asist": 1,
+        "top":    { "tiros_totales": 3, "disparos_puerta": 2, "oport_creadas": 2, "grandes_oport": 1, "acc_defensivas": 0, "pases_precisos": "12/14" },
+        "ataque": { "toques": 28, "toques_area": 4, "regates": "3/4", "pases_ultimo_tercio": 1, "tiros_largos": null, "perdida_balon": 1 },
+        "defensa":{ "acc_defensivas": 0, "entradas": 0, "interceptaciones": 0, "recuperaciones": 0, "despejes": 0, "bloqueos": 0, "regateado": 2 },
+        "duelos": { "ganados": 4, "perdidos": 2, "terrestres": "4/6", "aereos": "0/0", "faltas": 0, "faltas_recibidas": 3 }
+      },
+      {
+        "nombre": "Danilo", "id": 501847, "rating": 7.92, "mvp": false, "portero": false,
+        "min": 45, "goles": 1, "asist": 0,
+        "top":    { "tiros_totales": 2, "disparos_puerta": 1, "oport_creadas": 2, "grandes_oport": null, "acc_defensivas": 4, "pases_precisos": "16/18" },
+        "ataque": { "toques": 27, "toques_area": 2, "regates": "0/1", "pases_ultimo_tercio": 1, "tiros_largos": "0/1", "perdida_balon": 0 },
+        "defensa":{ "acc_defensivas": 4, "entradas": 1, "interceptaciones": 1, "recuperaciones": 4, "despejes": 1, "bloqueos": 0, "regateado": 1 },
+        "duelos": { "ganados": 2, "perdidos": 2, "terrestres": "1/2", "aereos": "1/2", "faltas": 1, "faltas_recibidas": 0 }
+      },
+      {
+        "nombre": "Rayan", "id": 1478295, "rating": 7.82, "mvp": false, "portero": false,
+        "min": 45, "goles": 1, "asist": 0,
+        "top":    { "tiros_totales": 3, "disparos_puerta": 2, "oport_creadas": 0, "grandes_oport": 1, "acc_defensivas": 0, "pases_precisos": "10/14" },
+        "ataque": { "toques": 26, "toques_area": 3, "regates": "2/3", "pases_ultimo_tercio": 1, "tiros_largos": null, "perdida_balon": 1 },
+        "defensa":{ "acc_defensivas": 0, "entradas": 0, "interceptaciones": 0, "recuperaciones": 0, "despejes": 0, "bloqueos": 0, "regateado": 1 },
+        "duelos": { "ganados": 2, "perdidos": 2, "terrestres": "2/3", "aereos": "0/1", "faltas": 1, "faltas_recibidas": 1 }
+      },
+      {
+        "nombre": "Douglas Santos", "id": 362688, "rating": 7.74, "mvp": false, "portero": false,
+        "min": 45, "goles": 0, "asist": 1,
+        "top":    { "tiros_totales": null, "disparos_puerta": null, "oport_creadas": 1, "grandes_oport": null, "acc_defensivas": 1, "pases_precisos": "32/36" },
+        "ataque": { "toques": 47, "toques_area": 1, "regates": "0/0", "pases_ultimo_tercio": 3, "tiros_largos": "1/2", "perdida_balon": 0 },
+        "defensa":{ "acc_defensivas": 1, "entradas": 1, "interceptaciones": 0, "recuperaciones": 1, "despejes": 0, "bloqueos": 0, "regateado": 0 },
+        "duelos": { "ganados": 1, "perdidos": 1, "terrestres": "1/2", "aereos": "0/0", "faltas": 0, "faltas_recibidas": 1 }
+      },
+      {
+        "nombre": "Carlos Harvey", "id": 940333, "rating": 7.63, "mvp": false, "portero": false,
+        "min": 84, "goles": 1, "asist": 0,
+        "top":    { "tiros_totales": 1, "disparos_puerta": 1, "oport_creadas": 2, "grandes_oport": null, "acc_defensivas": 3, "pases_precisos": "26/33" },
+        "ataque": { "toques": 41, "toques_area": 3, "regates": "1/2", "pases_ultimo_tercio": 2, "tiros_largos": "0/2", "perdida_balon": 1 },
+        "defensa":{ "acc_defensivas": 3, "entradas": 1, "interceptaciones": 1, "recuperaciones": 3, "despejes": 0, "bloqueos": 0, "regateado": 2 },
+        "duelos": { "ganados": 3, "perdidos": 3, "terrestres": "3/5", "aereos": "0/1", "faltas": 1, "faltas_recibidas": 2 }
+      },
+      {
+        "nombre": "Raphinha", "id": 812652, "rating": 7.12, "mvp": false, "portero": false,
+        "min": 45, "goles": 0, "asist": 0,
+        "top":    { "tiros_totales": 3, "disparos_puerta": 1, "oport_creadas": 1, "grandes_oport": null, "acc_defensivas": 3, "pases_precisos": "13/15" },
+        "ataque": { "toques": 26, "toques_area": 2, "regates": "1/1", "pases_ultimo_tercio": 1, "tiros_largos": null, "perdida_balon": 0 },
+        "defensa":{ "acc_defensivas": 3, "entradas": 1, "interceptaciones": 0, "recuperaciones": 4, "despejes": 0, "bloqueos": 1, "regateado": 1 },
+        "duelos": { "ganados": 2, "perdidos": 2, "terrestres": "2/4", "aereos": "0/0", "faltas": 1, "faltas_recibidas": 2 }
+      },
+      {
+        "nombre": "José L. Rodríguez", "id": 940334, "rating": 7.11, "mvp": false, "portero": false,
+        "min": 66, "goles": 0, "asist": 0,
+        "top":    { "tiros_totales": 2, "disparos_puerta": 2, "oport_creadas": 1, "grandes_oport": null, "acc_defensivas": 0, "pases_precisos": "16/20" },
+        "ataque": { "toques": 30, "toques_area": 2, "regates": "1/1", "pases_ultimo_tercio": 1, "tiros_largos": null, "perdida_balon": 1 },
+        "defensa":{ "acc_defensivas": 0, "entradas": 0, "interceptaciones": 0, "recuperaciones": 0, "despejes": 0, "bloqueos": 0, "regateado": 1 },
+        "duelos": { "ganados": 1, "perdidos": 2, "terrestres": "1/3", "aereos": "0/0", "faltas": 0, "faltas_recibidas": 1 }
+      },
+      {
+        "nombre": "Ederson", "id": 574077, "rating": 6.98, "mvp": false, "portero": true,
+        "min": 45, "goles": 0, "asist": 0,
+        "top":    { "tiros_totales": null, "disparos_puerta": null, "oport_creadas": null, "grandes_oport": null, "acc_defensivas": 1, "pases_precisos": "18/21" },
+        "ataque": { "toques": 23, "toques_area": null, "regates": null, "pases_ultimo_tercio": null, "tiros_largos": "7/9", "perdida_balon": 0 },
+        "defensa":{ "acc_defensivas": 1, "entradas": 0, "interceptaciones": 0, "recuperaciones": 1, "despejes": 0, "bloqueos": 0, "regateado": 0 },
+        "duelos": { "ganados": 0, "perdidos": 0, "terrestres": null, "aereos": null, "faltas": 0, "faltas_recibidas": 0 },
+        "portero_stats": { "paradas": 6, "goles_contra": 1, "goles_evitados": null }
+      },
+      {
+        "nombre": "Alisson Becker", "id": 346000, "rating": 6.92, "mvp": false, "portero": true,
+        "min": 45, "goles": 0, "asist": 0,
+        "top":    { "tiros_totales": null, "disparos_puerta": null, "oport_creadas": null, "grandes_oport": null, "acc_defensivas": 0, "pases_precisos": "15/18" },
+        "ataque": { "toques": 19, "toques_area": null, "regates": null, "pases_ultimo_tercio": null, "tiros_largos": "4/7", "perdida_balon": 0 },
+        "defensa":{ "acc_defensivas": 0, "entradas": 0, "interceptaciones": 0, "recuperaciones": 0, "despejes": 0, "bloqueos": 0, "regateado": 0 },
+        "duelos": { "ganados": 0, "perdidos": 0, "terrestres": null, "aereos": null, "faltas": 0, "faltas_recibidas": 0 },
+        "portero_stats": { "paradas": 2, "goles_contra": 1, "goles_evitados": null }
+      },
+      {
+        "nombre": "Wesley", "id": 1054131, "rating": 6.83, "mvp": false, "portero": false,
+        "min": 45, "goles": 0, "asist": 0,
+        "top":    { "tiros_totales": null, "disparos_puerta": null, "oport_creadas": null, "grandes_oport": null, "acc_defensivas": 6, "pases_precisos": "20/22" },
+        "ataque": { "toques": 35, "toques_area": 0, "regates": "0/1", "pases_ultimo_tercio": 2, "tiros_largos": "1/2", "perdida_balon": 0 },
+        "defensa":{ "acc_defensivas": 6, "entradas": 2, "interceptaciones": 1, "recuperaciones": 4, "despejes": 1, "bloqueos": 0, "regateado": 0 },
+        "duelos": { "ganados": 3, "perdidos": 2, "terrestres": "2/4", "aereos": "1/1", "faltas": 1, "faltas_recibidas": 0 }
+      },
+      {
+        "nombre": "Fabinho", "id": 523801, "rating": 6.82, "mvp": false, "portero": false,
+        "min": 45, "goles": 0, "asist": 0,
+        "top":    { "tiros_totales": null, "disparos_puerta": null, "oport_creadas": null, "grandes_oport": null, "acc_defensivas": 4, "pases_precisos": "32/36" },
+        "ataque": { "toques": 43, "toques_area": 1, "regates": "0/0", "pases_ultimo_tercio": 2, "tiros_largos": "1/2", "perdida_balon": 0 },
+        "defensa":{ "acc_defensivas": 4, "entradas": 2, "interceptaciones": 1, "recuperaciones": 2, "despejes": 0, "bloqueos": 0, "regateado": 0 },
+        "duelos": { "ganados": 3, "perdidos": 1, "terrestres": "2/3", "aereos": "1/1", "faltas": 0, "faltas_recibidas": 0 }
+      },
+      {
+        "nombre": "Alex Sandro", "id": 157865, "rating": 6.66, "mvp": false, "portero": false,
+        "min": 45, "goles": 0, "asist": 0,
+        "top":    { "tiros_totales": null, "disparos_puerta": null, "oport_creadas": 1, "grandes_oport": null, "acc_defensivas": 4, "pases_precisos": "30/35" },
+        "ataque": { "toques": 41, "toques_area": 0, "regates": "0/0", "pases_ultimo_tercio": 3, "tiros_largos": "0/3", "perdida_balon": 0 },
+        "defensa":{ "acc_defensivas": 4, "entradas": 0, "interceptaciones": 2, "recuperaciones": 1, "despejes": 2, "bloqueos": 0, "regateado": 0 },
+        "duelos": { "ganados": 1, "perdidos": 2, "terrestres": "0/1", "aereos": "1/2", "faltas": 1, "faltas_recibidas": 0 }
+      },
+      {
+        "nombre": "Gleison Bremer", "id": 696679, "rating": 6.65, "mvp": false, "portero": false,
+        "min": 45, "goles": 0, "asist": 0,
+        "top":    { "tiros_totales": null, "disparos_puerta": null, "oport_creadas": null, "grandes_oport": null, "acc_defensivas": 3, "pases_precisos": "29/32" },
+        "ataque": { "toques": 37, "toques_area": 0, "regates": "0/0", "pases_ultimo_tercio": 1, "tiros_largos": "0/2", "perdida_balon": 0 },
+        "defensa":{ "acc_defensivas": 3, "entradas": 1, "interceptaciones": 1, "recuperaciones": 2, "despejes": 3, "bloqueos": 0, "regateado": 0 },
+        "duelos": { "ganados": 1, "perdidos": 0, "terrestres": "0/0", "aereos": "1/1", "faltas": 0, "faltas_recibidas": 0 }
+      },
+      {
+        "nombre": "Bruno Guimarães", "id": 857269, "rating": 6.54, "mvp": false, "portero": false,
+        "min": 45, "goles": 0, "asist": 0,
+        "top":    { "tiros_totales": 1, "disparos_puerta": null, "oport_creadas": 1, "grandes_oport": null, "acc_defensivas": 1, "pases_precisos": "31/34" },
+        "ataque": { "toques": 42, "toques_area": 2, "regates": "0/0", "pases_ultimo_tercio": 3, "tiros_largos": "1/2", "perdida_balon": 0 },
+        "defensa":{ "acc_defensivas": 1, "entradas": 1, "interceptaciones": 0, "recuperaciones": 1, "despejes": 0, "bloqueos": 0, "regateado": 0 },
+        "duelos": { "ganados": 2, "perdidos": 2, "terrestres": "2/4", "aereos": "0/0", "faltas": 2, "faltas_recibidas": 0 }
+      },
+      {
+        "nombre": "Luiz Henrique", "id": 1181700, "rating": 6.32, "mvp": false, "portero": false,
+        "min": 45, "goles": 0, "asist": 0,
+        "top":    { "tiros_totales": null, "disparos_puerta": null, "oport_creadas": null, "grandes_oport": null, "acc_defensivas": 0, "pases_precisos": "8/11" },
+        "ataque": { "toques": 16, "toques_area": 1, "regates": "0/2", "pases_ultimo_tercio": 1, "tiros_largos": null, "perdida_balon": 1 },
+        "defensa":{ "acc_defensivas": 0, "entradas": 0, "interceptaciones": 0, "recuperaciones": 0, "despejes": 0, "bloqueos": 0, "regateado": 2 },
+        "duelos": { "ganados": 0, "perdidos": 2, "terrestres": "0/2", "aereos": "0/0", "faltas": 0, "faltas_recibidas": 1 }
+      },
+      {
+        "nombre": "Léo Pereira", "id": 846033, "rating": 6.19, "mvp": false, "portero": false,
+        "min": 90, "goles": 0, "asist": 0,
+        "top":    { "tiros_totales": null, "disparos_puerta": null, "oport_creadas": null, "grandes_oport": null, "acc_defensivas": 5, "pases_precisos": "56/63" },
+        "ataque": { "toques": 73, "toques_area": 0, "regates": "0/0", "pases_ultimo_tercio": 2, "tiros_largos": "2/4", "perdida_balon": 0 },
+        "defensa":{ "acc_defensivas": 5, "entradas": 2, "interceptaciones": 1, "recuperaciones": 4, "despejes": 4, "bloqueos": 0, "regateado": 0 },
+        "duelos": { "ganados": 3, "perdidos": 1, "terrestres": "1/2", "aereos": "2/2", "faltas": 1, "faltas_recibidas": 0 }
+      },
+      {
+        "nombre": "Endrick", "id": 1640887, "rating": 6.08, "mvp": false, "portero": false,
+        "min": 45, "goles": 0, "asist": 0,
+        "top":    { "tiros_totales": 3, "disparos_puerta": 2, "oport_creadas": 0, "grandes_oport": null, "acc_defensivas": 0, "pases_precisos": "7/10" },
+        "ataque": { "toques": 18, "toques_area": 3, "regates": "0/1", "pases_ultimo_tercio": 0, "tiros_largos": null, "perdida_balon": 2 },
+        "defensa":{ "acc_defensivas": 0, "entradas": 0, "interceptaciones": 0, "recuperaciones": 0, "despejes": 0, "bloqueos": 0, "regateado": 0 },
+        "duelos": { "ganados": 1, "perdidos": 3, "terrestres": "1/4", "aereos": "0/0", "faltas": 1, "faltas_recibidas": 0 }
+      },
+      {
+        "nombre": "Matheus Cunha", "id": 859966, "rating": 5.64, "mvp": false, "portero": false,
+        "min": 45, "goles": 0, "asist": 0,
+        "top":    { "tiros_totales": null, "disparos_puerta": null, "oport_creadas": 1, "grandes_oport": null, "acc_defensivas": 2, "pases_precisos": "11/14" },
+        "ataque": { "toques": 22, "toques_area": 0, "regates": "0/1", "pases_ultimo_tercio": 1, "tiros_largos": null, "perdida_balon": 2 },
+        "defensa":{ "acc_defensivas": 2, "entradas": 0, "interceptaciones": 1, "recuperaciones": 2, "despejes": 0, "bloqueos": 0, "regateado": 1 },
+        "duelos": { "ganados": 1, "perdidos": 3, "terrestres": "1/3", "aereos": "0/1", "faltas": 0, "faltas_recibidas": 1 }
+      }
     ]
   }
 }

@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root { --dark:#0d0d1a; --dark2:#13131f; --acento:#1565c0; --gold:#f5c518; }
+:root{--dark:#0d0d1a;--dark2:#13131f;--acento:#1565c0;--gold:#f5c518;}
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark);color:#fff;}
 #app{background:var(--dark2);max-width:480px;margin:0 auto;min-height:100vh;}
@@ -17,7 +17,7 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
 .header{
   display:flex;align-items:center;gap:12px;
   padding:14px 14px 12px;
-  background:linear-gradient(180deg,rgba(21,101,192,.2) 0%,transparent 100%);
+  background:linear-gradient(180deg,rgba(21,101,192,.18) 0%,transparent 100%);
   border-bottom:1px solid rgba(255,255,255,.07);
   position:sticky;top:0;z-index:20;backdrop-filter:blur(10px);
 }
@@ -38,7 +38,7 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
 /* MATCH HEADER */
 .match-header{
   padding:20px 16px 18px;
-  background:linear-gradient(180deg,rgba(21,101,192,.12) 0%,transparent 100%);
+  background:linear-gradient(180deg,rgba(21,101,192,.1) 0%,transparent 100%);
   border-bottom:1px solid rgba(255,255,255,.06);
 }
 .match-meta{
@@ -88,7 +88,7 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
 .section{display:none;padding:16px;}
 .section.active{display:block;}
 
-/* POSESION */
+/* POSSESSION */
 .posesion-bar{
   height:36px;border-radius:8px;overflow:hidden;display:flex;
   margin:6px 0 12px;
@@ -139,31 +139,41 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
   font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:1.5px;
   color:rgba(255,255,255,.3);text-transform:uppercase;margin-bottom:10px;
 }
+
+/* PLAYER CARD */
+.player-card{
+  border-bottom:1px solid rgba(255,255,255,.05);
+  margin-bottom:2px;
+}
+.player-card:last-child{border-bottom:none;}
+
 .player-row{
   display:flex;align-items:center;gap:10px;
-  padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05);
+  padding:10px 0 10px;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
 }
-.player-row:last-child{border-bottom:none;}
+.player-row:hover .player-name{color:rgba(255,255,255,.9);}
+
 .player-avatar{
   width:40px;height:40px;border-radius:50%;overflow:hidden;
   flex-shrink:0;border:2px solid rgba(255,255,255,.12);
   display:flex;align-items:center;justify-content:center;
+  font-family:'Bebas Neue',sans-serif;font-size:13px;color:rgba(255,255,255,.7);
+  background:var(--acento);
 }
 .player-avatar img{width:100%;height:100%;object-fit:cover;}
-.player-num{
-  font-family:'Bebas Neue',sans-serif;font-size:16px;color:rgba(255,255,255,.5);
-}
+
 .player-info{flex:1;min-width:0;}
 .player-name{
   font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;
   color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  display:flex;align-items:center;gap:6px;
+  display:flex;align-items:center;gap:6px;transition:color .15s;
 }
 .mvp-tag{
   font-size:10px;background:rgba(245,197,24,.2);color:var(--gold);
-  padding:1px 5px;border-radius:3px;font-weight:600;letter-spacing:.5px;
+  padding:1px 5px;border-radius:3px;font-weight:600;letter-spacing:.5px;flex-shrink:0;
 }
-.player-detail{font-family:'DM Sans',sans-serif;font-size:11px;color:rgba(255,255,255,.35);margin-top:2px;}
+.player-meta{font-family:'Barlow Condensed',sans-serif;font-size:12px;color:rgba(255,255,255,.35);margin-top:2px;}
 .player-badges{display:flex;gap:5px;align-items:center;margin-top:4px;flex-wrap:wrap;}
 .badge{
   font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:.5px;
@@ -171,6 +181,8 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
 }
 .badge.gol{background:rgba(46,125,50,.3);color:#81c784;}
 .badge.asist{background:rgba(21,101,192,.3);color:#90caf9;}
+
+.player-right{display:flex;align-items:center;gap:6px;}
 .player-rating{
   font-family:'Bebas Neue',sans-serif;font-size:22px;
   min-width:44px;text-align:center;border-radius:6px;padding:4px 6px;
@@ -178,6 +190,68 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
 .r-high{background:rgba(46,125,50,.3);color:#66bb6a;}
 .r-mid {background:rgba(245,197,24,.2);color:#f5c518;}
 .r-low {background:rgba(229,57,53,.25);color:#ef9a9a;}
+
+.expand-btn{
+  width:24px;height:24px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  color:rgba(255,255,255,.3);font-size:10px;
+  transition:transform .25s, color .15s;flex-shrink:0;
+}
+.player-card.open .expand-btn{transform:rotate(180deg);color:rgba(255,255,255,.6);}
+
+/* PLAYER DETAIL PANEL */
+.player-detail-panel{
+  display:none;padding:0 0 14px 50px;
+  animation:fadeIn .2s ease;
+}
+.player-card.open .player-detail-panel{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+
+/* Section tabs inside player */
+.psec-tabs{
+  display:flex;gap:4px;margin-bottom:10px;
+}
+.psec-tab{
+  font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:.8px;
+  padding:4px 10px;border-radius:20px;cursor:pointer;text-transform:uppercase;
+  background:rgba(255,255,255,.06);color:rgba(255,255,255,.4);
+  transition:all .15s;border:1px solid transparent;
+}
+.psec-tab.active{
+  background:rgba(255,255,255,.1);color:#fff;
+  border-color:rgba(255,255,255,.15);
+}
+.psec-content{display:none;}
+.psec-content.active{display:block;}
+
+/* Stat grid inside player */
+.pstat-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;
+}
+.pstat-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);
+}
+.pstat-row:last-child{border-bottom:none;}
+.pstat-label{
+  font-family:'Barlow Condensed',sans-serif;font-size:12px;color:rgba(255,255,255,.4);
+}
+.pstat-val{
+  font-family:'Bebas Neue',sans-serif;font-size:16px;color:#fff;
+}
+.pstat-val.null-val{color:rgba(255,255,255,.2);}
+
+/* Portero block */
+.portero-block{
+  display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;
+}
+.portero-stat{
+  display:flex;flex-direction:column;align-items:center;
+  background:rgba(255,255,255,.05);border-radius:8px;
+  padding:8px 14px;min-width:70px;
+}
+.portero-stat-val{font-family:'Bebas Neue',sans-serif;font-size:26px;color:#fff;}
+.portero-stat-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;color:rgba(255,255,255,.4);letter-spacing:.8px;text-transform:uppercase;margin-top:2px;}
 
 /* LOADING */
 #loading{
@@ -276,7 +350,6 @@ const NOMBRES = {
   capeverde:'Cabo Verde', newzealand:'Nueva Zelanda', uzbekistan:'Uzbekistán',
   drcongo:'RD Congo', bosniaandherzegovina:'Bosnia y Herz.', paraguay:'Paraguay',
 };
-
 const COLORES = {
   argentina:'#75aadb', france:'#002395', brazil:'#009c3b', germany:'#c0392b',
   spain:'#c60b1e', england:'#cf081f', portugal:'#006600', mexico:'#006847',
@@ -287,14 +360,110 @@ const COLORES = {
 
 const nb  = s => NOMBRES[s] || (s.charAt(0).toUpperCase()+s.slice(1));
 const col = s => COLORES[s] || '#1565c0';
-const flag = s => `escudos/${s}.png`;
-const esc  = s => `escudos/${s}.png`;
+const esc = s => `escudos/${s}.png`;
 
 function rClass(r){ return r>=8?'r-high':r>=7?'r-mid':'r-low'; }
 
 function formatFecha(f){
   const d = new Date(f+'T12:00:00');
   return d.toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+}
+
+function fmt(v){
+  if(v===null||v===undefined) return null;
+  return String(v);
+}
+
+// Build stats grid HTML for a section object + label map
+function buildStatsGrid(obj, labels){
+  if(!obj) return '';
+  const rows = Object.entries(labels)
+    .map(([key, label])=>{
+      const raw = obj[key];
+      const isNull = raw===null||raw===undefined;
+      const val = isNull ? '—' : fmt(raw);
+      return `<div class="pstat-row">
+        <span class="pstat-label">${label}</span>
+        <span class="pstat-val${isNull?' null-val':''}">${val}</span>
+      </div>`;
+    });
+  // split into 2 columns
+  const mid = Math.ceil(rows.length/2);
+  const col1 = rows.slice(0,mid).join('');
+  const col2 = rows.slice(mid).join('');
+  return `<div class="pstat-grid">
+    <div>${col1}</div>
+    <div>${col2}</div>
+  </div>`;
+}
+
+const LABELS_TOP = {
+  tiros_totales:   'Tiros totales',
+  disparos_puerta: 'A puerta',
+  oport_creadas:   'Oport. creadas',
+  grandes_oport:   'Gran. oport.',
+  acc_defensivas:  'Acc. defensivas',
+  pases_precisos:  'Pases precisos',
+};
+const LABELS_ATQ = {
+  toques:              'Toques',
+  toques_area:         'Toques área rival',
+  regates:             'Regates',
+  pases_ultimo_tercio: 'Pases últ. tercio',
+  tiros_largos:        'Tiros largos',
+  perdida_balon:       'Pérdidas',
+};
+const LABELS_DEF = {
+  acc_defensivas:  'Acc. defensivas',
+  entradas:        'Entradas',
+  interceptaciones:'Interceptaciones',
+  recuperaciones:  'Recuperaciones',
+  despejes:        'Despejes',
+  bloqueos:        'Bloqueos',
+  regateado:       'Regateado',
+};
+const LABELS_DUE = {
+  ganados:          'Duelos ganados',
+  perdidos:         'Duelos perdidos',
+  terrestres:       'Terrestres',
+  aereos:           'Aéreos',
+  faltas:           'Faltas cometidas',
+  faltas_recibidas: 'Faltas recibidas',
+};
+
+function buildPlayerDetailPanel(j, cardId){
+  const hasSections = j.top || j.ataque || j.defensa || j.duelos;
+  if(!hasSections) return '';
+
+  const tabs = [];
+  const contents = [];
+  let idx = 0;
+
+  function addTab(label, html){
+    const active = idx===0?'active':'';
+    tabs.push(`<div class="psec-tab ${active}" data-card="${cardId}" data-sec="${idx}">${label}</div>`);
+    contents.push(`<div class="psec-content ${active}" id="${cardId}-sec-${idx}">${html}</div>`);
+    idx++;
+  }
+
+  if(j.top)    addTab('Top',    buildStatsGrid(j.top,    LABELS_TOP));
+  if(j.ataque) addTab('Ataque', buildStatsGrid(j.ataque, LABELS_ATQ));
+  if(j.defensa)addTab('Defensa',buildStatsGrid(j.defensa,LABELS_DEF));
+  if(j.duelos) addTab('Duelos', buildStatsGrid(j.duelos, LABELS_DUE));
+
+  let porteroHtml = '';
+  if(j.portero && j.portero_stats){
+    const ps = j.portero_stats;
+    porteroHtml = `<div class="portero-block">
+      ${ps.paradas!==null&&ps.paradas!==undefined?`<div class="portero-stat"><div class="portero-stat-val">${ps.paradas}</div><div class="portero-stat-label">Paradas</div></div>`:''}
+      ${ps.goles_contra!==null&&ps.goles_contra!==undefined?`<div class="portero-stat"><div class="portero-stat-val">${ps.goles_contra}</div><div class="portero-stat-label">Goles encajados</div></div>`:''}
+      ${ps.goles_evitados!==null&&ps.goles_evitados!==undefined?`<div class="portero-stat"><div class="portero-stat-val">${ps.goles_evitados>=0?'+':''}${ps.goles_evitados}</div><div class="portero-stat-label">Goles evitados</div></div>`:''}
+    </div>`;
+  }
+
+  return `<div class="psec-tabs">${tabs.join('')}</div>
+    ${contents.join('')}
+    ${porteroHtml}`;
 }
 
 async function init(){
@@ -321,14 +490,14 @@ async function init(){
   // Match header
   document.getElementById('match-meta').textContent =
     `${p.competicion.toUpperCase()} · ${formatFecha(p.fecha)} · ${p.estadio}`;
-  document.getElementById('flag-local').src     = flag(p.local);
-  document.getElementById('flag-visitante').src = flag(p.visitante);
+  document.getElementById('flag-local').src     = esc(p.local);
+  document.getElementById('flag-visitante').src = esc(p.visitante);
   document.getElementById('name-local').textContent     = nb(p.local).toUpperCase();
   document.getElementById('name-visitante').textContent = nb(p.visitante).toUpperCase();
   document.getElementById('score-local').textContent     = p.goles_local;
   document.getElementById('score-visitante').textContent = p.goles_visitante;
 
-  // Goles
+  // Goals
   const gl = document.getElementById('goals-local');
   const gv = document.getElementById('goals-visitante');
   (p.goles_detalle.local||[]).forEach(g=>{
@@ -345,7 +514,7 @@ async function init(){
   document.getElementById('legend-local').textContent     = nb(p.local);
   document.getElementById('legend-visitante').textContent = nb(p.visitante);
 
-  // Stats
+  // Top stats
   const sc = document.getElementById('stats-container');
   data.top_stats.forEach(s=>{
     if(s.tipo==='posesion'){
@@ -353,7 +522,7 @@ async function init(){
       div.innerHTML = `
         <div class="posesion-label">${s.label}</div>
         <div class="posesion-bar">
-          <div class="posesion-local" style="width:${s.local_val}%">${s.local}</div>
+          <div class="posesion-local"  style="width:${s.local_val}%">${s.local}</div>
           <div class="posesion-visitante" style="width:${s.visitante_val}%">${s.visitante}</div>
         </div>`;
       sc.appendChild(div);
@@ -370,39 +539,69 @@ async function init(){
 
   // Jugadores
   const jc = document.getElementById('jugadores-container');
-  const jugs = (data.jugadores[slug]||[]).sort((a,b)=>b.rating-a.rating);
+  const jugs = (data.jugadores[slug]||[]).slice().sort((a,b)=>b.rating-a.rating);
 
   if(jugs.length){
     const title = document.createElement('div');
     title.className='jugadores-title';
-    title.textContent = nb(slug);
+    title.textContent = nb(slug).toUpperCase();
     jc.appendChild(title);
 
-    jugs.forEach(j=>{
+    jugs.forEach((j,idx)=>{
+      const cardId = `pcard-${idx}`;
       const badges=[];
       if(j.goles>0) badges.push(`<span class="badge gol">⚽ ${j.goles===1?'GOL':j.goles+' GOLES'}</span>`);
       if(j.asist>0) badges.push(`<span class="badge asist">🎯 ${j.asist===1?'ASIST':j.asist+' ASIST'}</span>`);
 
-      const row=document.createElement('div');
-      row.className='player-row';
-      row.innerHTML=`
-        <div class="player-avatar" style="background:${col(slug)}">
-          <img src="fotos/sin-foto.png" alt="" onerror="this.style.display='none'">
-        </div>
-        <div class="player-info">
-          <div class="player-name">
-            ${j.nombre}
-            ${j.mvp?'<span class="mvp-tag">★ MVP</span>':''}
+      const detail = buildPlayerDetailPanel(j, cardId);
+      const hasDetail = !!detail;
+      const ratingDisplay = j.rating ? j.rating.toFixed(2) : '—';
+
+      const card = document.createElement('div');
+      card.className = 'player-card';
+      card.id = cardId;
+      card.innerHTML = `
+        <div class="player-row">
+          <div class="player-avatar" style="background:${col(slug)}25;border-color:${col(slug)}50;">
+            <img src="fotos/sin-foto.png" alt="" onerror="this.style.display='none'">
           </div>
-          <div class="player-detail">${j.min}' · ${j.tiros} tiros · ${j.disp_puerta} a puerta · ${j.oport} oport.</div>
-          ${badges.length?'<div class="player-badges">'+badges.join('')+'</div>':''}
+          <div class="player-info">
+            <div class="player-name">
+              ${j.nombre}
+              ${j.mvp?'<span class="mvp-tag">★ MVP</span>':''}
+            </div>
+            <div class="player-meta">${j.min}' · ${j.portero?'Portero':'Jugador'}</div>
+            ${badges.length?'<div class="player-badges">'+badges.join('')+'</div>':''}
+          </div>
+          <div class="player-right">
+            <div class="player-rating ${rClass(j.rating)}">${ratingDisplay}</div>
+            ${hasDetail?'<div class="expand-btn">▼</div>':''}
+          </div>
         </div>
-        <div class="player-rating ${rClass(j.rating)}">${j.rating}</div>`;
-      jc.appendChild(row);
+        ${hasDetail?`<div class="player-detail-panel">${detail}</div>`:''}`;
+
+      if(hasDetail){
+        card.querySelector('.player-row').addEventListener('click',()=>{
+          card.classList.toggle('open');
+        });
+        // Sub-section tabs
+        card.querySelectorAll('.psec-tab').forEach(tab=>{
+          tab.addEventListener('click', e=>{
+            e.stopPropagation();
+            const sec = tab.dataset.sec;
+            card.querySelectorAll('.psec-tab').forEach(t=>t.classList.remove('active'));
+            card.querySelectorAll('.psec-content').forEach(c=>c.classList.remove('active'));
+            tab.classList.add('active');
+            card.querySelector(`#${cardId}-sec-${sec}`).classList.add('active');
+          });
+        });
+      }
+
+      jc.appendChild(card);
     });
   }
 
-  // Tabs
+  // Main tabs
   document.querySelectorAll('.tab').forEach(t=>{
     t.addEventListener('click',()=>{
       document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
