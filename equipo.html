@@ -349,6 +349,44 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   letter-spacing: 2px; line-height: 2;
 }
 
+/* ===== PARTIDO CARDS ===== */
+.partido-card {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 14px; border-radius: 10px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  margin-bottom: 8px; cursor: pointer;
+  text-decoration: none; color: inherit;
+  transition: background .15s, border-color .15s;
+}
+.partido-card:hover { background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.14); }
+.partido-card.acumulado {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.12);
+  cursor: default;
+}
+.pc-icon { font-size: 22px; flex-shrink: 0; }
+.pc-escudos { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.pc-escudo { width: 26px; height: 26px; object-fit: contain; }
+.pc-sep { font-family: 'Bebas Neue', sans-serif; font-size: 14px; color: rgba(255,255,255,.3); }
+.pc-info { flex: 1; min-width: 0; }
+.pc-resultado {
+  font-family: 'Bebas Neue', sans-serif; font-size: 17px; letter-spacing: 1px;
+  color: #fff; display: flex; align-items: center; gap: 8px;
+}
+.pc-score { font-size: 20px; }
+.pc-comp {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 10px;
+  letter-spacing: 1.5px; color: rgba(255,255,255,.35);
+  text-transform: uppercase; margin-top: 2px;
+}
+.pc-arrow { font-size: 14px; color: rgba(255,255,255,.25); flex-shrink: 0; }
+.stats-section-title {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 10px;
+  letter-spacing: 2px; color: rgba(255,255,255,.3);
+  text-transform: uppercase; margin: 16px 0 8px;
+}
+
 /* ===== TOAST ===== */
 #toast {
   position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
@@ -393,7 +431,6 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   </div>
 
   <div class="secondary-row">
-    <button class="sec-btn" onclick="openSection('plantel')">👥 Ver Plantel</button>
     <button class="sec-btn" onclick="openSection('estadisticas')">📊 Estadísticas</button>
   </div>
 
@@ -518,9 +555,8 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   <button class="back-btn" onclick="closeSection('estadisticas')">← Volver</button>
   <div class="screen-title">ESTADÍSTICAS</div>
   <div class="screen-sub" id="stats-sub">Rendimiento del equipo</div>
-  <div class="pronto-msg">
-    📊<br>PRÓXIMAMENTE<br>
-    <span style="font-size:11px;opacity:0.6;">Disponible una vez que comiencen los partidos</span>
+  <div id="stats-partidos-lista">
+    <div class="loading-spinner"></div>
   </div>
 </div>
 </div>
@@ -647,6 +683,7 @@ function openSection(id) {
   if (id === 'plantel' && plantelData) renderPlantel();
   if (id === 'formacion') initFormacion();
   if (id === 'puntajes') initPuntajes();
+  if (id === 'estadisticas') loadPartidosStats();
 }
 function closeSection(id) {
   document.getElementById(id + '-screen').style.display = 'none';
@@ -1221,6 +1258,108 @@ async function init() {
 })();
 
 init();
+
+// ── Estadísticas: lista de partidos ────────────────────────────────────────
+const NOMBRES_RIVAL = {
+  argentina:'Argentina',france:'Francia',brazil:'Brasil',germany:'Alemania',
+  spain:'España',england:'Inglaterra',portugal:'Portugal',mexico:'México',
+  usa:'EE.UU.',uruguay:'Uruguay',colombia:'Colombia',japan:'Japón',
+  morocco:'Marruecos',netherlands:'Países Bajos',croatia:'Croacia',
+  senegal:'Senegal',switzerland:'Suiza',australia:'Australia',
+  ecuador:'Ecuador',canada:'Canadá',southkorea:'Corea del Sur',
+  turkiye:'Türkiye',austria:'Austria',norway:'Noruega',sweden:'Suecia',
+  scotland:'Escocia',belgium:'Bélgica',iran:'Irán',iraq:'Irak',
+  jordan:'Jordania',qatar:'Catar',saudiarabia:'Arabia Saudita',
+  egypt:'Egipto',southafrica:'Sudáfrica',ghana:'Ghana',
+  ivorycoast:'Costa de Marfil',czechia:'Chequia',panama:'Panamá',
+  haiti:'Haití',curacao:'Curazao',algeria:'Argelia',
+  capeverde:'Cabo Verde',newzealand:'Nueva Zelanda',uzbekistan:'Uzbekistán',
+  drcongo:'RD Congo',bosniaandherzegovina:'Bosnia y Herz.',paraguay:'Paraguay',
+};
+const nbR = s => NOMBRES_RIVAL[s] || (s.charAt(0).toUpperCase()+s.slice(1));
+
+let partidos_cargados = false;
+async function loadPartidosStats() {
+  if (partidos_cargados) return;
+  const wrap = document.getElementById('stats-partidos-lista');
+  if (!wrap) return;
+
+  try {
+    const res = await fetch(`data/partidos/index.json?v=${Date.now()}`);
+    if (!res.ok) throw new Error();
+    const todos = await res.json();
+
+    // Filtrar partidos donde jugó este equipo
+    const misPartidos = todos.filter(p => p.local === slug || p.visitante === slug)
+      .sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
+
+    wrap.innerHTML = '';
+
+    if (!misPartidos.length) {
+      wrap.innerHTML = '<div class="pronto-msg">📊<br>PRÓXIMAMENTE<br><span style="font-size:11px;opacity:.6;">Disponible cuando comiencen los partidos</span></div>';
+      return;
+    }
+
+    // Card acumulado (si hay más de 1 partido)
+    if (misPartidos.length >= 1) {
+      const acc = document.createElement('div');
+      acc.innerHTML = `<div class="stats-section-title">Acumulado</div>`;
+      wrap.appendChild(acc);
+
+      const accCard = document.createElement('div');
+      accCard.className = 'partido-card acumulado';
+      accCard.innerHTML = `
+        <div class="pc-icon">📊</div>
+        <div class="pc-info">
+          <div class="pc-resultado">Torneo completo</div>
+          <div class="pc-comp">${misPartidos.length} partido${misPartidos.length!==1?'s':''} jugado${misPartidos.length!==1?'s':''}</div>
+        </div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1px;color:rgba(255,255,255,.2);text-transform:uppercase;">Próximamente</div>`;
+      wrap.appendChild(accCard);
+    }
+
+    // Cards de partidos individuales
+    const tituloP = document.createElement('div');
+    tituloP.innerHTML = `<div class="stats-section-title">Partidos</div>`;
+    wrap.appendChild(tituloP);
+
+    misPartidos.forEach(p => {
+      const esLocal   = p.local === slug;
+      const rival     = esLocal ? p.visitante : p.local;
+      const misGoles  = esLocal ? p.goles_local : p.goles_visitante;
+      const suyoGoles = esLocal ? p.goles_visitante : p.goles_local;
+      const resultado = misGoles > suyoGoles ? 'V' : misGoles < suyoGoles ? 'D' : 'E';
+      const resColor  = resultado==='V'?'#66bb6a':resultado==='D'?'#ef9a9a':'#f5c518';
+
+      const fecha = new Date(p.fecha+'T12:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'short'});
+
+      const card = document.createElement('a');
+      card.className = 'partido-card';
+      card.href = `estadisticas.html?p=${p.id}&c=${slug}`;
+      card.innerHTML = `
+        <div class="pc-escudos">
+          <img class="pc-escudo" src="escudos/${p.local}.png" alt="">
+          <span class="pc-sep">-</span>
+          <img class="pc-escudo" src="escudos/${p.visitante}.png" alt="">
+        </div>
+        <div class="pc-info">
+          <div class="pc-resultado">
+            ${nbR(p.local).toUpperCase()}
+            <span class="pc-score">${p.goles_local} - ${p.goles_visitante}</span>
+            ${nbR(p.visitante).toUpperCase()}
+          </div>
+          <div class="pc-comp">${p.competicion} · ${fecha}</div>
+        </div>
+        <div class="pc-arrow">›</div>`;
+      wrap.appendChild(card);
+    });
+
+    partidos_cargados = true;
+  } catch(e) {
+    const wrap2 = document.getElementById('stats-partidos-lista');
+    if(wrap2) wrap2.innerHTML = '<div class="pronto-msg">Error cargando partidos</div>';
+  }
+}
 </script>
 </body>
 </html>
