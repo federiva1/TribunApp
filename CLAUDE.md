@@ -197,6 +197,58 @@ Hardcoded arrays `LIBERTADORES_SLUGS` and `SUDAMERICANA_SLUGS` define Argentine 
 ### seleccion.html
 Manages a `convocados` array (up to 26 players). Players sourced from `data/seleccion.json` plus live search across all 30 `data/planteles/{slug}.json` files.
 
+## Mundial 2026 Module
+
+Módulo separado del flujo de clubes argentinos. Todas las páginas del Mundial son standalone (no dependen de `js/clubes.js` ni Supabase).
+
+### Páginas
+
+- **`fixture.html`** — Fixture del Mundial. Muestra amistosos + todas las fases (Fase de Grupos, Octavos, Cuartos, Semis, Final). Datos en `data/fixtures/mundial.json`. La pill "Estadísticas" del header apunta a `estadisticas-torneo.html`.
+- **`estadisticas-torneo.html`** — Landing de estadísticas del torneo. Sección superior: goleadores y asistidores globales (computados dinámicamente leyendo todos los JSONs de `data/partidos/`). Sección inferior: grilla de 48 selecciones. Selecciones con datos (`data/partidos/index.json` tiene entradas para ese slug) muestran "VER STATS" y linkan a `equipo.html?c={slug}`.
+- **`equipo.html`** — Perfil de selección. Tiene una sección "estadísticas" que llama a `loadPartidosStats()`: busca en `data/partidos/index.json` los partidos de ese slug, muestra una card Acumulado + cards por partido. Cada card es un `<a href="estadisticas.html?p={id}&c={slug}">`.
+- **`estadisticas.html`** — Vista de un partido específico. URL: `?p={partido-id}` + `?c={slug-equipo}` (opcional, para auto-seleccionar el tab del equipo visitante si se entra desde su perfil). Tiene dos tabs: **Estadísticas** (stats globales del partido) y **Jugadores** (switcher Local/Visitante con cards expandibles por jugador).
+
+### Data
+
+- **`data/fixtures/mundial.json`** — Array de partidos. Campos clave: `round`, `roundName`, `id` (FotMob ID), `stats_id` (ID del JSON en `data/partidos/`), `home`/`away` con `name`/`id`, `home_score`/`away_score`, `status.finished`. Si `stats_id` está presente y el partido está finalizado, `fixture.html` genera un link a `estadisticas.html?p={stats_id}`.
+- **`data/partidos/index.json`** — Array de entradas de partidos con estadísticas disponibles: `{ id, local, visitante, fecha, goles_local, goles_visitante, competicion, estadio }`. El `id` es el filename base (ej. `"brazil-panama"`).
+- **`data/partidos/{id}.json`** — Stats de un partido específico. Schema:
+  ```json
+  {
+    "partido": { "local", "visitante", "goles_local", "goles_visitante", "fecha", "estadio", "competicion", "goles_detalle": { "local": [...], "visitante": [...] } },
+    "top_stats": [ { "label", "local", "visitante", "tipo": "posesion|numero|texto", "local_val", "visitante_val" } ],
+    "jugadores": {
+      "{slug-local}": [ /* array de jugadores */ ],
+      "{slug-visitante}": [ /* array de jugadores */ ]
+    }
+  }
+  ```
+  Schema de cada jugador:
+  ```json
+  {
+    "nombre": "Carlos Harvey", "id": 1017520, "mvp": false, "portero": false,
+    "min": 84, "goles": 1, "asist": 0,
+    "top":    { "tiros_totales", "disparos_puerta", "oport_creadas", "grandes_oport", "acc_defensivas", "pases_precisos" },
+    "ataque": { "toques", "toques_area", "regates", "pases_ultimo_tercio", "tiros_largos", "perdida_balon" },
+    "defensa": { "acc_defensivas", "entradas", "interceptaciones", "recuperaciones", "despejes", "bloqueos", "regateado" },
+    "duelos":  { "ganados", "perdidos", "terrestres", "aereos", "faltas", "faltas_recibidas" },
+    "portero_stats": null  // o { "paradas", "goles_contra", "goles_evitados" } para porteros
+  }
+  ```
+  Campos opcionales son `null` cuando FotMob no reporta el valor (se muestran como `—`). `regates` y `terrestres`/`aereos` son strings fracción (`"2/5"`). Los jugadores están ordenados por minutos desc.
+
+### Escudos de selecciones
+
+`escudos/{slug}.png` — el slug es el nombre en minúsculas sin espacios (ej. `brazil`, `panama`, `unitedstates`). El frontend de estas páginas no usa `CLUBES_CONFIG`.
+
+### Extracción de stats FotMob (manual vía Chrome MCP)
+
+La API de FotMob para playerStats usa `stats` por sección como **objeto** (dict), no array. Al iterar:
+```js
+Object.entries(sec.stats || {}).forEach(([label, data]) => { ... })
+```
+Para Panama/selecciones, `p.name` es string directo (no `p.name.fullName`). El Chrome MCP trunca outputs largos — extraer un jugador a la vez con `JSON.stringify(window.__data[i])`.
+
 ## Key Conventions
 
 - **Slug** is the canonical identifier: URL param, JSON filenames, escudo path, Supabase `club` column, and `CLUBES_CONFIG` key all use the same slug (e.g. `bocajuniors`, `argentinosjuniors`).
