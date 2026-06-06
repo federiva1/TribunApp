@@ -604,6 +604,18 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 </div>
 </div>
 
+<!-- ===== OVERLAY: ACUMULADO ===== -->
+<div class="overlay-screen" id="acumulado-screen">
+<div class="overlay-inner">
+  <button class="back-btn" onclick="closeSection('acumulado')">← Volver</button>
+  <div class="screen-title">ACUMULADO</div>
+  <div class="screen-sub" id="acumulado-sub">Torneo completo</div>
+  <div id="acumulado-lista">
+    <div class="acc-loading">Cargando…</div>
+  </div>
+</div>
+</div>
+
 <div id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -727,6 +739,7 @@ function openSection(id) {
   if (id === 'formacion') initFormacion();
   if (id === 'puntajes') initPuntajes();
   if (id === 'estadisticas') loadPartidosStats();
+  if (id === 'acumulado') loadAcumulado();
 }
 function closeSection(id) {
   document.getElementById(id + '-screen').style.display = 'none';
@@ -1346,61 +1359,27 @@ async function loadPartidosStats() {
       return;
     }
 
-    // Card acumulado — agregar stats de todos los partidos
+    // Card acumulado — entrada al overlay de stats acumuladas
     {
       const accTit = document.createElement('div');
       accTit.innerHTML = `<div class="stats-section-title">Acumulado</div>`;
       wrap.appendChild(accTit);
 
       const accCard = document.createElement('div');
-      accCard.className = 'acumulado-card';
-      accCard.innerHTML = `<div class="acc-loading">Cargando…</div>`;
-      wrap.appendChild(accCard);
-
-      // Fetch todos los JSONs de partido en paralelo y agregar
-      Promise.all(misPartidos.map(p =>
-        fetch(`data/partidos/${p.id}.json?v=${Date.now()}`).then(r=>r.json()).catch(()=>null)
-      )).then(jsons => {
-        // Mapa acumulado por jugador
-        const mapa = {};
-        jsons.forEach(data => {
-          if (!data) return;
-          const esLocal = data.partido.local === slug;
-          const jugadores = esLocal ? data.jugadores[data.partido.local] : data.jugadores[data.partido.visitante];
-          if (!jugadores) return;
-          jugadores.forEach(j => {
-            const k = j.nombre;
-            if (!mapa[k]) mapa[k] = { nombre:k, min:0, goles:0, asist:0, partidos:0 };
-            mapa[k].min    += j.min    || 0;
-            mapa[k].goles  += j.goles  || 0;
-            mapa[k].asist  += j.asist  || 0;
-            mapa[k].partidos++;
-          });
-        });
-
-        const jugadores = Object.values(mapa).sort((a,b)=> b.goles-a.goles || b.asist-a.asist || b.min-a.min);
-
-        if (!jugadores.length) { accCard.innerHTML = '<div class="acc-loading">Sin datos</div>'; return; }
-
-        accCard.innerHTML = `
-          <div class="acc-header">
-            <span>JUGADOR</span>
-            <span class="acc-col">PJ</span>
-            <span class="acc-col">MIN</span>
-            <span class="acc-col">⚽</span>
-            <span class="acc-col">🅰️</span>
-          </div>
-          <div class="acc-rows">
-            ${jugadores.map(j=>`
-              <div class="acc-row">
-                <span class="acc-nombre">${j.nombre}</span>
-                <span class="acc-col acc-num">${j.partidos}</span>
-                <span class="acc-col acc-num">${j.min}'</span>
-                <span class="acc-col acc-num ${j.goles?'acc-gol':''}">${j.goles||'—'}</span>
-                <span class="acc-col acc-num ${j.asist?'acc-asi':''}">${j.asist||'—'}</span>
-              </div>`).join('')}
-          </div>`;
+      accCard.className = 'partido-card acumulado';
+      accCard.style.cursor = 'pointer';
+      accCard.innerHTML = `
+        <div class="pc-icon">📊</div>
+        <div class="pc-info">
+          <div class="pc-resultado">Torneo completo</div>
+          <div class="pc-comp">${misPartidos.length} partido${misPartidos.length!==1?'s':''} jugado${misPartidos.length!==1?'s':''}</div>
+        </div>
+        <div class="pc-arrow">›</div>`;
+      accCard.addEventListener('click', () => {
+        window._acumuladoPartidos = misPartidos;
+        openSection('acumulado');
       });
+      wrap.appendChild(accCard);
     }
 
     // Cards de partidos individuales
@@ -1444,6 +1423,62 @@ async function loadPartidosStats() {
     const wrap2 = document.getElementById('stats-partidos-lista');
     if(wrap2) wrap2.innerHTML = '<div class="pronto-msg">Error cargando partidos</div>';
   }
+}
+
+// ── Acumulado de todos los partidos ──────────────────────────────────────────
+async function loadAcumulado() {
+  const wrap = document.getElementById('acumulado-lista');
+  const misPartidos = window._acumuladoPartidos || [];
+  if (!misPartidos.length) { wrap.innerHTML = '<div class="acc-loading">Sin datos</div>'; return; }
+
+  document.getElementById('acumulado-sub').textContent =
+    `${misPartidos.length} partido${misPartidos.length!==1?'s':''} · ${nombreEquipo}`;
+
+  wrap.innerHTML = '<div class="acc-loading">Cargando…</div>';
+
+  const jsons = await Promise.all(
+    misPartidos.map(p => fetch(`data/partidos/${p.id}.json?v=${Date.now()}`).then(r=>r.json()).catch(()=>null))
+  );
+
+  const mapa = {};
+  jsons.forEach(data => {
+    if (!data) return;
+    const esLocal = data.partido.local === slug;
+    const jugs = esLocal ? data.jugadores[data.partido.local] : data.jugadores[data.partido.visitante];
+    if (!jugs) return;
+    jugs.forEach(j => {
+      if (!mapa[j.nombre]) mapa[j.nombre] = { nombre: j.nombre, min: 0, goles: 0, asist: 0, pj: 0 };
+      mapa[j.nombre].min   += j.min   || 0;
+      mapa[j.nombre].goles += j.goles || 0;
+      mapa[j.nombre].asist += j.asist || 0;
+      mapa[j.nombre].pj++;
+    });
+  });
+
+  const lista = Object.values(mapa).sort((a,b) => b.goles-a.goles || b.asist-a.asist || b.min-a.min);
+
+  if (!lista.length) { wrap.innerHTML = '<div class="acc-loading">Sin datos</div>'; return; }
+
+  wrap.innerHTML = `
+    <div class="acumulado-card">
+      <div class="acc-header">
+        <span>JUGADOR</span>
+        <span class="acc-col">PJ</span>
+        <span class="acc-col">MIN</span>
+        <span class="acc-col">⚽</span>
+        <span class="acc-col">🅰️</span>
+      </div>
+      <div class="acc-rows">
+        ${lista.map(j => `
+          <div class="acc-row">
+            <span class="acc-nombre">${j.nombre}</span>
+            <span class="acc-col acc-num">${j.pj}</span>
+            <span class="acc-col acc-num">${j.min}'</span>
+            <span class="acc-col acc-num ${j.goles ? 'acc-gol' : ''}">${j.goles || '—'}</span>
+            <span class="acc-col acc-num ${j.asist ? 'acc-asi' : ''}">${j.asist || '—'}</span>
+          </div>`).join('')}
+      </div>
+    </div>`;
 }
 </script>
 </body>
