@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fixture — Mundial 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --dark:  #0d0d1a;
+  --dark2: #13131f;
+  --dark3: #1a1a2e;
+  --acento: #1565c0;
+  --acento-light: #42a5f5;
+  --gold: #f5c518;
+  --verde: #2ad572;
+  --rojo: #e53935;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: var(--dark); color: #fff; overflow-x: hidden; }
+
+/* ===== HEADER ===== */
+#site-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 20px 10px;
+  background: linear-gradient(180deg, rgba(21,101,192,0.15) 0%, transparent 100%);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  position: sticky; top: 0; z-index: 50; backdrop-filter: blur(10px);
+  gap: 12px;
+}
+.logo-wrap { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.logo-titulo { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 3px; color: #fff; line-height: 1; }
+.logo-sub { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 3px; color: var(--acento-light); text-transform: uppercase; }
+.header-trophy { font-size: 28px; line-height: 1; }
+.header-pill {
+  display: flex; align-items: center; gap: 7px;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px; padding: 6px 14px;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 1px;
+  color: rgba(255,255,255,0.55); cursor: pointer; text-decoration: none;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+.header-pill:hover { background: rgba(21,101,192,0.18); border-color: rgba(21,101,192,0.4); color: #fff; }
+.header-pill-label { font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 1px; color: #fff; }
+
+/* ===== MAIN ===== */
+#main { padding: 24px 16px 60px; max-width: 700px; margin: 0 auto; }
+
+/* ===== TABS DE FASE ===== */
+.fase-tabs {
+  display: flex; gap: 6px; margin-bottom: 24px;
+  overflow-x: auto; padding-bottom: 4px;
+  scrollbar-width: none;
+}
+.fase-tabs::-webkit-scrollbar { display: none; }
+.fase-tab {
+  flex-shrink: 0;
+  font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 1.5px;
+  border: 1px solid rgba(255,255,255,0.12); background: transparent;
+  color: rgba(255,255,255,0.4); border-radius: 8px;
+  padding: 7px 14px; cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.fase-tab:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.7); }
+.fase-tab.active { background: var(--acento); border-color: var(--acento); color: #fff; }
+
+/* ===== BLOQUE DE DÍA ===== */
+.dia-bloque { margin-bottom: 28px; }
+.dia-header {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 10px; padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.dia-fecha {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px; letter-spacing: 2px; color: #fff;
+}
+.dia-badge {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+  background: rgba(21,101,192,0.2); border: 1px solid rgba(21,101,192,0.35);
+  color: var(--acento-light); border-radius: 20px; padding: 2px 8px;
+}
+.dia-badge.hoy { background: rgba(42,213,114,0.15); border-color: rgba(42,213,114,0.4); color: var(--verde); }
+
+/* ===== CARD DE PARTIDO ===== */
+.partido-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px; padding: 14px 16px;
+  margin-bottom: 8px;
+  transition: border-color 0.2s, background 0.2s;
+  cursor: default;
+}
+.partido-card:hover { background: rgba(255,255,255,0.05); border-color: rgba(21,101,192,0.25); }
+.partido-card.en-curso {
+  border-color: rgba(42,213,114,0.4);
+  background: rgba(42,213,114,0.04);
+}
+.partido-card.terminado { opacity: 0.75; }
+
+/* Meta del partido: grupo y horario */
+.partido-meta {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.partido-grupo {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+  color: rgba(255,255,255,0.3);
+}
+.partido-hora {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12px; letter-spacing: 1px;
+  color: rgba(255,255,255,0.35);
+}
+.partido-hora.en-curso { color: var(--verde); font-weight: 700; animation: pulso 1.4s ease-in-out infinite; }
+@keyframes pulso { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+/* Fila de equipos y marcador */
+.partido-fila {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 10px;
+}
+.equipo-home { display: flex; align-items: center; gap: 9px; justify-content: flex-end; }
+.equipo-away { display: flex; align-items: center; gap: 9px; }
+.partido-flag {
+  width: 36px; height: 36px; object-fit: contain;
+  filter: drop-shadow(0 1px 5px rgba(0,0,0,0.6));
+  flex-shrink: 0;
+}
+.partido-nombre {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 15px; font-weight: 700; letter-spacing: 0.3px;
+  color: rgba(255,255,255,0.9);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 120px;
+}
+.partido-nombre.ganador { color: #fff; }
+.partido-nombre.perdedor { color: rgba(255,255,255,0.4); }
+
+/* Marcador central */
+.marcador {
+  display: flex; align-items: center; gap: 6px;
+  font-family: 'Bebas Neue', sans-serif;
+  flex-shrink: 0;
+}
+.marcador-gol {
+  font-size: 28px; letter-spacing: 0; color: #fff; line-height: 1;
+  min-width: 20px; text-align: center;
+}
+.marcador-sep {
+  font-size: 20px; color: rgba(255,255,255,0.25); line-height: 1;
+}
+.marcador-vs {
+  font-size: 14px; letter-spacing: 2px; color: rgba(255,255,255,0.2); line-height: 1; padding: 0 4px;
+}
+
+/* ===== LOADING / EMPTY ===== */
+.loading-msg { text-align: center; padding: 80px 20px; color: rgba(255,255,255,0.25); font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 3px; }
+.loading-spinner { width: 30px; height: 30px; border: 3px solid rgba(255,255,255,0.08); border-top-color: var(--acento); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 14px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.empty-msg { text-align: center; padding: 40px 20px; color: rgba(255,255,255,0.25); font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 2px; }
+
+/* ===== FOOTER ===== */
+#site-footer { text-align: center; padding: 20px; font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 1px; color: rgba(255,255,255,0.15); border-top: 1px solid rgba(255,255,255,0.05); margin-top: 20px; }
+</style>
+</head>
+<body>
+
+<header id="site-header">
+  <a class="logo-wrap" href="index.html">
+    <span class="header-trophy">🏆</span>
+    <div>
+      <div class="logo-titulo">TribunApp</div>
+      <div class="logo-sub">Mundial 2026</div>
+    </div>
+  </a>
+  <div style="display:flex;gap:8px;">
+    <a class="header-pill" href="estadisticas.html">
+      <span>📊</span>
+      <span class="header-pill-label">Estadísticas</span>
+    </a>
+  </div>
+</header>
+
+<main id="main">
+  <div id="loading-state">
+    <div class="loading-spinner"></div>
+    <div class="loading-msg">CARGANDO FIXTURE...</div>
+  </div>
+  <div id="contenido" style="display:none;">
+    <div class="fase-tabs" id="fase-tabs"></div>
+    <div id="partidos-wrap"></div>
+  </div>
+</main>
+
+<footer id="site-footer">TribunApp · Mundial 2026 · Datos: FotMob</footer>
+
+<script>
+// Nombres en español
+const NOMBRES_ES = {
+  czechia:'Chequia', mexico:'México', southafrica:'Sudáfrica', southkorea:'Corea del Sur',
+  bosniaandherzegovina:'Bosnia y Herz.', canada:'Canadá', qatar:'Qatar', switzerland:'Suiza',
+  brazil:'Brasil', haiti:'Haití', morocco:'Marruecos', scotland:'Escocia',
+  australia:'Australia', paraguay:'Paraguay', turkiye:'Turquía', usa:'EE.UU.',
+  curacao:'Curazao', ecuador:'Ecuador', germany:'Alemania', ivorycoast:'Costa de Marfil',
+  japan:'Japón', netherlands:'Países Bajos', sweden:'Suecia', tunisia:'Túnez',
+  belgium:'Bélgica', egypt:'Egipto', iran:'Irán', newzealand:'Nueva Zelanda',
+  capeverde:'Cabo Verde', saudiarabia:'Arabia Saudita', spain:'España', uruguay:'Uruguay',
+  france:'Francia', iraq:'Irak', norway:'Noruega', senegal:'Senegal',
+  algeria:'Argelia', argentina:'Argentina', austria:'Austria', jordan:'Jordania',
+  colombia:'Colombia', drcongo:'Rep. D. Congo', portugal:'Portugal', uzbekistan:'Uzbekistán',
+  croatia:'Croacia', england:'Inglaterra', ghana:'Ghana', panama:'Panamá',
+};
+
+// Slugs por ID de equipo
+let slugPorId = {};
+
+// Mapeo de rondas
+const FASES = [
+  { key: 'grupos',   label: 'Grupos',   rounds: ['1','2','3'], visible: true },
+  { key: 'octavos',  label: 'Octavos',  rounds: ['1/16'],      visible: false },
+  { key: 'cuartos',  label: 'Cuartos',  rounds: ['1/8'],       visible: false },
+  { key: 'semis',    label: 'Semis',    rounds: ['1/4'],       visible: false },
+  { key: 'final',    label: 'Final',    rounds: ['1/2','bronze','final'], visible: false },
+];
+
+const DIAS_ES = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+const MESES_ES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dic'];
+
+let faseActiva = 'grupos';
+let todosPartidos = [];
+
+function slugDeNombre(nombre) {
+  return nombre.toLowerCase()
+    .normalize('NFKD').replace(/[̀-ͯ]/g, '')
+    .replace(/\s+/g, '').replace(/-/g, '').replace(/'/g, '');
+}
+
+function nombreEs(nombreEn, teamId) {
+  const slug = slugPorId[teamId] || slugDeNombre(nombreEn);
+  return NOMBRES_ES[slug] || nombreEn;
+}
+
+function formatearFecha(utcStr) {
+  // Convertir UTC a Argentina (UTC-3)
+  const d = new Date(utcStr);
+  d.setHours(d.getHours() - 3);
+  const dia = DIAS_ES[d.getUTCDay()];
+  const num = d.getUTCDate();
+  const mes = MESES_ES[d.getUTCMonth()];
+  return `${dia} ${num} ${mes}`;
+}
+
+function formatearHora(utcStr) {
+  const d = new Date(utcStr);
+  d.setHours(d.getHours() - 3);
+  const h = String(d.getUTCHours()).padStart(2, '0');
+  const m = String(d.getUTCMinutes()).padStart(2, '0');
+  return `${h}:${m}`;
+}
+
+function diaKey(utcStr) {
+  // Día en Argentina
+  const d = new Date(utcStr);
+  d.setHours(d.getHours() - 3);
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
+}
+
+function esHoy(utcStr) {
+  const hoy = new Date();
+  const argHoy = new Date(hoy.getTime() - 3*60*60*1000);
+  const diaH = `${argHoy.getUTCFullYear()}-${String(argHoy.getUTCMonth()+1).padStart(2,'0')}-${String(argHoy.getUTCDate()).padStart(2,'0')}`;
+  return diaKey(utcStr) === diaH;
+}
+
+function renderFaseTabs() {
+  const wrap = document.getElementById('fase-tabs');
+  wrap.innerHTML = '';
+  for (const f of FASES.filter(f => f.visible)) {
+    const btn = document.createElement('button');
+    btn.className = 'fase-tab' + (f.key === faseActiva ? ' active' : '');
+    btn.textContent = f.label;
+    btn.onclick = () => { faseActiva = f.key; renderPartidos(); renderFaseTabs(); };
+    wrap.appendChild(btn);
+  }
+}
+
+function renderPartidos() {
+  const wrap = document.getElementById('partidos-wrap');
+  wrap.innerHTML = '';
+
+  const fase = FASES.find(f => f.key === faseActiva);
+  const filtrados = todosPartidos.filter(p => fase.rounds.includes(p.round));
+
+  if (!filtrados.length) {
+    wrap.innerHTML = '<div class="empty-msg">Sin partidos en esta fase todavía</div>';
+    return;
+  }
+
+  // Agrupar por día Argentina
+  const porDia = {};
+  for (const p of filtrados) {
+    const dk = diaKey(p.status.utcTime);
+    if (!porDia[dk]) porDia[dk] = [];
+    porDia[dk].push(p);
+  }
+
+  for (const dk of Object.keys(porDia).sort()) {
+    const partidos = porDia[dk];
+    const bloque = document.createElement('div');
+    bloque.className = 'dia-bloque';
+
+    const hoy = esHoy(partidos[0].status.utcTime);
+    const fechaStr = formatearFecha(partidos[0].status.utcTime);
+
+    bloque.innerHTML = `
+      <div class="dia-header">
+        <span class="dia-fecha">${fechaStr}</span>
+        ${hoy ? '<span class="dia-badge hoy">HOY</span>' : ''}
+      </div>
+    `;
+
+    for (const p of partidos) {
+      bloque.appendChild(crearCardPartido(p));
+    }
+
+    wrap.appendChild(bloque);
+  }
+}
+
+function crearCardPartido(p) {
+  const card = document.createElement('div');
+  const { started, finished, cancelled } = p.status;
+  const enCurso = started && !finished;
+
+  let claseCard = 'partido-card';
+  if (enCurso) claseCard += ' en-curso';
+  if (finished) claseCard += ' terminado';
+  card.className = claseCard;
+
+  const slugHome = slugPorId[p.home.id] || slugDeNombre(p.home.name);
+  const slugAway = slugPorId[p.away.id] || slugDeNombre(p.away.name);
+  const nomHome = NOMBRES_ES[slugHome] || p.home.name;
+  const nomAway = NOMBRES_ES[slugAway] || p.away.name;
+
+  // Resultados
+  const golesHome = p.home.score ?? null;
+  const golesAway = p.away.score ?? null;
+  const hayMarcador = golesHome !== null && golesAway !== null;
+
+  let claseNomHome = 'partido-nombre';
+  let claseNomAway = 'partido-nombre';
+  if (finished && hayMarcador) {
+    if (golesHome > golesAway) { claseNomHome += ' ganador'; claseNomAway += ' perdedor'; }
+    else if (golesAway > golesHome) { claseNomAway += ' ganador'; claseNomHome += ' perdedor'; }
+  }
+
+  // Grupo o ronda
+  let metaLabel = '';
+  if (p.group) metaLabel = `Grupo ${p.group}`;
+  else if (p.round === '1/16') metaLabel = 'Octavos de Final';
+  else if (p.round === '1/8')  metaLabel = 'Cuartos de Final';
+  else if (p.round === '1/4')  metaLabel = 'Semifinal';
+  else if (p.round === '1/2')  metaLabel = 'Final';
+  else if (p.round === 'bronze') metaLabel = 'Tercer Puesto';
+  else if (p.round === 'final')  metaLabel = 'GRAN FINAL';
+
+  // Horario
+  let horaHTML = '';
+  if (enCurso) {
+    horaHTML = `<span class="partido-hora en-curso">EN VIVO</span>`;
+  } else if (finished) {
+    horaHTML = `<span class="partido-hora">FIN</span>`;
+  } else {
+    horaHTML = `<span class="partido-hora">${formatearHora(p.status.utcTime)} hs</span>`;
+  }
+
+  // Marcador central
+  let marcadorHTML = '';
+  if (hayMarcador) {
+    marcadorHTML = `
+      <div class="marcador">
+        <span class="marcador-gol">${golesHome}</span>
+        <span class="marcador-sep">-</span>
+        <span class="marcador-gol">${golesAway}</span>
+      </div>`;
+  } else {
+    marcadorHTML = `<div class="marcador"><span class="marcador-vs">VS</span></div>`;
+  }
+
+  card.innerHTML = `
+    <div class="partido-meta">
+      <span class="partido-grupo">${metaLabel}</span>
+      ${horaHTML}
+    </div>
+    <div class="partido-fila">
+      <div class="equipo-home">
+        <span class="${claseNomHome}">${nomHome}</span>
+        <img class="partido-flag" src="escudos/${slugHome}.png" alt="${nomHome}" onerror="this.style.opacity='0.1'">
+      </div>
+      ${marcadorHTML}
+      <div class="equipo-away">
+        <img class="partido-flag" src="escudos/${slugAway}.png" alt="${nomAway}" onerror="this.style.opacity='0.1'">
+        <span class="${claseNomAway}">${nomAway}</span>
+      </div>
+    </div>
+  `;
+
+  return card;
+}
+
+async function cargar() {
+  try {
+    const ts = Date.now();
+    const [resFixture, resEquipos] = await Promise.all([
+      fetch(`data/fixtures/mundial.json?t=${ts}`),
+      fetch(`data/equipos.json?t=${ts}`),
+    ]);
+    todosPartidos = await resFixture.json();
+    const equipos = await resEquipos.json();
+
+    // Mapear id → slug
+    for (const eq of equipos) {
+      slugPorId[String(eq.id)] = eq.slug;
+    }
+
+    renderFaseTabs();
+    renderPartidos();
+
+    document.getElementById('loading-state').style.display = 'none';
+    document.getElementById('contenido').style.display = '';
+  } catch(e) {
+    document.getElementById('loading-state').innerHTML =
+      `<div class="loading-msg">Error: ${e.message}</div>`;
+  }
+}
+
+cargar();
+</script>
+</body>
+</html>
