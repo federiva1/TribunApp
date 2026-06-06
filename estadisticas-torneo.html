@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estadísticas — Mundial 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--dark:#0d0d1a;--dark2:#13131f;--dark3:#1a1a2e;--acento:#1565c0;--acento-light:#42a5f5;--gold:#f5c518;--rojo:#e53935;}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark);color:#fff;overflow-x:hidden;}
+
+/* HEADER */
+#site-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 20px 10px;
+  background:linear-gradient(180deg,rgba(21,101,192,.15) 0%,transparent 100%);
+  border-bottom:1px solid rgba(255,255,255,.07);
+  position:sticky;top:0;z-index:50;backdrop-filter:blur(10px);gap:12px;
+}
+.logo-wrap{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.logo-titulo{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:#fff;line-height:1;}
+.logo-sub{font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:3px;color:var(--acento-light);text-transform:uppercase;}
+.header-trophy{font-size:28px;line-height:1;}
+.header-pill{
+  display:flex;align-items:center;gap:7px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);
+  border-radius:10px;padding:6px 14px;
+  font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:1px;
+  color:rgba(255,255,255,.55);cursor:pointer;text-decoration:none;
+  transition:background .2s,color .2s,border-color .2s;
+}
+.header-pill:hover{background:rgba(21,101,192,.18);border-color:rgba(21,101,192,.4);color:#fff;}
+.header-pill-label{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;color:#fff;}
+.header-pill.active-pill{background:rgba(21,101,192,.18);border-color:rgba(21,101,192,.4);color:#fff;}
+
+/* MAIN */
+#main{padding:24px 16px 60px;max-width:700px;margin:0 auto;}
+
+/* SECTION TITLE */
+.sec-title{
+  font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;
+  color:#fff;margin-bottom:4px;
+}
+.sec-sub{
+  font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2px;
+  color:rgba(255,255,255,.3);text-transform:uppercase;margin-bottom:16px;
+}
+
+/* TORNEO CARD */
+.torneo-card{
+  background:linear-gradient(135deg,rgba(21,101,192,.12) 0%,rgba(13,13,26,0) 100%);
+  border:1px solid rgba(21,101,192,.2);
+  border-radius:14px;padding:20px;margin-bottom:32px;
+}
+.torneo-label{
+  font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:3px;
+  color:var(--acento-light);text-transform:uppercase;margin-bottom:14px;
+  display:flex;align-items:center;gap:8px;
+}
+.torneo-label::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.06);}
+
+/* LÍDERES */
+.lideres-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.lider-bloque{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);
+  border-radius:10px;padding:14px 12px;
+}
+.lider-titulo{
+  font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:2px;
+  color:rgba(255,255,255,.35);text-transform:uppercase;margin-bottom:10px;
+}
+.lider-item{
+  display:flex;align-items:center;gap:8px;padding:5px 0;
+  border-bottom:1px solid rgba(255,255,255,.04);
+}
+.lider-item:last-child{border-bottom:none;}
+.lider-pos{
+  font-family:'Bebas Neue',sans-serif;font-size:13px;color:rgba(255,255,255,.25);
+  width:14px;flex-shrink:0;
+}
+.lider-flag{width:20px;height:20px;object-fit:contain;flex-shrink:0;}
+.lider-info{flex:1;min-width:0;}
+.lider-nombre{
+  font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;
+  color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.lider-equipo{font-family:'DM Sans',sans-serif;font-size:10px;color:rgba(255,255,255,.35);}
+.lider-val{
+  font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--gold);flex-shrink:0;
+}
+
+/* PRÓXIMAMENTE en lider */
+.lider-pronto{
+  text-align:center;padding:16px 0;
+  font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:1px;
+  color:rgba(255,255,255,.2);text-transform:uppercase;
+}
+
+/* EQUIPOS */
+.equipos-header{
+  display:flex;align-items:baseline;justify-content:space-between;
+  margin-bottom:14px;
+}
+.equipos-count{
+  font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:1px;
+  color:rgba(255,255,255,.3);
+}
+.equipos-grid{display:flex;flex-direction:column;gap:8px;}
+
+/* EQUIPO ROW */
+.equipo-row{
+  display:flex;align-items:center;gap:12px;
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);
+  border-radius:10px;padding:12px 14px;
+  text-decoration:none;color:inherit;cursor:pointer;
+  transition:background .15s,border-color .15s;
+}
+.equipo-row:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12);}
+.equipo-row.sin-stats{opacity:.5;cursor:default;}
+.equipo-row.sin-stats:hover{background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.06);}
+.er-flag{width:32px;height:32px;object-fit:contain;flex-shrink:0;}
+.er-info{flex:1;min-width:0;}
+.er-nombre{
+  font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;
+  color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.er-sub{
+  font-family:'Barlow Condensed',sans-serif;font-size:11px;
+  color:rgba(255,255,255,.3);letter-spacing:.5px;margin-top:1px;
+}
+.er-badge{
+  font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1px;
+  padding:3px 8px;border-radius:20px;text-transform:uppercase;flex-shrink:0;
+}
+.er-badge.con-stats{background:rgba(21,101,192,.2);color:var(--acento-light);border:1px solid rgba(21,101,192,.3);}
+.er-badge.sin-stats-badge{background:rgba(255,255,255,.05);color:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.06);}
+.er-arrow{color:rgba(255,255,255,.2);font-size:14px;flex-shrink:0;}
+
+/* SEARCH */
+.search-wrap{position:relative;margin-bottom:14px;}
+.search-input{
+  width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
+  border-radius:10px;padding:10px 14px 10px 36px;
+  font-family:'Barlow Condensed',sans-serif;font-size:14px;letter-spacing:.5px;
+  color:#fff;outline:none;
+  transition:border-color .2s,background .2s;
+}
+.search-input::placeholder{color:rgba(255,255,255,.3);}
+.search-input:focus{border-color:rgba(21,101,192,.4);background:rgba(255,255,255,.07);}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;opacity:.4;}
+
+/* LOADING */
+.loading-msg{
+  text-align:center;padding:40px;
+  font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:2px;
+  color:rgba(255,255,255,.3);
+}
+</style>
+</head>
+<body>
+
+<header id="site-header">
+  <a class="logo-wrap" href="index.html">
+    <span class="header-trophy">🏆</span>
+    <div>
+      <div class="logo-titulo">TribunApp</div>
+      <div class="logo-sub">Mundial 2026</div>
+    </div>
+  </a>
+  <div style="display:flex;gap:8px;">
+    <a class="header-pill active-pill" href="estadisticas-torneo.html">
+      <span>📊</span>
+      <span class="header-pill-label">Estadísticas</span>
+    </a>
+    <a class="header-pill" href="fixture.html">
+      <span>📅</span>
+      <span class="header-pill-label">Fixture</span>
+    </a>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- TORNEO STATS -->
+  <div class="sec-title">Estadísticas</div>
+  <div class="sec-sub">Mundial 2026 · Highlights</div>
+
+  <div class="torneo-card" id="torneo-card">
+    <div class="torneo-label">⚽ Destacados del torneo</div>
+    <div class="lideres-grid" id="lideres-grid">
+      <div class="loading-msg" style="grid-column:1/-1;">Cargando…</div>
+    </div>
+  </div>
+
+  <!-- EQUIPOS -->
+  <div class="equipos-header">
+    <div>
+      <div class="sec-title">Equipos</div>
+      <div class="sec-sub">Estadísticas individuales por selección</div>
+    </div>
+    <div class="equipos-count" id="equipos-count"></div>
+  </div>
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input class="search-input" id="search-input" type="text" placeholder="Buscar equipo…">
+  </div>
+  <div class="equipos-grid" id="equipos-grid">
+    <div class="loading-msg">Cargando equipos…</div>
+  </div>
+
+</main>
+
+<script>
+const NOMBRES_ES = {
+  Argentina:'Argentina',France:'Francia',Brazil:'Brasil',Germany:'Alemania',
+  Spain:'España',England:'Inglaterra',Portugal:'Portugal',Mexico:'México',
+  USA:'EE.UU.',Uruguay:'Uruguay',Colombia:'Colombia',Japan:'Japón',
+  Morocco:'Marruecos',Netherlands:'Países Bajos',Croatia:'Croacia',
+  Senegal:'Senegal',Switzerland:'Suiza',Australia:'Australia',
+  Ecuador:'Ecuador',Canada:'Canadá','South Korea':'Corea del Sur',
+  Türkiye:'Türkiye',Austria:'Austria',Norway:'Noruega',Sweden:'Suecia',
+  Scotland:'Escocia',Belgium:'Bélgica',Iran:'Irán',Iraq:'Irak',
+  Jordan:'Jordania',Qatar:'Catar','Saudi Arabia':'Arabia Saudita',
+  Egypt:'Egipto','South Africa':'Sudáfrica',Ghana:'Ghana',
+  "Ivory Coast":'Costa de Marfil',Czechia:'Chequia',Panama:'Panamá',
+  Haiti:'Haití',Curaçao:'Curazao',Algeria:'Argelia',
+  'Cape Verde':'Cabo Verde','New Zealand':'Nueva Zelanda',Uzbekistan:'Uzbekistán',
+  'DR Congo':'RD Congo','Bosnia and Herzegovina':'Bosnia y Herz.',Paraguay:'Paraguay',
+};
+
+const GRUPOS = {A:'A',B:'B',C:'C',D:'D',E:'E',F:'F',G:'G',H:'H',I:'I',J:'J',K:'K',L:'L'};
+
+let todosEquipos = [];
+let partidosIndex = [];
+
+function esc(slug){ return `escudos/${slug}.png`; }
+function nbSlug(s){
+  const map={argentina:'Argentina',france:'Francia',brazil:'Brasil',germany:'Alemania',
+    spain:'España',england:'Inglaterra',portugal:'Portugal',mexico:'México',
+    usa:'EE.UU.',uruguay:'Uruguay',colombia:'Colombia',japan:'Japón',
+    morocco:'Marruecos',netherlands:'Países Bajos',croatia:'Croacia',
+    senegal:'Senegal',switzerland:'Suiza',australia:'Australia',
+    ecuador:'Ecuador',canada:'Canadá',southkorea:'Corea del Sur',
+    turkiye:'Türkiye',austria:'Austria',norway:'Noruega',sweden:'Suecia',
+    scotland:'Escocia',belgium:'Bélgica',iran:'Irán',iraq:'Irak',
+    jordan:'Jordania',qatar:'Catar',saudiarabia:'Arabia Saudita',
+    egypt:'Egipto',southafrica:'Sudáfrica',ghana:'Ghana',
+    ivorycoast:'Costa de Marfil',czechia:'Chequia',panama:'Panamá',
+    haiti:'Haití',curacao:'Curazao',algeria:'Argelia',
+    capeverde:'Cabo Verde',newzealand:'Nueva Zelanda',uzbekistan:'Uzbekistán',
+    drcongo:'RD Congo',bosniaandherzegovina:'Bosnia y Herz.',paraguay:'Paraguay'};
+  return map[s] || (s.charAt(0).toUpperCase()+s.slice(1));
+}
+
+// Cuáles equipos tienen al menos 1 partido en el índice
+function equiposConStats(index){
+  const set = new Set();
+  index.forEach(p=>{ set.add(p.local); set.add(p.visitante); });
+  return set;
+}
+
+// Computar goleadores y asistidores de todos los JSONs de partidos cargados
+async function computarLideres(index){
+  const goles={}, asists={}, info={};
+  for(const p of index){
+    let data;
+    try{
+      const res = await fetch(`data/partidos/${p.id}.json?v=${Date.now()}`);
+      if(!res.ok) continue;
+      data = await res.json();
+    }catch(e){ continue; }
+
+    for(const team of [data.partido.local, data.partido.visitante]){
+      const jugs = data.jugadores[team]||[];
+      jugs.forEach(j=>{
+        if(!info[j.nombre]) info[j.nombre]={equipo:team,nombre:j.nombre};
+        if(j.goles>0) goles[j.nombre]=(goles[j.nombre]||0)+j.goles;
+        if(j.asist>0) asists[j.nombre]=(asists[j.nombre]||0)+j.asist;
+      });
+    }
+  }
+  return {goles, asists, info};
+}
+
+function buildLiderBloque(titulo, mapa, info, top=5){
+  const sorted = Object.entries(mapa).sort((a,b)=>b[1]-a[1]).slice(0,top);
+  if(!sorted.length){
+    return `<div class="lider-bloque">
+      <div class="lider-titulo">${titulo}</div>
+      <div class="lider-pronto">Sin datos aún</div>
+    </div>`;
+  }
+  const items = sorted.map(([nombre,val],i)=>{
+    const eq = info[nombre]?.equipo||'';
+    return `<div class="lider-item">
+      <span class="lider-pos">${i+1}</span>
+      <img class="lider-flag" src="escudos/${eq}.png" alt="" onerror="this.style.opacity='.1'">
+      <div class="lider-info">
+        <div class="lider-nombre">${nombre}</div>
+        <div class="lider-equipo">${nbSlug(eq)}</div>
+      </div>
+      <span class="lider-val">${val}</span>
+    </div>`;
+  }).join('');
+  return `<div class="lider-bloque">
+    <div class="lider-titulo">${titulo}</div>
+    ${items}
+  </div>`;
+}
+
+function renderEquipos(equipos, conStats, filtro=''){
+  const grid = document.getElementById('equipos-grid');
+  const q = filtro.toLowerCase().trim();
+  const filtrados = q
+    ? equipos.filter(e=>nbSlug(e.slug).toLowerCase().includes(q)||(e.nombre||'').toLowerCase().includes(q))
+    : equipos;
+
+  grid.innerHTML='';
+  document.getElementById('equipos-count').textContent=`${filtrados.length} equipos`;
+
+  // Ordenar: primero los que tienen stats
+  filtrados.sort((a,b)=>{
+    const as = conStats.has(a.slug)?0:1;
+    const bs = conStats.has(b.slug)?0:1;
+    if(as!==bs) return as-bs;
+    return nbSlug(a.slug).localeCompare(nbSlug(b.slug));
+  });
+
+  filtrados.forEach(eq=>{
+    const tieneStats = conStats.has(eq.slug);
+    const row = tieneStats ? document.createElement('a') : document.createElement('div');
+    row.className = 'equipo-row' + (tieneStats?'':' sin-stats');
+    if(tieneStats){
+      row.href = `equipo.html?c=${eq.slug}`;
+      row.style.textDecoration='none';
+      row.style.color='inherit';
+      row.style.display='flex';
+    }
+    row.innerHTML=`
+      <img class="er-flag" src="${esc(eq.slug)}" alt="" onerror="this.style.opacity='.1'">
+      <div class="er-info">
+        <div class="er-nombre">${nbSlug(eq.slug)}</div>
+        <div class="er-sub">Grupo ${eq.grupo} · Mundial 2026</div>
+      </div>
+      <span class="er-badge ${tieneStats?'con-stats':'sin-stats-badge'}">${tieneStats?'Ver stats':'Sin datos'}</span>
+      ${tieneStats?'<span class="er-arrow">›</span>':''}`;
+    grid.appendChild(row);
+  });
+}
+
+async function init(){
+  try{
+    const [resEq, resIdx] = await Promise.all([
+      fetch(`data/equipos.json?v=${Date.now()}`),
+      fetch(`data/partidos/index.json?v=${Date.now()}`),
+    ]);
+    todosEquipos = await resEq.json();
+    partidosIndex = await resIdx.json();
+  }catch(e){
+    document.getElementById('equipos-grid').innerHTML='<div class="loading-msg">Error cargando datos</div>';
+    return;
+  }
+
+  const conStats = equiposConStats(partidosIndex);
+
+  // Render equipos (solo mundialistas — los que tienen slug mundialista)
+  // Filtrar solo los 48 (los que tienen grupo definido)
+  const mundialistas = todosEquipos.filter(e=>e.grupo && e.slug);
+  renderEquipos(mundialistas, conStats);
+
+  // Buscador
+  document.getElementById('search-input').addEventListener('input', e=>{
+    renderEquipos(mundialistas, conStats, e.target.value);
+  });
+
+  // Líderes
+  const {goles, asists, info} = await computarLideres(partidosIndex);
+  const grid = document.getElementById('lideres-grid');
+  if(Object.keys(goles).length===0 && Object.keys(asists).length===0){
+    grid.innerHTML='<div class="lider-pronto" style="grid-column:1/-1;">Los destacados aparecerán cuando se jueguen los primeros partidos.</div>';
+  } else {
+    grid.innerHTML = buildLiderBloque('⚽ Goleadores', goles, info)
+                   + buildLiderBloque('🎯 Asistidores', asists, info);
+  }
+}
+
+init();
+</script>
+</body>
+</html>

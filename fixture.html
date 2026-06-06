@@ -101,6 +101,12 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   background: rgba(42,213,114,0.04);
 }
 .partido-card.terminado { opacity: 0.75; }
+.partido-card.con-stats { cursor: pointer; opacity: 1; }
+.partido-card.con-stats:hover { background: rgba(255,255,255,0.07); border-color: rgba(21,101,192,0.3); opacity: 1; }
+.stats-badge {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 1px;
+  color: var(--acento-light); text-transform: uppercase; margin-top: 8px; text-align: center;
+}
 
 /* Meta del partido: grupo y horario */
 .partido-meta {
@@ -182,7 +188,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
     </div>
   </a>
   <div style="display:flex;gap:8px;">
-    <a class="header-pill" href="estadisticas.html">
+    <a class="header-pill" href="estadisticas-torneo.html">
       <span>📊</span>
       <span class="header-pill-label">Estadísticas</span>
     </a>
@@ -224,6 +230,7 @@ let slugPorId = {};
 
 // Mapeo de rondas
 const FASES = [
+  { key: 'amistosos',label: 'Amistosos',rounds: ['amistoso'],  visible: true },
   { key: 'grupos',   label: 'Grupos',   rounds: ['1','2','3'], visible: true },
   { key: 'octavos',  label: 'Octavos',  rounds: ['1/16'],      visible: false },
   { key: 'cuartos',  label: 'Cuartos',  rounds: ['1/8'],       visible: false },
@@ -336,23 +343,31 @@ function renderPartidos() {
 }
 
 function crearCardPartido(p) {
-  const card = document.createElement('div');
+  const tieneStats = p.stats_id && p.status.finished;
+  const card = tieneStats ? document.createElement('a') : document.createElement('div');
   const { started, finished, cancelled } = p.status;
   const enCurso = started && !finished;
 
   let claseCard = 'partido-card';
   if (enCurso) claseCard += ' en-curso';
   if (finished) claseCard += ' terminado';
+  if (tieneStats) claseCard += ' con-stats';
   card.className = claseCard;
+  if (tieneStats) {
+    card.href = `estadisticas.html?p=${p.stats_id}`;
+    card.style.textDecoration = 'none';
+    card.style.color = 'inherit';
+    card.style.display = 'block';
+  }
 
   const slugHome = slugPorId[p.home.id] || slugDeNombre(p.home.name);
   const slugAway = slugPorId[p.away.id] || slugDeNombre(p.away.name);
   const nomHome = NOMBRES_ES[slugHome] || p.home.name;
   const nomAway = NOMBRES_ES[slugAway] || p.away.name;
 
-  // Resultados
-  const golesHome = p.home.score ?? null;
-  const golesAway = p.away.score ?? null;
+  // Resultados (soporta score en home.score o en home_score raíz)
+  const golesHome = p.home.score ?? p.home_score ?? null;
+  const golesAway = p.away.score ?? p.away_score ?? null;
   const hayMarcador = golesHome !== null && golesAway !== null;
 
   let claseNomHome = 'partido-nombre';
@@ -395,9 +410,10 @@ function crearCardPartido(p) {
     marcadorHTML = `<div class="marcador"><span class="marcador-vs">VS</span></div>`;
   }
 
+  const metaRonda = p.round === 'amistoso' ? 'Amistoso' : metaLabel;
   card.innerHTML = `
     <div class="partido-meta">
-      <span class="partido-grupo">${metaLabel}</span>
+      <span class="partido-grupo">${metaRonda}</span>
       ${horaHTML}
     </div>
     <div class="partido-fila">
@@ -411,6 +427,7 @@ function crearCardPartido(p) {
         <span class="${claseNomAway}">${nomAway}</span>
       </div>
     </div>
+    ${tieneStats ? '<div class="stats-badge">📊 Ver estadísticas →</div>' : ''}
   `;
 
   return card;
