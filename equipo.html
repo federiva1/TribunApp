@@ -218,6 +218,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   border-radius: 50%; border: 2.5px solid #fff; overflow: hidden;
   position: relative; box-shadow: 0 2px 6px rgba(0,0,0,0.5);
   background: var(--acento); display: flex; align-items: center; justify-content: center;
+  transition: background 0.3s;
 }
 .player-bubble img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: none; }
 .player-bubble .fallback-num { font-family: 'Bebas Neue', sans-serif; font-size: var(--pfs, 16px); color: #fff; }
@@ -296,6 +297,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .score-avatar-wrap {
   width: 38px; height: 38px; border-radius: 50%; overflow: hidden;
   background: var(--acento); display: flex; align-items: center; justify-content: center;
+  transition: background 0.3s;
   flex-shrink: 0; border: 2px solid rgba(255,255,255,0.15);
 }
 .score-avatar-wrap img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: none; }
@@ -535,6 +537,61 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 let SUPABASE_URL = '', SUPABASE_KEY = '';
 try { if (typeof _SUPABASE_URL !== 'undefined') { SUPABASE_URL = _SUPABASE_URL; SUPABASE_KEY = _SUPABASE_KEY; } } catch(e) {}
 
+// ============================================================
+// COLORES POR SELECCIÓN
+// ============================================================
+const COLORES_EQUIPO = {
+  argentina:            '#75aadb', // celeste
+  france:               '#002395', // azul marino
+  brazil:               '#009c3b', // verde
+  germany:              '#c0392b', // rojo (segunda)
+  spain:                '#c60b1e', // rojo
+  england:              '#cf081f', // rojo
+  portugal:             '#006600', // verde
+  mexico:               '#006847', // verde oscuro
+  usa:                  '#002868', // azul marino
+  uruguay:              '#5db8e8', // celeste
+  colombia:             '#fcd116', // amarillo
+  japan:                '#bc002d', // rojo
+  morocco:              '#c1272d', // rojo
+  netherlands:          '#ff6200', // naranja
+  croatia:              '#d01111', // rojo
+  senegal:              '#00853f', // verde
+  switzerland:          '#d52b1e', // rojo
+  australia:            '#00843d', // verde
+  ecuador:              '#ffd100', // amarillo
+  canada:               '#d80621', // rojo
+  southkorea:           '#cd2e3a', // rojo
+  turkiye:              '#e30a17', // rojo
+  austria:              '#ed2939', // rojo
+  norway:               '#ef2b2d', // rojo
+  sweden:               '#006aa7', // azul
+  scotland:             '#003380', // azul marino
+  belgium:              '#000000', // negro
+  iran:                 '#239f40', // verde
+  iraq:                 '#007a3d', // verde
+  jordan:               '#007a3d', // verde
+  qatar:                '#8d1b3d', // burdeos
+  saudiarabia:          '#006c35', // verde oscuro
+  egypt:                '#c8102e', // rojo
+  southafrica:          '#007a4d', // verde
+  ghana:                '#006b3f', // verde
+  ivorycoast:           '#f77f00', // naranja
+  czechia:              '#d7141a', // rojo
+  panama:               '#da121a', // rojo
+  haiti:                '#00209f', // azul
+  curacao:              '#002b7f', // azul marino
+  algeria:              '#006233', // verde
+  capeverde:            '#003893', // azul marino
+  newzealand:           '#00247d', // azul
+  uzbekistan:           '#1eb53a', // verde
+  drcongo:              '#007fff', // azul
+  bosniaandherzegovina: '#002395', // azul
+  paraguay:             '#d52b1e', // rojo
+};
+
+let colorEquipo = '#1565c0'; // fallback azul
+
 const NAMES_ES = {
   czechia:'Chequia', mexico:'México', southafrica:'Sudáfrica', southkorea:'Corea del Sur',
   bosniaandherzegovina:'Bosnia y Herzegovina', canada:'Canadá', qatar:'Qatar', switzerland:'Suiza',
@@ -669,7 +726,7 @@ ro.observe(pitch); updatePlayerSizes();
 
 function makeAvatar(src, label, size) {
   const wrap = document.createElement('div');
-  wrap.style.cssText = `width:${size}px;height:${size}px;border-radius:50%;overflow:hidden;background:var(--acento);display:flex;align-items:center;justify-content:center;flex-shrink:0;`;
+  wrap.style.cssText = `width:${size}px;height:${size}px;border-radius:50%;overflow:hidden;background:${colorEquipo};display:flex;align-items:center;justify-content:center;flex-shrink:0;`;
   const img = document.createElement('img');
   img.src = src;
   img.style.cssText = 'width:100%;height:100%;object-fit:cover;object-position:top center;display:none;';
@@ -1133,6 +1190,12 @@ async function init() {
     document.getElementById('club-escudo').src = `escudos/${slug}.png`;
     document.getElementById('club-nombre').textContent = nombreEquipo.toUpperCase();
     document.getElementById('club-sub').textContent = `GRUPO ${plantelData.grupo} · MUNDIAL 2026`;
+
+    // Aplicar color del equipo al CSS
+    colorEquipo = COLORES_EQUIPO[slug] || '#1565c0';
+    document.documentElement.style.setProperty('--acento', colorEquipo);
+    // Calcular versión más clara para textos
+    document.documentElement.style.setProperty('--acento-light', colorEquipo);
     document.getElementById('plantel-sub').textContent = `${plantelData.jugadores.length} jugadores convocados`;
     document.getElementById('stats-sub').textContent = nombreEquipo;
 
