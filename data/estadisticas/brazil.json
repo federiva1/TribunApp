@@ -1,0 +1,64 @@
+{
+  "partido": {
+    "local": "brazil",
+    "visitante": "panama",
+    "goles_local": 6,
+    "goles_visitante": 2,
+    "fecha": "2026-05-31",
+    "estadio": "Estadio Jornalista Mário Filho (Maracanã)",
+    "competicion": "Amistoso",
+    "goles_detalle": {
+      "local": ["Vinícius 1'", "Casemiro 39'", "Rayan 53'", "Paquetá 60'", "Thiago 63' (Pen)", "Danilo 81'"],
+      "visitante": ["Cunha 14' (OG)", "Harvey 84'"]
+    }
+  },
+  "top_stats": [
+    { "label": "Posesión", "local": "55%", "visitante": "45%", "tipo": "posesion", "local_val": 55, "visitante_val": 45 },
+    { "label": "Tiros totales",               "local": "20",        "visitante": "16",        "tipo": "numero" },
+    { "label": "Disparos a puerta",            "local": "12",        "visitante": "9",         "tipo": "numero" },
+    { "label": "Toques en el área rival",      "local": "39",        "visitante": "11",        "tipo": "numero" },
+    { "label": "Gran probabilidad",            "local": "6",         "visitante": "0",         "tipo": "numero" },
+    { "label": "Grandes oportunidades perd.", "local": "3",         "visitante": "0",         "tipo": "numero" },
+    { "label": "Pases precisos",               "local": "510 (88%)", "visitante": "394 (86%)", "tipo": "texto" },
+    { "label": "Tarjetas amarillas",           "local": "0",         "visitante": "1",         "tipo": "numero" },
+    { "label": "Saques de esquina",            "local": "1",         "visitante": "1",         "tipo": "numero" },
+    { "label": "Faltas",                       "local": "14",        "visitante": "5",         "tipo": "numero" }
+  ],
+  "jugadores": {
+    "brazil": [
+      { "nombre": "Lucas Paquetá",     "rating": 8.6, "mvp": true,  "min": 45, "goles": 1, "asist": 1, "acc_def": 1, "tiros": 2, "disp_puerta": 1, "oport": 4 },
+      { "nombre": "Igor Thiago",       "rating": 8.6, "mvp": false, "min": 45, "goles": 1, "asist": 1, "acc_def": 2, "tiros": 2, "disp_puerta": 2, "oport": 2 },
+      { "nombre": "Casemiro",          "rating": 8.5, "mvp": false, "min": 45, "goles": 1, "asist": 1, "acc_def": 3, "tiros": 1, "disp_puerta": 1, "oport": 1 },
+      { "nombre": "Vinícius Júnior",   "rating": 8.4, "mvp": false, "min": 45, "goles": 1, "asist": 1, "acc_def": 0, "tiros": 3, "disp_puerta": 2, "oport": 2 },
+      { "nombre": "Danilo",            "rating": 7.9, "mvp": false, "min": 45, "goles": 1, "asist": 0, "acc_def": 4, "tiros": 2, "disp_puerta": 1, "oport": 2 },
+      { "nombre": "Rayan",             "rating": 7.8, "mvp": false, "min": 45, "goles": 1, "asist": 0, "acc_def": 0, "tiros": 3, "disp_puerta": 2, "oport": 0 },
+      { "nombre": "Douglas Santos",    "rating": 7.7, "mvp": false, "min": 45, "goles": 0, "asist": 1, "acc_def": 1, "tiros": 0, "disp_puerta": 0, "oport": 1 },
+      { "nombre": "Carlos Harvey",     "rating": 7.6, "mvp": false, "min": 84, "goles": 1, "asist": 0, "acc_def": 3, "tiros": 1, "disp_puerta": 1, "oport": 2 },
+      { "nombre": "Raphinha",          "rating": 7.1, "mvp": false, "min": 45, "goles": 0, "asist": 0, "acc_def": 3, "tiros": 3, "disp_puerta": 1, "oport": 1 },
+      { "nombre": "José L. Rodríguez", "rating": 7.1, "mvp": false, "min": 66, "goles": 0, "asist": 0, "acc_def": 0, "tiros": 2, "disp_puerta": 2, "oport": 1 },
+      { "nombre": "Ederson",           "rating": 7.0, "mvp": false, "min": 45, "goles": 0, "asist": 0, "acc_def": 1, "tiros": 0, "disp_puerta": 0, "oport": 0 },
+      { "nombre": "Alisson Becker",    "rating": 6.9, "mvp": false, "min": 45, "goles": 0, "asist": 0, "acc_def": 0, "tiros": 0, "disp_puerta": 0, "oport": 0 },
+      { "nombre": "Wesley",            "rating": 6.8, "mvp": false, "min": 45, "goles": 0, "asist": 0, "acc_def": 6, "tiros": 0, "disp_puerta": 0, "oport": 0 },
+      { "nombre": "Fabinho",           "rating": 6.8, "mvp": false, "min": 45, "goles": 0, "asist": 0, "acc_def": 4, "tiros": 0, "disp_puerta": 0, "oport": 0 },
+      { "nombre": "Alex Sandro",       "rating": 6.7, "mvp": false, "min": 45, "goles": 0, "asist": 0, "acc_def": 4, "tiros": 0, "disp_puerta": 0, "oport": 1 },
+      { "nombre": "Gleison Bremer",    "rating": 6.7, "mvp": false, "min": 45, "goles": 0, "asist": 0, "acc_def": 3, "tiros": 0, "disp_puerta": 0, "oport": 0 },
+      { "nombre": "Bruno Guimarães",   "rating": 6.5, "mvp": false, "min": 45, "goles": 0, "asist": 0, "acc_def": 1, "tiros": 1, "disp_puerta": 0, "oport": 1 },
+      { "nombre": "Luiz Henrique",     "rating": 6.3, "mvp": false, "min": 45, "goles": 0, "asist": 0, "acc_def": 0, "tiros": 0, "disp_puerta": 0, "oport": 0 },
+      { "nombre": "Léo Pereira",       "rating": 6.2, "mvp": false, "min": 90, "goles": 0, "asist": 0, "acc_def": 5, "tiros": 0, "disp_puerta": 0, "oport": 0 },
+      { "nombre": "Endrick",           "rating": 6.1, "mvp": false, "min": 45, "goles": 0, "asist": 0, "acc_def": 0, "tiros": 3, "disp_puerta": 2, "oport": 0 },
+      { "nombre": "Matheus Cunha",     "rating": 5.6, "mvp": false, "min": 45, "goles": 0, "asist": 0, "acc_def": 2, "tiros": 0, "disp_puerta": 0, "oport": 1 }
+    ],
+    "panama": [
+      { "nombre": "José Fajardo",      "rating": 6.5, "mvp": false, "min": 45, "goles": 0, "asist": 0, "acc_def": 0, "tiros": 2, "disp_puerta": 1, "oport": 2 },
+      { "nombre": "Kadir Barría",      "rating": 6.5, "mvp": false, "min": 24, "goles": 0, "asist": 0, "acc_def": 0, "tiros": 1, "disp_puerta": 0, "oport": 1 },
+      { "nombre": "Cristian Martínez", "rating": 6.4, "mvp": false, "min": 45, "goles": 0, "asist": 0, "acc_def": 3, "tiros": 0, "disp_puerta": 0, "oport": 0 },
+      { "nombre": "Cecilio Waterman",  "rating": 6.4, "mvp": false, "min": 45, "goles": 0, "asist": 0, "acc_def": 1, "tiros": 1, "disp_puerta": 1, "oport": 1 },
+      { "nombre": "Ismael Díaz",       "rating": 5.9, "mvp": false, "min": 45, "goles": 0, "asist": 0, "acc_def": 1, "tiros": 2, "disp_puerta": 1, "oport": 0 },
+      { "nombre": "Yoel Bárcenas",     "rating": 5.6, "mvp": false, "min": 65, "goles": 0, "asist": 0, "acc_def": 4, "tiros": 1, "disp_puerta": 1, "oport": 1 },
+      { "nombre": "Carlos Harvey",     "rating": 7.6, "mvp": false, "min": 84, "goles": 1, "asist": 0, "acc_def": 3, "tiros": 1, "disp_puerta": 1, "oport": 2 },
+      { "nombre": "Fidel Escobar",     "rating": 5.5, "mvp": false, "min": 65, "goles": 0, "asist": 0, "acc_def": 6, "tiros": 1, "disp_puerta": 1, "oport": 0 },
+      { "nombre": "Amir Murillo",      "rating": 4.8, "mvp": false, "min": 84, "goles": 0, "asist": 0, "acc_def": 2, "tiros": 2, "disp_puerta": 0, "oport": 2 },
+      { "nombre": "Orlando Mosquera",  "rating": 3.9, "mvp": false, "min": 90, "goles": 0, "asist": 0, "acc_def": 2, "tiros": 0, "disp_puerta": 0, "oport": 0 }
+    ]
+  }
+}
