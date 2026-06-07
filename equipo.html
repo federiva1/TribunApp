@@ -430,6 +430,40 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .acc-gol { color: #66bb6a; font-weight: 700; }
 .acc-asi { color: #64b5f6; font-weight: 700; }
 
+/* ===== PLAYER CARDS (acumulado) ===== */
+.player-card{border-bottom:1px solid rgba(255,255,255,.05);}
+.player-card:last-child{border-bottom:none;}
+.player-row{display:flex;align-items:center;gap:10px;padding:10px 0;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.player-avatar{width:40px;height:40px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.1);}
+.player-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.player-info{flex:1;min-width:0;}
+.player-name{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.player-meta{font-family:'Barlow Condensed',sans-serif;font-size:12px;color:rgba(255,255,255,.35);margin-top:2px;}
+.player-badges{display:flex;gap:5px;align-items:center;margin-top:4px;flex-wrap:wrap;}
+.badge{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:.5px;padding:2px 6px;border-radius:4px;}
+.badge.gol{background:rgba(46,125,50,.3);color:#81c784;}
+.badge.asist{background:rgba(21,101,192,.3);color:#90caf9;}
+.expand-btn{width:24px;height:24px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.25);font-size:10px;transition:transform .25s,color .15s;flex-shrink:0;}
+.player-card.open .expand-btn{transform:rotate(180deg);color:rgba(255,255,255,.5);}
+.player-detail-panel{display:none;padding:0 0 14px 50px;animation:fadeIn .2s ease;}
+.player-card.open .player-detail-panel{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.psec-tabs{display:flex;gap:4px;margin-bottom:10px;}
+.psec-tab{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:.8px;padding:4px 10px;border-radius:20px;cursor:pointer;text-transform:uppercase;background:rgba(255,255,255,.06);color:rgba(255,255,255,.4);transition:all .15s;border:1px solid transparent;}
+.psec-tab.active{background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.15);}
+.psec-content{display:none;}
+.psec-content.active{display:block;}
+.pstat-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;}
+.pstat-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);}
+.pstat-row:last-child{border-bottom:none;}
+.pstat-label{font-family:'Barlow Condensed',sans-serif;font-size:12px;color:rgba(255,255,255,.4);}
+.pstat-val{font-family:'Bebas Neue',sans-serif;font-size:16px;color:#fff;}
+.pstat-val.null-val{color:rgba(255,255,255,.2);}
+.portero-block{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;}
+.portero-stat{display:flex;flex-direction:column;align-items:center;background:rgba(255,255,255,.05);border-radius:8px;padding:8px 14px;min-width:70px;}
+.portero-stat-val{font-family:'Bebas Neue',sans-serif;font-size:26px;color:#fff;}
+.portero-stat-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;color:rgba(255,255,255,.4);letter-spacing:.8px;text-transform:uppercase;margin-top:2px;}
+
 /* ===== TOAST ===== */
 #toast {
   position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
@@ -1426,6 +1460,104 @@ async function loadPartidosStats() {
 }
 
 // ── Acumulado de todos los partidos ──────────────────────────────────────────
+// ── helpers acumulado ───────────────────────────────────────────────────────
+const ACC_LABELS_TOP = {tiros_totales:'Tiros totales',disparos_puerta:'A puerta',oport_creadas:'Oport. creadas',grandes_oport:'Gran. oport.',acc_defensivas:'Acc. defensivas',pases_precisos:'Pases precisos'};
+const ACC_LABELS_ATQ = {toques:'Toques',toques_area:'Toques área rival',regates:'Regates',pases_ultimo_tercio:'Pases últ. tercio',tiros_largos:'Tiros largos',perdida_balon:'Pérdidas'};
+const ACC_LABELS_DEF = {acc_defensivas:'Acc. defensivas',entradas:'Entradas',interceptaciones:'Interceptaciones',recuperaciones:'Recuperaciones',despejes:'Despejes',bloqueos:'Bloqueos',regateado:'Regateado'};
+const ACC_LABELS_DUE = {ganados:'Duelos ganados',perdidos:'Duelos perdidos',terrestres:'Terrestres',aereos:'Aéreos',faltas:'Faltas cometidas',faltas_recibidas:'Faltas recibidas'};
+
+// Suma dos valores: números → suma, fracciones "a/b" → suma num y den, null → null si ambos null
+function accSum(a, b) {
+  if (a === null && b === null) return null;
+  if (typeof a === 'string' || typeof b === 'string') {
+    const parseF = v => v ? String(v).split('/').map(Number) : [0,0];
+    const [an,ad] = parseF(a); const [bn,bd] = parseF(b);
+    return `${an+bn}/${ad+bd}`;
+  }
+  return (a || 0) + (b || 0);
+}
+
+function accMergeSection(dest, src) {
+  if (!src) return;
+  Object.keys(src).forEach(k => {
+    dest[k] = dest[k] === undefined ? src[k] : accSum(dest[k], src[k]);
+  });
+}
+
+function accBuildGrid(obj, labels) {
+  if (!obj) return '';
+  const rows = Object.entries(labels).map(([k,l]) => {
+    const raw = obj[k];
+    const isNull = raw === null || raw === undefined;
+    return `<div class="pstat-row"><span class="pstat-label">${l}</span><span class="pstat-val${isNull?' null-val':''}">${isNull ? '—' : raw}</span></div>`;
+  });
+  const mid = Math.ceil(rows.length / 2);
+  return `<div class="pstat-grid"><div>${rows.slice(0,mid).join('')}</div><div>${rows.slice(mid).join('')}</div></div>`;
+}
+
+function accBuildCard(j, idx, teamColor) {
+  const cardId = `acc-c${idx}`;
+  const badges = [];
+  if (j.goles > 0) badges.push(`<span class="badge gol">⚽ ${j.goles===1?'GOL':j.goles+' GOLES'}</span>`);
+  if (j.asist > 0) badges.push(`<span class="badge asist">🎯 ${j.asist===1?'ASIST':j.asist+' ASIST'}</span>`);
+
+  const tabs = [], contents = [];
+  let ti = 0;
+  function addTab(label, html) {
+    tabs.push(`<div class="psec-tab ${ti===0?'active':''}" data-sec="${ti}">${label}</div>`);
+    contents.push(`<div class="psec-content ${ti===0?'active':''}" id="${cardId}-s${ti}">${html}</div>`);
+    ti++;
+  }
+  if (j.top)    addTab('Top',    accBuildGrid(j.top,    ACC_LABELS_TOP));
+  if (j.ataque) addTab('Ataque', accBuildGrid(j.ataque, ACC_LABELS_ATQ));
+  if (j.defensa)addTab('Defensa',accBuildGrid(j.defensa,ACC_LABELS_DEF));
+  if (j.duelos) addTab('Duelos', accBuildGrid(j.duelos, ACC_LABELS_DUE));
+
+  let porteroBlock = '';
+  if (j.portero && j.portero_stats) {
+    const ps = j.portero_stats;
+    const items = [
+      ps.paradas != null ? `<div class="portero-stat"><div class="portero-stat-val">${ps.paradas}</div><div class="portero-stat-label">Paradas</div></div>` : '',
+      ps.goles_contra != null ? `<div class="portero-stat"><div class="portero-stat-val">${ps.goles_contra}</div><div class="portero-stat-label">Goles enc.</div></div>` : '',
+    ].filter(Boolean);
+    if (items.length) porteroBlock = `<div class="portero-block">${items.join('')}</div>`;
+  }
+
+  const detail = tabs.length ? `<div class="psec-tabs">${tabs.join('')}</div>${contents.join('')}${porteroBlock}` : '';
+
+  const card = document.createElement('div');
+  card.className = 'player-card';
+  card.id = cardId;
+  card.innerHTML = `
+    <div class="player-row">
+      <div class="player-avatar" style="background:${teamColor}20;border-color:${teamColor}40">
+        <img src="fotos/sin-foto.png" alt="" onerror="this.style.display='none'">
+      </div>
+      <div class="player-info">
+        <div class="player-name">${j.nombre}</div>
+        <div class="player-meta">${j.min}' · ${j.portero?'Portero':'Jugador'} · ${j.pj} PJ</div>
+        ${badges.length ? '<div class="player-badges">'+badges.join('')+'</div>' : ''}
+      </div>
+      ${detail ? '<div class="expand-btn">▼</div>' : ''}
+    </div>
+    ${detail ? `<div class="player-detail-panel">${detail}</div>` : ''}`;
+
+  if (detail) {
+    card.querySelector('.player-row').addEventListener('click', () => card.classList.toggle('open'));
+    card.querySelectorAll('.psec-tab').forEach(tab => {
+      tab.addEventListener('click', e => {
+        e.stopPropagation();
+        const sec = tab.dataset.sec;
+        card.querySelectorAll('.psec-tab').forEach(t => t.classList.remove('active'));
+        card.querySelectorAll('.psec-content').forEach(c => c.classList.remove('active'));
+        tab.classList.add('active');
+        card.querySelector(`#${cardId}-s${sec}`).classList.add('active');
+      });
+    });
+  }
+  return card;
+}
+
 async function loadAcumulado() {
   const wrap = document.getElementById('acumulado-lista');
   const misPartidos = window._acumuladoPartidos || [];
@@ -1440,6 +1572,7 @@ async function loadAcumulado() {
     misPartidos.map(p => fetch(`data/partidos/${p.id}.json?v=${Date.now()}`).then(r=>r.json()).catch(()=>null))
   );
 
+  // Agregar todos los campos por jugador
   const mapa = {};
   jsons.forEach(data => {
     if (!data) return;
@@ -1447,38 +1580,36 @@ async function loadAcumulado() {
     const jugs = esLocal ? data.jugadores[data.partido.local] : data.jugadores[data.partido.visitante];
     if (!jugs) return;
     jugs.forEach(j => {
-      if (!mapa[j.nombre]) mapa[j.nombre] = { nombre: j.nombre, min: 0, goles: 0, asist: 0, pj: 0 };
-      mapa[j.nombre].min   += j.min   || 0;
-      mapa[j.nombre].goles += j.goles || 0;
-      mapa[j.nombre].asist += j.asist || 0;
-      mapa[j.nombre].pj++;
+      if (!mapa[j.nombre]) {
+        mapa[j.nombre] = {
+          nombre: j.nombre, portero: j.portero, pj: 0,
+          min: 0, goles: 0, asist: 0,
+          top: {}, ataque: {}, defensa: {}, duelos: {},
+          portero_stats: j.portero ? { paradas: null, goles_contra: null } : null
+        };
+      }
+      const m = mapa[j.nombre];
+      m.pj++;
+      m.min   += j.min   || 0;
+      m.goles += j.goles || 0;
+      m.asist += j.asist || 0;
+      accMergeSection(m.top,    j.top);
+      accMergeSection(m.ataque, j.ataque);
+      accMergeSection(m.defensa,j.defensa);
+      accMergeSection(m.duelos, j.duelos);
+      if (j.portero && j.portero_stats) {
+        m.portero_stats.paradas     = accSum(m.portero_stats.paradas,     j.portero_stats.paradas);
+        m.portero_stats.goles_contra= accSum(m.portero_stats.goles_contra, j.portero_stats.goles_contra);
+      }
     });
   });
 
-  const lista = Object.values(mapa).sort((a,b) => b.goles-a.goles || b.asist-a.asist || b.min-a.min);
-
+  const lista = Object.values(mapa).sort((a,b) => b.min - a.min);
   if (!lista.length) { wrap.innerHTML = '<div class="acc-loading">Sin datos</div>'; return; }
 
-  wrap.innerHTML = `
-    <div class="acumulado-card">
-      <div class="acc-header">
-        <span>JUGADOR</span>
-        <span class="acc-col">PJ</span>
-        <span class="acc-col">MIN</span>
-        <span class="acc-col">⚽</span>
-        <span class="acc-col">🅰️</span>
-      </div>
-      <div class="acc-rows">
-        ${lista.map(j => `
-          <div class="acc-row">
-            <span class="acc-nombre">${j.nombre}</span>
-            <span class="acc-col acc-num">${j.pj}</span>
-            <span class="acc-col acc-num">${j.min}'</span>
-            <span class="acc-col acc-num ${j.goles ? 'acc-gol' : ''}">${j.goles || '—'}</span>
-            <span class="acc-col acc-num ${j.asist ? 'acc-asi' : ''}">${j.asist || '—'}</span>
-          </div>`).join('')}
-      </div>
-    </div>`;
+  wrap.innerHTML = '';
+  const teamColor = getComputedStyle(document.documentElement).getPropertyValue('--acento').trim() || '#1565c0';
+  lista.forEach((j, idx) => wrap.appendChild(accBuildCard(j, idx, teamColor)));
 }
 </script>
 </body>
