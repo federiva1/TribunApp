@@ -742,11 +742,12 @@ let plantelData = null;
 let squad = [];  // [{num, name, fid, posicion}] — formato interno normalizado
 let slug = '';
 let nombreEquipo = '';
+let estadoMundial = { puntajesOpen: false, rival: null, match_date: null }; // cargado desde estado_mundial.json
 
-// localStorage keys
-const lsFormKey     = () => `${slug}_formacion`;
-const lsFormDataKey = () => `${slug}_formacion_data`;
-const lsScoresKey   = () => `${slug}_puntajes`;
+// localStorage keys — incluyen match_date para que cada partido tenga su propio voto
+const lsFormKey     = () => `${slug}_${estadoMundial.match_date||'x'}_formacion`;
+const lsFormDataKey = () => `${slug}_${estadoMundial.match_date||'x'}_formacion_data`;
+const lsScoresKey   = () => `${slug}_${estadoMundial.match_date||'x'}_puntajes`;
 
 // ── Toast ──────────────────────────────────────────────────────────────────
 function showToast(msg) {
@@ -1048,7 +1049,11 @@ document.getElementById('confirm-btn').addEventListener('click', async () => {
     localStorage.setItem(lsFormDataKey(), JSON.stringify(jugadores));
     // Intentar Supabase si está configurado
     if (SUPABASE_URL) {
-      const payload = { jugadores, club: slug, device_id: getDeviceId() };
+      const payload = {
+        jugadores, club: slug, device_id: getDeviceId(),
+        rival: estadoMundial.rival || null,
+        match_date: estadoMundial.match_date || null
+      };
       await fetch(`${SUPABASE_URL}/rest/v1/formaciones`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' },
@@ -1107,7 +1112,11 @@ async function showFormacionResults() {
     return;
   }
   try {
-    const res  = await fetch(`${SUPABASE_URL}/rest/v1/formaciones?select=jugadores&club=eq.${slug}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
+    const md = estadoMundial.match_date;
+    const url = md
+      ? `${SUPABASE_URL}/rest/v1/formaciones?select=jugadores&club=eq.${slug}&match_date=eq.${md}`
+      : `${SUPABASE_URL}/rest/v1/formaciones?select=jugadores&club=eq.${slug}`;
+    const res  = await fetch(url, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
     const data = await res.json();
     const total = data.length;
     if (!total) { list.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.3);padding:20px;font-size:13px;">Todavía no hay formaciones enviadas.</div>'; return; }
@@ -1149,10 +1158,63 @@ async function showFormacionResults() {
 // ============================================================
 let userScores = {}, scoresWasReady = false, puntajesInited = false;
 
-function initPuntajes() {
+async function initPuntajes() {
   if (puntajesInited) return;
   puntajesInited = true;
   document.getElementById('puntajes-equipo-tag').textContent = nombreEquipo.toUpperCase();
+
+  // Si puntajes está cerrado, mostrar mensaje
+  if (!estadoMundial.puntajesOpen) {
+    document.getElementById('scores-list').innerHTML =
+      '<p style="color:rgba(255,255,255,0.3);font-size:13px;text-align:center;padding:30px;">Los puntajes están cerrados por ahora.</p>';
+    const btn = document.getElementById('scores-confirm-btn');
+    btn.disabled = true; btn.style.opacity = '0.3';
+    return;
+  }
+
+  // Cargar jugadores que jugaron del partido activo (rival + match_date)
+  let squadPuntajes = [];
+  if (estadoMundial.rival && estadoMundial.match_date) {
+    try {
+      // Buscar el partido en el índice
+      const idxRes = await fetch(`data/partidos/index.json?v=${Date.now()}`);
+      const idx = await idxRes.json();
+      const partido = idx.find(p =>
+        (p.local === slug && p.visitante === estadoMundial.rival) ||
+        (p.visitante === slug && p.local === estadoMundial.rival)
+      );
+      if (partido) {
+        const pRes = await fetch(`data/partidos/${partido.id}.json?v=${Date.now()}`);
+        const pData = await pRes.json();
+        const jugs = pData.jugadores[slug] || [];
+        squadPuntajes = jugs.map(j => {
+          // Cruzar con plantel para obtener numero y posicion reales
+          const enPlantel = squad.find(s =>
+            s.name.toLowerCase() === j.nombre.toLowerCase() ||
+            String(s.fid) === String(j.id)
+          );
+          return {
+            num: enPlantel?.num ?? j.id,   // numero de camiseta si existe, sino id fotmob
+            name: j.nombre,
+            fid: String(j.id),
+            posicion: j.portero ? 'GK' : (enPlantel?.posicion || 'DEL'),
+            fotmob_id: j.id                // guardamos el id fotmob para el payload
+          };
+        });
+      }
+    } catch(e) { console.error('Error cargando jugadores del partido:', e); }
+  }
+
+  // Añadir técnico como última entrada (num: 0)
+  const tecnico = plantelData.tecnico || null;
+  if (tecnico) squadPuntajes.push({ num: 0, name: tecnico, fid: 0, posicion: 'TEC' });
+
+  // Si no cargó nada del partido, fallback al squad completo
+  if (!squadPuntajes.length) squadPuntajes = squad;
+
+  // Sobrescribir squad para puntajes (sólo para esta función)
+  window._squadPuntajes = squadPuntajes;
+
   if (localStorage.getItem(lsScoresKey())) {
     const btn = document.getElementById('scores-confirm-btn');
     btn.textContent = '✓ Ya puntuaste'; btn.style.background = '#2e7d32'; btn.style.opacity = '1';
@@ -1163,25 +1225,28 @@ function initPuntajes() {
 function renderScores() {
   const list = document.getElementById('scores-list');
   list.innerHTML = '';
-  if (!squad.length) {
+  const sq = window._squadPuntajes || squad;
+  if (!sq.length) {
     list.innerHTML = '<p style="color:rgba(255,255,255,0.3);font-size:13px;text-align:center;padding:20px;">El plantel aún no está cargado.</p>';
     return;
   }
   const alreadyVoted = !!localStorage.getItem(lsScoresKey());
 
-  // Agrupar por posición: GK → DEF → MED → DEL
+  // Agrupar por posición: GK → DEF → MED → DEL → TEC
+  const POS_ORDER_P = ['GK','DEF','MED','DEL','TEC'];
+  const POS_LABELS_P = { ...POS_LABELS, TEC: 'Técnico' };
   const porPos = {};
-  for (const p of squad) {
+  for (const p of sq) {
     const pos = p.posicion || 'DEL';
     if (!porPos[pos]) porPos[pos] = [];
     porPos[pos].push(p);
   }
 
-  for (const pos of POS_ORDER) {
+  for (const pos of POS_ORDER_P) {
     const grupo = porPos[pos];
     if (!grupo?.length) continue;
 
-    const titulo = document.createElement('div'); titulo.className = 'scores-section-title'; titulo.textContent = POS_LABELS[pos] || pos;
+    const titulo = document.createElement('div'); titulo.className = 'scores-section-title'; titulo.textContent = POS_LABELS_P[pos] || pos;
     list.appendChild(titulo);
 
     grupo.forEach(p => {
@@ -1220,7 +1285,7 @@ function renderScores() {
 }
 
 function checkScoresReady() {
-  const total   = squad.length;
+  const total   = (window._squadPuntajes || squad).length;
   const isReady = Object.keys(userScores).length === total && total > 0;
   const btn = document.getElementById('scores-confirm-btn');
   if (isReady && !scoresWasReady) { btn.classList.remove('ready'); void btn.offsetWidth; btn.classList.add('ready'); }
@@ -1231,12 +1296,19 @@ function checkScoresReady() {
 document.getElementById('scores-confirm-btn').addEventListener('click', async () => {
   const btn = document.getElementById('scores-confirm-btn');
   if (localStorage.getItem(lsScoresKey())) return; // ya votó
-  if (Object.keys(userScores).length !== squad.length || !squad.length) return;
+  const sqP = window._squadPuntajes || squad;
+  if (Object.keys(userScores).length !== sqP.length || !sqP.length) return;
   btn.textContent = 'Enviando...'; btn.disabled = true;
   try {
     localStorage.setItem(lsScoresKey(), '1');
     if (SUPABASE_URL) {
-      const payload = { puntajes: userScores, club: slug };
+      const payload = {
+        puntajes: userScores,
+        club: slug,
+        rival: estadoMundial.rival || null,
+        match_date: estadoMundial.match_date || null,
+        device_id: getDeviceId()
+      };
       await fetch(`${SUPABASE_URL}/rest/v1/puntajes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' },
@@ -1268,15 +1340,20 @@ async function showScoresResults() {
     return;
   }
   try {
-    const res  = await fetch(`${SUPABASE_URL}/rest/v1/puntajes?select=puntajes&club=eq.${slug}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
+    const md2 = estadoMundial.match_date;
+    const urlP = md2
+      ? `${SUPABASE_URL}/rest/v1/puntajes?select=puntajes&club=eq.${slug}&match_date=eq.${md2}`
+      : `${SUPABASE_URL}/rest/v1/puntajes?select=puntajes&club=eq.${slug}`;
+    const res  = await fetch(urlP, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
     const data = await res.json();
     if (!data.length) { list.innerHTML = '<div style="color:rgba(255,255,255,0.3);text-align:center;padding:20px;">Sin resultados aún.</div>'; totalEl.textContent = ''; return; }
     const totalVoters = data.length;
     totalEl.textContent = `${totalVoters} hincha${totalVoters !== 1 ? 's' : ''} votaron`;
     const totals = {}, countMap = {};
     data.forEach(row => { Object.entries(row.puntajes || {}).forEach(([num, val]) => { totals[num] = (totals[num] || 0) + Number(val); countMap[num] = (countMap[num] || 0) + 1; }); });
+    const sqR = window._squadPuntajes || squad;
     const results = Object.keys(totals).map(num => {
-      const p = squad.find(s => s.num === Number(num));
+      const p = sqR.find(s => String(s.num) === String(num));
       return { num: Number(num), name: p?.name || `#${num}`, fid: p?.fid || 0, avg: totals[num] / countMap[num] };
     }).sort((a, b) => b.avg - a.avg);
 
@@ -1331,6 +1408,25 @@ async function init() {
     squad = plantelData.jugadores
       .map(j => ({ num: j.numero, name: j.nombre, fid: j.fid, posicion: j.posicion || 'DEL' }))
       .sort((a, b) => (a.num ?? 99) - (b.num ?? 99));
+
+    // Cargar estado_mundial.json para saber si puntajes está abierto y para qué partido
+    try {
+      const er = await fetch(`data/estado_mundial.json?v=${Date.now()}`);
+      if (er.ok) {
+        const estado = await er.json();
+        if (estado[slug]) {
+          estadoMundial = estado[slug];
+          const badge = document.getElementById('badge-puntajes');
+          if (estadoMundial.puntajesOpen) {
+            badge.textContent = 'ABIERTO';
+            badge.className = 'hero-badge abierto';
+          } else {
+            badge.textContent = 'CERRADO';
+            badge.className = 'hero-badge cerrado';
+          }
+        }
+      }
+    } catch(e) { /* silencioso */ }
 
     // Deep-link: ?s=estadisticas abre la sección directamente
     if (params.get('s') === 'estadisticas') openSection('estadisticas');
