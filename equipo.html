@@ -838,6 +838,29 @@ function renderPlantel() {
 // ============================================================
 let onPitch = [], draggingNew = null, activePitchDrag = null;
 let dragOffX = 0, dragOffY = 0, sendingForm = false, wasReady = false;
+let dragStartX = 0, dragStartY = 0;
+
+// Zonas de cancha por posición (y=0 arriba, y=100 abajo; portero ataca hacia arriba)
+const POSICION_ZONE = {
+  GK:  { x: 50, y: 87 },
+  DEF: { x: 50, y: 71 },
+  MED: { x: 50, y: 50 },
+  DEL: { x: 50, y: 26 },
+};
+
+function placeFromBench(p) {
+  if (onPitch.find(x => x.num === p.num)) return;
+  if (onPitch.length >= 11) { showToast('Ya tenés 11 jugadores en cancha'); return; }
+  const zone = POSICION_ZONE[p.posicion] || { x: 50, y: 50 };
+  let x = zone.x, y = zone.y, tries = 0;
+  while (tries < 32 && onPitch.some(o => Math.hypot(o.xPct - x, o.yPct - y) < 10)) {
+    const ang = tries * (Math.PI / 4), ring = 1 + Math.floor(tries / 8);
+    x = Math.max(5, Math.min(95, zone.x + Math.cos(ang) * 9 * ring));
+    y = Math.max(8, Math.min(95, zone.y + Math.sin(ang) * 9 * ring));
+    tries++;
+  }
+  addToPitch(p, Math.round(x * 10) / 10, Math.round(y * 10) / 10);
+}
 let formacionInited = false;
 
 const pitch      = document.getElementById('pitch');
@@ -882,8 +905,8 @@ function renderGrid() {
     const num = document.createElement('span'); num.className = 'chip-num'; num.textContent = p.num; chip.appendChild(num);
     const nm  = document.createElement('span'); nm.className  = 'chip-name'; nm.textContent = apellido(p.name); chip.appendChild(nm);
     if (!used) {
-      chip.addEventListener('touchstart', e => { e.preventDefault(); draggingNew = p; }, { passive: false });
-      chip.addEventListener('mousedown',  e => { e.preventDefault(); draggingNew = p; });
+      chip.addEventListener('touchstart', e => { e.preventDefault(); draggingNew = p; dragStartX = e.touches[0].clientX; dragStartY = e.touches[0].clientY; }, { passive: false });
+      chip.addEventListener('mousedown',  e => { e.preventDefault(); draggingNew = p; dragStartX = e.clientX; dragStartY = e.clientY; });
     }
     playerGrid.appendChild(chip);
   });
@@ -961,6 +984,9 @@ function handleEnd(cx, cy) {
         Math.max(3, Math.min(97, ((cx - rect.left) / pitch.clientWidth) * 100)),
         Math.max(3, Math.min(97, ((cy - rect.top)  / pitch.clientHeight) * 100))
       );
+    } else if (Math.hypot(cx - dragStartX, cy - dragStartY) < 12) {
+      // Tap sin arrastrar → posición por defecto según posicion
+      placeFromBench(draggingNew);
     }
     draggingNew = null;
   }
@@ -1060,10 +1086,8 @@ document.getElementById('confirm-btn').addEventListener('click', async () => {
         body: JSON.stringify(payload)
       });
     }
-    showToast(`¡Formación enviada! Vamos ${nombreEquipo}`);
+    showToast(`¡Formación enviada! ¡Vamos ${nombreEquipo}! 🎉`);
     updateCounter();
-    document.getElementById('formation-success').style.display = 'flex';
-    document.getElementById('formation-success-body').textContent = `Tu formación fue registrada. ¡Vamos ${nombreEquipo}!`;
   } catch(e) { showToast('Error de conexión.'); }
   finally { sendingForm = false; }
 });
@@ -1187,27 +1211,28 @@ async function initPuntajes() {
         const pRes = await fetch(`data/partidos/${partido.id}.json?v=${Date.now()}`);
         const pData = await pRes.json();
         const jugs = pData.jugadores[slug] || [];
-        squadPuntajes = jugs.map(j => {
-          // Cruzar con plantel para obtener numero y posicion reales
+        squadPuntajes = jugs.map((j, idx) => {
+          // Cruzar con plantel para obtener numero, fid real y posicion
           const enPlantel = squad.find(s =>
             s.name.toLowerCase() === j.nombre.toLowerCase() ||
             String(s.fid) === String(j.id)
           );
           return {
-            num: enPlantel?.num ?? j.id,   // numero de camiseta si existe, sino id fotmob
+            num: enPlantel?.num ?? j.id,
             name: j.nombre,
-            fid: String(j.id),
+            fid: enPlantel?.fid ?? String(j.id),   // fid real del plantel para la foto
             posicion: j.portero ? 'GK' : (enPlantel?.posicion || 'DEL'),
-            fotmob_id: j.id                // guardamos el id fotmob para el payload
+            tipo: j.tipo || (idx < 11 ? 'titular' : 'suplente'),
+            fotmob_id: j.id
           };
         });
       }
     } catch(e) { console.error('Error cargando jugadores del partido:', e); }
   }
 
-  // Añadir técnico como última entrada (num: 0)
+  // Añadir técnico como última entrada
   const tecnico = plantelData.tecnico || null;
-  if (tecnico) squadPuntajes.push({ num: 0, name: tecnico, fid: 0, posicion: 'TEC' });
+  if (tecnico) squadPuntajes.push({ num: 0, name: tecnico, fid: 0, posicion: 'TEC', tipo: 'dt' });
 
   // Si no cargó nada del partido, fallback al squad completo
   if (!squadPuntajes.length) squadPuntajes = squad;
@@ -1232,37 +1257,32 @@ function renderScores() {
   }
   const alreadyVoted = !!localStorage.getItem(lsScoresKey());
 
-  // Agrupar por posición: GK → DEF → MED → DEL → TEC
-  const POS_ORDER_P = ['GK','DEF','MED','DEL','TEC'];
-  const POS_LABELS_P = { ...POS_LABELS, TEC: 'Técnico' };
-  const porPos = {};
-  for (const p of sq) {
-    const pos = p.posicion || 'DEL';
-    if (!porPos[pos]) porPos[pos] = [];
-    porPos[pos].push(p);
-  }
+  const POS_SORT = { GK: 0, DEF: 1, MED: 2, DEL: 3, TEC: 4 };
+  const byPos = (a, b) => (POS_SORT[a.posicion] ?? 3) - (POS_SORT[b.posicion] ?? 3);
+  const titulares = sq.filter(p => p.tipo === 'titular').sort(byPos);
+  const suplentes = sq.filter(p => p.tipo === 'suplente').sort(byPos);
+  const dt        = sq.filter(p => p.tipo === 'dt');
 
-  for (const pos of POS_ORDER_P) {
-    const grupo = porPos[pos];
-    if (!grupo?.length) continue;
+  function renderGroup(titulo, players, showSkip = false) {
+    if (!players.length) return;
+    const tEl = document.createElement('div'); tEl.className = 'scores-section-title'; tEl.textContent = titulo;
+    list.appendChild(tEl);
 
-    const titulo = document.createElement('div'); titulo.className = 'scores-section-title'; titulo.textContent = POS_LABELS_P[pos] || pos;
-    list.appendChild(titulo);
-
-    grupo.forEach(p => {
+    players.forEach(p => {
       const row = document.createElement('div'); row.className = 'score-player-row'; row.dataset.num = p.num;
 
       const avWrap = document.createElement('div'); avWrap.className = 'score-avatar-wrap';
       const img = document.createElement('img'); img.src = FOTO(p.fid);
-      const fb  = document.createElement('span'); fb.className = 'av-fb'; fb.textContent = p.num;
+      const fb  = document.createElement('span'); fb.className = 'av-fb'; fb.textContent = p.tipo === 'dt' ? 'DT' : (p.num || '?');
       img.onload  = () => { img.style.display = 'block'; fb.style.display = 'none'; };
       img.onerror = () => { img.style.display = 'none'; fb.style.display = 'block'; };
       img.style.display = 'none';
       avWrap.appendChild(img); avWrap.appendChild(fb); row.appendChild(avWrap);
 
-      const info    = document.createElement('div'); info.className = 'score-player-info';
-      const numEl   = document.createElement('div'); numEl.className = 'score-player-num'; numEl.textContent = `#${p.num}`;
-      const nameEl  = document.createElement('div'); nameEl.className = 'score-player-name'; nameEl.textContent = apellido(p.name);
+      const info   = document.createElement('div'); info.className = 'score-player-info';
+      const numEl  = document.createElement('div'); numEl.className = 'score-player-num';
+      numEl.textContent = p.tipo === 'dt' ? 'DT' : `#${p.num}`;
+      const nameEl = document.createElement('div'); nameEl.className = 'score-player-name'; nameEl.textContent = apellido(p.name);
       info.appendChild(numEl); info.appendChild(nameEl); row.appendChild(info);
 
       const btns = document.createElement('div'); btns.className = 'score-btns';
@@ -1272,20 +1292,37 @@ function renderScores() {
         else {
           btn.addEventListener('click', () => {
             userScores[p.num] = i;
-            btns.querySelectorAll('.score-btn').forEach((b, idx) => b.classList.toggle('selected', idx + 1 === i));
+            btns.querySelectorAll('.score-btn').forEach((b, ix) => b.classList.toggle('selected', ix + 1 === i));
             row.classList.add('voted');
             checkScoresReady();
           });
         }
         btns.appendChild(btn);
       }
+      if (showSkip && !alreadyVoted) {
+        const skip = document.createElement('button'); skip.className = 'score-btn skip'; skip.textContent = 'S/P';
+        skip.title = 'Sin puntaje';
+        skip.addEventListener('click', () => {
+          userScores[p.num] = null;
+          btns.querySelectorAll('.score-btn:not(.skip)').forEach(b => b.classList.remove('selected'));
+          skip.classList.add('selected');
+          row.classList.add('voted');
+          checkScoresReady();
+        });
+        btns.appendChild(skip);
+      }
       row.appendChild(btns); list.appendChild(row);
     });
   }
+
+  renderGroup('TITULARES', titulares);
+  renderGroup('SUPLENTES QUE INGRESARON', suplentes, true);
+  renderGroup('DIRECTOR TÉCNICO', dt);
 }
 
 function checkScoresReady() {
   const total   = (window._squadPuntajes || squad).length;
+  // Contar votos emitidos (incluyendo S/P = null)
   const isReady = Object.keys(userScores).length === total && total > 0;
   const btn = document.getElementById('scores-confirm-btn');
   if (isReady && !scoresWasReady) { btn.classList.remove('ready'); void btn.offsetWidth; btn.classList.add('ready'); }
