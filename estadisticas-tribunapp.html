@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estadísticas TribunApp — Mundial 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--dark:#0d0d1a;--dark2:#13131f;--dark3:#1a1a2e;--acento:#1565c0;--acento-light:#42a5f5;--gold:#f5c518;--rojo:#e53935;}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark);color:#fff;overflow-x:hidden;}
+
+/* HEADER */
+#site-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 20px 10px;
+  background:linear-gradient(180deg,rgba(21,101,192,.15) 0%,transparent 100%);
+  border-bottom:1px solid rgba(255,255,255,.07);
+  position:sticky;top:0;z-index:50;backdrop-filter:blur(10px);gap:12px;
+}
+.logo-wrap{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.logo-titulo{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:#fff;line-height:1;}
+.logo-sub{font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:3px;color:var(--acento-light);text-transform:uppercase;}
+.header-trophy{font-size:28px;line-height:1;}
+.header-pills{display:flex;gap:8px;}
+.header-pill{
+  display:flex;align-items:center;gap:7px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);
+  border-radius:10px;padding:6px 14px;
+  font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:1px;
+  color:rgba(255,255,255,.55);cursor:pointer;text-decoration:none;
+  transition:background .2s,color .2s,border-color .2s;
+}
+.header-pill:hover{background:rgba(21,101,192,.18);border-color:rgba(21,101,192,.4);color:#fff;}
+.header-pill-label{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;color:#fff;}
+.header-pill.active-pill{background:rgba(245,197,24,.12);border-color:rgba(245,197,24,.35);color:#fff;}
+
+/* MAIN */
+#main{padding:24px 16px 60px;max-width:700px;margin:0 auto;}
+
+.sec-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:#fff;margin-bottom:4px;}
+.sec-sub{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2px;color:rgba(255,255,255,.3);text-transform:uppercase;margin-bottom:16px;}
+
+/* BUSCADOR */
+.search-wrap{position:relative;margin-bottom:16px;}
+.search-wrap input{
+  width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+  border-radius:10px;padding:10px 14px 10px 36px;color:#fff;font-size:14px;outline:none;
+  font-family:'DM Sans',sans-serif;
+}
+.search-wrap input::placeholder{color:rgba(255,255,255,.3);}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.4;font-size:14px;}
+
+/* EQUIPO ROW */
+.equipo-row{
+  display:flex;align-items:center;gap:14px;
+  padding:13px 16px;margin-bottom:6px;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);
+  border-radius:12px;cursor:pointer;text-decoration:none;color:inherit;
+  transition:background .15s,border-color .15s;
+}
+.equipo-row:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.15);}
+.equipo-row.sin-datos{opacity:.35;cursor:default;pointer-events:none;}
+.eq-escudo{width:36px;height:36px;object-fit:contain;}
+.eq-info{flex:1;min-width:0;}
+.eq-nombre{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;color:#fff;}
+.eq-sub{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:1px;color:rgba(255,255,255,.35);text-transform:uppercase;margin-top:1px;}
+.eq-badge{
+  font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1.5px;
+  padding:3px 8px;border-radius:6px;text-transform:uppercase;flex-shrink:0;
+}
+.eq-badge.con-datos{background:rgba(245,197,24,.15);color:var(--gold);border:1px solid rgba(245,197,24,.3);}
+.eq-badge.sin-badge{background:rgba(255,255,255,.06);color:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.07);}
+.eq-arrow{color:rgba(255,255,255,.2);font-size:14px;}
+
+/* EQUIPOS GRID (24 equipos) */
+#equipos-lista{margin-top:8px;}
+</style>
+</head>
+<body>
+
+<header id="site-header">
+  <a class="logo-wrap" href="index.html">
+    <div class="header-trophy">🏆</div>
+    <div>
+      <div class="logo-titulo">TRIBUNAPP</div>
+      <div class="logo-sub">MUNDIAL 2026</div>
+    </div>
+  </a>
+  <div class="header-pills">
+    <a class="header-pill active-pill" href="estadisticas-tribunapp.html">
+      <span>🏆</span>
+      <span class="header-pill-label">TribunApp</span>
+    </a>
+    <a class="header-pill" href="estadisticas-torneo.html">
+      <span>📊</span>
+      <span class="header-pill-label">Estadísticas</span>
+    </a>
+    <a class="header-pill" href="fixture.html">
+      <span>📅</span>
+      <span class="header-pill-label">Fixture</span>
+    </a>
+  </div>
+</header>
+
+<div id="main">
+  <div class="sec-title">ESTADÍSTICAS TRIBUNAPP</div>
+  <div class="sec-sub">Elecciones y puntajes de la comunidad</div>
+
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="buscador" placeholder="Buscar equipo...">
+  </div>
+
+  <div id="equipos-lista">
+    <div style="text-align:center;padding:40px;color:rgba(255,255,255,.3);font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;">Cargando…</div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script>
+const NAMES_ES = {
+  czechia:'Chequia',mexico:'México',southafrica:'Sudáfrica',southkorea:'Corea del Sur',
+  bosniaandherzegovina:'Bosnia y Herz.',canada:'Canadá',qatar:'Qatar',switzerland:'Suiza',
+  brazil:'Brasil',haiti:'Haití',morocco:'Marruecos',scotland:'Escocia',
+  australia:'Australia',paraguay:'Paraguay',turkiye:'Turquía',usa:'Estados Unidos',
+  curacao:'Curazao',ecuador:'Ecuador',germany:'Alemania',ivorycoast:'Costa de Marfil',
+  japan:'Japón',netherlands:'Países Bajos',sweden:'Suecia',tunisia:'Túnez',
+  belgium:'Bélgica',egypt:'Egipto',iran:'Irán',newzealand:'Nueva Zelanda',
+  capeverde:'Cabo Verde',saudiarabia:'Arabia Saudita',spain:'España',uruguay:'Uruguay',
+  france:'Francia',iraq:'Irak',norway:'Noruega',senegal:'Senegal',
+  algeria:'Argelia',argentina:'Argentina',austria:'Austria',jordan:'Jordania',
+  colombia:'Colombia',drcongo:'Rep. D. del Congo',portugal:'Portugal',uzbekistan:'Uzbekistán',
+  croatia:'Croacia',england:'Inglaterra',ghana:'Ghana',panama:'Panamá',
+};
+
+// Todos los slugs de los 48 equipos del mundial
+const SLUGS_48 = [
+  'argentina','australia','austria','belgium','bosniaandherzegovina','brazil',
+  'canada','capeverde','colombia','croatia','czechia','drcongo',
+  'ecuador','egypt','england','france','germany','ghana',
+  'haiti','iran','iraq','ivorycoast','japan','jordan',
+  'mexico','morocco','netherlands','newzealand','norway','panama',
+  'paraguay','portugal','qatar','saudiarabia','scotland','senegal',
+  'southafrica','southkorea','spain','sweden','switzerland','tunisia',
+  'turkiye','uruguay','usa','uzbekistan','curacao','southkorea'
+];
+const SLUGS_UNIQ = [...new Set(SLUGS_48)];
+
+async function init() {
+  // Cargar índice de partidos para saber qué equipos tienen datos
+  let partidosIdx = [];
+  try {
+    const r = await fetch(`data/partidos/index.json?v=${Date.now()}`);
+    partidosIdx = await r.json();
+  } catch(e) {}
+
+  // Saber qué equipos tienen formaciones/puntajes en Supabase
+  let equiposConDatos = new Set();
+  if (typeof _SUPABASE_URL !== 'undefined' && _SUPABASE_URL) {
+    try {
+      // Un solo query agrupado para saber qué clubs tienen filas
+      const [rF, rP] = await Promise.all([
+        fetch(`${_SUPABASE_URL}/rest/v1/formaciones?select=club&limit=500`, { headers: { 'apikey': _SUPABASE_KEY, 'Authorization': `Bearer ${_SUPABASE_KEY}` } }),
+        fetch(`${_SUPABASE_URL}/rest/v1/puntajes?select=club&limit=500`,    { headers: { 'apikey': _SUPABASE_KEY, 'Authorization': `Bearer ${_SUPABASE_KEY}` } }),
+      ]);
+      const [fRows, pRows] = await Promise.all([rF.json(), rP.json()]);
+      [...fRows, ...pRows].forEach(r => { if (r.club) equiposConDatos.add(r.club); });
+    } catch(e) {}
+  }
+
+  // También marcar equipos que tienen partidos estadísticos (para mostrar en otra sección)
+  const equiposConPartidos = new Set();
+  partidosIdx.forEach(p => { equiposConPartidos.add(p.local); equiposConPartidos.add(p.visitante); });
+
+  renderLista(SLUGS_UNIQ, equiposConDatos, equiposConPartidos);
+
+  document.getElementById('buscador').addEventListener('input', e => {
+    const q = e.target.value.toLowerCase().trim();
+    const filtrados = SLUGS_UNIQ.filter(s => {
+      const nombre = (NAMES_ES[s] || s).toLowerCase();
+      return nombre.includes(q) || s.includes(q);
+    });
+    renderLista(filtrados, equiposConDatos, equiposConPartidos);
+  });
+}
+
+function renderLista(slugs, equiposConDatos, equiposConPartidos) {
+  const wrap = document.getElementById('equipos-lista');
+  wrap.innerHTML = '';
+
+  // Ordenar: con datos primero, luego alfabético
+  const sorted = [...slugs].sort((a, b) => {
+    const aD = equiposConDatos.has(a) ? 0 : 1;
+    const bD = equiposConDatos.has(b) ? 0 : 1;
+    if (aD !== bD) return aD - bD;
+    return (NAMES_ES[a]||a).localeCompare(NAMES_ES[b]||b);
+  });
+
+  sorted.forEach(slug => {
+    const tieneFormPunt = equiposConDatos.has(slug);
+    const nombre = NAMES_ES[slug] || slug;
+
+    const el = tieneFormPunt ? document.createElement('a') : document.createElement('div');
+    el.className = 'equipo-row' + (tieneFormPunt ? '' : ' sin-datos');
+    if (tieneFormPunt) {
+      el.href = `tribunapp-equipo.html?c=${slug}`;
+      el.style.textDecoration = 'none';
+      el.style.color = 'inherit';
+    }
+
+    el.innerHTML = `
+      <img class="eq-escudo" src="escudos/${slug}.png" alt="${nombre}" onerror="this.style.opacity='.2'">
+      <div class="eq-info">
+        <div class="eq-nombre">${nombre}</div>
+        <div class="eq-sub">MUNDIAL 2026</div>
+      </div>
+      <span class="eq-badge ${tieneFormPunt ? 'con-datos' : 'sin-badge'}">${tieneFormPunt ? 'VER STATS' : 'Sin datos'}</span>
+      ${tieneFormPunt ? '<span class="eq-arrow">›</span>' : ''}`;
+
+    wrap.appendChild(el);
+  });
+
+  if (!sorted.length) {
+    wrap.innerHTML = '<div style="text-align:center;padding:30px;color:rgba(255,255,255,.3);font-family:\'Barlow Condensed\',sans-serif;">Sin resultados</div>';
+  }
+}
+
+init();
+</script>
+</body>
+</html>
