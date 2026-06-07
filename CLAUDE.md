@@ -241,6 +241,28 @@ Módulo separado del flujo de clubes argentinos. Todas las páginas del Mundial 
 
 `escudos/{slug}.png` — el slug es el nombre en minúsculas sin espacios (ej. `brazil`, `panama`, `unitedstates`). El frontend de estas páginas no usa `CLUBES_CONFIG`.
 
+### TribunApp Stats Module (community data — Mundial)
+
+Pages showing community-generated data (formation votes + puntajes) for Mundial 2026:
+
+- **`estadisticas-tribunapp.html`** — Landing page. Lists all 48 teams. Queries Supabase `formaciones?select=club` and `puntajes?select=club` to detect which teams have data. Teams with data appear first (gold "VER STATS" badge, clickable → `tribunapp-equipo.html?c={slug}`). Teams without data are grayed and non-clickable.
+- **`tribunapp-equipo.html`** — Per-team community stats. Two tabs: **Acumulado** (all matches aggregated) and **Partidos** (one expandable card per match). For each match, shows formation vote % (player selection count / total submissions × 100) and puntajes average (sum of scores / count of votes per player). Uses `fetchAll()` → `agruparPorPartido()` keyed by `"${match_date}|${rival}"`.
+
+### `data/estado_mundial.json` (Mundial puntajes gate)
+
+```json
+{
+  "brazil": { "puntajesOpen": true, "rival": "panama", "match_date": "2026-05-31" },
+  "panama": { "puntajesOpen": true, "rival": "brazil", "match_date": "2026-05-31" }
+}
+```
+
+Fetched by `equipo.html` on load (with `?v=${Date.now()}` cache bust). Controls whether the puntajes section is open for a team. Also provides the `rival` and `match_date` for the active match — used to:
+1. Scope localStorage keys: `${slug}_${match_date}_formacion` / `_formacion_data` / `_puntajes`
+2. Filter Supabase formaciones/puntajes queries by `match_date`
+3. Load match-specific players from `data/partidos/index.json` → `data/partidos/{id}.json` for the puntajes section (only players who actually played in that match)
+4. Include `rival` and `match_date` in Supabase insert payloads
+
 ### Extracción de stats FotMob (manual vía Chrome MCP)
 
 La API de FotMob para playerStats usa `stats` por sección como **objeto** (dict), no array. Al iterar:
