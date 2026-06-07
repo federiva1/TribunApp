@@ -241,6 +241,25 @@ Módulo separado del flujo de clubes argentinos. Todas las páginas del Mundial 
 
 `escudos/{slug}.png` — el slug es el nombre en minúsculas sin espacios (ej. `brazil`, `panama`, `unitedstates`). El frontend de estas páginas no usa `CLUBES_CONFIG`.
 
+### Foto FID — convención crítica
+
+Los archivos de foto (`fotos/{fid}.png`) usan el **fid del plantel** (`data/planteles/{slug}.json → jugadores[].fid`), NO el ID de FotMob del partido (`data/partidos/{id}.json → jugadores[slug][].id`). Estos dos IDs difieren para muchos jugadores. Siempre usar `enPlantel?.fid` para construir la URL de foto; el `j.id` del partido es solo para identificación interna.
+
+### Puntajes — convenciones de `equipo.html`
+
+- `checkScoresReady()` usa `sq.every(p => p.num in userScores)` (no comparación de lengths) para manejar jugadores con número duplicado (frecuente en amistosos donde dos arqueros juegan).
+- Al enviar puntajes: Supabase primero, localStorage después. Si el fetch falla (`!res.ok`), se lanza error y el localStorage no se setea → el usuario puede reintentar.
+- Los scores se persisten en localStorage en `lsScoresKey() + '_data'` (JSON) para restaurarlos al recargar, además del flag `lsScoresKey()` que indica "ya votó".
+- Post-submit: **nunca bloquear la pantalla** con overlay. Solo toast + botón "Ya enviaste ✓" deshabilitado. Los botones de puntaje individuales quedan activos (el usuario puede ver/modificar localmente pero no reenviar).
+- `tipo` field en cada jugador: `'titular'` / `'suplente'` / `'dt'`. Se lee del JSON del partido (`j.tipo`) con fallback `idx < 11 ? 'titular' : 'suplente'`. Debe estar en `data/partidos/{id}.json`.
+- `device_id` NO existe en la tabla `puntajes` de Supabase (sí en `formaciones`). No incluir en el payload de puntajes.
+
+### Formación — convenciones de `equipo.html`
+
+- Post-submit: nunca mostrar `#formation-success` overlay. Solo toast. El pitch queda libre para editar/descargar.
+- Tap-to-place: al hacer tap (< 12px movimiento) sobre un chip del banco, se llama `placeFromBench(p)` que posiciona al jugador según `POSICION_ZONE[p.posicion]` con collision avoidance en espiral.
+- `POSICION_ZONE`: `GK {x:50,y:87}`, `DEF {x:50,y:71}`, `MED {x:50,y:50}`, `DEL {x:50,y:26}`.
+
 ### TribunApp Stats Module (community data — Mundial)
 
 Pages showing community-generated data (formation votes + puntajes) for Mundial 2026:

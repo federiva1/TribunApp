@@ -616,7 +616,10 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 
   <div id="scores-list"></div>
   <button id="scores-confirm-btn">Confirmar puntajes</button>
-  <button id="scores-ver-resultados-btn" class="btn-secondary" style="margin-top:8px;">Ver resultados →</button>
+  <div style="display:flex;gap:8px;margin-top:8px;">
+    <button id="scores-download-btn" class="btn-secondary" style="flex:1;opacity:0.3;cursor:not-allowed;" disabled>Descargar</button>
+    <button id="scores-ver-resultados-btn" class="btn-secondary" style="flex:1;">Ver resultados →</button>
+  </div>
 
   <!-- success overlay -->
   <div id="scores-success">
@@ -1220,7 +1223,7 @@ async function initPuntajes() {
           return {
             num: enPlantel?.num ?? j.id,
             name: j.nombre,
-            fid: enPlantel?.fid ?? String(j.id),   // fid real del plantel para la foto
+            fid: enPlantel?.fid ?? String(j.id),   // plantel fid para foto (ahí están las imágenes)
             posicion: j.portero ? 'GK' : (enPlantel?.posicion || 'DEL'),
             tipo: j.tipo || (idx < 11 ? 'titular' : 'suplente'),
             fotmob_id: j.id
@@ -1240,9 +1243,12 @@ async function initPuntajes() {
   // Sobrescribir squad para puntajes (sólo para esta función)
   window._squadPuntajes = squadPuntajes;
 
+  // Restaurar puntajes previos si ya votó
   if (localStorage.getItem(lsScoresKey())) {
+    const saved = localStorage.getItem(lsScoresKey() + '_data');
+    if (saved) try { Object.assign(userScores, JSON.parse(saved)); } catch(e) {}
     const btn = document.getElementById('scores-confirm-btn');
-    btn.textContent = '✓ Ya puntuaste'; btn.style.background = '#2e7d32'; btn.style.opacity = '1';
+    btn.textContent = 'Ya enviaste ✓'; btn.style.background = '#2e7d32'; btn.style.opacity = '0.6'; btn.disabled = true;
   }
   renderScores();
 }
@@ -1288,18 +1294,16 @@ function renderScores() {
       const btns = document.createElement('div'); btns.className = 'score-btns';
       for (let i = 1; i <= 10; i++) {
         const btn = document.createElement('button'); btn.className = 'score-btn'; btn.textContent = i;
-        if (alreadyVoted) { btn.disabled = true; btn.style.opacity = '0.3'; btn.style.cursor = 'default'; }
-        else {
-          btn.addEventListener('click', () => {
-            userScores[p.num] = i;
-            btns.querySelectorAll('.score-btn').forEach((b, ix) => b.classList.toggle('selected', ix + 1 === i));
-            row.classList.add('voted');
-            checkScoresReady();
-          });
-        }
+        btn.addEventListener('click', () => {
+          userScores[p.num] = i;
+          btns.querySelectorAll('.score-btn:not(.skip)').forEach((b, ix) => b.classList.toggle('selected', ix + 1 === i));
+          row.classList.add('voted');
+          checkScoresReady();
+        });
+        if (userScores[p.num] === i) { btn.classList.add('selected'); row.classList.add('voted'); }
         btns.appendChild(btn);
       }
-      if (showSkip && !alreadyVoted) {
+      if (showSkip) {
         const skip = document.createElement('button'); skip.className = 'score-btn skip'; skip.textContent = 'S/P';
         skip.title = 'Sin puntaje';
         skip.addEventListener('click', () => {
@@ -1309,6 +1313,7 @@ function renderScores() {
           row.classList.add('voted');
           checkScoresReady();
         });
+        if (p.num in userScores && userScores[p.num] === null) { skip.classList.add('selected'); row.classList.add('voted'); }
         btns.appendChild(skip);
       }
       row.appendChild(btns); list.appendChild(row);
@@ -1321,42 +1326,67 @@ function renderScores() {
 }
 
 function checkScoresReady() {
-  const total   = (window._squadPuntajes || squad).length;
-  // Contar votos emitidos (incluyendo S/P = null)
-  const isReady = Object.keys(userScores).length === total && total > 0;
+  const sq = window._squadPuntajes || squad;
+  const alreadyVoted = !!localStorage.getItem(lsScoresKey());
+  // Verificar que cada jugador tiene su num en userScores (maneja nums duplicados en amistosos)
+  const isReady = sq.length > 0 && sq.every(p => p.num in userScores) && !alreadyVoted;
   const btn = document.getElementById('scores-confirm-btn');
+  btn.disabled = !isReady;
+  btn.style.opacity = isReady ? '1' : '0.3';
+  btn.style.cursor  = isReady ? 'pointer' : 'not-allowed';
   if (isReady && !scoresWasReady) { btn.classList.remove('ready'); void btn.offsetWidth; btn.classList.add('ready'); }
-  else if (!isReady) btn.classList.remove('ready');
   scoresWasReady = isReady;
+  // Habilitar descargar cuando todos estén puntuados
+  const allScored = sq.length > 0 && sq.every(p => p.num in userScores);
+  const dlBtn = document.getElementById('scores-download-btn');
+  if (dlBtn) { dlBtn.disabled = !allScored; dlBtn.style.opacity = allScored ? '1' : '0.3'; dlBtn.style.cursor = allScored ? 'pointer' : 'not-allowed'; }
 }
 
 document.getElementById('scores-confirm-btn').addEventListener('click', async () => {
   const btn = document.getElementById('scores-confirm-btn');
   if (localStorage.getItem(lsScoresKey())) return; // ya votó
   const sqP = window._squadPuntajes || squad;
-  if (Object.keys(userScores).length !== sqP.length || !sqP.length) return;
+  if (!sqP.length || !sqP.every(p => p.num in userScores)) return;
   btn.textContent = 'Enviando...'; btn.disabled = true;
   try {
-    localStorage.setItem(lsScoresKey(), '1');
     if (SUPABASE_URL) {
       const payload = {
         puntajes: userScores,
         club: slug,
         rival: estadoMundial.rival || null,
-        match_date: estadoMundial.match_date || null,
-        device_id: getDeviceId()
+        match_date: estadoMundial.match_date || null
       };
-      await fetch(`${SUPABASE_URL}/rest/v1/puntajes`, {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/puntajes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' },
         body: JSON.stringify(payload)
       });
+      if (!res.ok) { const err = await res.text(); throw new Error(err); }
     }
-    btn.textContent = '✓ Ya puntuaste'; btn.style.background = '#2e7d32'; btn.style.opacity = '1'; btn.classList.remove('ready');
-    const succ = document.getElementById('scores-success');
-    succ.style.display = 'flex'; succ.style.flexDirection = 'column';
-    succ.style.alignItems = 'center'; succ.style.justifyContent = 'center';
-  } catch(e) { showToast('Error de conexión.'); btn.disabled = false; btn.textContent = 'Confirmar puntajes'; }
+    localStorage.setItem(lsScoresKey(), '1');
+    localStorage.setItem(lsScoresKey() + '_data', JSON.stringify(userScores));
+    btn.textContent = 'Ya enviaste ✓'; btn.style.background = '#2e7d32'; btn.style.opacity = '0.6'; btn.disabled = true; btn.classList.remove('ready');
+    showToast('¡Puntajes enviados! 🎉');
+  } catch(e) { console.error('Puntajes error:', e); showToast('Error al enviar. Intentá de nuevo.'); btn.disabled = false; btn.textContent = 'Confirmar puntajes'; }
+});
+
+document.getElementById('scores-download-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('scores-download-btn');
+  btn.textContent = 'Generando...'; btn.disabled = true;
+  document.querySelectorAll('.xbtn').forEach(x => x.style.display = 'none');
+  try {
+    await new Promise(r => setTimeout(r, 150));
+    const el = document.getElementById('scores-list');
+    const canvas = await html2canvas(el, { backgroundColor: '#13131f', scale: 2, useCORS: true, logging: false });
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.font = `bold ${Math.round(canvas.width * 0.025)}px sans-serif`;
+    ctx.textAlign = 'right';
+    ctx.fillText(`Mis puntajes · ${nombreEquipo} · Mundial 2026`, canvas.width - 12, canvas.height - 10);
+    const link = document.createElement('a'); link.download = `mis-puntajes-${slug}.png`; link.href = canvas.toDataURL('image/png'); link.click();
+    showToast('Descargado!');
+  } catch(e) { showToast('No se pudo generar.'); }
+  finally { document.querySelectorAll('.xbtn').forEach(x => x.style.display = ''); btn.textContent = 'Descargar'; btn.disabled = false; }
 });
 
 document.getElementById('scores-ver-resultados-btn').addEventListener('click', showScoresResults);
