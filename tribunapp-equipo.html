@@ -256,17 +256,21 @@ function renderFormList(players, container) {
 }
 
 // ── Render podio puntajes ─────────────────────────────────────────────────
+function _puntName(num, squad) {
+  const sq = squad?.find(s => String(s.num) === String(num));
+  return sq?.name || (String(num) === '0' ? 'D.T.' : `#${num}`);
+}
+
 function renderPodio(players, container, squad) {
   if (!players.length) { container.innerHTML += '<div class="msg-center">Sin puntajes aún</div>'; return; }
   const top3 = players.slice(0, 3);
   const medals = ['🥇','🥈','🥉'];
   const podioEl = document.createElement('div'); podioEl.className = 'podio';
   top3.forEach((p, i) => {
-    const sq = squad?.find(s => String(s.num) === String(p.num));
     const item = document.createElement('div'); item.className = 'podio-item';
     item.innerHTML = `
       <div class="podio-medal">${medals[i]}</div>
-      <div class="podio-name">${sq?.name || p.num}</div>
+      <div class="podio-name">${_puntName(p.num, squad)}</div>
       <div class="podio-val">${p.avg}</div>
       <div class="podio-label">${p.votes} voto${p.votes!==1?'s':''}</div>`;
     podioEl.appendChild(item);
@@ -277,10 +281,9 @@ function renderPodio(players, container, squad) {
   const list = document.createElement('div'); list.className = 'form-list';
   list.innerHTML = `<div class="form-header"><span>JUGADOR</span><span class="fh-col">PROM.</span></div>`;
   players.slice(3).forEach(p => {
-    const sq = squad?.find(s => String(s.num) === String(p.num));
     const row = document.createElement('div'); row.className = 'form-row';
     row.innerHTML = `
-      <div class="form-row-name">${sq?.name || p.num}</div>
+      <div class="form-row-name">${_puntName(p.num, squad)}</div>
       <div class="form-row-pct" style="color:var(--gold)">${p.avg}</div>`;
     list.appendChild(row);
   });

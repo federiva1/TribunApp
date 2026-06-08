@@ -1129,6 +1129,7 @@ document.getElementById('back-formacion-results-btn').addEventListener('click', 
 async function showFormacionResults() {
   const rs = document.getElementById('formacion-results-screen');
   rs.style.display = 'flex'; rs.style.flexDirection = 'column';
+  document.getElementById('formacion-screen').scrollTop = 0;
   const list   = document.getElementById('formacion-results-list');
   const totalEl = document.getElementById('formacion-total-votes');
   list.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.3);padding:20px;font-size:13px;">Cargando...</div>';
