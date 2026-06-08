@@ -288,7 +288,7 @@ function renderPodio(players, container, squad) {
 }
 
 // ── Render tarjeta de partido (para lista de partidos) ────────────────────
-function renderPartidoCard(grupo, formRows, puntRows, container) {
+function renderPartidoCard(grupo, formRows, puntRows, container, squad = []) {
   const fecha = grupo.match_date ? new Date(grupo.match_date + 'T12:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'short'}) : '—';
   const nombreRival = nbR(grupo.rival || '?');
 
@@ -330,7 +330,7 @@ function renderPartidoCard(grupo, formRows, puntRows, container) {
       if (pCount) {
         const sl = document.createElement('div'); sl.className = 'slab'; sl.textContent = 'Puntajes';
         detail.appendChild(sl);
-        renderPodio(calcPuntajes(puntRows), detail, null);
+        renderPodio(calcPuntajes(puntRows), detail, squad);
       }
       if (!fCount && !pCount) detail.innerHTML = '<div class="msg-center">Sin datos</div>';
     }
@@ -346,11 +346,20 @@ function renderPartidoCard(grupo, formRows, puntRows, container) {
 
 // ── INIT ──────────────────────────────────────────────────────────────────
 async function init() {
-  let formaciones = [], puntajes = [];
+  let formaciones = [], puntajes = [], squad = [];
   try {
-    const data = await fetchAll();
+    const [data, plantelRes] = await Promise.all([
+      fetchAll(),
+      fetch(`/data/planteles/${slug}.json`).then(r => r.ok ? r.json() : null).catch(() => null)
+    ]);
     formaciones = data.formaciones;
     puntajes    = data.puntajes;
+    if (plantelRes) {
+      const raw = plantelRes.jugadores || plantelRes;
+      if (Array.isArray(raw)) {
+        squad = raw.map(p => ({ num: p.num ?? p.numero, name: p.name ?? p.nombre, fid: p.fid }));
+      }
+    }
   } catch(e) {
     document.getElementById('acc-loading').textContent = 'Error cargando datos.';
     document.getElementById('part-loading').textContent = 'Error cargando datos.';
@@ -375,7 +384,7 @@ async function init() {
     if (puntajes.length) {
       const sl = document.createElement('div'); sl.className = 'slab'; sl.textContent = `Puntajes · ${puntajes.length} votos`;
       accEl.appendChild(sl);
-      renderPodio(calcPuntajes(puntajes), accEl, null);
+      renderPodio(calcPuntajes(puntajes), accEl, squad);
     }
   }
 
@@ -404,7 +413,7 @@ async function init() {
 
     Object.values(grupos)
       .sort((a, b) => (a.match_date || '').localeCompare(b.match_date || ''))
-      .forEach(g => renderPartidoCard(g, g.fRows, g.pRows, partEl));
+      .forEach(g => renderPartidoCard(g, g.fRows, g.pRows, partEl, squad));
   }
 }
 

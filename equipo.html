@@ -1397,6 +1397,7 @@ document.getElementById('back-scores-results-btn').addEventListener('click', () 
 async function showScoresResults() {
   const rs = document.getElementById('scores-results-screen');
   rs.style.display = 'flex'; rs.style.flexDirection = 'column';
+  document.getElementById('puntajes-screen').scrollTop = 0;
   const list    = document.getElementById('scores-results-list');
   const totalEl = document.getElementById('scores-total-votes');
   list.innerHTML = '<div style="color:rgba(255,255,255,0.3);text-align:center;padding:20px;">Cargando...</div>';

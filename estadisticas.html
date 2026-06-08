@@ -418,7 +418,9 @@ function buildDetailPanel(j, cardId){
   return `<div class="psec-tabs">${tabs.join('')}</div>${contents.join('')}${portero}`;
 }
 
-function renderPlayers(jugs, teamSlug, containerId){
+function _normName(s){ return (s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim(); }
+
+function renderPlayers(jugs, teamSlug, containerId, squad){
   const container = document.getElementById(containerId);
   if(!jugs||!jugs.length){
     container.innerHTML=`<div class="no-data"><div class="no-data-icon">📋</div><div class="no-data-text">Sin datos de jugadores</div></div>`;
@@ -435,13 +437,16 @@ function renderPlayers(jugs, teamSlug, containerId){
 
     const detail = buildDetailPanel(j, cardId);
 
+    const enPlantel = squad && squad.find(s=>_normName(s.name||s.nombre)===_normName(j.nombre));
+    const fotoSrc = enPlantel && enPlantel.fid ? `fotos/${enPlantel.fid}.png` : '';
+
     const card = document.createElement('div');
     card.className='player-card';
     card.id=cardId;
     card.innerHTML=`
       <div class="player-row">
         <div class="player-avatar" style="background:${teamCol}20;border-color:${teamCol}40">
-          <img src="fotos/sin-foto.png" alt="" onerror="this.style.display='none'">
+          ${fotoSrc?`<img src="${fotoSrc}" alt="" onerror="this.style.display='none'">`:``}
         </div>
         <div class="player-info">
           <div class="player-name">
@@ -469,6 +474,16 @@ function renderPlayers(jugs, teamSlug, containerId){
     }
     container.appendChild(card);
   });
+}
+
+async function loadSquad(slug){
+  try{
+    const r = await fetch(`data/planteles/${slug}.json`);
+    if(!r.ok) return [];
+    const raw = await r.json();
+    const arr = raw.jugadores || raw;
+    return Array.isArray(arr) ? arr : [];
+  }catch(e){ return []; }
 }
 
 async function init(){
@@ -556,9 +571,10 @@ async function init(){
   document.getElementById('sw-name-local').textContent = nb(p.local).toUpperCase();
   document.getElementById('sw-name-visit').textContent = nb(p.visitante).toUpperCase();
 
-  // Render jugadores
-  renderPlayers(data.jugadores[p.local],   p.local,    'panel-local');
-  renderPlayers(data.jugadores[p.visitante],p.visitante,'panel-visit');
+  // Render jugadores (con fotos desde plantel)
+  const [sqLocal, sqVisit] = await Promise.all([loadSquad(p.local), loadSquad(p.visitante)]);
+  renderPlayers(data.jugadores[p.local],   p.local,    'panel-local',  sqLocal);
+  renderPlayers(data.jugadores[p.visitante],p.visitante,'panel-visit', sqVisit);
 
   // Team switch logic
   const btnL=document.getElementById('btn-local');
