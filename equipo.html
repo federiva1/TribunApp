@@ -1231,7 +1231,7 @@ async function initPuntajes() {
           };
         });
       }
-    } catch(e) { console.error('Error cargando jugadores del partido:', e); }
+    } catch(e) { console.error('Error cargando jugadores del partido'); }
   }
 
   // Añadir técnico como última entrada
@@ -1348,11 +1348,18 @@ document.getElementById('scores-confirm-btn').addEventListener('click', async ()
   if (localStorage.getItem(lsScoresKey())) return; // ya votó
   const sqP = window._squadPuntajes || squad;
   if (!sqP.length || !sqP.every(p => p.num in userScores)) return;
+
+  // Validar que todos los scores sean null (S/P) o entero 1-10
+  const validScores = Object.fromEntries(
+    Object.entries(userScores).filter(([,v]) => v === null || (Number.isInteger(v) && v >= 1 && v <= 10))
+  );
+  if (Object.keys(validScores).length !== Object.keys(userScores).length) return;
+
   btn.textContent = 'Enviando...'; btn.disabled = true;
   try {
     if (SUPABASE_URL) {
       const payload = {
-        puntajes: userScores,
+        puntajes: validScores,
         club: slug,
         rival: estadoMundial.rival || null,
         match_date: estadoMundial.match_date || null
@@ -1368,7 +1375,7 @@ document.getElementById('scores-confirm-btn').addEventListener('click', async ()
     localStorage.setItem(lsScoresKey() + '_data', JSON.stringify(userScores));
     btn.textContent = 'Ya enviaste ✓'; btn.style.background = '#2e7d32'; btn.style.opacity = '0.6'; btn.disabled = true; btn.classList.remove('ready');
     showToast('¡Puntajes enviados! 🎉');
-  } catch(e) { console.error('Puntajes error:', e); showToast('Error al enviar. Intentá de nuevo.'); btn.disabled = false; btn.textContent = 'Confirmar puntajes'; }
+  } catch(e) { console.error('Puntajes error'); showToast('Error al enviar. Intentá de nuevo.'); btn.disabled = false; btn.textContent = 'Confirmar puntajes'; }
 });
 
 document.getElementById('scores-download-btn').addEventListener('click', async () => {
@@ -1502,7 +1509,7 @@ async function init() {
 
   } catch(e) {
     document.getElementById('club-nombre').textContent = 'Error';
-    console.error(e);
+    console.error('Error de inicialización');
   }
 }
 
