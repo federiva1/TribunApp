@@ -497,10 +497,6 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
       <div class="club-header-nombre" id="club-nombre">Cargando...</div>
       <div class="club-header-sub" id="club-sub"></div>
     </div>
-    <div class="club-header-pills">
-      <a class="club-header-pill" id="pill-stats" href="#">📊 Estadísticas</a>
-      <a class="club-header-pill" id="pill-tribunapp" href="#">📣 Est. TribunApp</a>
-    </div>
   </header>
 
   <!-- HERO PANELS -->
@@ -523,6 +519,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 
   <div class="secondary-row">
     <button class="sec-btn" onclick="openSection('estadisticas')">📊 Estadísticas</button>
+    <a class="sec-btn" id="btn-tribunapp" href="#" style="text-decoration:none;">📣 Est. TribunApp</a>
   </div>
 
 </div>
@@ -1485,8 +1482,7 @@ async function init() {
     document.getElementById('club-escudo').src = `escudos/${slug}.png`;
     document.getElementById('club-nombre').textContent = nombreEquipo.toUpperCase();
     document.getElementById('club-sub').textContent = plantelData.grupo ? `GRUPO ${plantelData.grupo}` : '';
-    document.getElementById('pill-stats').href = `estadisticas-torneo.html#${slug}`;
-    document.getElementById('pill-tribunapp').href = `tribunapp-equipo.html?c=${slug}`;
+    document.getElementById('btn-tribunapp').href = `tribunapp-equipo.html?c=${slug}`;
 
     // Aplicar color del equipo al CSS
     colorEquipo = COLORES_EQUIPO[slug] || '#1565c0';
