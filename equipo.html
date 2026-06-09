@@ -668,6 +668,8 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="js/config.js"></script>
 <script>
+(function() {
+'use strict';
 // ============================================================
 // CONFIG
 // ============================================================
@@ -755,7 +757,7 @@ let plantelData = null;
 let squad = [];  // [{num, name, fid, posicion}] — formato interno normalizado
 let slug = '';
 let nombreEquipo = '';
-let estadoMundial = { puntajesOpen: false, rival: null, match_date: null }; // cargado desde estado_mundial.json
+let estadoMundial = { puntajesOpen: false, rival: null, match_date: null };
 
 // localStorage keys — incluyen match_date para que cada partido tenga su propio voto
 const lsFormKey     = () => `${slug}_${estadoMundial.match_date||'x'}_formacion`;
@@ -1384,6 +1386,18 @@ document.getElementById('scores-confirm-btn').addEventListener('click', async ()
 
   btn.textContent = 'Enviando...'; btn.disabled = true;
   try {
+    // Re-validar estado real desde el servidor antes de insertar
+    try {
+      const chk = await fetch(`data/estado_mundial.json?v=${Date.now()}`);
+      if (chk.ok) {
+        const chkData = await chk.json();
+        if (!chkData[slug]?.puntajesOpen) {
+          btn.textContent = 'Confirmar puntajes'; btn.disabled = false;
+          return;
+        }
+      }
+    } catch(_) { /* red caída: continuar */ }
+
     if (SUPABASE_URL) {
       const payload = {
         puntajes: validScores,
@@ -1814,6 +1828,12 @@ async function loadAcumulado() {
   const teamColor = getComputedStyle(document.documentElement).getPropertyValue('--acento').trim() || '#1565c0';
   lista.forEach((j, idx) => wrap.appendChild(accBuildCard(j, idx, teamColor)));
 }
+
+// Exponer al HTML solo las funciones necesarias para onclick
+window.openSection  = openSection;
+window.closeSection = closeSection;
+
+})(); // fin IIFE
 </script>
 </body>
 </html>
