@@ -36,6 +36,11 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
 .header-pill:hover{background:rgba(21,101,192,.18);border-color:rgba(21,101,192,.4);color:#fff;}
 .header-pill-label{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;color:#fff;}
 .header-pill.active-pill{background:rgba(245,197,24,.12);border-color:rgba(245,197,24,.35);color:#fff;}
+@media (max-width: 500px) {
+  .header-pill-label { display: none; }
+  .header-pill { padding: 6px 10px; gap: 0; }
+  .header-pills { gap: 6px; }
+}
 
 /* MAIN */
 #main{padding:24px 16px 60px;max-width:700px;margin:0 auto;}

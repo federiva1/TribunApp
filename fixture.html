@@ -44,6 +44,12 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 }
 .header-pill:hover { background: rgba(21,101,192,0.18); border-color: rgba(21,101,192,0.4); color: #fff; }
 .header-pill-label { font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 1px; color: #fff; }
+@media (max-width: 500px) {
+  .header-pill-label { display: none; }
+  .header-pill { padding: 6px 10px; gap: 0; }
+  .card-btns { gap: 6px; }
+  .card-btn-ficha, .card-btn-stats { font-size: 11px; padding: 5px 8px; }
+}
 
 /* ===== MAIN ===== */
 #main { padding: 24px 16px 60px; max-width: 700px; margin: 0 auto; }
