@@ -27,8 +27,11 @@ jobs:
           API_SPORTS_KEY: ${{ secrets.API_SPORTS_KEY }}
         run: python scripts/fetch_mundial_standings.py
 
+      - name: Update estado_mundial (rival + match_date por equipo)
+        run: python scripts/fetch_mundial_estado.py
+
       - name: Commit if changed
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: 'chore: update mundial data [skip ci]'
-          file_pattern: data/fixtures/mundial.json data/estado_torneo.json
+          file_pattern: data/fixtures/mundial.json data/estado_torneo.json data/estado_mundial.json
