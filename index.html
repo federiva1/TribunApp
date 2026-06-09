@@ -346,7 +346,7 @@ async function cargar() {
     const ts = Date.now();
     const [resEquipos, resEstado] = await Promise.all([
       fetch(`data/equipos.json?t=${ts}`),
-      fetch(`data/estado_mundial.json?t=${ts}`),
+      fetch(`data/estado_torneo.json?t=${ts}`),
     ]);
     const equipos = await resEquipos.json();
     const estado  = await resEstado.json();
