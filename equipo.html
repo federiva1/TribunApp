@@ -619,9 +619,8 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 
   <!-- banner -->
   <div style="width:100%;height:100px;background:url('fotos/bg-puntajes.png') center/cover no-repeat;border-radius:10px;margin-bottom:14px;position:relative;overflow:hidden;">
-    <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.15) 0%,rgba(19,19,31,0.88) 100%);display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;padding:10px 14px;gap:2px;">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:#fff;line-height:1;">⭐ PUNTUÁ EL PARTIDO</div>
-      <div id="puntajes-equipo-tag" style="font-family:'Bebas Neue',sans-serif;font-size:14px;color:var(--acento-light);letter-spacing:1px;line-height:1;"></div>
+    <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.15) 0%,rgba(19,19,31,0.88) 100%);display:flex;align-items:flex-end;padding:10px 14px;">
+      <img id="puntajes-equipo-flag" src="" alt="" style="width:52px;height:52px;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.7));">
     </div>
   </div>
 
@@ -1200,7 +1199,7 @@ let userScores = {}, scoresWasReady = false, puntajesInited = false;
 async function initPuntajes() {
   if (puntajesInited) return;
   puntajesInited = true;
-  document.getElementById('puntajes-equipo-tag').textContent = nombreEquipo.toUpperCase();
+  document.getElementById('puntajes-equipo-flag').src = `escudos/${slug}.png`;
 
   // Si puntajes está cerrado, mostrar mensaje
   if (!estadoMundial.puntajesOpen) {
