@@ -170,8 +170,6 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 
 <script src="js/clubes.js"></script>
 <script>
-const API_KEY = 'b8bbfc856fd5cf12cd7d697b2b01887d';
-
 const LIBERTADORES_SLUGS = ['estudiantes','independienterivadavia','bocajuniors','clubatleticoplatense','lanus','rosariocentral'];
 const SUDAMERICANA_SLUGS = ['tigre','sanlorenzo','racingclub','deportivoriestra','riverplate','barracascentral'];
 
@@ -199,9 +197,7 @@ function renderGrid(slugs, containerId, copa) {
 
 // ── Grupos en vivo ──────────────────────────────────────────────────────────
 async function fetchStandings(leagueId) {
-  const res = await fetch(`https://v3.football.api-sports.io/standings?league=${leagueId}&season=2026`, {
-    headers: { 'x-apisports-key': API_KEY }
-  });
+  const res = await fetch(`/api/apisports/standings?league=${leagueId}&season=2026`);
   const d = await res.json();
   return d.response?.[0]?.league?.standings || [];
 }

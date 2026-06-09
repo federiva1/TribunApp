@@ -782,7 +782,6 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 // ============================================================
 // CONFIG GLOBAL
 // ============================================================
-const API_KEY_TABLA = 'b8bbfc856fd5cf12cd7d697b2b01887d';
 
 // ---- Leer club desde URL ----
 const params = new URLSearchParams(window.location.search);
@@ -1715,7 +1714,7 @@ async function renderFixture() {
   cont.innerHTML = '<div style="text-align:center;color:#555;padding:30px;font-size:13px;">Cargando...</div>';
   const leagueId = COPA === 'libertadores' ? 13 : COPA === 'sudamericana' ? 11 : 128;
   try {
-    const res = await fetch(`https://v3.football.api-sports.io/fixtures?team=${CLUB.id}&season=2026&league=${leagueId}`, { headers: { 'x-apisports-key': API_KEY_TABLA } });
+    const res = await fetch(`/api/apisports/fixtures?team=${CLUB.id}&season=2026&league=${leagueId}`);
     const d = await res.json();
     _fixtureCache = d.response || [];
     _renderFixtureList(_filterByTorneo(_fixtureCache), cont);

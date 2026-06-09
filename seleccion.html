@@ -380,7 +380,6 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 // ============================================================
 // CONFIG
 // ============================================================
-const API_KEY = 'b8bbfc856fd5cf12cd7d697b2b01887d';
 const ARG_TEAM_ID = 6;
 const FOTO_SEL = fid => `fotos/seleccion/${fid}.png`;
 function getDeviceId() { let id=localStorage.getItem('tribunapp_device_id'); if(!id){id='dev_'+Math.random().toString(36).substr(2,12)+Date.now().toString(36);localStorage.setItem('tribunapp_device_id',id);} return id; }
@@ -416,10 +415,7 @@ function closeSelSection() {
 async function loadRecentPlayers() {
   try {
     // 1. Obtener últimos 5 fixtures de Argentina en todos los torneos
-    const fixtRes = await fetch(
-      `https://v3.football.api-sports.io/fixtures?team=${ARG_TEAM_ID}&last=5`,
-      { headers: { 'x-apisports-key': API_KEY } }
-    );
+    const fixtRes = await fetch(`/api/apisports/fixtures?team=${ARG_TEAM_ID}&last=5`);
     const fixtData = await fixtRes.json();
     const fixtures = fixtData.response || [];
     if (!fixtures.length) { showEmptyState(); return; }
@@ -428,10 +424,7 @@ async function loadRecentPlayers() {
     const playerMap = {}; // fid -> jugador
     await Promise.all(fixtures.map(async f => {
       try {
-        const lineupRes = await fetch(
-          `https://v3.football.api-sports.io/fixtures/lineups?fixture=${f.fixture.id}`,
-          { headers: { 'x-apisports-key': API_KEY } }
-        );
+        const lineupRes = await fetch(`/api/apisports/fixtures/lineups?fixture=${f.fixture.id}`);
         const lineupData = await lineupRes.json();
         const argLineup = (lineupData.response || []).find(l => l.team.id === ARG_TEAM_ID);
         if (!argLineup) return;
