@@ -1227,7 +1227,7 @@ async function initPuntajes() {
             fid: enPlantel?.fid ?? String(j.id),   // plantel fid para foto (ahí están las imágenes)
             posicion: j.portero ? 'GK' : (enPlantel?.posicion || 'DEL'),
             tipo: j.tipo || (idx < 11 ? 'titular' : 'suplente'),
-            fotmob_id: j.id
+            _src_id: j.id
           };
         });
       }
