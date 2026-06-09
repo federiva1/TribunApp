@@ -1,4 +1,4 @@
-name: Update Mundial Fixtures
+name: Update Mundial Fixtures & Standings
 
 on:
   schedule:
@@ -22,8 +22,13 @@ jobs:
           API_SPORTS_KEY: ${{ secrets.API_SPORTS_KEY }}
         run: python scripts/fetch_mundial_fixtures.py
 
+      - name: Fetch Mundial standings
+        env:
+          API_SPORTS_KEY: ${{ secrets.API_SPORTS_KEY }}
+        run: python scripts/fetch_mundial_standings.py
+
       - name: Commit if changed
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: 'chore: update mundial fixtures [skip ci]'
-          file_pattern: data/fixtures/mundial.json
+          commit_message: 'chore: update mundial data [skip ci]'
+          file_pattern: data/fixtures/mundial.json data/estado_torneo.json

@@ -465,6 +465,44 @@ async function cargar() {
 }
 
 cargar();
+
+// Live scores: poll cada 60s si hay partido en curso
+let _liveInterval = null;
+
+function hayPartidoEnCurso() {
+  const live = ['1H','HT','2H','ET','BT','P','SUSP'];
+  return todosPartidos.some(p => live.includes(p.status?.short));
+}
+
+async function pollLive() {
+  try {
+    const res = await fetch(`data/fixtures/mundial.json?t=${Date.now()}`);
+    if (!res.ok) return;
+    const fresh = await res.json();
+    const changed = JSON.stringify(fresh) !== JSON.stringify(todosPartidos);
+    if (changed) {
+      todosPartidos = fresh;
+      renderPartidos();
+    }
+    if (!hayPartidoEnCurso()) {
+      clearInterval(_liveInterval);
+      _liveInterval = null;
+    }
+  } catch(e) {}
+}
+
+function iniciarLivePoll() {
+  if (_liveInterval) return;
+  _liveInterval = setInterval(pollLive, 60000);
+}
+
+// Arrancar poll si ya hay partido en curso al cargar
+setTimeout(() => { if (hayPartidoEnCurso()) iniciarLivePoll(); }, 2000);
+
+// Reanudar poll cuando la pestaña vuelve a estar activa
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && hayPartidoEnCurso()) iniciarLivePoll();
+});
 </script>
 </body>
 </html>

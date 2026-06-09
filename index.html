@@ -437,13 +437,14 @@ function renderGrupos(equipos, estado) {
 
       let statsHTML = '';
       if (statsEquipo) {
-        const dg = statsEquipo.gf - statsEquipo.gc;
+        const dg = statsEquipo.dg ?? (statsEquipo.gf - statsEquipo.gc);
         const dgStr = dg > 0 ? `+${dg}` : `${dg}`;
         const ptsClass = pos === 1 ? 'stat-pts lider' : pos === 2 ? 'stat-pts segundo' : 'stat-pts';
         statsHTML = `
           <div class="equipo-stats">
-            <span class="stat-pj">${dgStr}</span>
-            <span class="${ptsClass}">${statsEquipo.pts}</span>
+            <span class="stat-pj" title="Partidos jugados">${statsEquipo.pj ?? 0}</span>
+            <span class="stat-dg" title="Diferencia de goles">${dgStr}</span>
+            <span class="${ptsClass}" title="Puntos">${statsEquipo.pts ?? 0}</span>
           </div>`;
       }
 
