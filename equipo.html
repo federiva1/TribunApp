@@ -1245,9 +1245,13 @@ async function initPuntajes() {
     } catch(e) { console.error('Error cargando jugadores del partido'); }
   }
 
-  // Añadir técnico como última entrada
+  // Añadir técnico como última entrada (soporta string legacy o {nombre, fid})
   const tecnico = plantelData.tecnico || null;
-  if (tecnico) squadPuntajes.push({ num: 0, name: tecnico, fid: 0, posicion: 'TEC', tipo: 'dt' });
+  if (tecnico) {
+    const dtNombre = typeof tecnico === 'object' ? tecnico.nombre : tecnico;
+    const dtFid    = typeof tecnico === 'object' ? (tecnico.fid || 0) : 0;
+    squadPuntajes.push({ num: 0, name: dtNombre, fid: dtFid, posicion: 'TEC', tipo: 'dt' });
+  }
 
   // Si no cargó nada del partido, fallback al squad completo
   if (!squadPuntajes.length) squadPuntajes = squad;
