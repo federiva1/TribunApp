@@ -101,12 +101,80 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   background: rgba(42,213,114,0.04);
 }
 .partido-card.terminado { opacity: 0.75; }
-.partido-card.con-stats { cursor: pointer; opacity: 1; }
-.partido-card.con-stats:hover { background: rgba(255,255,255,0.07); border-color: rgba(21,101,192,0.3); opacity: 1; }
-.stats-badge {
-  font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 1px;
-  color: var(--acento-light); text-transform: uppercase; margin-top: 8px; text-align: center;
+.partido-card.terminado:has(.card-btns) { opacity: 1; }
+
+/* Botones footer de la card */
+.card-btns {
+  display: flex; gap: 8px; margin-top: 12px; justify-content: center; flex-wrap: wrap;
 }
+.card-btn {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600;
+  letter-spacing: 1.2px; text-transform: uppercase; padding: 5px 12px; border-radius: 4px;
+  border: none; cursor: pointer; transition: background 0.15s, opacity 0.15s;
+  text-decoration: none; display: inline-flex; align-items: center; gap: 5px;
+}
+.card-btn-ficha {
+  background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.75);
+}
+.card-btn-ficha:hover { background: rgba(255,255,255,0.14); }
+.card-btn-stats {
+  background: rgba(21,101,192,0.25); color: var(--acento-light);
+}
+.card-btn-stats:hover { background: rgba(21,101,192,0.4); }
+
+/* Panel ficha inline */
+.ficha-panel {
+  margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.07);
+  padding-top: 12px; display: none;
+}
+.ficha-panel.abierto { display: block; }
+.ficha-loading {
+  text-align: center; padding: 20px; color: rgba(255,255,255,0.3);
+  font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 2px;
+}
+.ficha-cols {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+}
+.ficha-equipo-titulo {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.35);
+  margin-bottom: 8px; text-align: center;
+}
+.ficha-jugador {
+  display: flex; align-items: center; gap: 7px; padding: 4px 6px; border-radius: 4px;
+  transition: background 0.1s;
+}
+.ficha-jugador:hover { background: rgba(255,255,255,0.04); }
+.ficha-jugador-foto {
+  width: 28px; height: 28px; border-radius: 50%; object-fit: cover; flex-shrink: 0;
+  background: rgba(255,255,255,0.06);
+}
+.ficha-jugador-num {
+  font-family: 'Bebas Neue', sans-serif; font-size: 13px; color: rgba(255,255,255,0.25);
+  min-width: 16px; text-align: center; flex-shrink: 0;
+}
+.ficha-jugador-info { flex: 1; min-width: 0; }
+.ficha-jugador-nombre {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 600;
+  color: rgba(255,255,255,0.85); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ficha-jugador-nombre.capitan::after { content: ' (C)'; color: rgba(255,255,255,0.3); font-weight: 400; }
+.ficha-jugador-eventos { display: flex; gap: 3px; align-items: center; flex-shrink: 0; }
+.ev-icon { font-size: 12px; line-height: 1; }
+.ficha-subs {
+  margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;
+}
+.ficha-subs-titulo {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 2px;
+  text-transform: uppercase; color: rgba(255,255,255,0.2); margin-bottom: 6px; text-align: center;
+}
+.ficha-sub-fila {
+  display: flex; align-items: center; gap: 4px; padding: 3px 6px; font-size: 12px;
+  font-family: 'Barlow Condensed', sans-serif; color: rgba(255,255,255,0.55);
+}
+.ficha-sub-min { color: rgba(255,255,255,0.25); min-width: 28px; }
+.ficha-sub-out { color: rgba(255,80,80,0.7); }
+.ficha-sub-in  { color: rgba(42,213,114,0.8); }
 
 /* Meta del partido: grupo y horario */
 .partido-meta {
@@ -348,28 +416,21 @@ function renderPartidos() {
 
 function crearCardPartido(p) {
   const tieneStats = p.stats_id && p.status.finished;
-  const card = tieneStats ? document.createElement('a') : document.createElement('div');
+  const tieneFicha = !!p.api_id;
+  const card = document.createElement('div');
   const { started, finished, cancelled } = p.status;
   const enCurso = started && !finished;
 
   let claseCard = 'partido-card';
   if (enCurso) claseCard += ' en-curso';
   if (finished) claseCard += ' terminado';
-  if (tieneStats) claseCard += ' con-stats';
   card.className = claseCard;
-  if (tieneStats) {
-    card.href = `estadisticas.html?p=${p.stats_id}`;
-    card.style.textDecoration = 'none';
-    card.style.color = 'inherit';
-    card.style.display = 'block';
-  }
 
   const slugHome = p.home.slug || slugPorId[p.home.id] || slugDeNombre(p.home.name);
   const slugAway = p.away.slug || slugPorId[p.away.id] || slugDeNombre(p.away.name);
   const nomHome = NOMBRES_ES[slugHome] || p.home.name;
   const nomAway = NOMBRES_ES[slugAway] || p.away.name;
 
-  // Resultados (soporta score en home.score o en home_score raíz)
   const golesHome = p.home.score ?? p.home_score ?? null;
   const golesAway = p.away.score ?? p.away_score ?? null;
   const hayMarcador = golesHome !== null && golesAway !== null;
@@ -381,7 +442,6 @@ function crearCardPartido(p) {
     else if (golesAway > golesHome) { claseNomAway += ' ganador'; claseNomHome += ' perdedor'; }
   }
 
-  // Grupo o ronda
   let metaLabel = '';
   if (p.group) metaLabel = `Grupo ${p.group}`;
   else if (p.round === '1/16') metaLabel = 'Octavos de Final';
@@ -391,7 +451,6 @@ function crearCardPartido(p) {
   else if (p.round === 'bronze') metaLabel = 'Tercer Puesto';
   else if (p.round === 'final')  metaLabel = 'GRAN FINAL';
 
-  // Horario
   let horaHTML = '';
   if (enCurso) {
     horaHTML = `<span class="partido-hora en-curso">EN VIVO</span>`;
@@ -401,7 +460,6 @@ function crearCardPartido(p) {
     horaHTML = `<span class="partido-hora">${formatearHora(p.status.utcTime)} hs</span>`;
   }
 
-  // Marcador central
   let marcadorHTML = '';
   if (hayMarcador) {
     marcadorHTML = `
@@ -415,6 +473,15 @@ function crearCardPartido(p) {
   }
 
   const metaRonda = p.round === 'amistoso' ? 'Amistoso' : metaLabel;
+
+  let btnsHTML = '';
+  if (tieneFicha || tieneStats) {
+    btnsHTML = '<div class="card-btns">';
+    if (tieneFicha) btnsHTML += `<button class="card-btn card-btn-ficha" data-api="${p.api_id}" data-home="${nomHome}" data-away="${nomAway}" data-hslug="${slugHome}" data-aslug="${slugAway}">📋 Ver ficha</button>`;
+    if (tieneStats) btnsHTML += `<a class="card-btn card-btn-stats" href="estadisticas.html?p=${p.stats_id}">📊 Ver estadísticas →</a>`;
+    btnsHTML += '</div>';
+  }
+
   card.innerHTML = `
     <div class="partido-meta">
       <span class="partido-grupo">${metaRonda}</span>
@@ -431,10 +498,138 @@ function crearCardPartido(p) {
         <span class="${claseNomAway}">${nomAway}</span>
       </div>
     </div>
-    ${tieneStats ? '<div class="stats-badge">📊 Ver estadísticas →</div>' : ''}
+    ${btnsHTML}
+    <div class="ficha-panel" id="ficha-${p.api_id || ''}"></div>
   `;
 
+  // Bind del botón VER FICHA
+  if (tieneFicha) {
+    const btn = card.querySelector('.card-btn-ficha');
+    btn.addEventListener('click', () => toggleFicha(p, btn, card));
+  }
+
   return card;
+}
+
+// Cache de fichas ya cargadas
+const _fichaCache = {};
+
+async function toggleFicha(p, btn, card) {
+  const panel = card.querySelector('.ficha-panel');
+  const abierto = panel.classList.contains('abierto');
+  if (abierto) {
+    panel.classList.remove('abierto');
+    btn.textContent = '📋 Ver ficha';
+    return;
+  }
+  panel.classList.add('abierto');
+  btn.textContent = '📋 Ocultar ficha';
+
+  if (_fichaCache[p.api_id]) {
+    panel.innerHTML = _fichaCache[p.api_id];
+    return;
+  }
+
+  panel.innerHTML = '<div class="ficha-loading">CARGANDO...</div>';
+
+  try {
+    const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+    const base = isLocal
+      ? 'https://v3.football.api-sports.io'
+      : '/api/apisports';
+    const headers = isLocal ? { 'x-apisports-key': 'b8bbfc856fd5cf12cd7d697b2b01887d' } : {};
+    const [resLinea, resEv] = await Promise.all([
+      fetch(`${base}/fixtures/lineups?fixture=${p.api_id}`, { headers }),
+      fetch(`${base}/fixtures/events?fixture=${p.api_id}`, { headers }),
+    ]);
+    const [dLinea, dEv] = await Promise.all([resLinea.json(), resEv.json()]);
+
+    const lineups = (dLinea.response || []);
+    const events  = (dEv.response || []);
+
+    const html = renderFicha(lineups, events, p);
+    _fichaCache[p.api_id] = html;
+    panel.innerHTML = html;
+  } catch(e) {
+    panel.innerHTML = `<div class="ficha-loading">No disponible</div>`;
+  }
+}
+
+function renderFicha(lineups, events, p) {
+  if (!lineups.length) return '<div class="ficha-loading">Sin datos de alineación</div>';
+
+  // Indexar eventos por playerId
+  const evByPlayer = {};
+  for (const ev of events) {
+    const pid = ev.player?.id;
+    if (!pid) continue;
+    if (!evByPlayer[pid]) evByPlayer[pid] = [];
+    evByPlayer[pid].push(ev);
+  }
+  // Subs: cambios indexados por equipo (api-sports team id)
+  const subsByTeam = {};
+  for (const ev of events) {
+    if (ev.type !== 'subst') continue;
+    const tid = ev.team?.id;
+    if (!subsByTeam[tid]) subsByTeam[tid] = [];
+    subsByTeam[tid].push(ev);
+  }
+
+  function iconosJugador(pid) {
+    const evs = evByPlayer[pid] || [];
+    return evs.map(ev => {
+      if (ev.type === 'Goal') return ev.detail === 'Own Goal' ? '<span class="ev-icon" title="Gol en contra">⚽🔴</span>' : '<span class="ev-icon" title="Gol">⚽</span>';
+      if (ev.type === 'Card') return ev.detail === 'Yellow Card' ? '<span class="ev-icon" title="Amarilla">🟨</span>' : '<span class="ev-icon" title="Roja">🟥</span>';
+      if (ev.type === 'Assist') return '<span class="ev-icon" title="Asistencia">🅰️</span>';
+      return '';
+    }).join('');
+  }
+
+  function renderEquipo(lineup) {
+    const tid = lineup.team?.id;
+    const jugadores = [...(lineup.startXI || []), ...(lineup.substitutes || [])];
+    const titulares = lineup.startXI || [];
+    const suplentes = lineup.substitutes || [];
+    const subs = subsByTeam[tid] || [];
+
+    let html = `<div class="ficha-equipo-titulo">${lineup.team?.name || ''}</div>`;
+
+    for (const j of titulares) {
+      const pl = j.player;
+      const foto = `https://media.api-sports.io/football/players/${pl.id}.png`;
+      const cap = pl.captain ? ' capitan' : '';
+      html += `
+        <div class="ficha-jugador">
+          <img class="ficha-jugador-foto" src="${foto}" alt="" onerror="this.src='data:image/svg+xml,<svg xmlns=\\'http://www.w3.org/2000/svg\\'/>'" >
+          <span class="ficha-jugador-num">${pl.number || ''}</span>
+          <div class="ficha-jugador-info">
+            <div class="ficha-jugador-nombre${cap}">${pl.name || ''}</div>
+          </div>
+          <div class="ficha-jugador-eventos">${iconosJugador(pl.id)}</div>
+        </div>`;
+    }
+
+    if (subs.length) {
+      html += `<div class="ficha-subs"><div class="ficha-subs-titulo">Cambios</div>`;
+      for (const s of subs) {
+        html += `
+          <div class="ficha-sub-fila">
+            <span class="ficha-sub-min">${s.time?.elapsed}'</span>
+            <span class="ficha-sub-out">↓ ${s.player?.name || ''}</span>
+            <span style="color:rgba(255,255,255,0.2)"> / </span>
+            <span class="ficha-sub-in">↑ ${s.assist?.name || ''}</span>
+          </div>`;
+      }
+      html += '</div>';
+    }
+
+    return html;
+  }
+
+  const col1 = lineups[0] ? renderEquipo(lineups[0]) : '';
+  const col2 = lineups[1] ? renderEquipo(lineups[1]) : '';
+
+  return `<div class="ficha-cols"><div>${col1}</div><div>${col2}</div></div>`;
 }
 
 async function cargar() {
