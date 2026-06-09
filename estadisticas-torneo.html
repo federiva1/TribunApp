@@ -256,6 +256,7 @@ function nbSlug(s){
     haiti:'Haití',curacao:'Curazao',algeria:'Argelia',
     capeverde:'Cabo Verde',newzealand:'Nueva Zelanda',uzbekistan:'Uzbekistán',
     drcongo:'RD Congo',bosniaandherzegovina:'Bosnia y Herz.',paraguay:'Paraguay'};
+  if (!s) return '';
   return map[s] || (s.charAt(0).toUpperCase()+s.slice(1));
 }
 
@@ -371,23 +372,28 @@ async function init(){
   const conStats = equiposConStats(partidosIndex);
 
   // Render equipos (solo mundialistas — los que tienen slug mundialista)
-  // Filtrar solo los 48 (los que tienen grupo definido)
-  const mundialistas = todosEquipos.filter(e=>e.grupo && e.slug);
-  renderEquipos(mundialistas, conStats);
-
-  // Buscador
-  document.getElementById('search-input').addEventListener('input', e=>{
-    renderEquipos(mundialistas, conStats, e.target.value);
-  });
+  const mundialistas = (Array.isArray(todosEquipos) ? todosEquipos : []).filter(e=>e.grupo && e.slug);
+  try {
+    renderEquipos(mundialistas, conStats);
+    document.getElementById('search-input').addEventListener('input', e=>{
+      renderEquipos(mundialistas, conStats, e.target.value);
+    });
+  } catch(e) {
+    document.getElementById('equipos-grid').innerHTML='<div class="loading-msg">Error mostrando equipos</div>';
+  }
 
   // Líderes
-  const {goles, asists, info} = await computarLideres(partidosIndex);
-  const grid = document.getElementById('lideres-grid');
-  if(Object.keys(goles).length===0 && Object.keys(asists).length===0){
-    grid.innerHTML='<div class="lider-pronto" style="grid-column:1/-1;">Los destacados aparecerán cuando se jueguen los primeros partidos.</div>';
-  } else {
-    grid.innerHTML = buildLiderBloque('⚽ Goleadores', goles, info)
-                   + buildLiderBloque('🎯 Asistidores', asists, info);
+  try {
+    const {goles, asists, info} = await computarLideres(partidosIndex);
+    const grid = document.getElementById('lideres-grid');
+    if(Object.keys(goles).length===0 && Object.keys(asists).length===0){
+      grid.innerHTML='<div class="lider-pronto" style="grid-column:1/-1;">Los destacados aparecerán cuando se jueguen los primeros partidos.</div>';
+    } else {
+      grid.innerHTML = buildLiderBloque('⚽ Goleadores', goles, info)
+                     + buildLiderBloque('🎯 Asistidores', asists, info);
+    }
+  } catch(e) {
+    document.getElementById('lideres-grid').innerHTML='';
   }
 }
 
