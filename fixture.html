@@ -364,8 +364,8 @@ function crearCardPartido(p) {
     card.style.display = 'block';
   }
 
-  const slugHome = slugPorId[p.home.id] || slugDeNombre(p.home.name);
-  const slugAway = slugPorId[p.away.id] || slugDeNombre(p.away.name);
+  const slugHome = p.home.slug || slugPorId[p.home.id] || slugDeNombre(p.home.name);
+  const slugAway = p.away.slug || slugPorId[p.away.id] || slugDeNombre(p.away.name);
   const nomHome = NOMBRES_ES[slugHome] || p.home.name;
   const nomAway = NOMBRES_ES[slugAway] || p.away.name;
 
@@ -447,9 +447,10 @@ async function cargar() {
     todosPartidos = await resFixture.json();
     const equipos = await resEquipos.json();
 
-    // Mapear id → slug
+    // Mapear id → slug (FotMob id y api-sports id)
     for (const eq of equipos) {
       slugPorId[String(eq.id)] = eq.slug;
+      if (eq.api_id) slugPorId[String(eq.api_id)] = eq.slug;
     }
 
     renderFaseTabs();
