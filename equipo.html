@@ -47,6 +47,16 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   font-family: 'Barlow Condensed', sans-serif; font-size: 10px;
   letter-spacing: 1.5px; color: rgba(255,255,255,0.35); margin-top: 2px;
 }
+.club-header-pills {
+  display: flex; flex-direction: column; gap: 5px; flex-shrink: 0; align-items: flex-end;
+}
+.club-header-pill {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600;
+  letter-spacing: 1.2px; text-transform: uppercase; padding: 4px 9px; border-radius: 4px;
+  text-decoration: none; transition: background 0.15s; white-space: nowrap;
+  background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.6);
+}
+.club-header-pill:hover { background: rgba(255,255,255,0.13); color: #fff; }
 
 /* ===== HERO PANELS ===== */
 .hero-panels { display: flex; flex-direction: column; }
@@ -485,7 +495,11 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
     <img class="club-header-escudo" id="club-escudo" src="" alt="">
     <div class="club-header-info">
       <div class="club-header-nombre" id="club-nombre">Cargando...</div>
-      <div class="club-header-sub" id="club-sub">Mundial 2026</div>
+      <div class="club-header-sub" id="club-sub"></div>
+    </div>
+    <div class="club-header-pills">
+      <a class="club-header-pill" id="pill-stats" href="#">📊 Estadísticas</a>
+      <a class="club-header-pill" id="pill-tribunapp" href="#">🏆 TribunApp</a>
     </div>
   </header>
 
@@ -1470,7 +1484,9 @@ async function init() {
     document.title = `${nombreEquipo} — Mundial 2026`;
     document.getElementById('club-escudo').src = `escudos/${slug}.png`;
     document.getElementById('club-nombre').textContent = nombreEquipo.toUpperCase();
-    document.getElementById('club-sub').textContent = `GRUPO ${plantelData.grupo} · MUNDIAL 2026`;
+    document.getElementById('club-sub').textContent = plantelData.grupo ? `GRUPO ${plantelData.grupo}` : '';
+    document.getElementById('pill-stats').href = `estadisticas-torneo.html#${slug}`;
+    document.getElementById('pill-tribunapp').href = `tribunapp-equipo.html?c=${slug}`;
 
     // Aplicar color del equipo al CSS
     colorEquipo = COLORES_EQUIPO[slug] || '#1565c0';

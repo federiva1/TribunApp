@@ -490,11 +490,15 @@ function crearCardPartido(p) {
     <div class="partido-fila">
       <div class="equipo-home">
         <span class="${claseNomHome}">${nomHome}</span>
-        <img class="partido-flag" src="escudos/${slugHome}.png" alt="${nomHome}" onerror="this.style.opacity='0.1'">
+        <a href="equipo.html?c=${slugHome}" onclick="event.stopPropagation()">
+          <img class="partido-flag" src="escudos/${slugHome}.png" alt="${nomHome}" onerror="this.style.opacity='0.1'">
+        </a>
       </div>
       ${marcadorHTML}
       <div class="equipo-away">
-        <img class="partido-flag" src="escudos/${slugAway}.png" alt="${nomAway}" onerror="this.style.opacity='0.1'">
+        <a href="equipo.html?c=${slugAway}" onclick="event.stopPropagation()">
+          <img class="partido-flag" src="escudos/${slugAway}.png" alt="${nomAway}" onerror="this.style.opacity='0.1'">
+        </a>
         <span class="${claseNomAway}">${nomAway}</span>
       </div>
     </div>
