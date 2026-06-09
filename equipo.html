@@ -778,6 +778,19 @@ function getDeviceId() {
 
 // ── Navegación entre secciones ─────────────────────────────────────────────
 function openSection(id) {
+  if (id === 'puntajes' && !estadoMundial.puntajesOpen) {
+    // Animación de shake en el panel para indicar que está bloqueado
+    const panel = document.querySelector('.hero-panel:last-of-type');
+    if (panel) {
+      panel.style.transition = 'transform 0.08s';
+      const shakes = [6, -6, 4, -4, 2, 0];
+      shakes.reduce((p, x, i) => p.then(() => new Promise(r => {
+        panel.style.transform = `translateX(${x}px)`;
+        setTimeout(r, 60);
+      })), Promise.resolve()).then(() => { panel.style.transform = ''; });
+    }
+    return;
+  }
   const el = document.getElementById(id + '-screen');
   if (el.parentNode !== document.body) document.body.appendChild(el);
   el.style.display = 'block';
@@ -1508,12 +1521,15 @@ async function init() {
         if (estado[slug]) {
           estadoMundial = estado[slug];
           const badge = document.getElementById('badge-puntajes');
+          const puntPanel = document.querySelector('.hero-panel:last-of-type');
           if (estadoMundial.puntajesOpen) {
             badge.textContent = 'ABIERTO';
             badge.className = 'hero-badge abierto';
+            if (puntPanel) puntPanel.style.cursor = 'pointer';
           } else {
             badge.textContent = 'CERRADO';
             badge.className = 'hero-badge cerrado';
+            if (puntPanel) puntPanel.style.cursor = 'not-allowed';
           }
         }
       }
