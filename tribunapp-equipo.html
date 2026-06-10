@@ -16,14 +16,13 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{--dark:#0d0d1a;--dark2:#13131f;--acento:#f5c518;--acento-light:#f5c518;}
+:root{--dark:#0d0d1a;--dark2:#13131f;--acento:#f5c518;--gold:#f5c518;}
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark);color:#fff;}
 #app{background:var(--dark2);max-width:480px;margin:0 auto;min-height:100vh;}
 
 .header{
   display:flex;align-items:center;gap:12px;padding:14px 14px 12px;
-  background:linear-gradient(180deg,rgba(0,0,0,.25) 0%,transparent 100%);
   border-bottom:1px solid rgba(255,255,255,.07);
   position:sticky;top:0;z-index:20;backdrop-filter:blur(10px);background-color:var(--dark2);
 }
@@ -37,79 +36,30 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
 .header-nombre{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;}
 .header-sub{font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1.5px;color:rgba(255,255,255,.35);}
 
+/* MATCH BANNER */
+.match-banner{
+  margin:16px 16px 0;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  border-radius:14px;padding:16px;
+  display:flex;align-items:center;gap:14px;
+}
+.mb-team{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;}
+.mb-escudo{width:44px;height:44px;object-fit:contain;}
+.mb-name{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;text-align:center;color:#fff;line-height:1.2;}
+.mb-sep{display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0;}
+.mb-vs{font-family:'Bebas Neue',sans-serif;font-size:22px;color:rgba(255,255,255,.3);}
+.mb-fecha{font-family:'Barlow Condensed',sans-serif;font-size:9px;letter-spacing:2px;color:rgba(255,255,255,.25);text-transform:uppercase;text-align:center;white-space:nowrap;}
+
 .content{padding:20px 16px 60px;}
 
-/* TABS ACUMULADO / PARTIDOS */
-.tabs-nav{display:flex;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:20px;}
-.tab-btn{
-  flex:1;padding:10px;text-align:center;cursor:pointer;
-  font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:1px;
-  color:rgba(255,255,255,.4);border-bottom:2px solid transparent;
-  transition:color .15s,border-color .15s;text-transform:uppercase;
-}
-.tab-btn.active{color:#fff;border-color:var(--acento);}
-
-.tab-panel{display:none;}
-.tab-panel.active{display:block;}
-
-/* SECCIÓN LABEL */
 .slab{
   font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:2px;
   color:rgba(255,255,255,.3);text-transform:uppercase;margin:20px 0 8px;
 }
 
-/* PARTIDO CARD */
-.partido-card{
-  display:flex;align-items:center;gap:12px;padding:14px;
-  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
-  border-radius:12px;margin-bottom:8px;cursor:pointer;text-decoration:none;color:inherit;
-  transition:background .15s,border-color .15s;
-}
-.partido-card:hover{background:rgba(255,255,255,.08);}
-.pc-escudos{display:flex;align-items:center;gap:4px;flex-shrink:0;}
-.pc-escudo{width:24px;height:24px;object-fit:contain;}
-.pc-sep{font-family:'Bebas Neue',sans-serif;font-size:13px;color:rgba(255,255,255,.3);}
-.pc-info{flex:1;min-width:0;}
-.pc-resultado{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;display:flex;align-items:center;gap:6px;}
-.pc-score{font-size:18px;}
-.pc-meta{font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1px;color:rgba(255,255,255,.3);text-transform:uppercase;margin-top:2px;}
-.pc-arrow{color:rgba(255,255,255,.2);}
-.pc-counts{
-  font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:.5px;
-  color:rgba(255,255,255,.4);text-align:right;flex-shrink:0;line-height:1.6;
-}
-.pc-counts span{display:block;}
-.pc-counts .hl{color:var(--acento);}
-
-/* JUGADOR ROW en acumulado */
-.jug-row{
-  display:flex;align-items:center;gap:12px;padding:10px 0;
-  border-bottom:1px solid rgba(255,255,255,.05);
-}
-.jug-row:last-child{border-bottom:none;}
-.jug-avatar{width:38px;height:38px;border-radius:50%;object-fit:cover;background:rgba(255,255,255,.08);flex-shrink:0;}
-.jug-name{flex:1;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;}
-.jug-val{font-family:'Bebas Neue',sans-serif;font-size:22px;min-width:48px;text-align:right;}
-.jug-pct{color:#42a5f5;}
-.jug-avg{color:#f5c518;}
-.jug-bar-wrap{flex:1;height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;}
-.jug-bar{height:100%;border-radius:2px;background:var(--acento);}
-
-/* PODIO */
-.podio{display:flex;gap:8px;margin-bottom:20px;}
-.podio-item{
-  flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
-  border-radius:12px;padding:12px 8px;text-align:center;
-}
-.podio-medal{font-size:20px;margin-bottom:6px;}
-.podio-name{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:#fff;line-height:1.2;}
-.podio-val{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--gold);}
-.podio-label{font-family:'Barlow Condensed',sans-serif;font-size:9px;letter-spacing:1px;color:rgba(255,255,255,.3);text-transform:uppercase;}
-
-/* LOADING / EMPTY */
 .msg-center{text-align:center;padding:40px 20px;font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:1px;color:rgba(255,255,255,.3);text-transform:uppercase;}
 
-/* FORMACIONES — barra de selección */
+/* FORMACIONES */
 .form-list{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px;overflow:hidden;margin-bottom:16px;}
 .form-header{display:flex;padding:8px 14px;background:rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.06);}
 .form-header span:first-child{flex:1;font-family:'Barlow Condensed',sans-serif;font-size:9px;letter-spacing:1.5px;color:rgba(255,255,255,.3);text-transform:uppercase;}
@@ -121,43 +71,55 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
 .form-row-pct{width:52px;text-align:center;font-family:'Bebas Neue',sans-serif;font-size:18px;color:#42a5f5;}
 .form-row-bar{width:52px;height:3px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;margin:0 8px;}
 .form-row-bar-fill{height:100%;border-radius:2px;background:#42a5f5;}
+
+/* PODIO */
+.podio{display:flex;gap:8px;margin-bottom:20px;}
+.podio-item{flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px 8px;text-align:center;}
 .podio-foto{width:44px;height:44px;border-radius:50%;object-fit:cover;background:rgba(255,255,255,.08);margin:0 auto 6px;display:block;}
+.podio-medal{font-size:20px;margin-bottom:6px;}
+.podio-name{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:#fff;line-height:1.2;}
+.podio-val{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--gold);}
+.podio-label{font-family:'Barlow Condensed',sans-serif;font-size:9px;letter-spacing:1px;color:rgba(255,255,255,.3);text-transform:uppercase;}
 </style>
 </head>
 <body>
 <div id="app">
   <div class="header">
-    <a class="header-back" href="estadisticas-tribunapp.html">← Volver</a>
+    <a class="header-back" href="estadisticas-tribunapp.html">&#8592; Volver</a>
     <div class="header-info">
       <img class="header-escudo" id="h-escudo" src="" alt="">
       <div>
         <div class="header-nombre" id="h-nombre"></div>
-        <div class="header-sub" id="h-sub">TRIBUNAPP · MUNDIAL 2026</div>
+        <div class="header-sub">TRIBUNAPP &middot; MUNDIAL 2026</div>
       </div>
     </div>
   </div>
 
+  <div class="match-banner" id="match-banner" style="display:none">
+    <div class="mb-team">
+      <img class="mb-escudo" id="mb-esc-local" src="" alt="" onerror="this.style.opacity='.2'">
+      <div class="mb-name" id="mb-nom-local"></div>
+    </div>
+    <div class="mb-sep">
+      <div class="mb-vs">VS</div>
+      <div class="mb-fecha" id="mb-fecha"></div>
+    </div>
+    <div class="mb-team">
+      <img class="mb-escudo" id="mb-esc-rival" src="" alt="" onerror="this.style.opacity='.2'">
+      <div class="mb-name" id="mb-nom-rival"></div>
+    </div>
+  </div>
+
   <div class="content">
-    <div class="tabs-nav">
-      <div class="tab-btn active" data-tab="acumulado">Acumulado</div>
-      <div class="tab-btn" data-tab="partidos">Partidos</div>
-    </div>
-
-    <!-- TAB ACUMULADO -->
-    <div class="tab-panel active" id="tab-acumulado">
-      <div class="msg-center" id="acc-loading">Cargando…</div>
-    </div>
-
-    <!-- TAB PARTIDOS -->
-    <div class="tab-panel" id="tab-partidos">
-      <div class="msg-center" id="part-loading">Cargando…</div>
+    <div id="main-content">
+      <div class="msg-center">Cargando&hellip;</div>
     </div>
   </div>
 </div>
 
 <script src="js/config.js"></script>
 <script>
-const NAMES_ES = {
+var NAMES_ES = {
   czechia:'Chequia',mexico:'México',southafrica:'Sudáfrica',southkorea:'Corea del Sur',
   bosniaandherzegovina:'Bosnia y Herz.',canada:'Canadá',qatar:'Qatar',switzerland:'Suiza',
   brazil:'Brasil',haiti:'Haití',morocco:'Marruecos',scotland:'Escocia',
@@ -169,281 +131,206 @@ const NAMES_ES = {
   france:'Francia',iraq:'Irak',norway:'Noruega',senegal:'Senegal',
   algeria:'Argelia',argentina:'Argentina',austria:'Austria',jordan:'Jordania',
   colombia:'Colombia',drcongo:'Rep. D. del Congo',portugal:'Portugal',uzbekistan:'Uzbekistán',
-  croatia:'Croacia',england:'Inglaterra',ghana:'Ghana',panama:'Panamá',
+  croatia:'Croacia',england:'Inglaterra',ghana:'Ghana',panama:'Panamá'
 };
 
-const nbR = s => NAMES_ES[s] || s;
-const params = new URLSearchParams(location.search);
-const slug = params.get('c');
+var params = new URLSearchParams(location.search);
+var slug = params.get('c');
 if (!slug) location.href = 'estadisticas-tribunapp.html';
 
-const SB_URL = typeof _SUPABASE_URL !== 'undefined' ? _SUPABASE_URL : '';
-const SB_KEY = typeof _SUPABASE_KEY !== 'undefined' ? _SUPABASE_KEY : '';
-const SB_H   = { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` };
+var SB_URL = typeof _SUPABASE_URL !== 'undefined' ? _SUPABASE_URL : '';
+var SB_KEY = typeof _SUPABASE_KEY !== 'undefined' ? _SUPABASE_KEY : '';
+var SB_H   = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY };
 
-document.getElementById('h-escudo').src = `escudos/${slug}.png`;
+document.getElementById('h-escudo').src = 'escudos/' + slug + '.png';
 document.getElementById('h-nombre').textContent = (NAMES_ES[slug] || slug).toUpperCase();
 
-// Tabs
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-  });
-});
-
-// ── Fetch datos de Supabase ────────────────────────────────────────────────
-async function fetchAll() {
-  if (!SB_URL) return { formaciones: [], puntajes: [] };
-  const [rF, rP] = await Promise.all([
-    fetch(`${SB_URL}/rest/v1/formaciones?select=jugadores,match_date,rival&club=eq.${slug}&order=match_date.asc`, { headers: SB_H }),
-    fetch(`${SB_URL}/rest/v1/puntajes?select=puntajes,match_date,rival&club=eq.${slug}&order=match_date.asc`,    { headers: SB_H }),
-  ]);
-  const [formaciones, puntajes] = await Promise.all([rF.json(), rP.json()]);
-  return { formaciones: formaciones || [], puntajes: puntajes || [] };
-}
-
-// ── Agrupar por partido (match_date + rival) ───────────────────────────────
-function agruparPorPartido(rows) {
-  const map = {};
-  rows.forEach(r => {
-    const key = `${r.match_date}|${r.rival}`;
-    if (!map[key]) map[key] = { match_date: r.match_date, rival: r.rival, rows: [] };
-    map[key].rows.push(r);
-  });
-  return Object.values(map).sort((a, b) => a.match_date?.localeCompare(b.match_date));
-}
-
-// ── Calcular % de elección en formaciones ─────────────────────────────────
 function calcFormaciones(rows) {
-  const counts = {}, total = rows.length;
-  rows.forEach(r => {
-    (r.jugadores || []).forEach(j => {
-      const k = j.name || `#${j.num}`;
+  var counts = {}, total = rows.length;
+  rows.forEach(function(r) {
+    (r.jugadores || []).forEach(function(j) {
+      var k = j.name || ('#' + j.num);
       if (!counts[k]) counts[k] = { name: k, fid: j.fid || 0, count: 0 };
       counts[k].count++;
     });
   });
   return Object.values(counts)
-    .map(p => ({ ...p, pct: Math.round((p.count / total) * 100) }))
-    .sort((a, b) => b.pct - a.pct);
+    .map(function(p) { return Object.assign({}, p, { pct: Math.round((p.count / total) * 100) }); })
+    .sort(function(a, b) { return b.pct - a.pct; });
 }
 
-// ── Calcular promedio puntajes ─────────────────────────────────────────────
 function calcPuntajes(rows) {
-  const totals = {}, counts = {};
-  rows.forEach(r => {
-    Object.entries(r.puntajes || {}).forEach(([num, val]) => {
+  var totals = {}, counts = {};
+  rows.forEach(function(r) {
+    Object.entries(r.puntajes || {}).forEach(function(entry) {
+      var num = entry[0], val = entry[1];
       totals[num] = (totals[num] || 0) + Number(val);
       counts[num] = (counts[num] || 0) + 1;
     });
   });
-  return Object.keys(totals).map(num => ({
-    num, avg: +(totals[num] / counts[num]).toFixed(1), votes: counts[num]
-  })).sort((a, b) => b.avg - a.avg);
+  return Object.keys(totals).map(function(num) {
+    return { num: num, avg: +(totals[num] / counts[num]).toFixed(1), votes: counts[num] };
+  }).sort(function(a, b) { return b.avg - a.avg; });
 }
 
-// ── Render formaciones list ───────────────────────────────────────────────
-function _fotoSrc(name, squadRef) {
-  const sq = squadRef?.find(s => s.name === name);
-  return sq?.fid ? `fotos/${sq.fid}.png` : '';
-}
-
-function renderFormList(players, container, squadRef) {
-  if (!players.length) { container.innerHTML += '<div class="msg-center">Sin formaciones aún</div>'; return; }
-  const wrap = document.createElement('div'); wrap.className = 'form-list';
-  wrap.innerHTML = `
-    <div class="form-header">
-      <span>JUGADOR</span>
-      <span class="fh-col">%</span>
-    </div>`;
-  players.forEach(p => {
-    const foto = _fotoSrc(p.name, squadRef);
-    const row = document.createElement('div'); row.className = 'form-row';
-    row.innerHTML = `
-      ${foto ? `<img class="form-row-foto" src="${foto}" alt="" onerror="this.style.opacity='.2'">` : '<div class="form-row-foto"></div>'}
-      <div class="form-row-name">${p.name}</div>
-      <div class="form-row-bar"><div class="form-row-bar-fill" style="width:${p.pct}%"></div></div>
-      <div class="form-row-pct">${p.pct}%</div>`;
+function renderFormList(players, container) {
+  if (!players.length) {
+    var d = document.createElement('div'); d.className = 'msg-center'; d.textContent = 'Sin formaciones aún';
+    container.appendChild(d); return;
+  }
+  var wrap = document.createElement('div'); wrap.className = 'form-list';
+  var hdr = document.createElement('div'); hdr.className = 'form-header';
+  hdr.innerHTML = '<span>JUGADOR</span><span class="fh-col">%</span>';
+  wrap.appendChild(hdr);
+  players.forEach(function(p) {
+    var row = document.createElement('div'); row.className = 'form-row';
+    var foto = p.fid ? '<img class="form-row-foto" src="fotos/' + p.fid + '.png" alt="" onerror="this.style.opacity=\'.2\'">' : '<div class="form-row-foto"></div>';
+    row.innerHTML = foto +
+      '<div class="form-row-name">' + p.name + '</div>' +
+      '<div class="form-row-bar"><div class="form-row-bar-fill" style="width:' + p.pct + '%"></div></div>' +
+      '<div class="form-row-pct">' + p.pct + '%</div>';
     wrap.appendChild(row);
   });
   container.appendChild(wrap);
 }
 
-// ── Render podio puntajes ─────────────────────────────────────────────────
-function _puntName(num, squad) {
-  const sq = squad?.find(s => String(s.num) === String(num));
-  return sq?.name || (String(num) === '0' ? 'D.T.' : `#${num}`);
+function puntName(num, squad) {
+  var sq = squad && squad.find(function(s) { return String(s.num) === String(num); });
+  return sq ? sq.name : (String(num) === '0' ? 'D.T.' : '#' + num);
 }
-
-function _puntFid(num, squad) {
-  const sq = squad?.find(s => String(s.num) === String(num));
-  return sq?.fid || null;
+function puntFid(num, squad) {
+  var sq = squad && squad.find(function(s) { return String(s.num) === String(num); });
+  return sq ? sq.fid : null;
 }
 
 function renderPodio(players, container, squad) {
-  if (!players.length) { container.innerHTML += '<div class="msg-center">Sin puntajes aún</div>'; return; }
-  const top3 = players.slice(0, 3);
-  const medals = ['🥇','🥈','🥉'];
-  const podioEl = document.createElement('div'); podioEl.className = 'podio';
-  top3.forEach((p, i) => {
-    const fid = _puntFid(p.num, squad);
-    const item = document.createElement('div'); item.className = 'podio-item';
-    item.innerHTML = `
-      ${fid ? `<img class="podio-foto" src="fotos/${fid}.png" alt="" onerror="this.style.opacity='.1'">` : '<div class="podio-foto"></div>'}
-      <div class="podio-medal">${medals[i]}</div>
-      <div class="podio-name">${_puntName(p.num, squad)}</div>
-      <div class="podio-val">${p.avg}</div>
-      <div class="podio-label">${p.votes} voto${p.votes!==1?'s':''}</div>`;
+  if (!players.length) {
+    var d = document.createElement('div'); d.className = 'msg-center'; d.textContent = 'Sin puntajes aún';
+    container.appendChild(d); return;
+  }
+  var top3 = players.slice(0, 3);
+  var medals = ['🥇','🥈','🥉'];
+  var podioEl = document.createElement('div'); podioEl.className = 'podio';
+  top3.forEach(function(p, i) {
+    var fid = puntFid(p.num, squad);
+    var item = document.createElement('div'); item.className = 'podio-item';
+    var foto = fid ? '<img class="podio-foto" src="fotos/' + fid + '.png" alt="" onerror="this.style.opacity=\'.1\'">' : '<div class="podio-foto"></div>';
+    item.innerHTML = foto +
+      '<div class="podio-medal">' + medals[i] + '</div>' +
+      '<div class="podio-name">' + puntName(p.num, squad) + '</div>' +
+      '<div class="podio-val">' + p.avg + '</div>' +
+      '<div class="podio-label">' + p.votes + ' voto' + (p.votes !== 1 ? 's' : '') + '</div>';
     podioEl.appendChild(item);
   });
   container.appendChild(podioEl);
 
-  // Resto de jugadores
-  const list = document.createElement('div'); list.className = 'form-list';
-  list.innerHTML = `<div class="form-header"><span>JUGADOR</span><span class="fh-col">PROM.</span></div>`;
-  players.slice(3).forEach(p => {
-    const fid = _puntFid(p.num, squad);
-    const row = document.createElement('div'); row.className = 'form-row';
-    row.innerHTML = `
-      ${fid ? `<img class="form-row-foto" src="fotos/${fid}.png" alt="" onerror="this.style.opacity='.1'">` : '<div class="form-row-foto"></div>'}
-      <div class="form-row-name">${_puntName(p.num, squad)}</div>
-      <div class="form-row-pct" style="color:var(--gold)">${p.avg}</div>`;
-    list.appendChild(row);
-  });
-  container.appendChild(list);
+  if (players.length > 3) {
+    var list = document.createElement('div'); list.className = 'form-list';
+    var lhdr = document.createElement('div'); lhdr.className = 'form-header';
+    lhdr.innerHTML = '<span>JUGADOR</span><span class="fh-col">PROM.</span>';
+    list.appendChild(lhdr);
+    players.slice(3).forEach(function(p) {
+      var fid = puntFid(p.num, squad);
+      var row = document.createElement('div'); row.className = 'form-row';
+      var foto = fid ? '<img class="form-row-foto" src="fotos/' + fid + '.png" alt="" onerror="this.style.opacity=\'.1\'">' : '<div class="form-row-foto"></div>';
+      row.innerHTML = foto +
+        '<div class="form-row-name">' + puntName(p.num, squad) + '</div>' +
+        '<div class="form-row-pct" style="color:var(--gold)">' + p.avg + '</div>';
+      list.appendChild(row);
+    });
+    container.appendChild(list);
+  }
 }
 
-// ── Render tarjeta de partido (para lista de partidos) ────────────────────
-function renderPartidoCard(grupo, formRows, puntRows, container, squad = []) {
-  const fecha = grupo.match_date ? new Date(grupo.match_date + 'T12:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'short'}) : '—';
-  const nombreRival = nbR(grupo.rival || '?');
-
-  const card = document.createElement('div'); card.className = 'partido-card';
-  const fCount = formRows.length, pCount = puntRows.length;
-  card.innerHTML = `
-    <div class="pc-escudos">
-      <img class="pc-escudo" src="escudos/${slug}.png" alt="" onerror="this.style.opacity='.2'">
-      <span class="pc-sep">vs</span>
-      <img class="pc-escudo" src="escudos/${grupo.rival||'x'}.png" alt="" onerror="this.style.opacity='.2'">
-    </div>
-    <div class="pc-info">
-      <div class="pc-resultado">vs ${nombreRival.toUpperCase()}</div>
-      <div class="pc-meta">${fecha}</div>
-    </div>
-    <div class="pc-counts">
-      <span>${fCount > 0 ? `<b class="hl">${fCount}</b> form.` : '—'}</span>
-      <span>${pCount > 0 ? `<b class="hl">${pCount}</b> punt.` : '—'}</span>
-    </div>
-    <div class="pc-arrow">›</div>`;
-
-  // Al hacer click, expande los detalles del partido
-  const detail = document.createElement('div');
-  detail.style.display = 'none';
-  detail.style.padding = '0 0 16px';
-
-  let expanded = false;
-  card.addEventListener('click', async () => {
-    expanded = !expanded;
-    card.querySelector('.pc-arrow').textContent = expanded ? '▼' : '›';
-    if (expanded && !detail.dataset.loaded) {
-      detail.dataset.loaded = '1';
-      detail.innerHTML = '';
-      if (fCount) {
-        const sl = document.createElement('div'); sl.className = 'slab'; sl.textContent = 'Elección de formación';
-        detail.appendChild(sl);
-        renderFormList(calcFormaciones(formRows), detail, squad);
-      }
-      if (pCount) {
-        const sl = document.createElement('div'); sl.className = 'slab'; sl.textContent = 'Puntajes';
-        detail.appendChild(sl);
-        renderPodio(calcPuntajes(puntRows), detail, squad);
-      }
-      if (!fCount && !pCount) detail.innerHTML = '<div class="msg-center">Sin datos</div>';
-    }
-    detail.style.display = expanded ? 'block' : 'none';
-  });
-
-  const wrap = document.createElement('div');
-  wrap.style.marginBottom = '8px';
-  wrap.appendChild(card);
-  wrap.appendChild(detail);
-  container.appendChild(wrap);
+function renderContent(formaciones, puntajes, squad, mainEl) {
+  mainEl.innerHTML = '';
+  if (!formaciones.length && !puntajes.length) {
+    mainEl.innerHTML = '<div class="msg-center">Aún no hay votos para este partido.</div>';
+    return;
+  }
+  if (formaciones.length) {
+    var sl1 = document.createElement('div'); sl1.className = 'slab';
+    sl1.textContent = 'Elección de formación · ' + formaciones.length + ' voto' + (formaciones.length !== 1 ? 's' : '');
+    mainEl.appendChild(sl1);
+    renderFormList(calcFormaciones(formaciones), mainEl);
+  }
+  if (puntajes.length) {
+    var sl2 = document.createElement('div'); sl2.className = 'slab';
+    sl2.textContent = 'Puntajes · ' + puntajes.length + ' voto' + (puntajes.length !== 1 ? 's' : '');
+    mainEl.appendChild(sl2);
+    renderPodio(calcPuntajes(puntajes), mainEl, squad);
+  }
 }
 
-// ── INIT ──────────────────────────────────────────────────────────────────
 async function init() {
-  let formaciones = [], puntajes = [], squad = [];
+  var mainEl = document.getElementById('main-content');
+
+  var estado = null;
   try {
-    const [data, plantelRes] = await Promise.all([
-      fetchAll(),
-      fetch(`/data/planteles/${slug}.json`).then(r => r.ok ? r.json() : null).catch(() => null)
-    ]);
-    formaciones = data.formaciones;
-    puntajes    = data.puntajes;
-    if (plantelRes) {
-      const raw = plantelRes.jugadores || plantelRes;
-      if (Array.isArray(raw)) {
-        squad = raw.map(p => ({ num: p.num ?? p.numero, name: p.name ?? p.nombre, fid: p.fid }));
+    var r0 = await fetch('data/estado_mundial.json?v=' + Date.now());
+    var json0 = await r0.json();
+    estado = json0[slug] || null;
+  } catch(e) {}
+
+  var squad = [];
+  try {
+    var rp = await fetch('data/planteles/' + slug + '.json');
+    if (rp.ok) {
+      var raw = await rp.json();
+      var arr = raw.jugadores || raw;
+      if (Array.isArray(arr)) {
+        squad = arr.map(function(p) {
+          return { num: p.num != null ? p.num : p.numero, name: p.name || p.nombre, fid: p.fid };
+        });
       }
     }
+  } catch(e) {}
+
+  var rival     = estado ? (estado.rival      || '') : '';
+  var matchDate = estado ? (estado.match_date || '') : '';
+
+  if (rival && matchDate) {
+    var fechaFmt = new Date(matchDate + 'T12:00:00').toLocaleDateString('es-AR', { day:'numeric', month:'short', year:'numeric' });
+
+    var roundLabel = '';
+    try {
+      var rm = await fetch('data/fixtures/mundial.json');
+      var partidos = await rm.json();
+      var found = partidos.find(function(p) {
+        return p.date === matchDate && p.home && p.away && (
+          (p.home.slug === slug && p.away.slug === rival) ||
+          (p.away.slug === slug && p.home.slug === rival)
+        );
+      });
+      if (found && found.roundName) roundLabel = found.roundName;
+      else if (found && found.round) roundLabel = 'Fecha ' + found.round;
+    } catch(e) {}
+
+    document.getElementById('match-banner').style.display = 'flex';
+    document.getElementById('mb-esc-local').src  = 'escudos/' + slug  + '.png';
+    document.getElementById('mb-nom-local').textContent  = (NAMES_ES[slug]  || slug).toUpperCase();
+    document.getElementById('mb-esc-rival').src  = 'escudos/' + rival + '.png';
+    document.getElementById('mb-nom-rival').textContent  = (NAMES_ES[rival] || rival).toUpperCase();
+    document.getElementById('mb-fecha').textContent = (roundLabel ? roundLabel + ' · ' : '') + fechaFmt;
+  }
+
+  if (!SB_URL) { mainEl.innerHTML = '<div class="msg-center">Sin datos aún.</div>'; return; }
+
+  var formaciones = [], puntajes = [];
+  try {
+    var fBase = SB_URL + '/rest/v1/formaciones?select=jugadores,match_date,rival&club=eq.' + slug;
+    var pBase = SB_URL + '/rest/v1/puntajes?select=puntajes,match_date,rival&club=eq.'    + slug;
+    var fUrl = fBase + (matchDate && rival ? '&match_date=eq.' + matchDate + '&rival=eq.' + rival : '&order=match_date.desc');
+    var pUrl = pBase + (matchDate && rival ? '&match_date=eq.' + matchDate + '&rival=eq.' + rival : '&order=match_date.desc');
+    var results = await Promise.all([fetch(fUrl, {headers: SB_H}), fetch(pUrl, {headers: SB_H})]);
+    formaciones = await results[0].json() || [];
+    puntajes    = await results[1].json() || [];
   } catch(e) {
-    document.getElementById('acc-loading').textContent = 'Error cargando datos.';
-    document.getElementById('part-loading').textContent = 'Error cargando datos.';
+    mainEl.innerHTML = '<div class="msg-center">Error cargando datos.</div>';
     return;
   }
 
-  const partForm = agruparPorPartido(formaciones);
-  const partPunt = agruparPorPartido(puntajes);
-
-  // ── TAB ACUMULADO ──
-  const accEl = document.getElementById('tab-acumulado');
-  accEl.innerHTML = '';
-
-  if (!formaciones.length && !puntajes.length) {
-    accEl.innerHTML = '<div class="msg-center">Aún no hay datos de la comunidad para este equipo.</div>';
-  } else {
-    if (formaciones.length) {
-      const sl = document.createElement('div'); sl.className = 'slab'; sl.textContent = `Elección de formación · ${formaciones.length} votos`;
-      accEl.appendChild(sl);
-      renderFormList(calcFormaciones(formaciones), accEl, squad);
-    }
-    if (puntajes.length) {
-      const sl = document.createElement('div'); sl.className = 'slab'; sl.textContent = `Puntajes · ${puntajes.length} votos`;
-      accEl.appendChild(sl);
-      renderPodio(calcPuntajes(puntajes), accEl, squad);
-    }
-  }
-
-  // ── TAB PARTIDOS ──
-  const partEl = document.getElementById('tab-partidos');
-  partEl.innerHTML = '';
-
-  // Unir partidos de formaciones y puntajes por key
-  const allKeys = new Set([...partForm, ...partPunt].map(g => `${g.match_date}|${g.rival}`));
-
-  if (!allKeys.size) {
-    partEl.innerHTML = '<div class="msg-center">Sin partidos con datos aún.</div>';
-  } else {
-    // Reconstruir grupos unificados
-    const grupos = {};
-    [...formaciones].forEach(r => {
-      const k = `${r.match_date}|${r.rival}`;
-      if (!grupos[k]) grupos[k] = { match_date: r.match_date, rival: r.rival, fRows: [], pRows: [] };
-      grupos[k].fRows.push(r);
-    });
-    [...puntajes].forEach(r => {
-      const k = `${r.match_date}|${r.rival}`;
-      if (!grupos[k]) grupos[k] = { match_date: r.match_date, rival: r.rival, fRows: [], pRows: [] };
-      grupos[k].pRows.push(r);
-    });
-
-    Object.values(grupos)
-      .sort((a, b) => (a.match_date || '').localeCompare(b.match_date || ''))
-      .forEach(g => renderPartidoCard(g, g.fRows, g.pRows, partEl, squad));
-  }
+  renderContent(formaciones, puntajes, squad, mainEl);
 }
 
 init();
