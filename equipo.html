@@ -727,7 +727,8 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   <!-- FORMACIÓN principal -->
   <div id="formacion-header" style="text-align:center;margin-bottom:10px;">
     <h1 style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#fff;letter-spacing:2px;">⚽ Armá tu formación</h1>
-    <p style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:4px;">Arrastrá jugadores del banco a la cancha</p>
+    <p id="formacion-vs-label" style="font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:2px;color:rgba(255,255,255,0.55);margin-top:3px;text-transform:uppercase;display:none;"></p>
+    <p style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;">Arrastrá jugadores del banco a la cancha</p>
   </div>
 
   <div id="pitch">
@@ -792,8 +793,9 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 
   <!-- banner -->
   <div style="width:100%;height:100px;background:url('fotos/bg-puntajes.png') center/cover no-repeat;border-radius:10px;margin-bottom:14px;position:relative;overflow:hidden;">
-    <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.15) 0%,rgba(19,19,31,0.88) 100%);display:flex;align-items:flex-end;padding:10px 14px;">
+    <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.15) 0%,rgba(19,19,31,0.88) 100%);display:flex;align-items:flex-end;padding:10px 14px;gap:10px;">
       <img id="puntajes-equipo-flag" src="" alt="" style="width:52px;height:52px;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.7));">
+      <p id="puntajes-vs-label" style="font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:2px;color:rgba(255,255,255,0.55);text-transform:uppercase;margin-bottom:8px;display:none;"></p>
     </div>
   </div>
 
@@ -1892,6 +1894,21 @@ async function init() {
         const estado = await er.json();
         if (estado[slug]) {
           estadoMundial = estado[slug];
+          if (estadoMundial.rival) {
+            const vsLabel = document.getElementById('formacion-vs-label');
+            if (vsLabel) {
+              const NAMES_ES_FH = {algeria:'Argelia',argentina:'Argentina',brazil:'Brasil',france:'Francia',germany:'Alemania',spain:'España',england:'Inglaterra',portugal:'Portugal',netherlands:'Países Bajos',uruguay:'Uruguay',colombia:'Colombia',mexico:'México',usa:'Estados Unidos',canada:'Canadá',japan:'Japón',southkorea:'Corea del Sur',morocco:'Marruecos',senegal:'Senegal',australia:'Australia',croatia:'Croacia',switzerland:'Suiza',ecuador:'Ecuador',ghana:'Ghana',panama:'Panamá',southafrica:'Sudáfrica',iran:'Irán',iraq:'Irak',norway:'Noruega',sweden:'Suecia',belgium:'Bélgica',denmark:'Dinamarca',poland:'Polonia',turkey:'Turquía',turkiye:'Turquía',ukraine:'Ucrania',scotland:'Escocia',czechia:'Chequia',saudiarabia:'Arabia Saudita',egypt:'Egipto',nigeria:'Nigeria',ivorycoast:'Costa de Marfil',drcongo:'Rep. D. del Congo',haiti:'Haití',curacao:'Curazao',paraguay:'Paraguay',austria:'Austria',jordan:'Jordania',uzbekistan:'Uzbekistán',capeverde:'Cabo Verde',qatar:'Qatar',newzealand:'Nueva Zelanda',taiwan:'Taiwán',bosniaandherzegovina:'Bosnia y Herz.',tunisia:'Túnez'};
+              const rivalEs = NAMES_ES_FH[estadoMundial.rival] || estadoMundial.rival;
+              vsLabel.textContent = 'vs ' + rivalEs;
+              vsLabel.style.display = 'block';
+            }
+            const vsLabelP = document.getElementById('puntajes-vs-label');
+            if (vsLabelP) {
+              const rivalEs2 = NAMES_ES_FH[estadoMundial.rival] || estadoMundial.rival;
+              vsLabelP.textContent = 'vs ' + rivalEs2;
+              vsLabelP.style.display = 'block';
+            }
+          }
           const badge = document.getElementById('badge-puntajes');
           const puntPanel = document.querySelector('.hero-panel:last-of-type');
           if (estadoMundial.puntajesOpen) {
