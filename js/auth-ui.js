@@ -77,6 +77,23 @@
 }
 .auth-submit-btn:hover { background: #1976d2; }
 .auth-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.auth-google-btn {
+  width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;
+  background: #fff; color: #333; border: none;
+  border-radius: 8px; padding: 11px; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
+  margin-top: 10px; transition: background 0.2s;
+}
+.auth-google-btn:hover { background: #f1f3f4; }
+.auth-google-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.auth-divider {
+  display: flex; align-items: center; gap: 10px;
+  margin: 14px 0 4px;
+  color: rgba(255,255,255,0.3); font-size: 11px; letter-spacing: 1px;
+}
+.auth-divider::before, .auth-divider::after {
+  content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.1);
+}
 .auth-error {
   font-size: 12px; color: #e53935; text-align: center;
   margin-top: 10px; min-height: 16px; line-height: 1.4;
@@ -136,6 +153,11 @@
         </div>
         <button class="auth-submit-btn" id="auth-login-btn" onclick="authDoLogin()">INGRESAR</button>
         <div class="auth-error" id="auth-login-error"></div>
+        <div class="auth-divider">O</div>
+        <button class="auth-google-btn" id="auth-google-btn-login" onclick="authDoGoogle()">
+          <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.16 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-3.66-13.47-8.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+          Continuar con Google
+        </button>
       </div>
 
       <!-- TAB REGISTRO -->
@@ -157,6 +179,11 @@
         <button class="auth-submit-btn" id="auth-reg-btn" onclick="authDoRegister()">REGISTRARSE</button>
         <div class="auth-error" id="auth-reg-error"></div>
         <div class="auth-success" id="auth-reg-success"></div>
+        <div class="auth-divider">O</div>
+        <button class="auth-google-btn" id="auth-google-btn-reg" onclick="authDoGoogle()">
+          <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.16 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-3.66-13.47-8.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+          Continuar con Google
+        </button>
       </div>
     </div>
   `;
@@ -204,6 +231,16 @@
     if (btn) btn.classList.add('active');
     document.getElementById('auth-tab-login').style.display = tab === 'login' ? 'block' : 'none';
     document.getElementById('auth-tab-register').style.display = tab === 'register' ? 'block' : 'none';
+  };
+
+  window.authDoGoogle = async function() {
+    try {
+      await signInWithGoogle();
+      // La redirección la maneja Supabase OAuth — no hace falta cerrar el modal
+    } catch(e) {
+      const errEl = document.getElementById('auth-login-error') || document.getElementById('auth-reg-error');
+      if (errEl) errEl.textContent = 'Error al conectar con Google. Intentá de nuevo.';
+    }
   };
 
   window.authDoLogin = async function() {

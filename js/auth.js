@@ -86,6 +86,16 @@ async function signIn(email, password) {
   return data;
 }
 
+// ---- Google OAuth ----
+async function signInWithGoogle() {
+  const sb = getSupabaseClient();
+  const { error } = await sb.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.origin + window.location.pathname }
+  });
+  if (error) throw error;
+}
+
 // ---- Logout ----
 async function signOut() {
   const sb = getSupabaseClient();
