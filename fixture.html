@@ -429,6 +429,16 @@ function renderPartidos() {
   }
 }
 
+function getApiBase() {
+  const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+  return isLocal ? 'https://v3.football.api-sports.io' : '/api/apisports';
+}
+
+function getApiHeaders() {
+  const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+  return isLocal ? { 'x-apisports-key': 'b8bbfc856fd5cf12cd7d697b2b01887d' } : {};
+}
+
 function crearCardPartido(p) {
   const tieneStats = p.stats_id && p.status.finished;
   const tieneFicha = !!(p.api_id || p.stats_id);
@@ -440,6 +450,7 @@ function crearCardPartido(p) {
   if (enCurso) claseCard += ' en-curso';
   if (finished) claseCard += ' terminado';
   card.className = claseCard;
+  if (p.api_id) card.dataset.apiId = p.api_id;
 
   const slugHome = p.home.slug || slugPorId[p.home.id] || slugDeNombre(p.home.name);
   const slugAway = p.away.slug || slugPorId[p.away.id] || slugDeNombre(p.away.name);
@@ -533,25 +544,24 @@ function crearCardPartido(p) {
 // Cache de fichas ya cargadas
 const _fichaCache = {};
 
-async function toggleFicha(p, btn, card) {
-  const panel = card.querySelector('.ficha-panel');
-  const abierto = panel.classList.contains('abierto');
-  if (abierto) {
-    panel.classList.remove('abierto');
-    btn.textContent = '📋 Ver ficha';
-    return;
-  }
-  panel.classList.add('abierto');
-  btn.textContent = '📋 Ocultar ficha';
+// Estado de ficha abierta y polling en vivo
+let _liveTimer = null;
+let _openFichaState = { p: null, card: null };
 
+async function loadFichaContent(p, card) {
+  const panel = card.querySelector('.ficha-panel');
   const cacheKey = p.stats_id || p.api_id;
   const enCursoAhora = p.status?.started && !p.status?.finished;
+
   if (_fichaCache[cacheKey] && !enCursoAhora) {
     panel.innerHTML = _fichaCache[cacheKey];
     return;
   }
 
-  panel.innerHTML = '<div class="ficha-loading">CARGANDO...</div>';
+  // Solo mostrar "CARGANDO" si el panel está vacío (no actualizar silenciosamente en live)
+  if (!panel.innerHTML || panel.innerHTML.includes('ficha-loading')) {
+    panel.innerHTML = '<div class="ficha-loading">CARGANDO...</div>';
+  }
 
   try {
     // Prioridad: JSON local (stats_id) → api-sports (api_id)
@@ -559,7 +569,6 @@ async function toggleFicha(p, btn, card) {
       const res = await fetch(`data/partidos/${p.stats_id}.json?t=${Date.now()}`);
       if (res.ok) {
         const data = await res.json();
-        // Cargar planteles de ambos equipos para obtener fids de fotos
         const slugLocal = data.partido.local;
         const slugVisit = data.partido.visitante;
         const [rL, rV] = await Promise.allSettled([
@@ -569,26 +578,51 @@ async function toggleFicha(p, btn, card) {
         const plantelLocal = rL.status === 'fulfilled' && rL.value.ok ? await rL.value.json() : null;
         const plantelVisit = rV.status === 'fulfilled' && rV.value.ok ? await rV.value.json() : null;
         const html = renderFichaFromJson(data, plantelLocal, plantelVisit);
-        _fichaCache[cacheKey] = html;
+        if (!enCursoAhora) _fichaCache[cacheKey] = html;
         panel.innerHTML = html;
         return;
       }
     }
     // Fallback api-sports
-    const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-    const base = isLocal ? 'https://v3.football.api-sports.io' : '/api/apisports';
-    const headers = isLocal ? { 'x-apisports-key': 'b8bbfc856fd5cf12cd7d697b2b01887d' } : {};
-    const [resLinea, resEv] = await Promise.all([
+    if (!p.api_id) {
+      panel.innerHTML = '<div class="ficha-loading">No disponible</div>';
+      return;
+    }
+    const base = getApiBase();
+    const headers = getApiHeaders();
+    const slugHome = p.home?.slug || slugPorId[p.home?.id] || slugDeNombre(p.home?.name || '');
+    const slugAway = p.away?.slug || slugPorId[p.away?.id] || slugDeNombre(p.away?.name || '');
+    const [resLinea, resEv, rPL, rPV] = await Promise.allSettled([
       fetch(`${base}/fixtures/lineups?fixture=${p.api_id}`, { headers }),
       fetch(`${base}/fixtures/events?fixture=${p.api_id}`, { headers }),
+      fetch(`data/planteles/${slugHome}.json`),
+      fetch(`data/planteles/${slugAway}.json`),
     ]);
-    const [dLinea, dEv] = await Promise.all([resLinea.json(), resEv.json()]);
-    const html = renderFicha(dLinea.response || [], dEv.response || [], p);
-    _fichaCache[cacheKey] = html;
+    const lineups = resLinea.status === 'fulfilled' && resLinea.value.ok ? (await resLinea.value.json()).response || [] : [];
+    const events  = resEv.status  === 'fulfilled' && resEv.value.ok  ? (await resEv.value.json()).response  || [] : [];
+    const plantelLocal = rPL.status === 'fulfilled' && rPL.value.ok ? await rPL.value.json() : null;
+    const plantelVisit = rPV.status === 'fulfilled' && rPV.value.ok ? await rPV.value.json() : null;
+    const html = renderFichaEnhanced(lineups, events, p, plantelLocal, plantelVisit);
+    if (!enCursoAhora) _fichaCache[cacheKey] = html;
     panel.innerHTML = html;
   } catch(e) {
     panel.innerHTML = `<div class="ficha-loading">No disponible</div>`;
   }
+}
+
+async function toggleFicha(p, btn, card) {
+  const panel = card.querySelector('.ficha-panel');
+  const abierto = panel.classList.contains('abierto');
+  if (abierto) {
+    panel.classList.remove('abierto');
+    btn.textContent = '📋 Ver ficha';
+    _openFichaState = { p: null, card: null };
+    return;
+  }
+  panel.classList.add('abierto');
+  btn.textContent = '📋 Ocultar ficha';
+  _openFichaState = { p, card };
+  await loadFichaContent(p, card);
 }
 
 function renderFichaFromJson(data, plantelLocal, plantelVisit) {
@@ -663,6 +697,98 @@ function renderFichaFromJson(data, plantelLocal, plantelVisit) {
 
   const col1 = renderEquipoJson(p.local, fidLocal);
   const col2 = renderEquipoJson(p.visitante, fidVisit);
+  return `<div class="ficha-cols"><div>${col1}</div><div>${col2}</div></div>`;
+}
+
+function renderFichaEnhanced(lineups, events, p, plantelLocal, plantelVisit) {
+  if (!lineups.length) return '<div class="ficha-loading">Sin datos de alineación</div>';
+
+  // Normalizar nombre para lookup en plantel
+  const normN = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const firstLast = s => { const w = normN(s).split(/\s+/).filter(Boolean); return w.length >= 2 ? w[0]+' '+w[w.length-1] : normN(s); };
+
+  function buildFidIndex(plantel) {
+    const idx = {};
+    for (const pl of (plantel?.jugadores || [])) {
+      idx[normN(pl.nombre)] = pl.fid;
+      idx[firstLast(pl.nombre)] = pl.fid;
+    }
+    return idx;
+  }
+
+  // Mapear lineup team id → plantel fid index
+  // lineups[0] = local, lineups[1] = away (orden api-sports)
+  const fidLocal = buildFidIndex(plantelLocal);
+  const fidAway  = buildFidIndex(plantelVisit);
+
+  // Indexar eventos por playerId
+  const evByPlayer = {};
+  for (const ev of events) {
+    const pid = ev.player?.id;
+    if (!pid) continue;
+    if (!evByPlayer[pid]) evByPlayer[pid] = [];
+    evByPlayer[pid].push(ev);
+  }
+  const subsByTeam = {};
+  for (const ev of events) {
+    if (ev.type !== 'subst') continue;
+    const tid = ev.team?.id;
+    if (!subsByTeam[tid]) subsByTeam[tid] = [];
+    subsByTeam[tid].push(ev);
+  }
+
+  function iconosJugador(pid) {
+    const evs = evByPlayer[pid] || [];
+    return evs.map(ev => {
+      if (ev.type === 'Goal') return ev.detail === 'Own Goal' ? '<span class="ev-icon" title="Gol en contra">⚽🔴</span>' : '<span class="ev-icon" title="Gol">⚽</span>';
+      if (ev.type === 'Card') return ev.detail === 'Yellow Card' ? '<span class="ev-icon" title="Amarilla">🟨</span>' : '<span class="ev-icon" title="Roja">🟥</span>';
+      if (ev.type === 'Assist') return '<span class="ev-icon" title="Asistencia">🅰️</span>';
+      return '';
+    }).join('');
+  }
+
+  function renderEquipo(lineup, fidIdx) {
+    const tid = lineup.team?.id;
+    const titulares = lineup.startXI || [];
+    const subs = subsByTeam[tid] || [];
+
+    let html = `<div class="ficha-equipo-titulo">${lineup.team?.name || ''}</div>`;
+
+    for (const j of titulares) {
+      const pl = j.player;
+      const fid = fidIdx[normN(pl.name || '')] || fidIdx[firstLast(pl.name || '')] || null;
+      const fotoSrc = fid ? `fotos/${fid}.png` : `https://media.api-sports.io/football/players/${pl.id}.png`;
+      const cap = pl.captain ? ' capitan' : '';
+      html += `
+        <div class="ficha-jugador">
+          <img class="ficha-jugador-foto" src="${fotoSrc}" alt="" onerror="this.src='data:image/svg+xml,<svg xmlns=\\'http://www.w3.org/2000/svg\\'/>'" >
+          <span class="ficha-jugador-num">${pl.number || ''}</span>
+          <div class="ficha-jugador-info">
+            <div class="ficha-jugador-nombre${cap}">${pl.name || ''}</div>
+          </div>
+          <div class="ficha-jugador-eventos">${iconosJugador(pl.id)}</div>
+        </div>`;
+    }
+
+    if (subs.length) {
+      html += `<div class="ficha-subs"><div class="ficha-subs-titulo">Cambios</div>`;
+      for (const s of subs) {
+        html += `
+          <div class="ficha-sub-fila">
+            <span class="ficha-sub-min">${s.time?.elapsed}'</span>
+            <span class="ficha-sub-out">↓ ${s.player?.name || ''}</span>
+            <span style="color:rgba(255,255,255,0.2)"> / </span>
+            <span class="ficha-sub-in">↑ ${s.assist?.name || ''}</span>
+          </div>`;
+      }
+      html += '</div>';
+    }
+
+    return html;
+  }
+
+  const col1 = lineups[0] ? renderEquipo(lineups[0], fidLocal) : '';
+  const col2 = lineups[1] ? renderEquipo(lineups[1], fidAway)  : '';
   return `<div class="ficha-cols"><div>${col1}</div><div>${col2}</div></div>`;
 }
 
@@ -764,6 +890,17 @@ async function cargar() {
 
     document.getElementById('loading-state').style.display = 'none';
     document.getElementById('contenido').style.display = '';
+
+    // Buscar partidos en curso y arrancar live polling
+    const LIVE_SHORT = ['1H','HT','2H','ET','BT','P','SUSP'];
+    const liveCards = [];
+    for (const p of todosPartidos) {
+      if (!LIVE_SHORT.includes(p.status?.short)) continue;
+      if (!p.api_id) continue;
+      const cardEl = document.querySelector(`[data-api-id="${p.api_id}"]`);
+      if (cardEl) liveCards.push({ p, card: cardEl });
+    }
+    if (liveCards.length) startLivePolling(liveCards);
   } catch(e) {
     document.getElementById('loading-state').innerHTML =
       `<div class="loading-msg">Error: ${e.message}</div>`;
@@ -772,42 +909,107 @@ async function cargar() {
 
 cargar();
 
-// Live scores: poll cada 60s si hay partido en curso
-let _liveInterval = null;
+// Live polling por api-sports (partidos en curso)
+const LIVE_SHORT = ['1H','HT','2H','ET','BT','P','SUSP'];
 
-function hayPartidoEnCurso() {
-  const live = ['1H','HT','2H','ET','BT','P','SUSP'];
-  return todosPartidos.some(p => live.includes(p.status?.short));
-}
+function startLivePolling(liveCards) {
+  if (_liveTimer) clearInterval(_liveTimer);
 
-async function pollLive() {
-  try {
-    const res = await fetch(`data/fixtures/mundial.json?t=${Date.now()}`);
-    if (!res.ok) return;
-    const fresh = await res.json();
-    const changed = JSON.stringify(fresh) !== JSON.stringify(todosPartidos);
-    if (changed) {
-      todosPartidos = fresh;
-      renderPartidos();
+  async function tick() {
+    const base = getApiBase();
+    const headers = getApiHeaders();
+
+    // Filtrar solo los que siguen en curso
+    const activos = liveCards.filter(({ p }) => !p.status?.finished);
+    if (!activos.length) {
+      clearInterval(_liveTimer);
+      _liveTimer = null;
+      return;
     }
-    if (!hayPartidoEnCurso()) {
-      clearInterval(_liveInterval);
-      _liveInterval = null;
+
+    for (const { p, card } of activos) {
+      try {
+        const res = await fetch(`${base}/fixtures?id=${p.api_id}`, { headers });
+        if (!res.ok) continue;
+        const data = await res.json();
+        const fixture = data.response?.[0];
+        if (!fixture) continue;
+
+        const short    = fixture.fixture?.status?.short;
+        const elapsed  = fixture.fixture?.status?.elapsed;
+        const golesH   = fixture.goals?.home ?? null;
+        const golesA   = fixture.goals?.away ?? null;
+        const finished = ['FT','AET','PEN'].includes(short);
+
+        // Actualizar estado en el objeto p
+        p.status.short    = short;
+        p.status.finished = finished;
+        p.status.started  = true;
+        if (finished) {
+          p.home_score = golesH;
+          p.away_score = golesA;
+        }
+
+        // Actualizar marcador en el DOM
+        const marcadorEl = card.querySelector('.marcador');
+        if (marcadorEl && golesH !== null && golesA !== null) {
+          marcadorEl.innerHTML = `
+            <span class="marcador-gol">${golesH}</span>
+            <span class="marcador-sep">-</span>
+            <span class="marcador-gol">${golesA}</span>`;
+        }
+
+        // Actualizar label de hora
+        const horaEl = card.querySelector('.partido-hora');
+        if (horaEl) {
+          if (finished) {
+            horaEl.className = 'partido-hora';
+            horaEl.textContent = 'FIN';
+            card.classList.remove('en-curso');
+            card.classList.add('terminado');
+          } else if (LIVE_SHORT.includes(short)) {
+            horaEl.className = 'partido-hora en-curso';
+            horaEl.textContent = elapsed ? `${elapsed}'` : 'EN VIVO';
+          }
+        }
+
+        // Actualizar clases ganador/perdedor
+        if (finished && golesH !== null && golesA !== null) {
+          const nomEls = card.querySelectorAll('.partido-nombre');
+          if (nomEls.length === 2) {
+            nomEls[0].classList.remove('ganador', 'perdedor');
+            nomEls[1].classList.remove('ganador', 'perdedor');
+            if (golesH > golesA) { nomEls[0].classList.add('ganador'); nomEls[1].classList.add('perdedor'); }
+            else if (golesA > golesH) { nomEls[1].classList.add('ganador'); nomEls[0].classList.add('perdedor'); }
+          }
+        }
+
+        // Si hay ficha abierta para este partido en curso, recargar
+        if (!finished && _openFichaState.p === p && _openFichaState.card === card) {
+          await loadFichaContent(p, card);
+        }
+      } catch(e) { /* ignorar error individual */ }
     }
-  } catch(e) {}
-}
+  }
 
-function iniciarLivePoll() {
-  if (_liveInterval) return;
-  _liveInterval = setInterval(pollLive, 60000);
+  // Primera ejecución inmediata
+  tick();
+  _liveTimer = setInterval(tick, 60000);
 }
-
-// Arrancar poll si ya hay partido en curso al cargar
-setTimeout(() => { if (hayPartidoEnCurso()) iniciarLivePoll(); }, 2000);
 
 // Reanudar poll cuando la pestaña vuelve a estar activa
 document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && hayPartidoEnCurso()) iniciarLivePoll();
+  if (!document.hidden && _liveTimer === null) {
+    const LIVE_SHORT_CHECK = ['1H','HT','2H','ET','BT','P','SUSP'];
+    const liveCards = [];
+    for (const p of todosPartidos) {
+      if (!LIVE_SHORT_CHECK.includes(p.status?.short)) continue;
+      if (!p.api_id) continue;
+      const cardEl = document.querySelector(`[data-api-id="${p.api_id}"]`);
+      if (cardEl) liveCards.push({ p, card: cardEl });
+    }
+    if (liveCards.length) startLivePolling(liveCards);
+  }
 });
 </script>
 </body>
