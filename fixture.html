@@ -249,6 +249,11 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   font-size: 14px; letter-spacing: 2px; color: rgba(255,255,255,0.2); line-height: 1; padding: 0 4px;
 }
 
+/* ===== STANDING INLINE EN CARD ===== */
+.equipo-standing { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; flex-shrink: 0; }
+.standing-pts { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: #fff; line-height: 1; }
+.standing-dg { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 0.5px; color: rgba(255,255,255,0.35); line-height: 1; }
+
 /* ===== LOADING / EMPTY ===== */
 .loading-msg { text-align: center; padding: 80px 20px; color: rgba(255,255,255,0.25); font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 3px; }
 .loading-spinner { width: 30px; height: 30px; border: 3px solid rgba(255,255,255,0.08); border-top-color: var(--acento); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 14px; }
@@ -381,7 +386,39 @@ function renderFaseTabs() {
   }
 }
 
+let _standings = {};
+
+function computarStandings() {
+  const st = {};
+  for (const p of todosPartidos) {
+    if (!['1','2','3'].includes(p.round)) continue;
+    if (!p.status.finished) continue;
+    const gh = p.home_score ?? p.home?.score ?? null;
+    const ga = p.away_score ?? p.away?.score ?? null;
+    if (gh === null || ga === null) continue;
+    const sh = p.home.slug || slugDeNombre(p.home.name);
+    const sa = p.away.slug || slugDeNombre(p.away.name);
+    if (!st[sh]) st[sh] = { pts:0, gf:0, gc:0 };
+    if (!st[sa]) st[sa] = { pts:0, gf:0, gc:0 };
+    st[sh].gf += gh; st[sh].gc += ga;
+    st[sa].gf += ga; st[sa].gc += gh;
+    if (gh > ga)      { st[sh].pts += 3; }
+    else if (gh < ga) { st[sa].pts += 3; }
+    else              { st[sh].pts += 1; st[sa].pts += 1; }
+  }
+  _standings = st;
+}
+
+function standingHTML(slug) {
+  const s = _standings[slug];
+  if (!s) return '';
+  const dg = s.gf - s.gc;
+  const dgStr = dg > 0 ? '+' + dg : String(dg);
+  return `<div class="equipo-standing"><span class="standing-pts">${s.pts}</span><span class="standing-dg">DG ${dgStr}</span></div>`;
+}
+
 function renderPartidos() {
+  computarStandings();
   const wrap = document.getElementById('partidos-wrap');
   wrap.innerHTML = '';
 
@@ -492,6 +529,10 @@ function crearCardPartido(p) {
     btnsHTML += '</div>';
   }
 
+  const esGrupo = ['1','2','3'].includes(p.round);
+  const stHome = esGrupo ? standingHTML(slugHome) : '';
+  const stAway = esGrupo ? standingHTML(slugAway) : '';
+
   card.innerHTML = `
     <div class="partido-meta">
       <span class="partido-grupo">${metaRonda}</span>
@@ -499,6 +540,7 @@ function crearCardPartido(p) {
     </div>
     <div class="partido-fila">
       <div class="equipo-home">
+        ${stHome}
         <span class="${claseNomHome}">${nomHome}</span>
         <a href="equipo.html?c=${slugHome}" onclick="event.stopPropagation()">
           <img class="partido-flag" src="escudos/${slugHome}.png" alt="${nomHome}" onerror="this.style.opacity='0.1'">
@@ -510,6 +552,7 @@ function crearCardPartido(p) {
           <img class="partido-flag" src="escudos/${slugAway}.png" alt="${nomAway}" onerror="this.style.opacity='0.1'">
         </a>
         <span class="${claseNomAway}">${nomAway}</span>
+        ${stAway}
       </div>
     </div>
     ${btnsHTML}
