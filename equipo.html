@@ -988,13 +988,15 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
     if (!grid) return;
     const nameInput = document.getElementById('username-input');
     if (nameInput && _username) nameInput.value = _username;
+    if (_equipoHincha) _teamPickerSelected = _equipoHincha;
     grid.innerHTML = ALL_TEAMS.map(slug =>
-      '<div class="team-picker-item" data-slug="' + slug + '" onclick="window._teamPickerSelect(\'' + slug + '\')">' +
+      '<div class="team-picker-item' + (slug === _teamPickerSelected ? ' selected' : '') + '" data-slug="' + slug + '" onclick="window._teamPickerSelect(\'' + slug + '\')">' +
         '<img src="escudos/' + slug + '.png" alt="' + TEAMS_ES[slug] + '" onerror="this.style.opacity=0.3">' +
         '<span>' + TEAMS_ES[slug] + '</span>' +
       '</div>'
     ).join('');
     document.getElementById('team-picker-overlay').classList.add('open');
+    window._teamPickerValidate();
   }
 
   window._teamPickerValidate = function() {
