@@ -264,11 +264,7 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
   <div class="header">
     <a class="header-back" id="back-btn" href="index.html">← VOLVER</a>
     <div class="header-teams">
-      <img class="header-escudo" id="h-flag-local" src="" alt="">
-      <div>
-        <div class="header-sub" id="h-comp"></div>
-      </div>
-      <img class="header-escudo" id="h-flag-visit" src="" alt="">
+      <div class="header-sub" id="h-comp"></div>
     </div>
   </div>
 
@@ -516,8 +512,6 @@ async function init(){
   document.getElementById('back-btn').href = `equipo.html?c=${backSlug}`;
 
   // Header mini
-  document.getElementById('h-flag-local').src  = esc(p.local);
-  document.getElementById('h-flag-visit').src  = esc(p.visitante);
   document.getElementById('h-comp').textContent  = p.competicion.toUpperCase();
 
   // Match header
@@ -527,7 +521,7 @@ async function init(){
   document.getElementById('flag-visitante').src = esc(p.visitante);
 
   // Hacer banderas clickeables → equipo.html
-  ['h-flag-local','h-flag-visit','flag-local','flag-visitante','sw-flag-local','sw-flag-visit'].forEach(id => {
+  ['flag-local','flag-visitante','sw-flag-local','sw-flag-visit'].forEach(id => {
     const img = document.getElementById(id);
     if (!img) return;
     const slug = id.includes('visit') ? p.visitante : p.local;
