@@ -558,7 +558,16 @@ async function toggleFicha(p, btn, card) {
       const res = await fetch(`data/partidos/${p.stats_id}.json?t=${Date.now()}`);
       if (res.ok) {
         const data = await res.json();
-        const html = renderFichaFromJson(data);
+        // Cargar planteles de ambos equipos para obtener fids de fotos
+        const slugLocal = data.partido.local;
+        const slugVisit = data.partido.visitante;
+        const [rL, rV] = await Promise.allSettled([
+          fetch(`data/planteles/${slugLocal}.json`),
+          fetch(`data/planteles/${slugVisit}.json`),
+        ]);
+        const plantelLocal = rL.status === 'fulfilled' && rL.value.ok ? await rL.value.json() : null;
+        const plantelVisit = rV.status === 'fulfilled' && rV.value.ok ? await rV.value.json() : null;
+        const html = renderFichaFromJson(data, plantelLocal, plantelVisit);
         _fichaCache[cacheKey] = html;
         panel.innerHTML = html;
         return;
@@ -581,11 +590,31 @@ async function toggleFicha(p, btn, card) {
   }
 }
 
-function renderFichaFromJson(data) {
+function renderFichaFromJson(data, plantelLocal, plantelVisit) {
   const p = data.partido;
   const jugadores = data.jugadores || {};
 
-  function renderEquipoJson(slug) {
+  // Normalizar nombre para lookup (tildes, puntos, mayúsculas)
+  const normN = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const firstLast = s => { const w = normN(s).split(/\s+/).filter(Boolean); return w.length >= 2 ? w[0]+' '+w[w.length-1] : normN(s); };
+
+  function buildFidIndex(plantel) {
+    const idx = {};
+    for (const pl of (plantel?.jugadores || [])) {
+      idx[normN(pl.nombre)] = pl.fid;
+      idx[firstLast(pl.nombre)] = pl.fid;
+    }
+    return idx;
+  }
+
+  const fidLocal = buildFidIndex(plantelLocal);
+  const fidVisit = buildFidIndex(plantelVisit);
+
+  function getFid(nombre, fidIdx) {
+    return fidIdx[normN(nombre)] || fidIdx[firstLast(nombre)] || null;
+  }
+
+  function renderEquipoJson(slug, fidIdx) {
     const jgs = jugadores[slug] || [];
     const titulares = jgs.filter(j => j.tipo === 'titular');
     const suplentes = jgs.filter(j => j.tipo === 'suplente' && j.min > 0);
@@ -599,10 +628,10 @@ function renderFichaFromJson(data) {
       for (let i = 0; i < (j.asist || 0); i++) iconos.push('<span class="ev-icon" title="Asistencia">🅰️</span>');
       if (j.amarilla) iconos.push('<span class="ev-icon" title="Amarilla">🟨</span>');
       if (j.roja)     iconos.push('<span class="ev-icon" title="Roja">🟥</span>');
-      const foto = j.fid ? `fotos/${j.fid}.png` : '';
+      const fid = getFid(j.nombre, fidIdx);
       html += `
         <div class="ficha-jugador">
-          ${foto ? `<img class="ficha-jugador-foto" src="${foto}" alt="" onerror="this.style.display='none'">` : '<span class="ficha-jugador-foto"></span>'}
+          ${fid ? `<img class="ficha-jugador-foto" src="fotos/${fid}.png" alt="" onerror="this.style.display='none'">` : '<span class="ficha-jugador-foto"></span>'}
           <span class="ficha-jugador-num">${j.num || ''}</span>
           <div class="ficha-jugador-info">
             <div class="ficha-jugador-nombre">${j.nombre}</div>
@@ -631,8 +660,8 @@ function renderFichaFromJson(data) {
     return html;
   }
 
-  const col1 = renderEquipoJson(p.local);
-  const col2 = renderEquipoJson(p.visitante);
+  const col1 = renderEquipoJson(p.local, fidLocal);
+  const col2 = renderEquipoJson(p.visitante, fidVisit);
   return `<div class="ficha-cols"><div>${col1}</div><div>${col2}</div></div>`;
 }
 
