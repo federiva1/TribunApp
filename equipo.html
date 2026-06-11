@@ -104,6 +104,11 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 }
 .hero-badge.abierto { background: rgba(42,213,114,0.2); border-color: rgba(42,213,114,0.5); color: #2ad572; }
 .hero-badge.cerrado { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); color: rgba(255,255,255,0.3); }
+.hero-panel.panel-cerrado { cursor: not-allowed; }
+.hero-panel.panel-cerrado:hover { opacity: 1; }
+.hero-panel.panel-cerrado .hero-bg { filter: grayscale(60%) brightness(0.45); }
+.hero-panel.panel-cerrado .hero-overlay { background: rgba(0,0,0,0.5); }
+.lock-icon { font-size: 22px; display: block; margin-bottom: 6px; opacity: 0.45; }
 
 /* ===== SECONDARY ROW ===== */
 .secondary-row {
@@ -1895,30 +1900,32 @@ async function init() {
         if (estado[slug]) {
           estadoMundial = estado[slug];
           if (estadoMundial.rival) {
+            const NAMES_ES_FH = {algeria:'Argelia',argentina:'Argentina',brazil:'Brasil',france:'Francia',germany:'Alemania',spain:'España',england:'Inglaterra',portugal:'Portugal',netherlands:'Países Bajos',uruguay:'Uruguay',colombia:'Colombia',mexico:'México',usa:'Estados Unidos',canada:'Canadá',japan:'Japón',southkorea:'Corea del Sur',morocco:'Marruecos',senegal:'Senegal',australia:'Australia',croatia:'Croacia',switzerland:'Suiza',ecuador:'Ecuador',ghana:'Ghana',panama:'Panamá',southafrica:'Sudáfrica',iran:'Irán',iraq:'Irak',norway:'Noruega',sweden:'Suecia',belgium:'Bélgica',denmark:'Dinamarca',poland:'Polonia',turkey:'Turquía',turkiye:'Turquía',ukraine:'Ucrania',scotland:'Escocia',czechia:'Chequia',saudiarabia:'Arabia Saudita',egypt:'Egipto',nigeria:'Nigeria',ivorycoast:'Costa de Marfil',drcongo:'Rep. D. del Congo',haiti:'Haití',curacao:'Curazao',paraguay:'Paraguay',austria:'Austria',jordan:'Jordania',uzbekistan:'Uzbekistán',capeverde:'Cabo Verde',qatar:'Qatar',newzealand:'Nueva Zelanda',taiwan:'Taiwán',bosniaandherzegovina:'Bosnia y Herz.',tunisia:'Túnez'};
+            const rivalEs = NAMES_ES_FH[estadoMundial.rival] || estadoMundial.rival;
             const vsLabel = document.getElementById('formacion-vs-label');
-            if (vsLabel) {
-              const NAMES_ES_FH = {algeria:'Argelia',argentina:'Argentina',brazil:'Brasil',france:'Francia',germany:'Alemania',spain:'España',england:'Inglaterra',portugal:'Portugal',netherlands:'Países Bajos',uruguay:'Uruguay',colombia:'Colombia',mexico:'México',usa:'Estados Unidos',canada:'Canadá',japan:'Japón',southkorea:'Corea del Sur',morocco:'Marruecos',senegal:'Senegal',australia:'Australia',croatia:'Croacia',switzerland:'Suiza',ecuador:'Ecuador',ghana:'Ghana',panama:'Panamá',southafrica:'Sudáfrica',iran:'Irán',iraq:'Irak',norway:'Noruega',sweden:'Suecia',belgium:'Bélgica',denmark:'Dinamarca',poland:'Polonia',turkey:'Turquía',turkiye:'Turquía',ukraine:'Ucrania',scotland:'Escocia',czechia:'Chequia',saudiarabia:'Arabia Saudita',egypt:'Egipto',nigeria:'Nigeria',ivorycoast:'Costa de Marfil',drcongo:'Rep. D. del Congo',haiti:'Haití',curacao:'Curazao',paraguay:'Paraguay',austria:'Austria',jordan:'Jordania',uzbekistan:'Uzbekistán',capeverde:'Cabo Verde',qatar:'Qatar',newzealand:'Nueva Zelanda',taiwan:'Taiwán',bosniaandherzegovina:'Bosnia y Herz.',tunisia:'Túnez'};
-              const rivalEs = NAMES_ES_FH[estadoMundial.rival] || estadoMundial.rival;
-              vsLabel.textContent = 'vs ' + rivalEs;
-              vsLabel.style.display = 'block';
-            }
+            if (vsLabel) { vsLabel.textContent = 'vs ' + rivalEs; vsLabel.style.display = 'block'; }
             const vsLabelP = document.getElementById('puntajes-vs-label');
-            if (vsLabelP) {
-              const rivalEs2 = NAMES_ES_FH[estadoMundial.rival] || estadoMundial.rival;
-              vsLabelP.textContent = 'vs ' + rivalEs2;
-              vsLabelP.style.display = 'block';
-            }
+            if (vsLabelP) { vsLabelP.textContent = 'vs ' + rivalEs; vsLabelP.style.display = 'block'; }
           }
           const badge = document.getElementById('badge-puntajes');
           const puntPanel = document.querySelector('.hero-panel:last-of-type');
           if (estadoMundial.puntajesOpen) {
             badge.textContent = 'ABIERTO';
             badge.className = 'hero-badge abierto';
-            if (puntPanel) puntPanel.style.cursor = 'pointer';
+            if (puntPanel) puntPanel.classList.remove('panel-cerrado');
           } else {
-            badge.textContent = 'CERRADO';
+            badge.textContent = '🔒 CERRADO';
             badge.className = 'hero-badge cerrado';
-            if (puntPanel) puntPanel.style.cursor = 'not-allowed';
+            if (puntPanel) {
+              puntPanel.classList.add('panel-cerrado');
+              const content = puntPanel.querySelector('.hero-content');
+              if (content && !content.querySelector('.lock-icon')) {
+                const lock = document.createElement('span');
+                lock.className = 'lock-icon';
+                lock.textContent = '🔒';
+                content.insertBefore(lock, content.firstChild);
+              }
+            }
           }
         }
       }
