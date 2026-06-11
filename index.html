@@ -361,6 +361,66 @@ async function cargar() {
     const equipos = await resEquipos.json();
     const estado  = await resEstado.json();
 
+    // Build api_id → slug map from equipos.json
+    const apiIdToSlug = {};
+    for (const eq of equipos) {
+      if (eq.api_id) apiIdToSlug[eq.api_id] = eq.slug;
+    }
+
+    // Normalize static tablas keys: "Stage - A" → "A"
+    if (estado.tablas) {
+      const normalized = {};
+      for (const [k, v] of Object.entries(estado.tablas)) {
+        const m = k.match(/([A-L])$/);
+        if (m) normalized[m[1]] = v;
+        else if (/^[A-L]$/.test(k)) normalized[k] = v;
+      }
+      estado.tablas = normalized;
+    }
+
+    // Fetch live standings from API and merge into estado.tablas
+    try {
+      const resStandings = await fetch('/api/apisports/standings?league=1&season=2026');
+      if (resStandings.ok) {
+        const standingsData = await resStandings.json();
+        const groups = standingsData?.response?.[0]?.league?.standings || [];
+        const tablas = {};
+        for (const group of groups) {
+          if (!Array.isArray(group) || group.length === 0) continue;
+          // Extract letter from group name, e.g. "Stage A" → "A"
+          const groupName = group[0]?.group || '';
+          const letraMatch = groupName.match(/([A-L])$/);
+          if (!letraMatch) continue;
+          const letra = letraMatch[1];
+          tablas[letra] = group.map(entry => {
+            const slug = apiIdToSlug[entry.team?.id];
+            return {
+              slug: slug || entry.team?.name?.toLowerCase().replace(/\s/g, ''),
+              pts: entry.points ?? 0,
+              pj:  entry.all?.played ?? 0,
+              gf:  entry.all?.goals?.for ?? 0,
+              gc:  entry.all?.goals?.against ?? 0,
+              dg:  entry.goalsDiff ?? 0,
+            };
+          }).filter(t => t.slug);
+        }
+        if (Object.keys(tablas).length > 0) {
+          estado.tablas = tablas;
+        }
+      }
+    } catch (_) {
+      // API failure: fall back to static estado_torneo.json tablas
+      // Normalize keys from "Stage - A" → "A" if needed
+      if (estado.tablas) {
+        const normalized = {};
+        for (const [k, v] of Object.entries(estado.tablas)) {
+          const m = k.match(/([A-L])$/);
+          if (m) normalized[m[1]] = v;
+        }
+        if (Object.keys(normalized).length > 0) estado.tablas = normalized;
+      }
+    }
+
     renderFase(estado);
     renderGrupos(equipos, estado);
 
