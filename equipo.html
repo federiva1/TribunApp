@@ -1656,7 +1656,12 @@ async function initPuntajes() {
       if (partido) {
         const pRes = await fetch(`data/partidos/${partido.id}.json?v=${Date.now()}`);
         const pData = await pRes.json();
-        const jugs = pData.jugadores[slug] || [];
+        const jugsRaw = pData.jugadores[slug] || [];
+        // Solo titulares, DT, y suplentes que efectivamente ingresaron (min > 0)
+        const jugs = jugsRaw.filter(j =>
+          j.tipo === 'titular' || j.tipo === 'dt' ||
+          (j.tipo === 'suplente' && j.min != null && j.min > 0)
+        );
         squadPuntajes = jugs.map((j, idx) => {
           // Cruzar con plantel para obtener numero, fid real y posicion
           const enPlantel = squad.find(s =>
@@ -1676,12 +1681,15 @@ async function initPuntajes() {
     } catch(e) { console.error('Error cargando jugadores del partido'); }
   }
 
-  // Añadir técnico como última entrada (soporta string legacy o {nombre, fid})
-  const tecnico = plantelData.tecnico || null;
-  if (tecnico) {
-    const dtNombre = typeof tecnico === 'object' ? tecnico.nombre : tecnico;
-    const dtFid    = typeof tecnico === 'object' ? (tecnico.fid || 0) : 0;
-    squadPuntajes.push({ num: 0, name: dtNombre, fid: dtFid, posicion: 'TEC', tipo: 'dt' });
+  // Añadir técnico desde plantelData solo si no viene ya en el JSON del partido
+  const yaHayDt = squadPuntajes.some(p => p.tipo === 'dt');
+  if (!yaHayDt) {
+    const tecnico = plantelData.tecnico || null;
+    if (tecnico) {
+      const dtNombre = typeof tecnico === 'object' ? tecnico.nombre : tecnico;
+      const dtFid    = typeof tecnico === 'object' ? (tecnico.fid || 0) : 0;
+      squadPuntajes.push({ num: 0, name: dtNombre, fid: dtFid, posicion: 'TEC', tipo: 'dt' });
+    }
   }
 
   // Si no cargó nada del partido, fallback al squad completo
