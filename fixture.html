@@ -249,10 +249,57 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   font-size: 14px; letter-spacing: 2px; color: rgba(255,255,255,0.2); line-height: 1; padding: 0 4px;
 }
 
-/* ===== STANDING INLINE EN CARD ===== */
-.equipo-standing { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; flex-shrink: 0; }
-.standing-pts { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: #fff; line-height: 1; }
-.standing-dg { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 0.5px; color: rgba(255,255,255,0.35); line-height: 1; }
+/* ===== GRUPOS STANDINGS ===== */
+#grupos-wrap { padding: 0 0 8px; }
+.grupos-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+@media (max-width: 420px) { .grupos-grid { grid-template-columns: 1fr; } }
+.grupo-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.grupo-card-titulo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 12px; letter-spacing: 2px;
+  color: rgba(255,255,255,0.3);
+  padding: 7px 12px 5px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  text-transform: uppercase;
+}
+.grupo-fila {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.grupo-fila:last-child { border-bottom: none; }
+.grupo-pos {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px; color: rgba(255,255,255,0.25);
+  width: 12px; text-align: center; flex-shrink: 0;
+}
+.grupo-escudo { width: 20px; height: 20px; object-fit: contain; flex-shrink: 0; }
+.grupo-nombre {
+  flex: 1; min-width: 0;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 14px; font-weight: 600; color: #fff;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.grupo-pts {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px; color: #fff; line-height: 1;
+  min-width: 22px; text-align: right;
+}
+.grupo-dg {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px; color: rgba(255,255,255,0.3);
+  min-width: 32px; text-align: right; letter-spacing: 0.3px;
+}
+.grupo-fila.clasificado { background: rgba(66,165,245,0.06); }
 
 /* ===== LOADING / EMPTY ===== */
 .loading-msg { text-align: center; padding: 80px 20px; color: rgba(255,255,255,0.25); font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 3px; }
@@ -290,6 +337,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   </div>
   <div id="contenido" style="display:none;">
     <div class="fase-tabs" id="fase-tabs"></div>
+    <div id="grupos-wrap" style="display:none;"></div>
     <div id="partidos-wrap"></div>
   </div>
 </main>
@@ -381,44 +429,83 @@ function renderFaseTabs() {
     const btn = document.createElement('button');
     btn.className = 'fase-tab' + (f.key === faseActiva ? ' active' : '');
     btn.textContent = f.label;
-    btn.onclick = () => { faseActiva = f.key; renderPartidos(); renderFaseTabs(); };
+    btn.onclick = () => {
+      faseActiva = f.key;
+      renderPartidos();
+      renderFaseTabs();
+      const gw = document.getElementById('grupos-wrap');
+      if (gw) gw.style.display = faseActiva === 'grupos' ? '' : 'none';
+      if (faseActiva === 'grupos') cargarGrupos();
+    };
     wrap.appendChild(btn);
   }
 }
 
-let _standings = {};
+// ===== GRUPOS STANDINGS DESDE API =====
+let _gruposCache = null;
+let _gruposTs = 0;
+const GRUPOS_TTL = 60000; // 1 min
 
-function computarStandings() {
-  const st = {};
-  for (const p of todosPartidos) {
-    if (!['1','2','3'].includes(p.round)) continue;
-    if (!p.status.finished) continue;
-    const gh = p.home_score ?? p.home?.score ?? null;
-    const ga = p.away_score ?? p.away?.score ?? null;
-    if (gh === null || ga === null) continue;
-    const sh = p.home.slug || slugDeNombre(p.home.name);
-    const sa = p.away.slug || slugDeNombre(p.away.name);
-    if (!st[sh]) st[sh] = { pts:0, gf:0, gc:0 };
-    if (!st[sa]) st[sa] = { pts:0, gf:0, gc:0 };
-    st[sh].gf += gh; st[sh].gc += ga;
-    st[sa].gf += ga; st[sa].gc += gh;
-    if (gh > ga)      { st[sh].pts += 3; }
-    else if (gh < ga) { st[sa].pts += 3; }
-    else              { st[sh].pts += 1; st[sa].pts += 1; }
+async function cargarGrupos() {
+  const wrap = document.getElementById('grupos-wrap');
+  if (!wrap) return;
+  wrap.style.display = '';
+  if (_gruposCache && Date.now() - _gruposTs < GRUPOS_TTL) {
+    renderGrupos(_gruposCache);
+    return;
   }
-  _standings = st;
+  wrap.innerHTML = '<div class="loading-msg" style="padding:20px 0">Cargando posiciones…</div>';
+  try {
+    const res = await fetch('/api/apisports/standings?league=1&season=2026');
+    const json = await res.json();
+    const standings = json.response?.[0]?.league?.standings || [];
+    _gruposCache = standings;
+    _gruposTs = Date.now();
+    renderGrupos(standings);
+  } catch(e) {
+    wrap.innerHTML = '<div class="loading-msg" style="padding:16px 0">Error cargando posiciones</div>';
+  }
 }
 
-function standingHTML(slug) {
-  const s = _standings[slug];
-  if (!s) return '';
-  const dg = s.gf - s.gc;
-  const dgStr = dg > 0 ? '+' + dg : String(dg);
-  return `<div class="equipo-standing"><span class="standing-pts">${s.pts}</span><span class="standing-dg">DG ${dgStr}</span></div>`;
+function renderGrupos(standings) {
+  const wrap = document.getElementById('grupos-wrap');
+  if (!wrap) return;
+  if (!standings.length) { wrap.innerHTML = ''; return; }
+
+  const grid = document.createElement('div');
+  grid.className = 'grupos-grid';
+
+  for (const group of standings) {
+    const card = document.createElement('div');
+    card.className = 'grupo-card';
+    const groupName = group[0]?.group || '';
+    card.innerHTML = `<div class="grupo-card-titulo">${groupName}</div>`;
+
+    group.forEach((t, i) => {
+      const slug = slugDeNombre(t.team.name);
+      const nombre = NOMBRES_ES[slug] || t.team.name;
+      const dg = t.goalsDiff;
+      const dgStr = dg > 0 ? '+' + dg : String(dg);
+      const clasificado = i < 2 ? 'clasificado' : '';
+      const fila = document.createElement('div');
+      fila.className = `grupo-fila ${clasificado}`;
+      fila.innerHTML = `
+        <span class="grupo-pos">${t.rank}</span>
+        <img class="grupo-escudo" src="escudos/${slug}.png" alt="${nombre}" onerror="this.style.opacity='0.15'">
+        <span class="grupo-nombre">${nombre}</span>
+        <span class="grupo-pts">${t.points}</span>
+        <span class="grupo-dg">${dgStr}</span>`;
+      card.appendChild(fila);
+    });
+
+    grid.appendChild(card);
+  }
+
+  wrap.innerHTML = '';
+  wrap.appendChild(grid);
 }
 
 function renderPartidos() {
-  computarStandings();
   const wrap = document.getElementById('partidos-wrap');
   wrap.innerHTML = '';
 
@@ -529,10 +616,6 @@ function crearCardPartido(p) {
     btnsHTML += '</div>';
   }
 
-  const esGrupo = ['1','2','3'].includes(p.round);
-  const stHome = esGrupo ? standingHTML(slugHome) : '';
-  const stAway = esGrupo ? standingHTML(slugAway) : '';
-
   card.innerHTML = `
     <div class="partido-meta">
       <span class="partido-grupo">${metaRonda}</span>
@@ -540,7 +623,6 @@ function crearCardPartido(p) {
     </div>
     <div class="partido-fila">
       <div class="equipo-home">
-        ${stHome}
         <span class="${claseNomHome}">${nomHome}</span>
         <a href="equipo.html?c=${slugHome}" onclick="event.stopPropagation()">
           <img class="partido-flag" src="escudos/${slugHome}.png" alt="${nomHome}" onerror="this.style.opacity='0.1'">
@@ -552,7 +634,6 @@ function crearCardPartido(p) {
           <img class="partido-flag" src="escudos/${slugAway}.png" alt="${nomAway}" onerror="this.style.opacity='0.1'">
         </a>
         <span class="${claseNomAway}">${nomAway}</span>
-        ${stAway}
       </div>
     </div>
     ${btnsHTML}
@@ -707,6 +788,7 @@ async function cargar() {
 
     renderFaseTabs();
     renderPartidos();
+    cargarGrupos();
 
     document.getElementById('loading-state').style.display = 'none';
     document.getElementById('contenido').style.display = '';
