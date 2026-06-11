@@ -512,9 +512,8 @@ function renderGrupos(equipos, estado) {
         const ptsClass = pos === 1 ? 'stat-pts lider' : pos === 2 ? 'stat-pts segundo' : 'stat-pts';
         statsHTML = `
           <div class="equipo-stats">
-            <span class="stat-pj" title="Partidos jugados">${statsEquipo.pj ?? 0}</span>
-            <span class="stat-dg" title="Diferencia de goles">${dgStr}</span>
             <span class="${ptsClass}" title="Puntos">${statsEquipo.pts ?? 0}</span>
+            <span class="stat-dg" title="Diferencia de goles">${dgStr}</span>
           </div>`;
       }
 
