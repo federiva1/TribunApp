@@ -1668,10 +1668,17 @@ async function initPuntajes() {
             s.name.toLowerCase() === j.nombre.toLowerCase() ||
             String(s.fid) === String(j.id)
           );
+          // Para el DT, el fid viene de plantelData.tecnico (la foto está guardada con ese fid)
+          let fid = enPlantel?.fid ?? String(j.id);
+          if (j.tipo === 'dt' && plantelData?.tecnico) {
+            const tec = plantelData.tecnico;
+            const tecFid = typeof tec === 'object' ? tec.fid : null;
+            if (tecFid) fid = tecFid;
+          }
           return {
             num: enPlantel?.num ?? j.id,
             name: j.nombre,
-            fid: enPlantel?.fid ?? String(j.id),   // plantel fid para foto (ahí están las imágenes)
+            fid,   // plantel fid para foto (ahí están las imágenes)
             posicion: j.portero ? 'GK' : (enPlantel?.posicion || 'DEL'),
             tipo: j.tipo || (idx < 11 ? 'titular' : 'suplente'),
             _src_id: j.id

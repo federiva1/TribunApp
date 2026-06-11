@@ -266,7 +266,6 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
     <div class="header-teams">
       <img class="header-escudo" id="h-flag-local" src="" alt="">
       <div>
-        <div class="header-score" id="h-score"></div>
         <div class="header-sub" id="h-comp"></div>
       </div>
       <img class="header-escudo" id="h-flag-visit" src="" alt="">
@@ -519,7 +518,6 @@ async function init(){
   // Header mini
   document.getElementById('h-flag-local').src  = esc(p.local);
   document.getElementById('h-flag-visit').src  = esc(p.visitante);
-  document.getElementById('h-score').textContent = `${p.goles_local} - ${p.goles_visitante}`;
   document.getElementById('h-comp').textContent  = p.competicion.toUpperCase();
 
   // Match header
@@ -547,13 +545,20 @@ async function init(){
   // Goles
   const gl=document.getElementById('goals-local');
   const gv=document.getElementById('goals-visitante');
+  function fmtGol(g){
+    if(typeof g==='string') return '⚽ '+g;
+    let t=`⚽ ${g.min ? g.min+"' " : ''}${g.jugador||''}`;
+    if(g.asist) t+=` (E: ${g.asist})`;
+    return t;
+  }
   (p.goles_detalle.local||[]).forEach(g=>{
-    const d=document.createElement('div');d.className='goal-item';d.textContent='⚽ '+g;gl.appendChild(d);
+    const d=document.createElement('div');d.className='goal-item';d.textContent=fmtGol(g);gl.appendChild(d);
   });
   (p.goles_detalle.visitante||[]).forEach(g=>{
+    const isOG=typeof g==='object'&&(g.jugador||'').includes('OG');
     const d=document.createElement('div');
-    d.className='goal-item'+(g.includes('OG')?' og':'');
-    d.textContent='⚽ '+g;gv.appendChild(d);
+    d.className='goal-item'+(isOG?' og':'');
+    d.textContent=fmtGol(g);gv.appendChild(d);
   });
 
   // Stats legend + colores
