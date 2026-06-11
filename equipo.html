@@ -585,6 +585,21 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 }
 #team-picker-confirm:disabled { opacity: 0.35; cursor: not-allowed; }
 #team-picker-confirm:not(:disabled):hover { background: #1976d2; }
+#username-input {
+  width: 100%;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #fff;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  outline: none;
+  margin-bottom: 14px;
+  transition: border-color 0.2s;
+}
+#username-input::placeholder { color: rgba(255,255,255,0.3); }
+#username-input:focus { border-color: rgba(66,165,245,0.6); }
 
 /* ===== AUTH BUTTON EN HEADER ===== */
 #auth-header-btn {
@@ -601,8 +616,30 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   white-space: nowrap;
   transition: background 0.2s;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
 }
 #auth-header-btn:hover { background: rgba(255,255,255,0.18); }
+#auth-header-btn.logged-in {
+  background: rgba(66,165,245,0.12);
+  border-color: rgba(66,165,245,0.35);
+}
+.auth-btn-avatar {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.auth-btn-name {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 /* ===== AUTH MODAL ===== */
 #auth-modal-overlay {
@@ -863,8 +900,9 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 <!-- ===== TEAM PICKER MODAL ===== -->
 <div id="team-picker-overlay">
   <div id="team-picker-modal">
-    <div class="team-picker-title">¿Cuál es tu selección?</div>
-    <div class="team-picker-sub">Esta elección es permanente y no se puede modificar.</div>
+    <div class="team-picker-title">¡Bienvenido!</div>
+    <div class="team-picker-sub">Elegí tu nombre y tu selección favorita</div>
+    <input id="username-input" type="text" placeholder="Tu nombre o apodo..." maxlength="24" oninput="window._teamPickerValidate()">
     <div id="team-picker-grid"></div>
     <button id="team-picker-confirm" disabled onclick="window._teamPickerConfirm()">Confirmar</button>
   </div>
@@ -879,6 +917,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   let _sb = null;
   let _currentUser = null;
   let _equipoHincha = null;
+  let _username = null;
   let _teamPickerSelected = null;
 
   const TEAMS_ES = {
@@ -909,13 +948,18 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
     const btn = document.getElementById('auth-header-btn');
     if (!btn) return;
     if (_currentUser) {
+      btn.classList.add('logged-in');
+      const displayName = _username || (_currentUser.email || '').split('@')[0];
+      let html = '';
       if (_equipoHincha) {
-        btn.innerHTML = '<img src="escudos/' + _equipoHincha + '.png" style="width:20px;height:20px;object-fit:contain;vertical-align:middle;margin-right:6px;" onerror="this.style.display=\'none\'">' + (TEAMS_ES[_equipoHincha] || _equipoHincha);
+        html += '<img class="auth-btn-avatar" src="escudos/' + _equipoHincha + '.png" onerror="this.style.display=\'none\'">';
       } else {
-        const email = _currentUser.email || '';
-        btn.textContent = email.split('@')[0];
+        html += '<span style="font-size:16px;line-height:1;">👤</span>';
       }
+      html += '<span class="auth-btn-name">' + displayName + '</span>';
+      btn.innerHTML = html;
     } else {
+      btn.classList.remove('logged-in');
       btn.textContent = 'Ingresar';
     }
   }
@@ -924,11 +968,14 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
     const sb = getSB();
     if (!sb) return;
     try {
-      const { data } = await sb.from('perfiles').select('equipo_hincha').eq('id', userId).single();
-      if (data && data.equipo_hincha) {
+      const { data } = await sb.from('perfiles').select('equipo_hincha, username').eq('id', userId).single();
+      if (data && data.equipo_hincha && data.username) {
         _equipoHincha = data.equipo_hincha;
+        _username = data.username;
         _renderBtn();
       } else {
+        if (data && data.equipo_hincha) _equipoHincha = data.equipo_hincha;
+        if (data && data.username) _username = data.username;
         _showTeamPicker();
       }
     } catch(e) {
@@ -939,6 +986,8 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   function _showTeamPicker() {
     const grid = document.getElementById('team-picker-grid');
     if (!grid) return;
+    const nameInput = document.getElementById('username-input');
+    if (nameInput && _username) nameInput.value = _username;
     grid.innerHTML = ALL_TEAMS.map(slug =>
       '<div class="team-picker-item" data-slug="' + slug + '" onclick="window._teamPickerSelect(\'' + slug + '\')">' +
         '<img src="escudos/' + slug + '.png" alt="' + TEAMS_ES[slug] + '" onerror="this.style.opacity=0.3">' +
@@ -948,23 +997,32 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
     document.getElementById('team-picker-overlay').classList.add('open');
   }
 
+  window._teamPickerValidate = function() {
+    const name = (document.getElementById('username-input') || {}).value || '';
+    const btn = document.getElementById('team-picker-confirm');
+    if (btn) btn.disabled = !(name.trim().length >= 2 && _teamPickerSelected);
+  };
+
   window._teamPickerSelect = function(slug) {
     _teamPickerSelected = slug;
     document.querySelectorAll('.team-picker-item').forEach(el => {
       el.classList.toggle('selected', el.dataset.slug === slug);
     });
-    document.getElementById('team-picker-confirm').disabled = false;
+    window._teamPickerValidate();
   };
 
   window._teamPickerConfirm = async function() {
     if (!_teamPickerSelected || !_currentUser) return;
+    const nameVal = ((document.getElementById('username-input') || {}).value || '').trim();
+    if (nameVal.length < 2) return;
     const btn = document.getElementById('team-picker-confirm');
     btn.disabled = true;
     btn.textContent = 'Guardando…';
     const sb = getSB();
     try {
-      await sb.from('perfiles').upsert({ id: _currentUser.id, equipo_hincha: _teamPickerSelected });
+      await sb.from('perfiles').upsert({ id: _currentUser.id, equipo_hincha: _teamPickerSelected, username: nameVal });
       _equipoHincha = _teamPickerSelected;
+      _username = nameVal;
       _renderBtn();
       document.getElementById('team-picker-overlay').classList.remove('open');
     } catch(e) {
