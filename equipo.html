@@ -1663,10 +1663,11 @@ async function initPuntajes() {
           j.tipo === 'titular' || j.tipo === 'dt' ||
           (j.tipo === 'suplente' && j.min != null && j.min > 0)
         );
+        const normNombre = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
         squadPuntajes = jugs.map((j, idx) => {
-          // Cruzar con plantel para obtener numero, fid real y posicion
+          // Cruzar con plantel para obtener numero, fid real y posicion (normaliza tildes)
           const enPlantel = squad.find(s =>
-            s.name.toLowerCase() === j.nombre.toLowerCase() ||
+            normNombre(s.name) === normNombre(j.nombre) ||
             String(s.fid) === String(j.id)
           );
           // Para el DT, el fid viene de plantelData.tecnico (la foto está guardada con ese fid)
