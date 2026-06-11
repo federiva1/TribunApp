@@ -1664,11 +1664,15 @@ async function initPuntajes() {
           (j.tipo === 'suplente' && j.min != null && j.min > 0)
         );
         const normNombre = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+        const firstLast  = s => { const p = normNombre(s).split(/\s+/).filter(Boolean); return p.length >= 2 ? p[0] + ' ' + p[p.length-1] : normNombre(s); };
         squadPuntajes = jugs.map((j, idx) => {
-          // Cruzar con plantel para obtener numero, fid real y posicion (normaliza tildes)
+          // Cruzar con plantel: exact norm → fid → primer+último nombre (ignora segundo nombre de FotMob)
+          const nj = normNombre(j.nombre);
+          const flj = firstLast(j.nombre);
           const enPlantel = squad.find(s =>
-            normNombre(s.name) === normNombre(j.nombre) ||
-            String(s.fid) === String(j.id)
+            normNombre(s.name) === nj ||
+            String(s.fid) === String(j.id) ||
+            firstLast(s.name) === flj
           );
           // Para el DT, el fid viene de plantelData.tecnico (la foto está guardada con ese fid)
           let fid = enPlantel?.fid ?? String(j.id);
