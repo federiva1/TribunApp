@@ -1186,8 +1186,9 @@ let nombreEquipo = '';
 let estadoMundial = { puntajesOpen: false, rival: null, match_date: null };
 
 // localStorage keys — incluyen match_date para que cada partido tenga su propio voto
-const lsFormKey     = () => `${slug}_${estadoMundial.match_date||'x'}_formacion`;
-const lsFormDataKey = () => `${slug}_${estadoMundial.match_date||'x'}_formacion_data`;
+// formacion usa formacion_match_date si existe (siguiente partido), puntajes usa match_date (partido jugado)
+const lsFormKey     = () => `${slug}_${estadoMundial.formacion_match_date||estadoMundial.match_date||'x'}_formacion`;
+const lsFormDataKey = () => `${slug}_${estadoMundial.formacion_match_date||estadoMundial.match_date||'x'}_formacion_data`;
 const lsScoresKey   = () => `${slug}_${estadoMundial.match_date||'x'}_puntajes`;
 
 // ── Toast ──────────────────────────────────────────────────────────────────
@@ -1531,8 +1532,8 @@ document.getElementById('confirm-btn').addEventListener('click', async () => {
     if (SUPABASE_URL) {
       const payload = {
         jugadores, club: slug, device_id: getDeviceId(),
-        rival: estadoMundial.rival || null,
-        match_date: estadoMundial.match_date || null
+        rival: estadoMundial.formacion_rival || estadoMundial.rival || null,
+        match_date: estadoMundial.formacion_match_date || estadoMundial.match_date || null
       };
       await fetch(`${SUPABASE_URL}/rest/v1/formaciones`, {
         method: 'POST',
@@ -1591,7 +1592,7 @@ async function showFormacionResults() {
     return;
   }
   try {
-    const md = estadoMundial.match_date;
+    const md = estadoMundial.formacion_match_date || estadoMundial.match_date;
     const url = md
       ? `${SUPABASE_URL}/rest/v1/formaciones?select=jugadores&club=eq.${slug}&match_date=eq.${md}`
       : `${SUPABASE_URL}/rest/v1/formaciones?select=jugadores&club=eq.${slug}`;
@@ -1966,13 +1967,15 @@ async function init() {
         const estado = await er.json();
         if (estado[slug]) {
           estadoMundial = estado[slug];
-          if (estadoMundial.rival) {
+          if (estadoMundial.rival || estadoMundial.formacion_rival) {
             const NAMES_ES_FH = {algeria:'Argelia',argentina:'Argentina',brazil:'Brasil',france:'Francia',germany:'Alemania',spain:'España',england:'Inglaterra',portugal:'Portugal',netherlands:'Países Bajos',uruguay:'Uruguay',colombia:'Colombia',mexico:'México',usa:'Estados Unidos',canada:'Canadá',japan:'Japón',southkorea:'Corea del Sur',morocco:'Marruecos',senegal:'Senegal',australia:'Australia',croatia:'Croacia',switzerland:'Suiza',ecuador:'Ecuador',ghana:'Ghana',panama:'Panamá',southafrica:'Sudáfrica',iran:'Irán',iraq:'Irak',norway:'Noruega',sweden:'Suecia',belgium:'Bélgica',denmark:'Dinamarca',poland:'Polonia',turkey:'Turquía',turkiye:'Turquía',ukraine:'Ucrania',scotland:'Escocia',czechia:'Chequia',saudiarabia:'Arabia Saudita',egypt:'Egipto',nigeria:'Nigeria',ivorycoast:'Costa de Marfil',drcongo:'Rep. D. del Congo',haiti:'Haití',curacao:'Curazao',paraguay:'Paraguay',austria:'Austria',jordan:'Jordania',uzbekistan:'Uzbekistán',capeverde:'Cabo Verde',qatar:'Qatar',newzealand:'Nueva Zelanda',taiwan:'Taiwán',bosniaandherzegovina:'Bosnia y Herz.',tunisia:'Túnez'};
-            const rivalEs = NAMES_ES_FH[estadoMundial.rival] || estadoMundial.rival;
+            // Formación apunta al próximo partido; puntajes al partido jugado
+            const formRival  = estadoMundial.formacion_rival || estadoMundial.rival;
+            const puntRival  = estadoMundial.rival;
             const vsLabel = document.getElementById('formacion-vs-label');
-            if (vsLabel) { vsLabel.textContent = 'vs ' + rivalEs; vsLabel.style.display = 'block'; }
+            if (vsLabel) { vsLabel.textContent = 'vs ' + (NAMES_ES_FH[formRival] || formRival); vsLabel.style.display = 'block'; }
             const vsLabelP = document.getElementById('puntajes-vs-label');
-            if (vsLabelP) { vsLabelP.textContent = 'vs ' + rivalEs; vsLabelP.style.display = 'block'; }
+            if (vsLabelP) { vsLabelP.textContent = 'vs ' + (NAMES_ES_FH[puntRival] || puntRival); vsLabelP.style.display = 'block'; }
           }
           const badge = document.getElementById('badge-puntajes');
           const puntPanel = document.querySelector('.hero-panel:last-of-type');
