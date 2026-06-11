@@ -545,7 +545,8 @@ async function toggleFicha(p, btn, card) {
   btn.textContent = '📋 Ocultar ficha';
 
   const cacheKey = p.stats_id || p.api_id;
-  if (_fichaCache[cacheKey]) {
+  const enCursoAhora = p.status?.started && !p.status?.finished;
+  if (_fichaCache[cacheKey] && !enCursoAhora) {
     panel.innerHTML = _fichaCache[cacheKey];
     return;
   }
