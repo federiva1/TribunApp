@@ -431,7 +431,7 @@ function renderPartidos() {
 
 function crearCardPartido(p) {
   const tieneStats = p.stats_id && p.status.finished;
-  const tieneFicha = !!p.api_id;
+  const tieneFicha = !!(p.api_id || p.stats_id);
   const card = document.createElement('div');
   const { started, finished, cancelled } = p.status;
   const enCurso = started && !finished;
@@ -544,34 +544,96 @@ async function toggleFicha(p, btn, card) {
   panel.classList.add('abierto');
   btn.textContent = '📋 Ocultar ficha';
 
-  if (_fichaCache[p.api_id]) {
-    panel.innerHTML = _fichaCache[p.api_id];
+  const cacheKey = p.stats_id || p.api_id;
+  if (_fichaCache[cacheKey]) {
+    panel.innerHTML = _fichaCache[cacheKey];
     return;
   }
 
   panel.innerHTML = '<div class="ficha-loading">CARGANDO...</div>';
 
   try {
+    // Prioridad: JSON local (stats_id) → api-sports (api_id)
+    if (p.stats_id) {
+      const res = await fetch(`data/partidos/${p.stats_id}.json?t=${Date.now()}`);
+      if (res.ok) {
+        const data = await res.json();
+        const html = renderFichaFromJson(data);
+        _fichaCache[cacheKey] = html;
+        panel.innerHTML = html;
+        return;
+      }
+    }
+    // Fallback api-sports
     const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-    const base = isLocal
-      ? 'https://v3.football.api-sports.io'
-      : '/api/apisports';
+    const base = isLocal ? 'https://v3.football.api-sports.io' : '/api/apisports';
     const headers = isLocal ? { 'x-apisports-key': 'b8bbfc856fd5cf12cd7d697b2b01887d' } : {};
     const [resLinea, resEv] = await Promise.all([
       fetch(`${base}/fixtures/lineups?fixture=${p.api_id}`, { headers }),
       fetch(`${base}/fixtures/events?fixture=${p.api_id}`, { headers }),
     ]);
     const [dLinea, dEv] = await Promise.all([resLinea.json(), resEv.json()]);
-
-    const lineups = (dLinea.response || []);
-    const events  = (dEv.response || []);
-
-    const html = renderFicha(lineups, events, p);
-    _fichaCache[p.api_id] = html;
+    const html = renderFicha(dLinea.response || [], dEv.response || [], p);
+    _fichaCache[cacheKey] = html;
     panel.innerHTML = html;
   } catch(e) {
     panel.innerHTML = `<div class="ficha-loading">No disponible</div>`;
   }
+}
+
+function renderFichaFromJson(data) {
+  const p = data.partido;
+  const jugadores = data.jugadores || {};
+
+  function renderEquipoJson(slug) {
+    const jgs = jugadores[slug] || [];
+    const titulares = jgs.filter(j => j.tipo === 'titular');
+    const suplentes = jgs.filter(j => j.tipo === 'suplente' && j.min > 0);
+    const nombre = NOMBRES_ES[slug] || slug;
+
+    let html = `<div class="ficha-equipo-titulo">${nombre}</div>`;
+
+    for (const j of titulares) {
+      const iconos = [];
+      for (let i = 0; i < (j.goles || 0); i++) iconos.push('<span class="ev-icon" title="Gol">⚽</span>');
+      for (let i = 0; i < (j.asist || 0); i++) iconos.push('<span class="ev-icon" title="Asistencia">🅰️</span>');
+      if (j.amarilla) iconos.push('<span class="ev-icon" title="Amarilla">🟨</span>');
+      if (j.roja)     iconos.push('<span class="ev-icon" title="Roja">🟥</span>');
+      const foto = j.fid ? `fotos/${j.fid}.png` : '';
+      html += `
+        <div class="ficha-jugador">
+          ${foto ? `<img class="ficha-jugador-foto" src="${foto}" alt="" onerror="this.style.display='none'">` : '<span class="ficha-jugador-foto"></span>'}
+          <span class="ficha-jugador-num">${j.num || ''}</span>
+          <div class="ficha-jugador-info">
+            <div class="ficha-jugador-nombre">${j.nombre}</div>
+          </div>
+          <div class="ficha-jugador-eventos">${iconos.join('')}</div>
+        </div>`;
+    }
+
+    if (suplentes.length) {
+      html += `<div class="ficha-subs"><div class="ficha-subs-titulo">Cambios</div>`;
+      for (const s of suplentes) {
+        const minEntro = s.min != null ? (90 - s.min) + "'" : '';
+        const iconos = [];
+        for (let i = 0; i < (s.goles || 0); i++) iconos.push('⚽');
+        if (s.amarilla) iconos.push('🟨');
+        if (s.roja)     iconos.push('🟥');
+        html += `
+          <div class="ficha-sub-fila">
+            <span class="ficha-sub-min">${minEntro}</span>
+            <span class="ficha-sub-in">↑ ${s.nombre}${iconos.length ? ' ' + iconos.join('') : ''}</span>
+          </div>`;
+      }
+      html += '</div>';
+    }
+
+    return html;
+  }
+
+  const col1 = renderEquipoJson(p.local);
+  const col2 = renderEquipoJson(p.visitante);
+  return `<div class="ficha-cols"><div>${col1}</div><div>${col2}</div></div>`;
 }
 
 function renderFicha(lineups, events, p) {
