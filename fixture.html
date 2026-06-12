@@ -646,12 +646,16 @@ function renderFichaFromJson(data, plantelLocal, plantelVisit) {
   // Normalizar nombre para lookup (tildes, puntos, mayúsculas)
   const normN = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
   const firstLast = s => { const w = normN(s).split(/\s+/).filter(Boolean); return w.length >= 2 ? w[0]+' '+w[w.length-1] : normN(s); };
+  // Clave por conjunto de tokens ordenado: ignora orden apellido/nombre
+  // (api-sports "Hwang In-beom" vs plantel "In-Beom Hwang")
+  const tokKey = s => '' + normN(s).replace(/-/g,' ').split(/\s+/).filter(Boolean).sort().join(' ');
 
   function buildFidIndex(plantel) {
     const idx = {};
     for (const pl of (plantel?.jugadores || [])) {
       idx[normN(pl.nombre)] = pl.fid;
       idx[firstLast(pl.nombre)] = pl.fid;
+      idx[tokKey(pl.nombre)] = pl.fid;
     }
     return idx;
   }
@@ -660,7 +664,7 @@ function renderFichaFromJson(data, plantelLocal, plantelVisit) {
   const fidVisit = buildFidIndex(plantelVisit);
 
   function getFid(nombre, fidIdx) {
-    return fidIdx[normN(nombre)] || fidIdx[firstLast(nombre)] || null;
+    return fidIdx[normN(nombre)] || fidIdx[firstLast(nombre)] || fidIdx[tokKey(nombre)] || null;
   }
 
   function renderEquipoJson(slug, fidIdx) {
