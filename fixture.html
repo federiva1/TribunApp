@@ -204,6 +204,38 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .ficha-gol-asist { color: rgba(255,255,255,0.3); font-size: 11px; }
 .ficha-gol-suplente { color: rgba(42,213,114,0.9); }
 
+/* Jugador clickeable + badges de ingreso/egreso */
+.ficha-jugador.clickable { cursor: pointer; }
+.ficha-mov { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; display: inline-flex; align-items: center; gap: 1px; flex-shrink: 0; }
+.ficha-mov-in  { color: rgba(42,213,114,0.9); }
+.ficha-mov-out { color: rgba(255,90,90,0.85); }
+
+/* Detalle de jugador (reemplaza la ficha al clickear) */
+.ficha-detalle { padding: 2px; animation: fdIn .15s ease; }
+@keyframes fdIn { from { opacity: 0; } to { opacity: 1; } }
+.fd-header { display: flex; align-items: center; gap: 14px; padding: 6px 4px 14px; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 14px; position: relative; }
+.fd-foto { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; background: rgba(255,255,255,0.06); flex-shrink: 0; }
+.fd-info { flex: 1; min-width: 0; padding-right: 40px; }
+.fd-nombre { font-family: 'Barlow Condensed', sans-serif; font-size: 19px; font-weight: 600; color: #fff; line-height: 1.1; }
+.fd-meta { font-size: 12px; color: rgba(255,255,255,0.45); margin-top: 3px; }
+.fd-num { font-family: 'Barlow Condensed', sans-serif; font-size: 32px; font-weight: 700; color: rgba(255,255,255,0.16); flex-shrink: 0; align-self: flex-start; }
+.fd-close { position: absolute; top: 0; right: 0; width: 30px; height: 30px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.6); cursor: pointer; font-size: 15px; line-height: 1; display: flex; align-items: center; justify-content: center; }
+.fd-close:hover { background: rgba(255,255,255,0.1); color: #fff; }
+.fd-badges { display: flex; gap: 6px; margin-top: 7px; flex-wrap: wrap; }
+.fd-badge { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; padding: 2px 8px; border-radius: 6px; background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.75); }
+.fd-sec { margin-bottom: 14px; }
+.fd-sec-tit { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.3); margin-bottom: 6px; }
+.fd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+.fd-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 4px 2px; border-bottom: 1px solid rgba(255,255,255,0.05); font-family: 'Barlow Condensed', sans-serif; font-size: 13px; }
+.fd-row-label { color: rgba(255,255,255,0.5); }
+.fd-row-val { color: #fff; font-weight: 500; }
+.fd-row-val.null { color: rgba(255,255,255,0.22); font-weight: 400; }
+.fd-portero { display: flex; gap: 10px; }
+.fd-pbox { flex: 1; background: rgba(255,255,255,0.04); border-radius: 8px; padding: 8px; text-align: center; }
+.fd-pval { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 700; color: #fff; }
+.fd-plabel { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.4); margin-top: 2px; }
+.fd-empty { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; color: rgba(255,255,255,0.4); text-align: center; padding: 18px 0; }
+
 /* Meta del partido: grupo y horario */
 .partido-meta {
   display: flex; align-items: center; justify-content: space-between;
@@ -568,7 +600,10 @@ async function loadFichaContent(p, card) {
   const enCursoAhora = p.status?.started && !p.status?.finished;
 
   if (_fichaCache[cacheKey] && !enCursoAhora) {
-    panel.innerHTML = _fichaCache[cacheKey];
+    const ctx = _fichaCache[cacheKey];
+    panel.innerHTML = ctx.lineupHTML;
+    panel._fichaCtx = ctx;
+    bindFichaPanel(panel);
     return;
   }
 
@@ -591,9 +626,11 @@ async function loadFichaContent(p, card) {
         ]);
         const plantelLocal = rL.status === 'fulfilled' && rL.value.ok ? await rL.value.json() : null;
         const plantelVisit = rV.status === 'fulfilled' && rV.value.ok ? await rV.value.json() : null;
-        const html = renderFichaFromJson(data, plantelLocal, plantelVisit);
-        if (!enCursoAhora) _fichaCache[cacheKey] = html;
-        panel.innerHTML = html;
+        const ctx = renderFichaFromJson(data, plantelLocal, plantelVisit);
+        if (!enCursoAhora) _fichaCache[cacheKey] = ctx;
+        panel.innerHTML = ctx.lineupHTML;
+        panel._fichaCtx = ctx;
+        bindFichaPanel(panel);
         return;
       }
     }
@@ -616,9 +653,11 @@ async function loadFichaContent(p, card) {
     const events  = resEv.status  === 'fulfilled' && resEv.value.ok  ? (await resEv.value.json()).response  || [] : [];
     const plantelLocal = rPL.status === 'fulfilled' && rPL.value.ok ? await rPL.value.json() : null;
     const plantelVisit = rPV.status === 'fulfilled' && rPV.value.ok ? await rPV.value.json() : null;
-    const html = renderFichaEnhanced(lineups, events, p, plantelLocal, plantelVisit);
-    if (!enCursoAhora) _fichaCache[cacheKey] = html;
-    panel.innerHTML = html;
+    const ctx = renderFichaEnhanced(lineups, events, p, plantelLocal, plantelVisit);
+    if (!enCursoAhora) _fichaCache[cacheKey] = ctx;
+    panel.innerHTML = ctx.lineupHTML;
+    panel._fichaCtx = ctx;
+    bindFichaPanel(panel);
   } catch(e) {
     panel.innerHTML = `<div class="ficha-loading">No disponible</div>`;
   }
@@ -650,13 +689,17 @@ function renderFichaFromJson(data, plantelLocal, plantelVisit) {
   // (api-sports "Hwang In-beom" vs plantel "In-Beom Hwang")
   const tokKey = s => '' + normN(s).replace(/-/g,' ').split(/\s+/).filter(Boolean).sort().join(' ');
 
+  const tokSet = s => new Set(normN(s).replace(/-/g,' ').split(/\s+/).filter(Boolean));
+
   function buildFidIndex(plantel) {
     const idx = {};
-    for (const pl of (plantel?.jugadores || [])) {
+    const list = (plantel?.jugadores || []);
+    for (const pl of list) {
       idx[normN(pl.nombre)] = pl.fid;
       idx[firstLast(pl.nombre)] = pl.fid;
       idx[tokKey(pl.nombre)] = pl.fid;
     }
+    idx._list = list;
     return idx;
   }
 
@@ -664,7 +707,42 @@ function renderFichaFromJson(data, plantelLocal, plantelVisit) {
   const fidVisit = buildFidIndex(plantelVisit);
 
   function getFid(nombre, fidIdx) {
-    return fidIdx[normN(nombre)] || fidIdx[firstLast(nombre)] || fidIdx[tokKey(nombre)] || null;
+    const directo = fidIdx[normN(nombre)] || fidIdx[firstLast(nombre)] || fidIdx[tokKey(nombre)];
+    if (directo) return directo;
+    // Fallback: mejor solapamiento de tokens (>=2 comunes y ganador único)
+    // cubre diferencias de romanización (Oh Hyeon-Gyu vs Hyun-Gyu Oh)
+    const mine = tokSet(nombre);
+    const scored = (fidIdx._list || []).map(pl => {
+      const o = tokSet(pl.nombre); let n = 0; mine.forEach(t => { if (o.has(t)) n++; }); return { pl, n };
+    }).sort((a, b) => b.n - a.n);
+    if (scored.length && scored[0].n >= 2 && (scored.length === 1 || scored[1].n < scored[0].n)) return scored[0].pl.fid;
+    return null;
+  }
+
+  // Registro pid → datos para el detalle al clickear
+  const players = {};
+
+  function eventosIconos(j) {
+    const iconos = [];
+    for (let i = 0; i < (j.goles || 0); i++) iconos.push('<span class="ev-icon" title="Gol">⚽</span>');
+    for (let i = 0; i < (j.asist || 0); i++) iconos.push('<span class="ev-icon" title="Asistencia">🅰️</span>');
+    if (j.amarilla) iconos.push('<span class="ev-icon" title="Amarilla">🟨</span>');
+    if (j.roja)     iconos.push('<span class="ev-icon" title="Roja">🟥</span>');
+    return iconos.join('');
+  }
+
+  function filaJugador(j, fidIdx, teamName, movHTML) {
+    const fid = getFid(j.nombre, fidIdx);
+    players[j.id] = { j, teamName, fid };
+    return `
+      <div class="ficha-jugador clickable" data-pid="${j.id}">
+        ${fid ? `<img class="ficha-jugador-foto" src="fotos/${fid}.png" alt="" onerror="this.style.display='none'">` : '<span class="ficha-jugador-foto"></span>'}
+        <span class="ficha-jugador-num">${j.num || ''}</span>
+        <div class="ficha-jugador-info">
+          <div class="ficha-jugador-nombre">${j.nombre}</div>
+        </div>
+        <div class="ficha-jugador-eventos">${movHTML || ''}${eventosIconos(j)}</div>
+      </div>`;
   }
 
   function renderEquipoJson(slug, fidIdx) {
@@ -676,36 +754,20 @@ function renderFichaFromJson(data, plantelLocal, plantelVisit) {
     let html = `<div class="ficha-equipo-titulo">${nombre}</div>`;
 
     for (const j of titulares) {
-      const iconos = [];
-      for (let i = 0; i < (j.goles || 0); i++) iconos.push('<span class="ev-icon" title="Gol">⚽</span>');
-      for (let i = 0; i < (j.asist || 0); i++) iconos.push('<span class="ev-icon" title="Asistencia">🅰️</span>');
-      if (j.amarilla) iconos.push('<span class="ev-icon" title="Amarilla">🟨</span>');
-      if (j.roja)     iconos.push('<span class="ev-icon" title="Roja">🟥</span>');
-      const fid = getFid(j.nombre, fidIdx);
-      html += `
-        <div class="ficha-jugador">
-          ${fid ? `<img class="ficha-jugador-foto" src="fotos/${fid}.png" alt="" onerror="this.style.display='none'">` : '<span class="ficha-jugador-foto"></span>'}
-          <span class="ficha-jugador-num">${j.num || ''}</span>
-          <div class="ficha-jugador-info">
-            <div class="ficha-jugador-nombre">${j.nombre}</div>
-          </div>
-          <div class="ficha-jugador-eventos">${iconos.join('')}</div>
-        </div>`;
+      // Titular que salió: min < 90 indica el minuto en que fue reemplazado
+      const movHTML = (j.min != null && j.min < 90)
+        ? `<span class="ficha-mov ficha-mov-out" title="Salió">↓ ${j.min}'</span> ` : '';
+      html += filaJugador(j, fidIdx, nombre, movHTML);
     }
 
     if (suplentes.length) {
-      html += `<div class="ficha-subs"><div class="ficha-subs-titulo">Cambios</div>`;
+      html += `<div class="ficha-subs"><div class="ficha-subs-titulo">Suplentes</div>`;
       for (const s of suplentes) {
-        const minEntro = s.min != null ? (90 - s.min) + "'" : '';
-        const iconos = [];
-        for (let i = 0; i < (s.goles || 0); i++) iconos.push('⚽');
-        if (s.amarilla) iconos.push('🟨');
-        if (s.roja)     iconos.push('🟥');
-        html += `
-          <div class="ficha-sub-fila">
-            <span class="ficha-sub-min">${minEntro}</span>
-            <span class="ficha-sub-in">↑ ${s.nombre}${iconos.length ? ' ' + iconos.join('') : ''}</span>
-          </div>`;
+        // Minuto de ingreso ≈ 90 - minutos jugados
+        const minEntro = s.min != null ? (90 - s.min) : null;
+        const movHTML = minEntro != null
+          ? `<span class="ficha-mov ficha-mov-in" title="Ingresó">↑ ${minEntro}'</span> ` : '';
+        html += filaJugador(s, fidIdx, nombre, movHTML);
       }
       html += '</div>';
     }
@@ -735,11 +797,101 @@ function renderFichaFromJson(data, plantelLocal, plantelVisit) {
     golesHTML = `<div class="ficha-goles"><div>${renderGolesCol(gd.local, p.local)}</div><div>${renderGolesCol(gd.visitante, p.visitante)}</div></div>`;
   }
 
-  return `${golesHTML}<div class="ficha-cols"><div>${col1}</div><div>${col2}</div></div>`;
+  const lineupHTML = `${golesHTML}<div class="ficha-cols"><div>${col1}</div><div>${col2}</div></div>`;
+  return { lineupHTML, players };
+}
+
+// ── Detalle de jugador (vista que reemplaza la ficha) ───────────────────────
+const LBL_TOP = {tiros_totales:'Tiros totales',disparos_puerta:'A puerta',oport_creadas:'Oport. creadas',grandes_oport:'Gran. oport.',acc_defensivas:'Acc. defensivas',pases_precisos:'Pases precisos'};
+const LBL_ATQ = {toques:'Toques',toques_area:'Toques área rival',regates:'Regates',pases_ultimo_tercio:'Pases últ. tercio',tiros_largos:'Tiros largos',perdida_balon:'Pérdidas'};
+const LBL_DEF = {acc_defensivas:'Acc. defensivas',entradas:'Entradas',interceptaciones:'Interceptaciones',recuperaciones:'Recuperaciones',despejes:'Despejes',bloqueos:'Bloqueos',regateado:'Regateado'};
+const LBL_DUE = {ganados:'Duelos ganados',perdidos:'Duelos perdidos',terrestres:'Terrestres',aereos:'Aéreos',faltas:'Faltas cometidas',faltas_recibidas:'Faltas recibidas'};
+
+function _fdGrid(obj, labels) {
+  const rows = Object.entries(labels).map(([k, l]) => {
+    const raw = obj[k];
+    const isNull = raw === null || raw === undefined;
+    return `<div class="fd-row"><span class="fd-row-label">${l}</span><span class="fd-row-val${isNull ? ' null' : ''}">${isNull ? '—' : raw}</span></div>`;
+  });
+  const mid = Math.ceil(rows.length / 2);
+  return `<div class="fd-grid"><div>${rows.slice(0, mid).join('')}</div><div>${rows.slice(mid).join('')}</div></div>`;
+}
+
+function _fdSec(titulo, gridHTML) {
+  return `<div class="fd-sec"><div class="fd-sec-tit">${titulo}</div>${gridHTML}</div>`;
+}
+
+function renderFichaDetalle(entry) {
+  const { j, teamName, fid } = entry;
+  const fotoTag = fid
+    ? `<img class="fd-foto" src="fotos/${fid}.png" alt="" onerror="this.style.visibility='hidden'">`
+    : `<span class="fd-foto"></span>`;
+  const tipoLabel = j.tipo === 'suplente' ? 'Suplente' : (j.tipo === 'dt' ? 'DT' : 'Titular');
+
+  const badges = [];
+  if (j.min != null) badges.push(`<span class="fd-badge">${j.min}' jugados</span>`);
+  if (j.goles)    badges.push(`<span class="fd-badge">⚽ ${j.goles}</span>`);
+  if (j.asist)    badges.push(`<span class="fd-badge">🅰️ ${j.asist}</span>`);
+  if (j.amarilla) badges.push(`<span class="fd-badge">🟨</span>`);
+  if (j.roja)     badges.push(`<span class="fd-badge">🟥</span>`);
+
+  const secs = [];
+  if (j.portero && j.portero_stats) {
+    const ps = j.portero_stats;
+    const box = (v, l) => `<div class="fd-pbox"><div class="fd-pval">${v}</div><div class="fd-plabel">${l}</div></div>`;
+    const items = [
+      ps.paradas != null ? box(ps.paradas, 'Paradas') : '',
+      ps.goles_contra != null ? box(ps.goles_contra, 'Goles enc.') : '',
+      ps.goles_evitados != null ? box((ps.goles_evitados >= 0 ? '+' : '') + ps.goles_evitados, 'Evitados') : '',
+    ].filter(Boolean);
+    if (items.length) secs.push(`<div class="fd-sec"><div class="fd-sec-tit">Arquero</div><div class="fd-portero">${items.join('')}</div></div>`);
+  }
+  if (j.top)     secs.push(_fdSec('Top',     _fdGrid(j.top, LBL_TOP)));
+  if (j.ataque)  secs.push(_fdSec('Ataque',  _fdGrid(j.ataque, LBL_ATQ)));
+  if (j.defensa) secs.push(_fdSec('Defensa', _fdGrid(j.defensa, LBL_DEF)));
+  if (j.duelos)  secs.push(_fdSec('Duelos',  _fdGrid(j.duelos, LBL_DUE)));
+
+  const body = secs.length ? secs.join('') : `<div class="fd-empty">Sin estadísticas detalladas para este jugador.</div>`;
+
+  return `
+    <div class="ficha-detalle">
+      <div class="fd-header">
+        ${fotoTag}
+        <div class="fd-info">
+          <div class="fd-nombre">${j.nombre}</div>
+          <div class="fd-meta">${teamName} · ${tipoLabel}</div>
+          <div class="fd-badges">${badges.join('')}</div>
+        </div>
+        <div class="fd-num">${j.num || j.numero || ''}</div>
+        <button class="fd-close" data-ficha-close aria-label="Cerrar">✕</button>
+      </div>
+      ${body}
+    </div>`;
+}
+
+// Delegación de click en el panel: abre detalle de jugador / cierra
+function bindFichaPanel(panel) {
+  if (panel._fichaBound) return;
+  panel._fichaBound = true;
+  panel.addEventListener('click', (e) => {
+    const ctx = panel._fichaCtx;
+    if (!ctx) return;
+    if (e.target.closest('[data-ficha-close]')) {
+      panel.innerHTML = ctx.lineupHTML;
+      return;
+    }
+    const row = e.target.closest('[data-pid]');
+    if (row) {
+      const entry = ctx.players[row.getAttribute('data-pid')];
+      if (entry) panel.innerHTML = renderFichaDetalle(entry);
+    }
+  });
 }
 
 function renderFichaEnhanced(lineups, events, p, plantelLocal, plantelVisit) {
-  if (!lineups.length) return '<div class="ficha-loading">Sin datos de alineación</div>';
+  if (!lineups.length) return { lineupHTML: '<div class="ficha-loading">Sin datos de alineación</div>', players: {} };
+
+  const players = {};
 
   // Normalizar nombre para lookup en plantel
   const normN = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
@@ -785,20 +937,35 @@ function renderFichaEnhanced(lineups, events, p, plantelLocal, plantelVisit) {
     }).join('');
   }
 
+  // Info básica del jugador a partir de los eventos (sin stats avanzadas)
+  function infoBasica(pid) {
+    const evs = evByPlayer[pid] || [];
+    let goles = 0, asist = 0, amarilla = false, roja = false;
+    for (const ev of evs) {
+      if (ev.type === 'Goal' && ev.detail !== 'Own Goal') goles++;
+      else if (ev.type === 'Assist') asist++;
+      else if (ev.type === 'Card') { if ((ev.detail || '').includes('Red')) roja = true; else amarilla = true; }
+    }
+    return { goles, asist, amarilla, roja };
+  }
+
   function renderEquipo(lineup, fidIdx) {
     const tid = lineup.team?.id;
+    const teamName = lineup.team?.name || '';
     const titulares = lineup.startXI || [];
     const subs = subsByTeam[tid] || [];
 
-    let html = `<div class="ficha-equipo-titulo">${lineup.team?.name || ''}</div>`;
+    let html = `<div class="ficha-equipo-titulo">${teamName}</div>`;
 
     for (const j of titulares) {
       const pl = j.player;
       const fid = fidIdx[normN(pl.name || '')] || fidIdx[firstLast(pl.name || '')] || null;
       const fotoSrc = fid ? `fotos/${fid}.png` : `https://media.api-sports.io/football/players/${pl.id}.png`;
       const cap = pl.captain ? ' capitan' : '';
+      const info = infoBasica(pl.id);
+      players[pl.id] = { j: { nombre: pl.name || '', num: pl.number || '', id: pl.id, tipo: 'titular', min: null, ...info }, teamName, fid };
       html += `
-        <div class="ficha-jugador">
+        <div class="ficha-jugador clickable" data-pid="${pl.id}">
           <img class="ficha-jugador-foto" src="${fotoSrc}" alt="" onerror="this.src='data:image/svg+xml,<svg xmlns=\\'http://www.w3.org/2000/svg\\'/>'" >
           <span class="ficha-jugador-num">${pl.number || ''}</span>
           <div class="ficha-jugador-info">
@@ -827,7 +994,7 @@ function renderFichaEnhanced(lineups, events, p, plantelLocal, plantelVisit) {
 
   const col1 = lineups[0] ? renderEquipo(lineups[0], fidLocal) : '';
   const col2 = lineups[1] ? renderEquipo(lineups[1], fidAway)  : '';
-  return `<div class="ficha-cols"><div>${col1}</div><div>${col2}</div></div>`;
+  return { lineupHTML: `<div class="ficha-cols"><div>${col1}</div><div>${col2}</div></div>`, players };
 }
 
 function renderFicha(lineups, events, p) {
