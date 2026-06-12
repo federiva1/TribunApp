@@ -218,7 +218,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .fd-info { flex: 1; min-width: 0; padding-right: 40px; }
 .fd-nombre { font-family: 'Barlow Condensed', sans-serif; font-size: 19px; font-weight: 600; color: #fff; line-height: 1.1; }
 .fd-meta { font-size: 12px; color: rgba(255,255,255,0.45); margin-top: 3px; }
-.fd-num { font-family: 'Barlow Condensed', sans-serif; font-size: 32px; font-weight: 700; color: rgba(255,255,255,0.16); flex-shrink: 0; align-self: flex-start; }
+.fd-num { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; color: rgba(255,255,255,0.4); margin-right: 7px; }
 .fd-close { position: absolute; top: 0; right: 0; width: 30px; height: 30px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.6); cursor: pointer; font-size: 15px; line-height: 1; display: flex; align-items: center; justify-content: center; }
 .fd-close:hover { background: rgba(255,255,255,0.1); color: #fff; }
 .fd-badges { display: flex; gap: 6px; margin-top: 7px; flex-wrap: wrap; }
@@ -852,11 +852,10 @@ function renderFichaDetalle(entry) {
       <div class="fd-header">
         ${fotoTag}
         <div class="fd-info">
-          <div class="fd-nombre">${j.nombre}</div>
+          <div class="fd-nombre">${(j.num || j.numero) ? `<span class="fd-num">${j.num || j.numero}</span>` : ''}${j.nombre}</div>
           <div class="fd-meta">${teamName} · ${tipoLabel}</div>
           <div class="fd-badges">${badges.join('')}</div>
         </div>
-        <div class="fd-num">${j.num || j.numero || ''}</div>
         <button class="fd-close" data-ficha-close aria-label="Cerrar">✕</button>
       </div>
       ${body}
