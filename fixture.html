@@ -356,6 +356,7 @@ const NOMBRES_ES = {
 
 // Slugs por ID de equipo
 let slugPorId = {};
+let grupoPorSlug = {};   // slug → letra de grupo del Mundial (A-L), desde equipos.json
 
 // Mapeo de rondas
 const FASES = [
@@ -515,7 +516,10 @@ function crearCardPartido(p) {
   }
 
   let metaLabel = '';
-  if (p.group) metaLabel = `Grupo ${p.group.replace(/^Group\s+/i, '')}`;
+  // p.group es la jornada ("Group 1/2/3"), NO el grupo del Mundial.
+  // La letra real (A-L) sale del equipo (data/equipos.json → grupoPorSlug).
+  const grupoLetra = grupoPorSlug[p.home?.slug] || grupoPorSlug[p.away?.slug] || null;
+  if (p.group) metaLabel = grupoLetra ? `Grupo ${grupoLetra}` : 'Fase de Grupos';
   else if (p.round === '1/16') metaLabel = 'Octavos de Final';
   else if (p.round === '1/8')  metaLabel = 'Cuartos de Final';
   else if (p.round === '1/4')  metaLabel = 'Semifinal';
@@ -688,30 +692,29 @@ function renderFichaFromJson(data, plantelLocal, plantelVisit) {
   const tokSet = s => new Set(normN(s).replace(/-/g,' ').split(/\s+/).filter(Boolean));
 
   function buildFidIndex(plantel) {
-    const idx = {};
-    const list = (plantel?.jugadores || []);
-    for (const pl of list) {
-      idx[normN(pl.nombre)] = pl.fid;
-      idx[firstLast(pl.nombre)] = pl.fid;
-      idx[tokKey(pl.nombre)] = pl.fid;
+    const idx = { _list: (plantel?.jugadores || []) };
+    for (const pl of idx._list) {
+      idx['n:' + normN(pl.nombre)] = pl;
+      idx['f:' + firstLast(pl.nombre)] = pl;
+      idx['t:' + tokKey(pl.nombre)] = pl;
     }
-    idx._list = list;
     return idx;
   }
 
   const fidLocal = buildFidIndex(plantelLocal);
   const fidVisit = buildFidIndex(plantelVisit);
 
-  function getFid(nombre, fidIdx) {
-    const directo = fidIdx[normN(nombre)] || fidIdx[firstLast(nombre)] || fidIdx[tokKey(nombre)];
+  // Devuelve la entrada del plantel que matchea (para fid y numero)
+  function getPlantelEntry(nombre, idx) {
+    const directo = idx['n:' + normN(nombre)] || idx['f:' + firstLast(nombre)] || idx['t:' + tokKey(nombre)];
     if (directo) return directo;
     // Fallback: mejor solapamiento de tokens (>=2 comunes y ganador único)
     // cubre diferencias de romanización (Oh Hyeon-Gyu vs Hyun-Gyu Oh)
     const mine = tokSet(nombre);
-    const scored = (fidIdx._list || []).map(pl => {
+    const scored = (idx._list || []).map(pl => {
       const o = tokSet(pl.nombre); let n = 0; mine.forEach(t => { if (o.has(t)) n++; }); return { pl, n };
     }).sort((a, b) => b.n - a.n);
-    if (scored.length && scored[0].n >= 2 && (scored.length === 1 || scored[1].n < scored[0].n)) return scored[0].pl.fid;
+    if (scored.length && scored[0].n >= 2 && (scored.length === 1 || scored[1].n < scored[0].n)) return scored[0].pl;
     return null;
   }
 
@@ -728,12 +731,15 @@ function renderFichaFromJson(data, plantelLocal, plantelVisit) {
   }
 
   function filaJugador(j, fidIdx, teamName, movHTML) {
-    const fid = getFid(j.nombre, fidIdx);
-    players[j.id] = { j, teamName, fid };
+    const pe = getPlantelEntry(j.nombre, fidIdx);
+    const fid = pe?.fid || null;
+    // Suplentes vienen sin número en el JSON del partido → fallback al del plantel
+    const num = j.num || pe?.numero || '';
+    players[j.id] = { j: { ...j, num }, teamName, fid };
     return `
       <div class="ficha-jugador clickable" data-pid="${j.id}">
         ${fid ? `<img class="ficha-jugador-foto" src="fotos/${fid}.png" alt="" onerror="this.style.display='none'">` : '<span class="ficha-jugador-foto"></span>'}
-        <span class="ficha-jugador-num">${j.num || ''}</span>
+        <span class="ficha-jugador-num">${num}</span>
         <div class="ficha-jugador-info">
           <div class="ficha-jugador-nombre">${j.nombre}</div>
         </div>
@@ -1147,6 +1153,7 @@ async function cargar() {
     for (const eq of equipos) {
       slugPorId[String(eq.id)] = eq.slug;
       if (eq.api_id) slugPorId[String(eq.api_id)] = eq.slug;
+      if (eq.grupo) grupoPorSlug[eq.slug] = eq.grupo;
     }
 
     renderFaseTabs();
