@@ -422,6 +422,26 @@ function buildDetailPanel(j, cardId){
 }
 
 function _normName(s){ return (s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim(); }
+// Clave por conjunto de tokens ordenado: ignora orden apellido/nombre
+// (api-sports "Hwang In-beom" vs plantel "In-Beom Hwang")
+function _tokKey(s){ return _normName(s).replace(/-/g,' ').split(/\s+/).filter(Boolean).sort().join(' '); }
+function _tokSet(s){ return new Set(_normName(s).replace(/-/g,' ').split(/\s+/).filter(Boolean)); }
+function _matchSquad(nombre, squad){
+  if(!squad) return null;
+  const nn=_normName(nombre), tk=_tokKey(nombre);
+  let m = squad.find(s=>_normName(s.name||s.nombre)===nn)
+       || squad.find(s=>_tokKey(s.name||s.nombre)===tk);
+  if(m) return m;
+  // Fallback: mejor solapamiento de tokens (>=2 comunes y ganador unico)
+  // cubre diferencias de romanizacion (Oh Hyeon-Gyu vs Hyun-Gyu Oh)
+  const mine=_tokSet(nombre);
+  const scored=squad.map(s=>{
+    const o=_tokSet(s.name||s.nombre); let n=0; mine.forEach(t=>{ if(o.has(t)) n++; });
+    return {s,n};
+  }).sort((a,b)=>b.n-a.n);
+  if(scored.length && scored[0].n>=2 && (scored.length===1 || scored[1].n<scored[0].n)) return scored[0].s;
+  return null;
+}
 
 function renderPlayers(jugs, teamSlug, containerId, squad){
   const container = document.getElementById(containerId);
@@ -440,7 +460,7 @@ function renderPlayers(jugs, teamSlug, containerId, squad){
 
     const detail = buildDetailPanel(j, cardId);
 
-    const enPlantel = squad && squad.find(s=>_normName(s.name||s.nombre)===_normName(j.nombre));
+    const enPlantel = _matchSquad(j.nombre, squad);
     const fotoSrc = enPlantel && enPlantel.fid ? `fotos/${enPlantel.fid}.png` : '';
 
     const card = document.createElement('div');
