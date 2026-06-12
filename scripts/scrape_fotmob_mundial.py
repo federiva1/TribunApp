@@ -32,6 +32,7 @@ import argparse
 import json
 import sys
 import time
+import unicodedata
 from pathlib import Path
 
 try:
@@ -128,17 +129,28 @@ def build_section(flat: dict, field_map: dict) -> dict | None:
 
 
 def normalize(s: str) -> str:
-    """Minusculas, sin tildes, sin puntos."""
+    """Minusculas, sin diacriticos (cualquier idioma), sin puntos.
+
+    api-sports da diacriticos completos ('Matej Kovar' con hacek/acute) y FotMob
+    versiones parcialmente despojadas; stripear TODO combining mark uniforma ambos.
+    """
     s = s.lower().strip()
-    for a, b in [('á','a'),('é','e'),('í','i'),('ó','o'),('ú','u'),('ü','u'),('ñ','n')]:
-        s = s.replace(a, b)
+    s = unicodedata.normalize('NFD', s)
+    s = ''.join(c for c in s if unicodedata.category(c) != 'Mn')
     return s.replace('.', '')
+
+
+def _tokset(norm: str) -> frozenset:
+    """Conjunto de tokens (separa por espacio y guion). Ignora orden apellido/nombre."""
+    return frozenset(t for t in norm.replace('-', ' ').split() if t)
 
 
 def enrich_players(players: list, ps_by_name: dict) -> list:
     """Agrega top/ataque/defensa/duelos/portero_stats a la lista de jugadores."""
     # Construir indice normalizado
     norm_index: dict[str, tuple[str, dict]] = {}
+    tokset_index: dict[frozenset, tuple[str, dict]] = {}
+    fm_list: list[tuple[frozenset, str, dict]] = []
     for fm_name, fm_data in ps_by_name.items():
         norm = normalize(fm_name)
         norm_index[norm] = (fm_name, fm_data)
@@ -148,6 +160,12 @@ def enrich_players(players: list, ps_by_name: dict) -> list:
             apellido = parts[-1]
             if apellido not in norm_index:
                 norm_index[apellido] = (fm_name, fm_data)
+        # Indice por conjunto de tokens (ignora orden — nombres asiaticos van invertidos
+        # en api-sports "Kim Seung-gyu" vs FotMob "Seung-Gyu Kim")
+        toks = _tokset(norm)
+        if toks:
+            tokset_index.setdefault(toks, (fm_name, fm_data))
+            fm_list.append((toks, fm_name, fm_data))
 
     for p in players:
         nombre = p.get('nombre', '')
@@ -161,6 +179,19 @@ def enrich_players(players: list, ps_by_name: dict) -> list:
             parts = norm_nombre.split()
             apellido = parts[-1] if parts else ''
             match = norm_index.get(apellido)
+
+        if not match:
+            # 3. Conjunto de tokens exacto (orden-independiente)
+            match = tokset_index.get(_tokset(norm_nombre))
+
+        if not match:
+            # 4. Mejor solapamiento de tokens (>=2 en comun y ganador unico)
+            mine = _tokset(norm_nombre)
+            scored = sorted(
+                ((len(mine & toks), fm_name, fm_data) for toks, fm_name, fm_data in fm_list),
+                key=lambda t: t[0], reverse=True)
+            if scored and scored[0][0] >= 2 and (len(scored) == 1 or scored[1][0] < scored[0][0]):
+                match = (scored[0][1], scored[0][2])
 
         if not match:
             continue
@@ -298,18 +329,26 @@ def main() -> int:
     print(f'FotMob players: {local_slug}={len(ps_local)}  {visitante_slug}={len(ps_visitante)}')
 
     # ── MVP ────────────────────────────────────────────────────────────────
+    # FotMob a veces da name como string, a veces como dict {firstName,lastName,fullName}
     potm = content.get('matchFacts', {}).get('playerOfTheMatch', {}) or {}
     mvp_name_raw = potm.get('name') or ''
-    mvp_fotmob_name = (mvp_name_raw if isinstance(mvp_name_raw, str) else '').strip()
+    if isinstance(mvp_name_raw, dict):
+        mvp_fotmob_name = (mvp_name_raw.get('fullName') or '').strip()
+    else:
+        mvp_fotmob_name = str(mvp_name_raw).strip()
+    mvp_id = potm.get('id')
 
     # ── Enriquecer jugadores ──────────────────────────────────────────────
     payload['jugadores'][local_slug]     = enrich_players(payload['jugadores'].get(local_slug, []),     ps_local)
     payload['jugadores'][visitante_slug] = enrich_players(payload['jugadores'].get(visitante_slug, []), ps_visitante)
 
-    # Marcar MVP
+    # Marcar MVP — por id de FotMob (robusto) o por conjunto de tokens del nombre
+    mvp_tokset = _tokset(normalize(mvp_fotmob_name)) if mvp_fotmob_name else frozenset()
     for slug in (local_slug, visitante_slug):
         for p in payload['jugadores'].get(slug, []):
-            if mvp_fotmob_name and p['nombre'] == mvp_fotmob_name:
+            es_mvp = (mvp_id is not None and p.get('id') == mvp_id) or \
+                     (mvp_tokset and _tokset(normalize(p['nombre'])) == mvp_tokset)
+            if es_mvp:
                 p['mvp'] = True
 
     # Recalcular xG del partido si vino null de api-sports
