@@ -959,17 +959,29 @@ function renderFichaEnhanced(lineups, events, p, plantelLocal, plantelVisit, pla
   // Normalizar nombre para lookup en plantel
   const normN = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
   const firstLast = s => { const w = normN(s).split(/\s+/).filter(Boolean); return w.length >= 2 ? w[0]+' '+w[w.length-1] : normN(s); };
+  const lastWord = s => { const w = normN(s).replace(/\./g, '').split(/\s+/).filter(Boolean); return w[w.length - 1] || ''; };
 
   function buildFidIndex(plantel) {
-    const idx = {};
-    for (const pl of (plantel?.jugadores || [])) {
-      idx[normN(pl.nombre)] = pl.fid;
-      idx[firstLast(pl.nombre)] = pl.fid;
-    }
-    return idx;
+    return { _list: (plantel?.jugadores || []) };
   }
 
-  // Mapear lineup team id → plantel fid index
+  // Devuelve la entrada del plantel que matchea (fid + numero).
+  // api-sports abrevia los nombres de los suplentes ("J. Shaffelburg") → match por apellido.
+  function getEntry(name, idx) {
+    const list = idx._list || [];
+    const nn = normN(name), fl = firstLast(name);
+    let m = list.find(pl => normN(pl.nombre) === nn) || list.find(pl => firstLast(pl.nombre) === fl);
+    if (m) return m;
+    const lw = lastWord(name);
+    const byLast = list.filter(pl => lastWord(pl.nombre) === lw);
+    if (byLast.length === 1) return byLast[0];
+    const mine = new Set(normN(name).replace(/-/g, ' ').split(/\s+/).filter(Boolean));
+    const scored = list.map(pl => { const o = new Set(normN(pl.nombre).replace(/-/g, ' ').split(/\s+/).filter(Boolean)); let n = 0; mine.forEach(t => { if (o.has(t)) n++; }); return { pl, n }; }).sort((a, b) => b.n - a.n);
+    if (scored.length && scored[0].n >= 2 && (scored.length === 1 || scored[1].n < scored[0].n)) return scored[0].pl;
+    return null;
+  }
+
+  // Mapear lineup team id → plantel index
   // lineups[0] = local, lineups[1] = away (orden api-sports)
   const fidLocal = buildFidIndex(plantelLocal);
   const fidAway  = buildFidIndex(plantelVisit);
@@ -1018,38 +1030,51 @@ function renderFichaEnhanced(lineups, events, p, plantelLocal, plantelVisit, pla
     const titulares = lineup.startXI || [];
     const subs = subsByTeam[tid] || [];
 
+    // Movimientos: minuto de salida de titulares + suplentes que ingresaron
+    const outMin = {};       // playerId titular → minuto que salió
+    const subsIn = [];       // [{id, name, min}]
+    for (const s of subs) {
+      if (s.player?.id) outMin[s.player.id] = s.time?.elapsed ?? null;
+      if (s.assist?.id) subsIn.push({ id: s.assist.id, name: s.assist.name || '', min: s.time?.elapsed ?? null });
+    }
+
+    // Fila genérica (titular o suplente) — con foto, número y stats clickeables
+    function fila(pid, name, number, fid, capClass, movHTML, tipo) {
+      const st = statsById[pid];
+      const info = infoBasica(pid);
+      const fotoSrc = fid ? `fotos/${fid}.png` : `https://media.api-sports.io/football/players/${pid}.png`;
+      players[pid] = { j: { nombre: name, num: number || '', id: pid, tipo, min: st?.games?.minutes ?? null, ...info, _live: _liveStatsRows(st) }, teamName, fid };
+      return `
+        <div class="ficha-jugador clickable" data-pid="${pid}">
+          <img class="ficha-jugador-foto" src="${fotoSrc}" alt="" onerror="this.src='data:image/svg+xml,<svg xmlns=\\'http://www.w3.org/2000/svg\\'/>'" >
+          <span class="ficha-jugador-num">${number || ''}</span>
+          <div class="ficha-jugador-info">
+            <div class="ficha-jugador-nombre${capClass}">${name}</div>
+          </div>
+          <div class="ficha-jugador-eventos">${movHTML || ''}${iconosJugador(pid)}</div>
+        </div>`;
+    }
+
     let html = `<div class="ficha-equipo-titulo">${teamName}</div>`;
 
     for (const j of titulares) {
       const pl = j.player;
-      const fid = fidIdx[normN(pl.name || '')] || fidIdx[firstLast(pl.name || '')] || null;
-      const fotoSrc = fid ? `fotos/${fid}.png` : `https://media.api-sports.io/football/players/${pl.id}.png`;
+      const entry = getEntry(pl.name || '', fidIdx);
+      const fid = entry?.fid || null;
+      const number = pl.number || entry?.numero || '';
       const cap = pl.captain ? ' capitan' : '';
-      const info = infoBasica(pl.id);
-      const st = statsById[pl.id];
-      const live = _liveStatsRows(st);
-      players[pl.id] = { j: { nombre: pl.name || '', num: pl.number || '', id: pl.id, tipo: 'titular', min: st?.games?.minutes ?? null, ...info, _live: live }, teamName, fid };
-      html += `
-        <div class="ficha-jugador clickable" data-pid="${pl.id}">
-          <img class="ficha-jugador-foto" src="${fotoSrc}" alt="" onerror="this.src='data:image/svg+xml,<svg xmlns=\\'http://www.w3.org/2000/svg\\'/>'" >
-          <span class="ficha-jugador-num">${pl.number || ''}</span>
-          <div class="ficha-jugador-info">
-            <div class="ficha-jugador-nombre${cap}">${pl.name || ''}</div>
-          </div>
-          <div class="ficha-jugador-eventos">${iconosJugador(pl.id)}</div>
-        </div>`;
+      const mv = outMin[pl.id] != null ? `<span class="ficha-mov ficha-mov-out" title="Salió">↓ ${outMin[pl.id]}'</span> ` : '';
+      html += fila(pl.id, pl.name || '', number, fid, cap, mv, 'titular');
     }
 
-    if (subs.length) {
-      html += `<div class="ficha-subs"><div class="ficha-subs-titulo">Cambios</div>`;
-      for (const s of subs) {
-        html += `
-          <div class="ficha-sub-fila">
-            <span class="ficha-sub-min">${s.time?.elapsed}'</span>
-            <span class="ficha-sub-out">↓ ${s.player?.name || ''}</span>
-            <span style="color:rgba(255,255,255,0.2)"> / </span>
-            <span class="ficha-sub-in">↑ ${s.assist?.name || ''}</span>
-          </div>`;
+    if (subsIn.length) {
+      html += `<div class="ficha-subs"><div class="ficha-subs-titulo">Suplentes</div>`;
+      for (const s of subsIn) {
+        const entry = getEntry(s.name, fidIdx);
+        const fid = entry?.fid || null;
+        const number = entry?.numero || '';
+        const mv = s.min != null ? `<span class="ficha-mov ficha-mov-in" title="Ingresó">↑ ${s.min}'</span> ` : '';
+        html += fila(s.id, s.name, number, fid, '', mv, 'suplente');
       }
       html += '</div>';
     }
