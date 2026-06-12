@@ -1665,15 +1665,28 @@ async function initPuntajes() {
         );
         const normNombre = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
         const firstLast  = s => { const p = normNombre(s).split(/\s+/).filter(Boolean); return p.length >= 2 ? p[0] + ' ' + p[p.length-1] : normNombre(s); };
+        // Clave por conjunto de tokens ordenado: ignora orden apellido/nombre
+        // (api-sports "Hwang In-beom" vs plantel "In-Beom Hwang")
+        const tokKey = s => normNombre(s).replace(/-/g,' ').split(/\s+/).filter(Boolean).sort().join(' ');
+        const tokSet = s => new Set(normNombre(s).replace(/-/g,' ').split(/\s+/).filter(Boolean));
         squadPuntajes = jugs.map((j, idx) => {
-          // Cruzar con plantel: exact norm → fid → primer+último nombre (ignora segundo nombre de FotMob)
+          // Cruzar con plantel: exact norm → fid → primer+último nombre → token-set → solapamiento
           const nj = normNombre(j.nombre);
           const flj = firstLast(j.nombre);
-          const enPlantel = squad.find(s =>
+          const tkj = tokKey(j.nombre);
+          let enPlantel = squad.find(s =>
             normNombre(s.name) === nj ||
             String(s.fid) === String(j.id) ||
-            firstLast(s.name) === flj
+            firstLast(s.name) === flj ||
+            tokKey(s.name) === tkj
           );
+          if (!enPlantel) {
+            // Fallback: mejor solapamiento de tokens (>=2 comunes y ganador único)
+            // cubre diferencias de romanización (Oh Hyeon-Gyu vs Hyun-Gyu Oh)
+            const mine = tokSet(j.nombre);
+            const scored = squad.map(s => { const o = tokSet(s.name); let n = 0; mine.forEach(t => { if (o.has(t)) n++; }); return { s, n }; }).sort((a,b)=>b.n-a.n);
+            if (scored.length && scored[0].n >= 2 && (scored.length === 1 || scored[1].n < scored[0].n)) enPlantel = scored[0].s;
+          }
           // Para el DT, el fid viene de plantelData.tecnico (la foto está guardada con ese fid)
           let fid = enPlantel?.fid ?? String(j.id);
           if (j.tipo === 'dt' && plantelData?.tecnico) {
