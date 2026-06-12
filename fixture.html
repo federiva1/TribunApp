@@ -189,6 +189,20 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .ficha-sub-min { color: rgba(255,255,255,0.25); min-width: 28px; }
 .ficha-sub-out { color: rgba(255,80,80,0.7); }
 .ficha-sub-in  { color: rgba(42,213,114,0.8); }
+.ficha-goles {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0 8px;
+  padding: 8px 12px 10px; border-bottom: 1px solid rgba(255,255,255,0.07);
+  margin-bottom: 4px;
+}
+.ficha-gol-fila {
+  display: flex; align-items: baseline; gap: 4px; font-size: 12px;
+  font-family: 'Barlow Condensed', sans-serif; color: rgba(255,255,255,0.7);
+  padding: 2px 0;
+}
+.ficha-gol-min { color: rgba(255,255,255,0.3); min-width: 26px; flex-shrink: 0; }
+.ficha-gol-jugador { flex: 1; }
+.ficha-gol-asist { color: rgba(255,255,255,0.3); font-size: 11px; }
+.ficha-gol-suplente { color: rgba(42,213,114,0.9); }
 
 /* Meta del partido: grupo y horario */
 .partido-meta {
@@ -469,7 +483,7 @@ function crearCardPartido(p) {
   }
 
   let metaLabel = '';
-  if (p.group) metaLabel = `Grupo ${p.group}`;
+  if (p.group) metaLabel = `Grupo ${p.group.replace(/^Group\s+/i, '')}`;
   else if (p.round === '1/16') metaLabel = 'Octavos de Final';
   else if (p.round === '1/8')  metaLabel = 'Cuartos de Final';
   else if (p.round === '1/4')  metaLabel = 'Semifinal';
@@ -697,7 +711,24 @@ function renderFichaFromJson(data, plantelLocal, plantelVisit) {
 
   const col1 = renderEquipoJson(p.local, fidLocal);
   const col2 = renderEquipoJson(p.visitante, fidVisit);
-  return `<div class="ficha-cols"><div>${col1}</div><div>${col2}</div></div>`;
+
+  let golesHTML = '';
+  const gd = p.goles_detalle;
+  if (gd && (gd.local?.length || gd.visitante?.length)) {
+    const ultimaPalabra = s => normN(s).split(/\s+/).filter(Boolean).slice(-1)[0] || '';
+    const renderGolesCol = (arr, slug) => {
+      const jgsDelEquipo = jugadores[slug] || [];
+      return (arr || []).map(g => {
+        const apellido = ultimaPalabra(g.jugador);
+        const match = jgsDelEquipo.find(j => ultimaPalabra(j.nombre) === apellido);
+        const subIcon = match?.tipo === 'suplente' ? '<span class="ficha-gol-suplente">↑</span> ' : '';
+        return `<div class="ficha-gol-fila"><span class="ficha-gol-min">${g.min}'</span> <span class="ficha-gol-jugador">⚽ ${subIcon}${g.jugador}${g.asist ? ` <span class="ficha-gol-asist">(${g.asist})</span>` : ''}</span></div>`;
+      }).join('');
+    };
+    golesHTML = `<div class="ficha-goles"><div>${renderGolesCol(gd.local, p.local)}</div><div>${renderGolesCol(gd.visitante, p.visitante)}</div></div>`;
+  }
+
+  return `${golesHTML}<div class="ficha-cols"><div>${col1}</div><div>${col2}</div></div>`;
 }
 
 function renderFichaEnhanced(lineups, events, p, plantelLocal, plantelVisit) {
