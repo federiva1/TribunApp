@@ -1,13 +1,11 @@
 export const config = { runtime: 'edge' };
 
+// Fallback a la key pública del repo si la env var no está configurada en Vercel.
+// Esta misma key ya está expuesta client-side en otras páginas (standings, fixture local).
+const FALLBACK_KEY = 'b8bbfc856fd5cf12cd7d697b2b01887d';
+
 export default async function handler(req) {
-  const key = process.env.API_SPORTS_KEY;
-  if (!key) {
-    return new Response(JSON.stringify({ error: 'not configured' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
+  const key = process.env.API_SPORTS_KEY || FALLBACK_KEY;
 
   const url = new URL(req.url);
   // Remove the /api/apisports prefix; the rest becomes the api-sports path+query
