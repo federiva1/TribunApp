@@ -725,8 +725,11 @@ function renderFichaFromJson(data, plantelLocal, plantelVisit) {
       return (arr || []).map(g => {
         const apellido = ultimaPalabra(g.jugador);
         const match = jgsDelEquipo.find(j => ultimaPalabra(j.nombre) === apellido);
-        const subIcon = match?.tipo === 'suplente' ? '<span class="ficha-gol-suplente">↑</span> ' : '';
-        return `<div class="ficha-gol-fila"><span class="ficha-gol-min">${g.min}'</span> <span class="ficha-gol-jugador">⚽ ${subIcon}${g.jugador}${g.asist ? ` <span class="ficha-gol-asist">(${g.asist})</span>` : ''}</span></div>`;
+        const esSuplente = match?.tipo === 'suplente';
+        const subIcon = esSuplente ? '<span class="ficha-gol-suplente">↑</span> ' : '';
+        // El asistente entre paréntesis solo cuando el goleador entró desde el banco
+        const asistHTML = (esSuplente && g.asist) ? ` <span class="ficha-gol-asist">(${g.asist})</span>` : '';
+        return `<div class="ficha-gol-fila"><span class="ficha-gol-min">${g.min}'</span> <span class="ficha-gol-jugador">⚽ ${subIcon}${g.jugador}${asistHTML}</span></div>`;
       }).join('');
     };
     golesHTML = `<div class="ficha-goles"><div>${renderGolesCol(gd.local, p.local)}</div><div>${renderGolesCol(gd.visitante, p.visitante)}</div></div>`;

@@ -449,7 +449,8 @@ function renderPlayers(jugs, teamSlug, containerId, squad){
     container.innerHTML=`<div class="no-data"><div class="no-data-icon">📋</div><div class="no-data-text">Sin datos de jugadores</div></div>`;
     return;
   }
-  const sorted = jugs.slice().sort((a,b)=>b.min-a.min);
+  // Excluir DT — no es jugador (aparecia como "null' · Jugador" sin foto)
+  const sorted = jugs.filter(j=>j.tipo!=='dt').slice().sort((a,b)=>b.min-a.min);
   const teamCol = col(teamSlug);
 
   sorted.forEach((j,idx)=>{
