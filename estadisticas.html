@@ -305,16 +305,6 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
 
     <!-- TAB: ESTADÍSTICAS GLOBALES -->
     <div class="section active" id="tab-stats">
-      <div class="teams-legend">
-        <div class="team-legend">
-          <div class="team-legend-dot" id="dot-local"></div>
-          <div class="team-legend-name" id="legend-local"></div>
-        </div>
-        <div class="team-legend">
-          <div class="team-legend-dot" id="dot-visit"></div>
-          <div class="team-legend-name" id="legend-visitante"></div>
-        </div>
-      </div>
       <div id="stats-container"></div>
     </div>
 
@@ -560,27 +550,26 @@ async function init(){
   // Goles
   const gl=document.getElementById('goals-local');
   const gv=document.getElementById('goals-visitante');
-  function fmtGol(g){
+  const jugsLocal = (data.jugadores||{})[p.local]||[];
+  const jugsVisit = (data.jugadores||{})[p.visitante]||[];
+  function fmtGol(g, jugs){
     if(typeof g==='string') return '⚽ '+g;
     let t=`⚽ ${g.min ? g.min+"' " : ''}${g.jugador||''}`;
-    if(g.asist) t+=` (E: ${g.asist})`;
+    // El asistente solo cuando el goleador entró desde el banco
+    const m=_matchSquad(g.jugador, jugs);
+    if(g.asist && m?.tipo==='suplente') t+=` (E: ${g.asist})`;
     return t;
   }
   (p.goles_detalle.local||[]).forEach(g=>{
-    const d=document.createElement('div');d.className='goal-item';d.textContent=fmtGol(g);gl.appendChild(d);
+    const d=document.createElement('div');d.className='goal-item';d.textContent=fmtGol(g, jugsLocal);gl.appendChild(d);
   });
   (p.goles_detalle.visitante||[]).forEach(g=>{
     const isOG=typeof g==='object'&&(g.jugador||'').includes('OG');
     const d=document.createElement('div');
     d.className='goal-item'+(isOG?' og':'');
-    d.textContent=fmtGol(g);gv.appendChild(d);
+    d.textContent=fmtGol(g, jugsVisit);gv.appendChild(d);
   });
 
-  // Stats legend + colores
-  document.getElementById('dot-local').style.background = cLocal;
-  document.getElementById('dot-visit').style.background = cVisit;
-  document.getElementById('legend-local').textContent     = nb(p.local);
-  document.getElementById('legend-visitante').textContent = nb(p.visitante);
 
   // Stats globales
   const sc=document.getElementById('stats-container');
