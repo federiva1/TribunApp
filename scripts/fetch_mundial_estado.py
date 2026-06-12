@@ -103,6 +103,14 @@ def main():
             'match_date':   match_date,
         }
 
+        # "Arma tu formación" apunta SIEMPRE al próximo partido no jugado
+        # (separado de rival/match_date que son del partido activo para puntajes).
+        # Así, tras un partido FT, los puntajes quedan en el jugado y la
+        # formación ya invita a votar el siguiente.
+        if proximo:
+            nueva_entrada['formacion_rival']      = proximo['rival']
+            nueva_entrada['formacion_match_date'] = proximo['date']
+
         if slug not in estado:
             nuevos += 1
         elif estado[slug] != nueva_entrada:
