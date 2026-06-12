@@ -891,12 +891,18 @@ async function cargar() {
     document.getElementById('loading-state').style.display = 'none';
     document.getElementById('contenido').style.display = '';
 
-    // Buscar partidos en curso y arrancar live polling
-    const LIVE_SHORT = ['1H','HT','2H','ET','BT','P','SUSP'];
+    // Buscar partidos en curso o posiblemente en curso (horario pasado, no terminado, no sin api_id)
+    // mundial.json es estático — no refleja el estado live. Detectamos por horario.
+    const now = Date.now();
     const liveCards = [];
     for (const p of todosPartidos) {
-      if (!LIVE_SHORT.includes(p.status?.short)) continue;
       if (!p.api_id) continue;
+      if (p.status?.finished || p.status?.cancelled) continue;
+      const utc = p.status?.utcTime ? new Date(p.status.utcTime).getTime() : null;
+      // Incluir si ya debería haber empezado (hasta 3h después del horario previsto)
+      const posiblementeEnCurso = utc && (now >= utc) && (now <= utc + 3 * 60 * 60 * 1000);
+      const yaEnCurso = ['1H','HT','2H','ET','BT','P','SUSP'].includes(p.status?.short);
+      if (!posiblementeEnCurso && !yaEnCurso) continue;
       const cardEl = document.querySelector(`[data-api-id="${p.api_id}"]`);
       if (cardEl) liveCards.push({ p, card: cardEl });
     }
@@ -1000,11 +1006,15 @@ function startLivePolling(liveCards) {
 // Reanudar poll cuando la pestaña vuelve a estar activa
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden && _liveTimer === null) {
-    const LIVE_SHORT_CHECK = ['1H','HT','2H','ET','BT','P','SUSP'];
+    const now2 = Date.now();
     const liveCards = [];
     for (const p of todosPartidos) {
-      if (!LIVE_SHORT_CHECK.includes(p.status?.short)) continue;
       if (!p.api_id) continue;
+      if (p.status?.finished || p.status?.cancelled) continue;
+      const utc = p.status?.utcTime ? new Date(p.status.utcTime).getTime() : null;
+      const posible = utc && (now2 >= utc) && (now2 <= utc + 3 * 60 * 60 * 1000);
+      const yaLive = ['1H','HT','2H','ET','BT','P','SUSP'].includes(p.status?.short);
+      if (!posible && !yaLive) continue;
       const cardEl = document.querySelector(`[data-api-id="${p.api_id}"]`);
       if (cardEl) liveCards.push({ p, card: cardEl });
     }
