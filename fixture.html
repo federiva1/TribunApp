@@ -600,10 +600,7 @@ async function loadFichaContent(p, card) {
   const enCursoAhora = p.status?.started && !p.status?.finished;
 
   if (_fichaCache[cacheKey] && !enCursoAhora) {
-    const ctx = _fichaCache[cacheKey];
-    panel.innerHTML = ctx.lineupHTML;
-    panel._fichaCtx = ctx;
-    bindFichaPanel(panel);
+    applyFichaCtx(panel, _fichaCache[cacheKey]);
     return;
   }
 
@@ -628,9 +625,7 @@ async function loadFichaContent(p, card) {
         const plantelVisit = rV.status === 'fulfilled' && rV.value.ok ? await rV.value.json() : null;
         const ctx = renderFichaFromJson(data, plantelLocal, plantelVisit);
         if (!enCursoAhora) _fichaCache[cacheKey] = ctx;
-        panel.innerHTML = ctx.lineupHTML;
-        panel._fichaCtx = ctx;
-        bindFichaPanel(panel);
+        applyFichaCtx(panel, ctx);
         return;
       }
     }
@@ -655,9 +650,7 @@ async function loadFichaContent(p, card) {
     const plantelVisit = rPV.status === 'fulfilled' && rPV.value.ok ? await rPV.value.json() : null;
     const ctx = renderFichaEnhanced(lineups, events, p, plantelLocal, plantelVisit);
     if (!enCursoAhora) _fichaCache[cacheKey] = ctx;
-    panel.innerHTML = ctx.lineupHTML;
-    panel._fichaCtx = ctx;
-    bindFichaPanel(panel);
+    applyFichaCtx(panel, ctx);
   } catch(e) {
     panel.innerHTML = `<div class="ficha-loading">No disponible</div>`;
   }
@@ -670,6 +663,7 @@ async function toggleFicha(p, btn, card) {
     panel.classList.remove('abierto');
     btn.textContent = '📋 Ver ficha';
     _openFichaState = { p: null, card: null };
+    panel._openDetailPid = null;
     return;
   }
   panel.classList.add('abierto');
@@ -877,15 +871,30 @@ function bindFichaPanel(panel) {
     const ctx = panel._fichaCtx;
     if (!ctx) return;
     if (e.target.closest('[data-ficha-close]')) {
+      panel._openDetailPid = null;
       panel.innerHTML = ctx.lineupHTML;
       return;
     }
     const row = e.target.closest('[data-pid]');
     if (row) {
-      const entry = ctx.players[row.getAttribute('data-pid')];
-      if (entry) panel.innerHTML = renderFichaDetalle(entry);
+      const pid = row.getAttribute('data-pid');
+      const entry = ctx.players[pid];
+      if (entry) { panel._openDetailPid = pid; panel.innerHTML = renderFichaDetalle(entry); }
     }
   });
+}
+
+// Aplica un contexto al panel. Si había un detalle de jugador abierto (refresh en
+// vivo), lo re-renderiza con los datos frescos en vez de cerrarlo.
+function applyFichaCtx(panel, ctx) {
+  panel._fichaCtx = ctx;
+  const pid = panel._openDetailPid;
+  if (pid && ctx.players && ctx.players[pid]) {
+    panel.innerHTML = renderFichaDetalle(ctx.players[pid]);
+  } else {
+    panel.innerHTML = ctx.lineupHTML;
+  }
+  bindFichaPanel(panel);
 }
 
 function renderFichaEnhanced(lineups, events, p, plantelLocal, plantelVisit) {
