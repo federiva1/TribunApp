@@ -638,17 +638,19 @@ async function loadFichaContent(p, card) {
     const headers = getApiHeaders();
     const slugHome = p.home?.slug || slugPorId[p.home?.id] || slugDeNombre(p.home?.name || '');
     const slugAway = p.away?.slug || slugPorId[p.away?.id] || slugDeNombre(p.away?.name || '');
-    const [resLinea, resEv, rPL, rPV] = await Promise.allSettled([
+    const [resLinea, resEv, resPlay, rPL, rPV] = await Promise.allSettled([
       fetch(`${base}/fixtures/lineups?fixture=${p.api_id}`, { headers }),
       fetch(`${base}/fixtures/events?fixture=${p.api_id}`, { headers }),
+      fetch(`${base}/fixtures/players?fixture=${p.api_id}`, { headers }),
       fetch(`data/planteles/${slugHome}.json`),
       fetch(`data/planteles/${slugAway}.json`),
     ]);
     const lineups = resLinea.status === 'fulfilled' && resLinea.value.ok ? (await resLinea.value.json()).response || [] : [];
     const events  = resEv.status  === 'fulfilled' && resEv.value.ok  ? (await resEv.value.json()).response  || [] : [];
+    const playerStats = resPlay.status === 'fulfilled' && resPlay.value.ok ? (await resPlay.value.json()).response || [] : [];
     const plantelLocal = rPL.status === 'fulfilled' && rPL.value.ok ? await rPL.value.json() : null;
     const plantelVisit = rPV.status === 'fulfilled' && rPV.value.ok ? await rPV.value.json() : null;
-    const ctx = renderFichaEnhanced(lineups, events, p, plantelLocal, plantelVisit);
+    const ctx = renderFichaEnhanced(lineups, events, p, plantelLocal, plantelVisit, playerStats);
     if (!enCursoAhora) _fichaCache[cacheKey] = ctx;
     applyFichaCtx(panel, ctx);
   } catch(e) {
@@ -815,6 +817,13 @@ function _fdSec(titulo, gridHTML) {
   return `<div class="fd-sec"><div class="fd-sec-tit">${titulo}</div>${gridHTML}</div>`;
 }
 
+// Grilla de 2 columnas a partir de filas [{label, val}] (stats en vivo de api-sports)
+function _fdGridFromRows(rows) {
+  const html = rows.map(r => `<div class="fd-row"><span class="fd-row-label">${r.label}</span><span class="fd-row-val">${r.val}</span></div>`);
+  const mid = Math.ceil(html.length / 2);
+  return `<div class="fd-grid"><div>${html.slice(0, mid).join('')}</div><div>${html.slice(mid).join('')}</div></div>`;
+}
+
 function renderFichaDetalle(entry) {
   const { j, teamName, fid } = entry;
   const fotoTag = fid
@@ -844,8 +853,12 @@ function renderFichaDetalle(entry) {
   if (j.ataque)  secs.push(_fdSec('Ataque',  _fdGrid(j.ataque, LBL_ATQ)));
   if (j.defensa) secs.push(_fdSec('Defensa', _fdGrid(j.defensa, LBL_DEF)));
   if (j.duelos)  secs.push(_fdSec('Duelos',  _fdGrid(j.duelos, LBL_DUE)));
+  // Stats en vivo (api-sports) — solo cuando no hay stats detalladas de FotMob
+  if (!secs.length && j._live && j._live.length) secs.push(_fdSec('Estadísticas', _fdGridFromRows(j._live)));
 
-  const body = secs.length ? secs.join('') : `<div class="fd-empty">Sin estadísticas detalladas para este jugador.</div>`;
+  const body = secs.length
+    ? secs.join('')
+    : `<div class="fd-empty">Las estadísticas se cargan a medida que avanza el partido.</div>`;
 
   return `
     <div class="ficha-detalle">
@@ -896,10 +909,47 @@ function applyFichaCtx(panel, ctx) {
   bindFichaPanel(panel);
 }
 
-function renderFichaEnhanced(lineups, events, p, plantelLocal, plantelVisit) {
+// Construye filas de stats en vivo (api-sports) para un jugador, salteando nulos
+function _liveStatsRows(st) {
+  if (!st) return [];
+  const rows = [];
+  const add = (label, val, sfx = '') => { if (val !== null && val !== undefined && val !== '') rows.push({ label, val: '' + val + sfx }); };
+  const g = st.games || {}, sh = st.shots || {}, go = st.goals || {}, pa = st.passes || {},
+        ta = st.tackles || {}, du = st.duels || {}, dr = st.dribbles || {}, fo = st.fouls || {};
+  add('Valoración', g.rating);
+  add('Tiros', sh.total);
+  add('Tiros al arco', sh.on);
+  add('Pases', pa.total);
+  add('Precisión pases', pa.accuracy, '%');
+  add('Pases clave', pa.key);
+  add('Entradas', ta.total);
+  add('Intercepciones', ta.interceptions);
+  add('Bloqueos', ta.blocks);
+  add('Duelos ganados', du.won);
+  add('Duelos totales', du.total);
+  add('Regates', (dr.success != null && dr.attempts != null) ? `${dr.success}/${dr.attempts}` : dr.success);
+  add('Faltas cometidas', fo.committed);
+  add('Faltas recibidas', fo.drawn);
+  if (g.position === 'G' || go.saves != null) {
+    add('Atajadas', go.saves);
+    add('Goles recibidos', go.conceded);
+  }
+  return rows;
+}
+
+function renderFichaEnhanced(lineups, events, p, plantelLocal, plantelVisit, playerStats) {
   if (!lineups.length) return { lineupHTML: '<div class="ficha-loading">Sin datos de alineación</div>', players: {} };
 
   const players = {};
+
+  // Indexar estadísticas por jugador (api-sports /fixtures/players, se actualiza en vivo)
+  const statsById = {};
+  for (const team of (playerStats || [])) {
+    for (const pj of (team.players || [])) {
+      const pid = pj.player?.id;
+      if (pid) statsById[pid] = (pj.statistics || [])[0] || null;
+    }
+  }
 
   // Normalizar nombre para lookup en plantel
   const normN = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
@@ -971,7 +1021,9 @@ function renderFichaEnhanced(lineups, events, p, plantelLocal, plantelVisit) {
       const fotoSrc = fid ? `fotos/${fid}.png` : `https://media.api-sports.io/football/players/${pl.id}.png`;
       const cap = pl.captain ? ' capitan' : '';
       const info = infoBasica(pl.id);
-      players[pl.id] = { j: { nombre: pl.name || '', num: pl.number || '', id: pl.id, tipo: 'titular', min: null, ...info }, teamName, fid };
+      const st = statsById[pl.id];
+      const live = _liveStatsRows(st);
+      players[pl.id] = { j: { nombre: pl.name || '', num: pl.number || '', id: pl.id, tipo: 'titular', min: st?.games?.minutes ?? null, ...info, _live: live }, teamName, fid };
       html += `
         <div class="ficha-jugador clickable" data-pid="${pl.id}">
           <img class="ficha-jugador-foto" src="${fotoSrc}" alt="" onerror="this.src='data:image/svg+xml,<svg xmlns=\\'http://www.w3.org/2000/svg\\'/>'" >
