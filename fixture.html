@@ -916,7 +916,6 @@ function _liveStatsRows(st) {
   const add = (label, val, sfx = '') => { if (val !== null && val !== undefined && val !== '') rows.push({ label, val: '' + val + sfx }); };
   const g = st.games || {}, sh = st.shots || {}, go = st.goals || {}, pa = st.passes || {},
         ta = st.tackles || {}, du = st.duels || {}, dr = st.dribbles || {}, fo = st.fouls || {};
-  add('Valoración', g.rating);
   add('Tiros', sh.total);
   add('Tiros al arco', sh.on);
   add('Pases', pa.total);
