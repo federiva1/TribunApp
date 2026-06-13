@@ -55,25 +55,44 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 }
 .header-trophy { font-size: 28px; line-height: 1; }
 
+/* Chip del torneo junto al logo */
+.header-chip {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--gold);
+  background: rgba(245,197,24,0.12);
+  border: 1px solid rgba(245,197,24,0.3);
+  border-radius: 6px; padding: 3px 8px;
+}
+
 .header-actions { display: flex; gap: 8px; align-items: center; }
 .header-pill {
   display: flex; align-items: center; gap: 7px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 10px; padding: 6px 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px; padding: 7px 13px;
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 12px; letter-spacing: 1px; color: rgba(255,255,255,0.55);
+  font-size: 13px; letter-spacing: 0.5px; color: rgba(255,255,255,0.85);
   cursor: pointer; text-decoration: none;
   transition: background 0.2s, color 0.2s, border-color 0.2s;
 }
+.header-pill svg { width: 15px; height: 15px; flex-shrink: 0; }
 .header-pill:hover {
-  background: rgba(21,101,192,0.18); border-color: rgba(21,101,192,0.4); color: #fff;
+  background: rgba(21,101,192,0.18); border-color: rgba(21,101,192,0.45); color: #fff;
 }
-.header-pill-label { font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 1px; color: #fff; }
-@media (max-width: 500px) {
+/* Fixture = acción principal */
+.header-pill.primary {
+  background: rgba(21,101,192,0.18); border-color: rgba(21,101,192,0.45); color: #fff;
+}
+.header-pill.primary:hover { background: rgba(21,101,192,0.3); }
+.header-pill-label { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 0.5px; }
+@media (max-width: 560px) {
   .header-pill-label { display: none; }
-  .header-pill { padding: 6px 10px; gap: 0; }
+  .header-pill { width: 36px; height: 36px; padding: 0; gap: 0; justify-content: center; }
   .header-actions { gap: 6px; }
+}
+@media (max-width: 430px) {
+  .header-chip { display: none; }
 }
 
 /* ===== MAIN ===== */
@@ -283,22 +302,22 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 <!-- HEADER -->
 <header id="site-header">
   <a class="logo-wrap" href="index.html">
-    <img src="Logo.png" alt="TribunApp" style="height:72px;object-fit:contain;">
-    <div class="logo-sub" style="margin-left:4px;color:#f5c518;">Mundial 2026</div>
+    <img src="Logo.png" alt="TribunApp" style="height:56px;object-fit:contain;">
+    <span class="header-chip">Mundial 2026</span>
   </a>
 
   <div class="header-actions">
-    <a class="header-pill" href="estadisticas-tribunapp.html" data-help="Estadísticas de la comunidad: las formaciones más votadas y los puntajes que los hinchas le pusieron a cada jugador.">
-      <span>📣</span>
-      <span class="header-pill-label">Est. TribunApp</span>
+    <a class="header-pill primary" href="fixture.html" data-help="Fixture del Mundial: todos los partidos por fase, con resultados en vivo y la ficha de cada partido.">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span class="header-pill-label">Fixture</span>
     </a>
     <a class="header-pill" href="estadisticas-torneo.html" data-help="Estadísticas del torneo: goleadores, asistidores y los datos de cada selección y partido.">
-      <span>📊</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
       <span class="header-pill-label">Estadísticas</span>
     </a>
-    <a class="header-pill" href="fixture.html" data-help="Fixture del Mundial: todos los partidos por fase, con resultados en vivo y la ficha de cada partido.">
-      <span>📅</span>
-      <span class="header-pill-label">Fixture</span>
+    <a class="header-pill" href="estadisticas-tribunapp.html" data-help="Estadísticas de la comunidad: las formaciones más votadas y los puntajes que los hinchas le pusieron a cada jugador.">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span class="header-pill-label">TribunApp</span>
     </a>
   </div>
 </header>
