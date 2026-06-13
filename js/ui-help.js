@@ -78,11 +78,28 @@
     el._uiHelpDone = true;
     var text = el.getAttribute('data-help');
     if (!text) return;
-    el.setAttribute('role', el.getAttribute('role') || 'button');
-    el.setAttribute('tabindex', el.getAttribute('tabindex') || '0');
-    el.setAttribute('aria-label', el.getAttribute('aria-label') || 'Ayuda');
-    el.addEventListener('click', function (e) { e.stopPropagation(); e.preventDefault(); showTip(el, text); });
-    el.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showTip(el, text); } });
+    // Links de navegación: solo hover (no interceptar el click para no romper la navegación)
+    var href = el.getAttribute('href');
+    var isLink = el.tagName === 'A' && href && href !== '#';
+
+    // Hover con delay (desktop): mostrar al quedarse encima un momento
+    var hoverTimer = null;
+    el.addEventListener('mouseenter', function () {
+      hoverTimer = setTimeout(function () { showTip(el, text); }, 350);
+    });
+    el.addEventListener('mouseleave', function () {
+      clearTimeout(hoverTimer);
+      if (popOwner === el) hideTip();
+    });
+
+    if (!isLink) {
+      // Click/tap para tocar (mobile) — toggle
+      el.setAttribute('role', el.getAttribute('role') || 'button');
+      el.setAttribute('tabindex', el.getAttribute('tabindex') || '0');
+      el.setAttribute('aria-label', el.getAttribute('aria-label') || 'Ayuda');
+      el.addEventListener('click', function (e) { e.stopPropagation(); e.preventDefault(); showTip(el, text); });
+      el.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showTip(el, text); } });
+    }
   }
 
   function refresh() {

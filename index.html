@@ -139,7 +139,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .grupo-equipos { padding: 8px; display: flex; flex-direction: column; gap: 3px; }
 
 .equipo-row {
-  display: flex; align-items: center; gap: 11px;
+  display: flex; align-items: center; gap: 8px;
   padding: 8px 10px;
   border-radius: 10px;
   border-left: 2px solid transparent;
@@ -177,11 +177,11 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 }
 
 .flag-wrap {
-  width: 40px; height: 40px; flex-shrink: 0;
+  width: 32px; height: 32px; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
 }
 .flag-img {
-  width: 38px; height: 38px; object-fit: contain;
+  width: 30px; height: 30px; object-fit: contain;
   filter: drop-shadow(0 2px 6px rgba(0,0,0,0.6));
   border-radius: 50%;
 }
@@ -210,6 +210,38 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 }
 .stat-pts.lider  { color: #2ad572; }
 .stat-pts.segundo { color: var(--acento-light); }
+
+/* Columnas de stats alineadas con separadores (PTS / DIF GOL) */
+.equipo-stats { gap: 0; align-self: stretch; align-items: stretch; }
+.stat-pts, .stat-dg {
+  display: flex; align-items: center; justify-content: center;
+  border-left: 1px solid rgba(255,255,255,0.1);
+}
+.stat-pts { width: 32px; text-align: center; }
+.stat-dg {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px; font-weight: 600;
+  color: rgba(255,255,255,0.4);
+  width: 38px; text-align: center;
+}
+.stat-dg.pos { color: rgba(42,213,114,0.7); }
+.stat-dg.neg { color: rgba(229,57,53,0.7); }
+
+/* Encabezado de columnas dentro del grupo */
+.grupo-colhead {
+  display: flex; align-items: stretch; justify-content: flex-end;
+  gap: 0; padding: 5px 18px 5px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.grupo-colhead span {
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 9px; letter-spacing: 0.5px; text-transform: uppercase;
+  color: rgba(255,255,255,0.3); text-align: center;
+  border-left: 1px solid rgba(255,255,255,0.1);
+}
+.grupo-colhead .col-pts { width: 32px; }
+.grupo-colhead .col-dg  { width: 38px; }
 
 .pos-num {
   font-family: 'Bebas Neue', sans-serif;
@@ -256,15 +288,15 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   </a>
 
   <div class="header-actions">
-    <a class="header-pill" href="estadisticas-tribunapp.html">
+    <a class="header-pill" href="estadisticas-tribunapp.html" data-help="Estadísticas de la comunidad: las formaciones más votadas y los puntajes que los hinchas le pusieron a cada jugador.">
       <span>📣</span>
       <span class="header-pill-label">Est. TribunApp</span>
     </a>
-    <a class="header-pill" href="estadisticas-torneo.html">
+    <a class="header-pill" href="estadisticas-torneo.html" data-help="Estadísticas del torneo: goleadores, asistidores y los datos de cada selección y partido.">
       <span>📊</span>
       <span class="header-pill-label">Estadísticas</span>
     </a>
-    <a class="header-pill" href="fixture.html">
+    <a class="header-pill" href="fixture.html" data-help="Fixture del Mundial: todos los partidos por fase, con resultados en vivo y la ficha de cada partido.">
       <span>📅</span>
       <span class="header-pill-label">Fixture</span>
     </a>
@@ -461,6 +493,13 @@ function renderGrupos(equipos, estado) {
     const equiposGrupo = porGrupo[letra];
     if (!equiposGrupo) continue;
 
+    // Obtener tabla del grupo (si existe) y ordenar por ella
+    const tablaGrupo = (estado.tablas || {})[letra];
+
+    const colhead = tablaGrupo
+      ? `<div class="grupo-colhead"><span class="col-pts">Pts</span><span class="col-dg">Dif gol</span></div>`
+      : '';
+
     const card = document.createElement('div');
     card.className = 'grupo-card';
     card.innerHTML = `
@@ -468,14 +507,12 @@ function renderGrupos(equipos, estado) {
         <div class="grupo-letra">${letra}</div>
         <div class="grupo-titulo">Grupo ${letra}</div>
       </div>
+      ${colhead}
       <div class="grupo-equipos" id="grupo-${letra}"></div>
     `;
     wrap.appendChild(card);
 
     const contenedor = card.querySelector(`#grupo-${letra}`);
-
-    // Obtener tabla del grupo (si existe) y ordenar por ella
-    const tablaGrupo = (estado.tablas || {})[letra];
     let equiposOrdenados = [...equiposGrupo];
     if (tablaGrupo) {
       const orden = {};
@@ -509,11 +546,12 @@ function renderGrupos(equipos, estado) {
       if (statsEquipo) {
         const dg = statsEquipo.dg ?? (statsEquipo.gf - statsEquipo.gc);
         const dgStr = dg > 0 ? `+${dg}` : `${dg}`;
+        const dgClass = dg > 0 ? 'stat-dg pos' : dg < 0 ? 'stat-dg neg' : 'stat-dg';
         const ptsClass = pos === 1 ? 'stat-pts lider' : pos === 2 ? 'stat-pts segundo' : 'stat-pts';
         statsHTML = `
           <div class="equipo-stats">
             <span class="${ptsClass}" title="Puntos">${statsEquipo.pts ?? 0}</span>
-            <span class="stat-dg" title="Diferencia de goles">${dgStr}</span>
+            <span class="${dgClass}" title="Diferencia de goles">${dgStr}</span>
           </div>`;
       }
 
