@@ -588,7 +588,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
       <div class="hero-bg" style="background-image:url('fotos/bg-formacion.png')"></div>
       <div class="hero-overlay"></div>
       <div class="hero-content">
-        <div class="hero-title">ARMÁ TU FORMACIÓN</div>
+        <div class="hero-title">ARMÁ TU FORMACIÓN <span class="help-icon" data-help="Armá tu formación titular para el próximo partido y compartila. También podés ver la más votada por los hinchas."></span></div>
         <div class="hero-sub">Elegí los 11 titulares</div>
       </div>
     </div>
@@ -596,13 +596,13 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
       <div class="hero-bg" style="background-image:url('fotos/bg-puntajes.png')"></div>
       <div class="hero-overlay"></div>
       <div class="hero-content">
-        <div class="hero-title">PONÉ TU PUNTAJE</div>
+        <div class="hero-title">PONÉ TU PUNTAJE <span class="help-icon" data-help="Después del partido, calificá del 1 al 10 a cada jugador. Tu voto se promedia con el de todos los hinchas."></span></div>
         <div class="hero-sub">Nota del 1 al 10</div>
       </div>
     </div>
   </div>
   <div class="secondary-row" id="secondary-row">
-    <div class="sec-btn" onclick="openSection('fechas')">📅 VER FECHAS</div>
+    <div class="sec-btn" onclick="openSection('fechas')">📅 VER FECHAS <span class="help-icon" data-help="El fixture completo y los resultados de tu equipo, fecha por fecha."></span></div>
   </div>
 </div>
 </div>
@@ -1540,13 +1540,14 @@ function renderSecondaryRow() {
   if (!row) return;
   if (currentUser) {
     row.innerHTML = `
-      <div class="sec-btn" onclick="openSection('fixture')">📋 FIXTURE</div>
-      <div class="sec-btn" onclick="openSection('fechas')">📅 VER FECHAS</div>
-      <div class="sec-btn" onclick="openSection('stats')">📊 ESTADÍSTICAS</div>
+      <div class="sec-btn" onclick="openSection('fixture')">📋 FIXTURE <span class="help-icon" data-help="Resultados y próximos partidos de tu equipo, en vivo."></span></div>
+      <div class="sec-btn" onclick="openSection('fechas')">📅 VER FECHAS <span class="help-icon" data-help="El fixture completo y los resultados de tu equipo, fecha por fecha."></span></div>
+      <div class="sec-btn" onclick="openSection('stats')">📊 ESTADÍSTICAS <span class="help-icon" data-help="Estadísticas del equipo y de cada jugador, más los datos votados por la comunidad."></span></div>
     `;
   } else {
-    row.innerHTML = `<div class="sec-btn" onclick="openSection('fechas')">📅 VER FECHAS</div>`;
+    row.innerHTML = `<div class="sec-btn" onclick="openSection('fechas')">📅 VER FECHAS <span class="help-icon" data-help="El fixture completo y los resultados de tu equipo, fecha por fecha."></span></div>`;
   }
+  if (window.UIHelp) window.UIHelp.refresh();
 }
 
 // ---- VER FECHAS ----
@@ -2405,5 +2406,6 @@ renderSecondaryRow();
 onAuthChange(() => renderSecondaryRow());
 initAuth();
 </script>
+<script src="js/ui-help.js"></script>
 </body>
 </html>

@@ -720,6 +720,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
     <div class="hero-panel" onclick="openSection('formacion')">
       <div class="hero-bg" id="bg-formacion" style="background-image:url('fotos/bg-formacion.png')"></div>
       <div class="hero-overlay"></div>
+      <span class="help-icon" style="position:absolute;top:10px;right:10px;z-index:5;background:rgba(0,0,0,0.45);" data-help="Armá tu 11 ideal para el próximo partido y compartilo. También podés ver la formación más votada por la comunidad."></span>
       <div class="hero-content">
         <div class="hero-badge abierto" id="badge-formacion">ABIERTO</div>
       </div>
@@ -727,6 +728,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
     <div class="hero-panel" onclick="openSection('puntajes')">
       <div class="hero-bg" id="bg-puntajes" style="background-image:url('fotos/bg-puntajes.png')"></div>
       <div class="hero-overlay"></div>
+      <span class="help-icon" style="position:absolute;top:10px;right:10px;z-index:5;background:rgba(0,0,0,0.45);" data-help="Después del partido, calificá del 1 al 10 a cada jugador. Tu voto se promedia con el de toda la comunidad."></span>
       <div class="hero-content">
         <div class="hero-badge abierto" id="badge-puntajes">ABIERTO</div>
       </div>
@@ -734,7 +736,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   </div>
 
   <div class="secondary-row">
-    <button class="sec-btn" onclick="openSection('estadisticas')">📊 Estadísticas</button>
+    <button class="sec-btn" onclick="openSection('estadisticas')">📊 Estadísticas <span class="help-icon" data-help="Estadísticas reales del equipo y de cada jugador, partido por partido."></span></button>
     <a class="sec-btn" id="btn-tribunapp" href="#" style="text-decoration:none;">📣 Est. TribunApp</a>
   </div>
 
@@ -2305,5 +2307,6 @@ window.closeSection = closeSection;
 
 })(); // fin IIFE
 </script>
+<script src="js/ui-help.js"></script>
 </body>
 </html>
