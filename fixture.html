@@ -694,6 +694,7 @@ function renderFichaFromJson(data, plantelLocal, plantelVisit) {
   const tokKey = s => '' + normN(s).replace(/-/g,' ').split(/\s+/).filter(Boolean).sort().join(' ');
 
   const tokSet = s => new Set(normN(s).replace(/-/g,' ').split(/\s+/).filter(Boolean));
+  const lastWord = s => { const w = normN(s).replace(/\./g,'').split(/\s+/).filter(Boolean); return w[w.length-1] || ''; };
 
   function buildFidIndex(plantel) {
     const idx = { _list: (plantel?.jugadores || []) };
@@ -712,6 +713,10 @@ function renderFichaFromJson(data, plantelLocal, plantelVisit) {
   function getPlantelEntry(nombre, idx) {
     const directo = idx['n:' + normN(nombre)] || idx['f:' + firstLast(nombre)] || idx['t:' + tokKey(nombre)];
     if (directo) return directo;
+    // Apellido único: api-sports usa nombre largo ("Matthew Freese") y el plantel corto ("Matt Freese")
+    const lw = lastWord(nombre);
+    const byLast = (idx._list || []).filter(pl => lastWord(pl.nombre) === lw);
+    if (byLast.length === 1) return byLast[0];
     // Fallback: mejor solapamiento de tokens (>=2 comunes y ganador único)
     // cubre diferencias de romanización (Oh Hyeon-Gyu vs Hyun-Gyu Oh)
     const mine = tokSet(nombre);
@@ -739,10 +744,12 @@ function renderFichaFromJson(data, plantelLocal, plantelVisit) {
     const fid = pe?.fid || null;
     // Suplentes vienen sin número en el JSON del partido → fallback al del plantel
     const num = j.num || pe?.numero || '';
-    players[j.id] = { j: { ...j, num }, teamName, fid };
+    // Foto: plantel local → fallback a la imagen de api-sports (el id del partido es de api-sports)
+    const foto = fid ? `fotos/${fid}.png` : (j.id ? `https://media.api-sports.io/football/players/${j.id}.png` : '');
+    players[j.id] = { j: { ...j, num }, teamName, fid, foto };
     return `
       <div class="ficha-jugador clickable" data-pid="${j.id}">
-        ${fid ? `<img class="ficha-jugador-foto" src="fotos/${fid}.png" alt="" onerror="this.style.display='none'">` : '<span class="ficha-jugador-foto"></span>'}
+        ${foto ? `<img class="ficha-jugador-foto" src="${foto}" alt="" onerror="this.style.display='none'">` : '<span class="ficha-jugador-foto"></span>'}
         <span class="ficha-jugador-num">${num}</span>
         <div class="ficha-jugador-info">
           <div class="ficha-jugador-nombre">${j.nombre}</div>
@@ -836,8 +843,10 @@ function _fdGridFromRows(rows) {
 
 function renderFichaDetalle(entry) {
   const { j, teamName, fid } = entry;
-  const fotoTag = fid
-    ? `<img class="fd-foto" src="fotos/${fid}.png" alt="" onerror="this.style.visibility='hidden'">`
+  // Foto: la calculada en la fila (plantel o api-sports), o construida desde fid/id
+  const foto = entry.foto || (fid ? `fotos/${fid}.png` : (j.id ? `https://media.api-sports.io/football/players/${j.id}.png` : ''));
+  const fotoTag = foto
+    ? `<img class="fd-foto" src="${foto}" alt="" onerror="this.style.visibility='hidden'">`
     : `<span class="fd-foto"></span>`;
   const tipoLabel = j.tipo === 'suplente' ? 'Suplente' : (j.tipo === 'dt' ? 'DT' : 'Titular');
 

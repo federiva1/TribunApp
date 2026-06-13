@@ -1671,8 +1671,9 @@ async function initPuntajes() {
         // (api-sports "Hwang In-beom" vs plantel "In-Beom Hwang")
         const tokKey = s => normNombre(s).replace(/-/g,' ').split(/\s+/).filter(Boolean).sort().join(' ');
         const tokSet = s => new Set(normNombre(s).replace(/-/g,' ').split(/\s+/).filter(Boolean));
+        const lastWord = s => { const w = normNombre(s).replace(/\./g,'').split(/\s+/).filter(Boolean); return w[w.length-1] || ''; };
         squadPuntajes = jugs.map((j, idx) => {
-          // Cruzar con plantel: exact norm → fid → primer+último nombre → token-set → solapamiento
+          // Cruzar con plantel: exact norm → fid → primer+último nombre → token-set → apellido único → solapamiento
           const nj = normNombre(j.nombre);
           const flj = firstLast(j.nombre);
           const tkj = tokKey(j.nombre);
@@ -1683,6 +1684,12 @@ async function initPuntajes() {
             tokKey(s.name) === tkj
           );
           if (!enPlantel) {
+            // Apellido único: api-sports usa nombre largo ("Matthew Freese") y el plantel corto ("Matt Freese")
+            const lw = lastWord(j.nombre);
+            const byLast = squad.filter(s => lastWord(s.name) === lw);
+            if (byLast.length === 1) enPlantel = byLast[0];
+          }
+          if (!enPlantel) {
             // Fallback: mejor solapamiento de tokens (>=2 comunes y ganador único)
             // cubre diferencias de romanización (Oh Hyeon-Gyu vs Hyun-Gyu Oh)
             const mine = tokSet(j.nombre);
@@ -1690,16 +1697,19 @@ async function initPuntajes() {
             if (scored.length && scored[0].n >= 2 && (scored.length === 1 || scored[1].n < scored[0].n)) enPlantel = scored[0].s;
           }
           // Para el DT, el fid viene de plantelData.tecnico (la foto está guardada con ese fid)
-          let fid = enPlantel?.fid ?? String(j.id);
+          let fid = enPlantel?.fid ?? null;
           if (j.tipo === 'dt' && plantelData?.tecnico) {
             const tec = plantelData.tecnico;
             const tecFid = typeof tec === 'object' ? tec.fid : null;
             if (tecFid) fid = tecFid;
           }
+          // Foto: plantel local → fallback a la imagen de api-sports (el id del partido es de api-sports)
+          const foto = fid ? FOTO(fid) : (j.id ? `https://media.api-sports.io/football/players/${j.id}.png` : '');
           return {
-            num: enPlantel?.num ?? j.id,
+            num: enPlantel?.num ?? (j.num || ''),
             name: j.nombre,
             fid,   // plantel fid para foto (ahí están las imágenes)
+            foto,
             posicion: j.portero ? 'GK' : (enPlantel?.posicion || 'DEL'),
             tipo: j.tipo || (idx < 11 ? 'titular' : 'suplente'),
             _src_id: j.id
@@ -1716,7 +1726,7 @@ async function initPuntajes() {
     if (tecnico) {
       const dtNombre = typeof tecnico === 'object' ? tecnico.nombre : tecnico;
       const dtFid    = typeof tecnico === 'object' ? (tecnico.fid || 0) : 0;
-      squadPuntajes.push({ num: 0, name: dtNombre, fid: dtFid, posicion: 'TEC', tipo: 'dt' });
+      squadPuntajes.push({ num: 0, name: dtNombre, fid: dtFid, foto: dtFid ? FOTO(dtFid) : '', posicion: 'TEC', tipo: 'dt' });
     }
   }
 
@@ -1761,7 +1771,7 @@ function renderScores() {
       const row = document.createElement('div'); row.className = 'score-player-row'; row.dataset.num = p.num;
 
       const avWrap = document.createElement('div'); avWrap.className = 'score-avatar-wrap';
-      const img = document.createElement('img'); img.src = FOTO(p.fid);
+      const img = document.createElement('img'); img.src = p.foto || FOTO(p.fid);
       const fb  = document.createElement('span'); fb.className = 'av-fb'; fb.textContent = p.tipo === 'dt' ? 'DT' : (p.num || '?');
       img.onload  = () => { img.style.display = 'block'; fb.style.display = 'none'; };
       img.onerror = () => { img.style.display = 'none'; fb.style.display = 'block'; };
@@ -1924,7 +1934,7 @@ async function showScoresResults() {
     const sqR = window._squadPuntajes || squad;
     const results = Object.keys(totals).map(num => {
       const p = sqR.find(s => String(s.num) === String(num));
-      return { num: Number(num), name: p?.name || `#${num}`, fid: p?.fid || 0, avg: totals[num] / countMap[num] };
+      return { num: Number(num), name: p?.name || `#${num}`, fid: p?.fid || 0, foto: p?.foto || (p?.fid ? FOTO(p.fid) : ''), avg: totals[num] / countMap[num] };
     }).sort((a, b) => b.avg - a.avg);
 
     list.innerHTML = '';
@@ -1933,7 +1943,7 @@ async function showScoresResults() {
       const row = document.createElement('div'); row.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:8px;';
       const rankEl = document.createElement('div'); rankEl.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:14px;color:rgba(255,255,255,0.3);min-width:24px;text-align:center;';
       rankEl.textContent = rank < 3 ? medals[rank] : `${rank+1}°`;
-      const av = makeAvatar(FOTO(p.fid), p.num, 38); av.style.flexShrink = '0';
+      const av = makeAvatar(p.foto || FOTO(p.fid), p.num, 38); av.style.flexShrink = '0';
       const info = document.createElement('div'); info.style.cssText = 'flex:1;min-width:0;';
       const nameEl = document.createElement('div'); nameEl.style.cssText = 'font-size:13px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'; nameEl.textContent = apellido(p.name);
       const barWrap = document.createElement('div'); barWrap.style.cssText = 'background:rgba(255,255,255,0.07);border-radius:4px;height:5px;overflow:hidden;margin-top:4px;';
