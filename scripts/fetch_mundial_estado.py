@@ -1,11 +1,11 @@
 """
 fetch_mundial_estado.py
-Genera/actualiza data/estado_mundial.json para las 48 selecciones
+Genera/actualiza data/estado_mundial.json para las 48 selecciones (ventana puntajes: 24h)
 leyendo data/fixtures/mundial.json.
 
 Para cada equipo determina el partido activo/próximo:
  - Si hay partido EN CURSO → puntajesOpen según update_estado (no se toca aquí)
- - Si hay partido TERMINADO reciente (≤ 48h) → puntajesOpen conservado
+ - Si hay partido TERMINADO reciente (≤ 24h) → puntajesOpen conservado
  - Si no hay partido aún jugado → puntajesOpen: false, rival y match_date del próximo
 
 Este script NO cambia puntajesOpen de entradas ya existentes con puntajesOpen:true.
@@ -69,14 +69,14 @@ def main():
         terminado = next((p for p in reversed(partidos) if p['finished']), None)
         proximo   = next((p for p in partidos if not p['started'] and not p['finished']), None)
 
-        # Partido relevante: en curso primero, luego el más reciente terminado (≤48h), luego próximo
+        # Partido relevante: en curso primero, luego el más reciente terminado (≤24h), luego próximo
         activo = None
         if en_curso:
             activo = en_curso
         elif terminado:
             try:
                 match_dt = datetime.fromisoformat(terminado['utcTime'].replace('Z','+00:00'))
-                if now - match_dt <= timedelta(hours=48):
+                if now - match_dt <= timedelta(hours=24):
                     activo = terminado
             except Exception:
                 activo = terminado
