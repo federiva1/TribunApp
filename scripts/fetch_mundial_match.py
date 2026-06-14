@@ -301,7 +301,18 @@ def build_partidos_json(raw: dict, local_slug: str, visitante_slug: str,
                 'duelos': None, 'portero_stats': None,
             })
 
-        return result
+        # Dedup: api-sports a veces lista al mismo jugador como titular Y suplente
+        # (cuando hay cambios tardíos). Conservar solo la entrada titular.
+        seen: set[int] = set()
+        deduped = []
+        for entry in result:
+            eid = entry.get('id')
+            if eid and eid in seen:
+                continue  # duplicado, saltar
+            if eid:
+                seen.add(eid)
+            deduped.append(entry)
+        return deduped
 
     local_jugs    = build_players(local_api_id if home_is_local else visit_api_id, True)
     visitante_jugs = build_players(visit_api_id if home_is_local else local_api_id, False)
