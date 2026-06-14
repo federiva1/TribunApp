@@ -1,0 +1,115 @@
+name: Mundial — Post-Match Stats
+
+on:
+  schedule:
+    # Crons calculados: kickoff UTC + 2h20m (grupos) / 3h15m (eliminatorias)
+    # ── Jornada 1 ──────────────────────────────────────────────────────────────
+    # (partidos ya jugados — crons pasados, se mantienen por historial)
+    # ── Jornada 2 ──────────────────────────────────────────────────────────────
+    - cron: "20 19 14 6 *"  # Germany vs Curacao
+    - cron: "20 22 14 6 *"  # Netherlands vs Japan
+    - cron: "20 1 15 6 *"   # Ivory Coast vs Ecuador
+    - cron: "20 4 15 6 *"   # Sweden vs Tunisia
+    - cron: "20 18 15 6 *"  # Spain vs Cape Verde Islands
+    - cron: "20 21 15 6 *"  # Belgium vs Egypt
+    - cron: "20 0 16 6 *"   # Saudi Arabia vs Uruguay
+    - cron: "20 3 16 6 *"   # Iran vs New Zealand
+    - cron: "20 21 16 6 *"  # France vs Senegal
+    - cron: "20 0 17 6 *"   # Iraq vs Norway
+    - cron: "20 3 17 6 *"   # Argentina vs Algeria
+    - cron: "20 6 17 6 *"   # Austria vs Jordan
+    - cron: "20 19 17 6 *"  # Portugal vs Congo DR
+    - cron: "20 22 17 6 *"  # England vs Croatia
+    - cron: "20 1 18 6 *"   # Ghana vs Panama
+    - cron: "20 4 18 6 *"   # Uzbekistan vs Colombia
+    - cron: "20 18 18 6 *"  # Czechia vs South Africa
+    - cron: "20 21 18 6 *"  # Switzerland vs Bosnia & Herzegovina
+    - cron: "20 0 19 6 *"   # Canada vs Qatar
+    - cron: "20 3 19 6 *"   # Mexico vs South Korea
+    - cron: "20 21 19 6 *"  # USA vs Australia
+    - cron: "20 0 20 6 *"   # Scotland vs Morocco
+    - cron: "50 2 20 6 *"   # Brazil vs Haiti
+    - cron: "20 5 20 6 *"   # Turkiye vs Paraguay
+    # ── Jornada 3 ──────────────────────────────────────────────────────────────
+    - cron: "20 19 20 6 *"  # Netherlands vs Sweden
+    - cron: "20 22 20 6 *"  # Germany vs Ivory Coast
+    - cron: "20 2 21 6 *"   # Ecuador vs Curacao
+    - cron: "20 6 21 6 *"   # Tunisia vs Japan
+    - cron: "20 18 21 6 *"  # Spain vs Saudi Arabia
+    - cron: "20 21 21 6 *"  # Belgium vs Iran
+    - cron: "20 0 22 6 *"   # Uruguay vs Cape Verde Islands
+    - cron: "20 3 22 6 *"   # New Zealand vs Egypt
+    - cron: "20 19 22 6 *"  # Argentina vs Austria
+    - cron: "20 23 22 6 *"  # France vs Iraq
+    - cron: "20 2 23 6 *"   # Norway vs Senegal
+    - cron: "20 5 23 6 *"   # Jordan vs Algeria
+    - cron: "20 19 23 6 *"  # Portugal vs Uzbekistan
+    - cron: "20 22 23 6 *"  # England vs Ghana
+    - cron: "20 1 24 6 *"   # Panama vs Croatia
+    - cron: "20 4 24 6 *"   # Colombia vs Congo DR
+    - cron: "20 21 24 6 *"  # Bosnia & Herzegovina vs Qatar / Switzerland vs Canada (doble fecha)
+    - cron: "20 0 25 6 *"   # Morocco vs Haiti / Scotland vs Brazil
+    - cron: "20 3 25 6 *"   # Czechia vs Mexico / South Africa vs South Korea
+    - cron: "20 22 25 6 *"  # Curacao vs Ivory Coast / Ecuador vs Germany
+    - cron: "20 1 26 6 *"   # Japan vs Sweden / Tunisia vs Netherlands
+    - cron: "20 4 26 6 *"   # Paraguay vs Australia / Turkiye vs USA
+    - cron: "20 21 26 6 *"  # Norway vs France / Senegal vs Iraq
+    - cron: "20 2 27 6 *"   # Cape Verde Islands vs Saudi Arabia / Uruguay vs Spain
+    - cron: "20 5 27 6 *"   # Egypt vs Iran / New Zealand vs Belgium
+    - cron: "20 23 27 6 *"  # Croatia vs Ghana / Panama vs England
+    - cron: "50 1 28 6 *"   # Colombia vs Portugal / Congo DR vs Uzbekistan
+    - cron: "20 4 28 6 *"   # Algeria vs Austria / Jordan vs Argentina
+    # ── Eliminatorias (Round of 32+) — +3h15m ──────────────────────────────────
+    # (se agregarán crons cuando se definan los fixtures)
+  workflow_dispatch:
+
+jobs:
+  post-match:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install requests playwright
+          playwright install chromium
+
+      - name: Update mundial fixtures
+        env:
+          API_SPORTS_KEY: ${{ secrets.API_SPORTS_KEY }}
+        run: python scripts/fetch_mundial_fixtures.py
+
+      - name: Fetch match stats — api-sports
+        env:
+          API_SPORTS_KEY: ${{ secrets.API_SPORTS_KEY }}
+        run: python scripts/fetch_mundial_match.py --auto
+
+      - name: Fetch player stats — FotMob
+        run: |
+          python scripts/scrape_fotmob_mundial.py --auto \
+            || echo "::warning::FotMob scraper falló (posible bloqueo). Stats de api-sports son suficientes."
+
+      - name: Update standings
+        env:
+          API_SPORTS_KEY: ${{ secrets.API_SPORTS_KEY }}
+        run: python scripts/fetch_mundial_standings.py
+
+      - name: Open/close puntajes (ventana 24h)
+        run: python scripts/fetch_mundial_estado.py --force
+
+      - name: Commit if changed
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: update mundial data [skip ci]"
+          file_pattern: >
+            data/fixtures/mundial.json
+            data/estado_mundial.json
+            data/partidos/*.json
+            data/partidos/index.json
