@@ -229,14 +229,137 @@ def enrich_players(players: list, ps_by_name: dict) -> list:
     return players
 
 
+def resolve_fotmob_url(stats_id: str, date_str: str, local_slug: str) -> str:
+    """Busca la URL de FotMob del partido usando la página de fixtures del equipo local."""
+    plantel_file = ROOT / 'data' / 'planteles' / f'{local_slug}.json'
+    if not plantel_file.exists():
+        raise FileNotFoundError(f'No existe data/planteles/{local_slug}.json')
+    fotmob_id = json.loads(plantel_file.read_text(encoding='utf-8')).get('fotmob_id')
+    if not fotmob_id:
+        raise ValueError(f'fotmob_id no encontrado para {local_slug}')
+
+    print(f'  Buscando URL FotMob (team={fotmob_id}, fecha={date_str})...')
+    with sync_playwright() as pw:
+        browser = pw.chromium.launch(headless=True)
+        ctx = browser.new_context(user_agent=UA)
+        page = ctx.new_page()
+        page.goto(f'https://www.fotmob.com/teams/{fotmob_id}/fixtures',
+                  wait_until='domcontentloaded', timeout=60000)
+        data = page.evaluate('() => document.getElementById("__NEXT_DATA__")?.textContent')
+        browser.close()
+
+    if not data:
+        raise RuntimeError('No se pudo obtener __NEXT_DATA__ de la página de fixtures')
+
+    d = json.loads(data)
+    fx = d['props']['pageProps']['fallback'][f'team-{fotmob_id}']['fixtures']
+    fixtures = fx.get('allFixtures', {}).get('fixtures', fx) if isinstance(fx, dict) else fx
+    for m in fixtures:
+        utc = (m.get('status') or {}).get('utcTime', '') or m.get('utcTime', '')
+        if date_str in str(utc):
+            page_url = m.get('pageUrl', '')
+            if page_url:
+                return f'https://www.fotmob.com{page_url}'
+    raise RuntimeError(f'No se encontró partido en FotMob para {local_slug} en {date_str}')
+
+
+def auto_mode(headed: bool = False) -> int:
+    """Procesa todos los partidos FT en mundial.json que ya tienen data/partidos/{stats_id}.json
+    pero les faltan stats individuales (top/ataque/defensa/duelos todos None)."""
+    mundial_file = ROOT / 'data' / 'fixtures' / 'mundial.json'
+    ms = json.loads(mundial_file.read_text(encoding='utf-8'))
+    pending = []
+    for m in ms:
+        st = m.get('status', {}) or {}
+        if not st.get('finished'):
+            continue
+        sid = m.get('stats_id')
+        if not sid:
+            continue
+        out_file = PARTIDOS_DIR / f'{sid}.json'
+        if not out_file.exists():
+            continue
+        # Verificar si ya tiene stats de FotMob (cualquier jugador con top != None)
+        d = json.loads(out_file.read_text(encoding='utf-8'))
+        all_jugs = [j for jugs in d.get('jugadores', {}).values() for j in jugs if j.get('tipo') != 'dt']
+        if any(j.get('top') is not None for j in all_jugs):
+            continue  # ya tiene FotMob stats
+        utc = st.get('utcTime', '')
+        date_str = utc[:10] if utc else ''
+        local_slug = m.get('home', {}).get('slug', '')
+        pending.append((sid, date_str, local_slug))
+
+    if not pending:
+        print('auto: nada que procesar (todos los FT ya tienen stats FotMob)')
+        return 0
+
+    errors = []
+    for sid, date_str, local_slug in pending:
+        try:
+            url = resolve_fotmob_url(sid, date_str, local_slug)
+            print(f'  URL resuelta: {url}')
+            # Reutilizar el flujo normal pasando la URL
+            import sys
+            sys.argv = ['scrape_fotmob_mundial.py', '--url', url, '--id', sid]
+            if headed:
+                sys.argv.append('--headed')
+        except Exception as e:
+            print(f'  ERROR resolviendo URL para {sid}: {e}')
+            errors.append(sid)
+            continue
+        # Procesar inline
+        out_file = PARTIDOS_DIR / f'{sid}.json'
+        payload = json.loads(out_file.read_text(encoding='utf-8'))
+        try:
+            nd = _fetch_next_data(url, headed)
+            enriched = enrich_players(nd, payload)
+            out_file.write_text(json.dumps(enriched, ensure_ascii=False, indent=2), encoding='utf-8')
+            print(f'  Enriquecido: data/partidos/{sid}.json')
+        except Exception as e:
+            print(f'  ERROR procesando FotMob para {sid}: {e}')
+            errors.append(sid)
+
+    if errors:
+        print(f'Errores en: {errors}')
+        return 1
+    return 0
+
+
+def _fetch_next_data(url: str, headed: bool = False) -> dict:
+    """Navega a la URL de FotMob y retorna __NEXT_DATA__."""
+    with sync_playwright() as pw:
+        browser = pw.chromium.launch(headless=not headed, slow_mo=80)
+        ctx = browser.new_context(user_agent=UA, locale='es-AR',
+                                  viewport={'width': 1280, 'height': 900})
+        page = ctx.new_page()
+        page.goto(url, wait_until='domcontentloaded', timeout=60000)
+        print('Esperando FotMob...')
+        time.sleep(8)
+        nd = page.evaluate('() => window.__NEXT_DATA__')
+        if not nd:
+            page.wait_for_load_state('networkidle', timeout=30000)
+            nd = page.evaluate('() => window.__NEXT_DATA__')
+        browser.close()
+    if not nd:
+        raise RuntimeError('Sin __NEXT_DATA__')
+    return nd
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument('--url',      default='', help='URL del partido en FotMob')
-    ap.add_argument('--id',       required=True, help='ID del partido (e.g. mexico-southafrica)')
+    ap.add_argument('--id',       default='', help='ID del partido (e.g. mexico-southafrica)')
+    ap.add_argument('--auto',     action='store_true', help='Procesar todos los FT sin stats FotMob')
     ap.add_argument('--headed',   action='store_true')
     ap.add_argument('--save-raw', action='store_true')
     ap.add_argument('--from-raw', action='store_true', help='Leer desde scripts/_fotmob_raw/{id}.json')
     args = ap.parse_args()
+
+    if args.auto:
+        return auto_mode(headed=args.headed)
+
+    if not args.id:
+        ap.error('--id requerido (o usa --auto)')
 
     out_file = PARTIDOS_DIR / f'{args.id}.json'
     if not out_file.exists():
@@ -256,23 +379,23 @@ def main() -> int:
         nd = json.loads(raw_file.read_text(encoding='utf-8'))
         print(f'Leyendo raw: {raw_file.name}')
     else:
-        if not args.url:
+        # Si no se pasa --url, intentar resolverla automáticamente desde mundial.json
+        url = args.url
+        if not url:
+            try:
+                ms = json.loads((ROOT / 'data' / 'fixtures' / 'mundial.json').read_text(encoding='utf-8'))
+                match = next((m for m in ms if m.get('stats_id') == args.id), None)
+                if match:
+                    date_str = (match.get('status') or {}).get('utcTime', '')[:10]
+                    local_slug = match.get('home', {}).get('slug', '')
+                    url = resolve_fotmob_url(args.id, date_str, local_slug)
+            except Exception as e:
+                print(f'No se pudo resolver URL automáticamente: {e}')
+        if not url:
             print('ERROR: --url requerido (o usa --from-raw)')
             return 1
-        print(f'Navegando: {args.url}')
-        with sync_playwright() as pw:
-            browser = pw.chromium.launch(headless=not args.headed, slow_mo=80)
-            ctx = browser.new_context(user_agent=UA, locale='es-AR',
-                                      viewport={'width': 1280, 'height': 900})
-            page = ctx.new_page()
-            page.goto(args.url, wait_until='domcontentloaded', timeout=60000)
-            print('Esperando FotMob...')
-            time.sleep(8)
-            nd = page.evaluate('() => window.__NEXT_DATA__')
-            if not nd:
-                page.wait_for_load_state('networkidle', timeout=30000)
-                nd = page.evaluate('() => window.__NEXT_DATA__')
-            browser.close()
+        print(f'Navegando: {url}')
+        nd = _fetch_next_data(url, args.headed)
 
         if nd and args.save_raw:
             RAW_DIR.mkdir(exist_ok=True)
@@ -280,7 +403,7 @@ def main() -> int:
                 json.dumps(nd, ensure_ascii=False, indent=2), encoding='utf-8')
             print(f'Raw guardado: scripts/_fotmob_raw/{args.id}.json')
 
-    if not nd:
+    if nd is None:
         print('ERROR: sin __NEXT_DATA__')
         return 1
 
