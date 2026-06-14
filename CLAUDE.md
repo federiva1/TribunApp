@@ -47,6 +47,27 @@ python scripts/scrape_fotmob_partidos.py                                     # A
 python scripts/scrape_fotmob_partidos.py --slug racingclub --copa sudamericana --date 2026-04-29
 python scripts/scrape_fotmob_partidos.py --headed                            # browser visible (debug)
 
+# === Mundial 2026 — pipeline post-partido ===
+
+# 1. Actualizar fixture del mundial (estados, scores) desde api-sports
+python scripts/fetch_mundial_fixtures.py
+
+# 2. Generar data/partidos/{stats_id}.json para partidos FT sin archivo aún
+python scripts/fetch_mundial_match.py --auto
+python scripts/fetch_mundial_match.py --fixture-id 1234567 --id germany-curacao  # manual
+
+# 3. Enriquecer con stats individuales FotMob (Playwright)
+python scripts/scrape_fotmob_mundial.py --auto                          # todos los pendientes
+python scripts/scrape_fotmob_mundial.py --url "https://..." --id germany-curacao  # manual
+python scripts/scrape_fotmob_mundial.py --auto --headed                 # browser visible (debug)
+
+# 4. Actualizar tabla de posiciones del mundial
+python scripts/fetch_mundial_standings.py
+
+# 5. Abrir/cerrar puntajes (ventana 24h desde FT)
+python scripts/fetch_mundial_estado.py           # conserva puntajesOpen existentes
+python scripts/fetch_mundial_estado.py --force   # recalcula puntajesOpen según tiempo
+
 # === One-shots ya ejecutados — NO volver a correr con --execute ===
 
 # Generar argentinosjuniors.json desde el Excel (deprecado a favor del scraper FotMob, mantenido)
@@ -306,3 +327,74 @@ Para Panama/selecciones, `p.name` es string directo (no `p.name.fullName`). El C
 - `scripts/migrar_votos_formaaajcion.py` es one-shot. Ya se ejecutó (107 formaciones + 114 puntajes para Banfield/IndRiv/AtlTuc; después se sumaron 14+19 de Huracán). **No volver a correr con `--execute` — duplica filas.**
 - `fetch_fixtures.py`, `update_estado.py`, `fetch_match_stats.py` leen `API_SPORTS_KEY` del environment (fallback a la key hardcodeada para uso local).
 - `FLUJO.md` documenta el ciclo de vida completo de una fecha y el plan de automatización.
+
+## Mundial 2026 — Automatización Post-Partido
+
+### Scripts del pipeline
+
+| Script | Fuente | Output |
+|--------|--------|--------|
+| `fetch_mundial_fixtures.py` | api-sports league=1 | `data/fixtures/mundial.json` |
+| `fetch_mundial_match.py --auto` | api-sports fixtures/{id} | `data/partidos/{stats_id}.json` |
+| `scrape_fotmob_mundial.py --auto` | FotMob Playwright | enriquece jugadores en el mismo JSON |
+| `fetch_mundial_standings.py` | api-sports standings | `data/partidos/standings.json` |
+| `fetch_mundial_estado.py --force` | lee mundial.json | `data/estado_mundial.json` |
+
+**Ventana de puntajes**: 24h desde el FT (no 48h como en liga). Configurado en `fetch_mundial_estado.py`.
+
+**Deduplicación jugadores**: `fetch_mundial_match.py` deduplica por player ID antes de devolver — api-sports double-lista jugadores que juegan los 90' como titular Y suplente. El fix evita que aparezcan duplicados en stats/puntajes.
+
+**Resolución URL FotMob auto**: `scrape_fotmob_mundial.py` tiene `resolve_fotmob_url(stats_id, date_str, local_slug)` que navega `fotmob.com/teams/{fotmob_id}/fixtures`, extrae `__NEXT_DATA__`, encuentra el partido por fecha y devuelve la URL exacta — sin tener que buscarla manualmente.
+
+**Photo matching** (`estadisticas.html` + `equipo.html`): jerarquía de 5 niveles:
+1. Exacto normalizado (tildes/case)
+2. First+Last token
+3. Token key (sorted set)
+4. Last word único
+5. Token overlap ≥ 2
+6. **Surname contained**: todos los tokens no-iniciales del nombre abreviado (ej. "A. Amaimouni") están en el nombre del plantel, match único → usa ese fid. Maneja "A. Amaimouni" → "Ayoube Amaimouni-Echghouyab".
+
+### Las 3 opciones de automatización
+
+#### 🖥️ Opción "Compu" (local — ya funcionando)
+- **Mecanismo**: Claude Code scheduled tasks (skill `/schedule`) en la máquina local
+- **Tareas programadas**: `mundial-post-match` (kickoff+2h05), `mundial-post-match-b1` (+5min backup), `mundial-post-match-b2` (+10min backup)
+- **Lógica backup**: cada tarea verifica si el partido ya fue procesado antes de actuar; si sí, termina sin hacer nada
+- **Requiere**: compu encendida + Claude Code app abierta
+- **Costo**: tokens del plan normal (~15k–30k tokens por partido estimado)
+- **Token tracking**: registrar en tabla abajo
+
+#### ☁️ Opción "Actions" (GitHub Actions — ya en prod)
+- **Mecanismo**: `.github/workflows/mundial-match-stats.yml` con 52 crons pre-calculados (kickoff UTC + 2h20m grupos, +3h15m eliminatorias)
+- **Pipeline**: fetch_mundial_fixtures → fetch_mundial_match --auto → scrape_fotmob_mundial --auto → fetch_mundial_standings → fetch_mundial_estado --force → git auto-commit
+- **No usa IA** — scripts Python determinísticos corriendo en runners de GitHub
+- **Requiere**: nada (funciona 24/7 sin compu)
+- **Costo**: $0 (gratis en repos públicos)
+- **Limitación conocida**: FotMob puede bloquear Playwright en Ubuntu (IP de GitHub). Si falla, el workflow continúa igualmente con stats de api-sports (sin stats individuales por jugador).
+
+#### 🤖 Opción "Agente Cloud" (todavía no implementada)
+- **Mecanismo**: servidor cloud (AWS Lambda / Render / Railway) + API de Anthropic corriendo Claude Code como agente autónomo
+- **Ventaja**: puede razonar, reintentar, manejar errores inesperados, notificar si algo sale mal
+- **Costo estimado**: $5–20/mes servidor + ~$0.50–2 por partido en tokens Claude Sonnet → **~$50–130 total para los 64 partidos del mundial**
+- **Estado**: pendiente de evaluación. Se implementará si Opción Actions falla sistemáticamente.
+
+### Registro de tokens por partido (para comparar opciones)
+
+| Partido | Opción | Tokens input | Tokens output | Total | Resultado |
+|---------|--------|-------------|---------------|-------|-----------|
+| — | — | — | — | — | — |
+
+*(Completar después de cada run de Opción Compu con el contador de tokens de la sesión)*
+
+### Stats_id de partidos del Mundial
+
+El `stats_id` en `mundial.json` es el nombre del archivo en `data/partidos/`. Se deriva del slug local-visitante.
+Slugs especiales que requieren mapeo manual en `fetch_mundial_match.py → NOMBRE_A_SLUG`:
+- `Bosnia and Herzegovina` → `bosniaandherzegovina`
+- `South Korea` → `southkorea`
+- `Czech Republic` / `Czechia` → `czechia`
+- `Türkiye` → `turkiye` (evitar unicode en filename)
+- `Congo DR` → `congodr`
+- `Ivory Coast` → `ivorycoast`
+- `Cape Verde Islands` → `capeverdeislands`
+- `USA` / `United States` → `usa`
