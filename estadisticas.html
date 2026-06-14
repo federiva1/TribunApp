@@ -436,6 +436,16 @@ function _matchSquad(nombre, squad){
     return {s,n};
   }).sort((a,b)=>b.n-a.n);
   if(scored.length && scored[0].n>=2 && (scored.length===1 || scored[1].n<scored[0].n)) return scored[0].s;
+  // Apellido contenido: FotMob abrevia el nombre ("A. Amaimouni") o usa solo una
+  // parte de un apellido compuesto ("Amaimouni" vs plantel "Amaimouni-Echghouyab").
+  // Match si todos los tokens de apellido (no iniciales) del input están en el set
+  // del plantel, con ganador único y al menos un token distintivo (len>=5 o 2+ tokens).
+  const isInit=t=>t.replace(/\./g,'').length<=1;
+  const surn=[...mine].filter(t=>!isInit(t));
+  if(surn.length){
+    const cands=squad.filter(s=>{ const o=_tokSet(s.name||s.nombre); return surn.every(t=>o.has(t)); });
+    if(cands.length===1 && (surn.some(t=>t.length>=5)||surn.length>=2)) return cands[0];
+  }
   return null;
 }
 

@@ -1696,6 +1696,16 @@ async function initPuntajes() {
             const scored = squad.map(s => { const o = tokSet(s.name); let n = 0; mine.forEach(t => { if (o.has(t)) n++; }); return { s, n }; }).sort((a,b)=>b.n-a.n);
             if (scored.length && scored[0].n >= 2 && (scored.length === 1 || scored[1].n < scored[0].n)) enPlantel = scored[0].s;
           }
+          if (!enPlantel) {
+            // Apellido contenido: FotMob abrevia ("A. Amaimouni") o usa parte de un
+            // apellido compuesto ("Amaimouni" vs plantel "Amaimouni-Echghouyab")
+            const isInit = t => t.replace(/\./g,'').length <= 1;
+            const surn = [...tokSet(j.nombre)].filter(t => !isInit(t));
+            if (surn.length) {
+              const cands = squad.filter(s => { const o = tokSet(s.name); return surn.every(t => o.has(t)); });
+              if (cands.length === 1 && (surn.some(t => t.length >= 5) || surn.length >= 2)) enPlantel = cands[0];
+            }
+          }
           // Para el DT, el fid viene de plantelData.tecnico (la foto está guardada con ese fid)
           let fid = enPlantel?.fid ?? null;
           if (j.tipo === 'dt' && plantelData?.tecnico) {
