@@ -177,6 +177,10 @@ var SB_H   = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY };
 document.getElementById('h-escudo').src = 'escudos/' + slug + '.png';
 document.getElementById('h-nombre').textContent = (NAMES_ES[slug] || slug).toUpperCase();
 
+// Seguridad: escapar HTML (datos de formaciones son escribibles por cualquiera vía la anon key)
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function fidNum(f) { var n = String(f == null ? '' : f).replace(/[^0-9]/g, ''); return n; }
+
 function calcFormaciones(rows) {
   var counts = {}, total = rows.length;
   rows.forEach(function(r) {
@@ -223,9 +227,9 @@ function renderFormList(players, container) {
   wrap.appendChild(hdr);
   players.forEach(function(p) {
     var row = document.createElement('div'); row.className = 'form-row';
-    var foto = p.fid ? '<img class="form-row-foto" src="fotos/' + p.fid + '.png" alt="" onerror="this.style.opacity=\'.2\'">' : '<div class="form-row-foto"></div>';
+    var foto = fidNum(p.fid) ? '<img class="form-row-foto" src="fotos/' + fidNum(p.fid) + '.png" alt="" onerror="this.style.opacity=\'.2\'">' : '<div class="form-row-foto"></div>';
     row.innerHTML = foto +
-      '<div class="form-row-name">' + p.name + '</div>' +
+      '<div class="form-row-name">' + esc(p.name) + '</div>' +
       '<div class="form-row-votes">' + p.count + ' voto' + (p.count !== 1 ? 's' : '') + '</div>' +
       '<div class="form-row-bar"><div class="form-row-bar-fill" style="width:' + p.pct + '%"></div></div>' +
       '<div class="form-row-pct">' + p.pct + '%</div>';
@@ -265,7 +269,7 @@ function renderPodio(players, container, squad) {
     var foto = fid ? '<img class="podio-foto" src="fotos/' + fid + '.png" alt="" onerror="this.style.opacity=\'.1\'">' : '<div class="podio-foto"></div>';
     item.innerHTML = foto +
       '<div class="podio-medal">' + medals[i] + '</div>' +
-      '<div class="podio-name">' + puntName(p.num, squad) + '</div>' +
+      '<div class="podio-name">' + esc(puntName(p.num, squad)) + '</div>' +
       '<div class="podio-val">' + (p.avg == null ? '—' : p.avg) + '</div>' +
       '<div class="podio-label">' + p.votes + ' voto' + (p.votes !== 1 ? 's' : '') + '</div>';
     podioEl.appendChild(item);
@@ -284,7 +288,7 @@ function renderPodio(players, container, squad) {
       var row = document.createElement('div'); row.className = 'form-row' + (isDT ? ' dt' : '');
       var foto = fid ? '<img class="form-row-foto" src="fotos/' + fid + '.png" alt="" onerror="this.style.opacity=\'.1\'">' : '<div class="form-row-foto"></div>';
       row.innerHTML = foto +
-        '<div class="form-row-name">' + puntName(p.num, squad) + '</div>' +
+        '<div class="form-row-name">' + esc(puntName(p.num, squad)) + '</div>' +
         '<div class="form-row-pct" style="color:var(--gold)">' + (p.avg == null ? '—' : p.avg) + '</div>';
       list.appendChild(row);
     });
