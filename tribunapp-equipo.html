@@ -194,11 +194,14 @@ function renderFormList(players, container) {
   container.appendChild(wrap);
 }
 
+function esDT(num) { return num === '' || num == null || String(num) === '0'; }
 function puntName(num, squad) {
+  if (esDT(num)) return 'D.T.';
   var sq = squad && squad.find(function(s) { return String(s.num) === String(num); });
-  return sq ? sq.name : (String(num) === '0' ? 'D.T.' : '#' + num);
+  return sq ? sq.name : '#' + num;
 }
 function puntFid(num, squad) {
+  if (esDT(num)) return null;
   var sq = squad && squad.find(function(s) { return String(s.num) === String(num); });
   return sq ? sq.fid : null;
 }
