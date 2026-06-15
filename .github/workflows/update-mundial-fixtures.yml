@@ -1,9 +1,9 @@
 name: Update Mundial Fixtures & Standings
 
 on:
-  schedule:
-    # Cada hora durante el Mundial (11 jun – 19 jul 2026)
-    - cron: '0 * * * *'
+  # schedule desactivado — modo "compu prendida" únicamente
+  # schedule:
+  #   - cron: '0 * * * *'
   workflow_dispatch:
 
 jobs:

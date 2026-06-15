@@ -1,8 +1,9 @@
 name: Match Monitor
 
 on:
-  schedule:
-    - cron: '*/15 * * * *'
+  # schedule desactivado — modo "compu prendida" únicamente
+  # schedule:
+  #   - cron: '*/15 * * * *'
   workflow_dispatch:
 
 jobs:

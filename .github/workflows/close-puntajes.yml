@@ -1,8 +1,9 @@
 name: Close Puntajes
 
 on:
-  schedule:
-    - cron: '0 */6 * * *'
+  # schedule desactivado — modo "compu prendida" únicamente
+  # schedule:
+  #   - cron: '0 */6 * * *'
   workflow_dispatch:
 
 jobs:

@@ -1,8 +1,9 @@
 name: Update Fixtures
 
 on:
-  schedule:
-    - cron: '0 9,21 * * *'
+  # schedule desactivado — modo "compu prendida" únicamente
+  # schedule:
+  #   - cron: '0 9,21 * * *'
   workflow_dispatch:
 
 jobs:
