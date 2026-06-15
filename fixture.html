@@ -477,14 +477,14 @@ function renderPartidos() {
   }
 }
 
+// Siempre vía el proxy serverless (/api/apisports) — la API key vive solo en
+// las env vars del servidor, nunca en el cliente.
 function getApiBase() {
-  const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-  return isLocal ? 'https://v3.football.api-sports.io' : '/api/apisports';
+  return '/api/apisports';
 }
 
 function getApiHeaders() {
-  const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-  return isLocal ? { 'x-apisports-key': 'b8bbfc856fd5cf12cd7d697b2b01887d' } : {};
+  return {};
 }
 
 function crearCardPartido(p) {
