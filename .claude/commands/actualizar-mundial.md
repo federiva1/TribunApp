@@ -1,0 +1,44 @@
+---
+description: Actualiza la web con los resultados de los partidos del Mundial 2026 que ya terminaron y todavía no fueron procesados (stats globales + jugadores FotMob + standings + puntajes + commit/push).
+---
+
+Actualizá la web de TribunApp con las estadísticas de los partidos del Mundial 2026 que **ya terminaron (FT)** y todavía **NO** fueron procesados. Trabajás en el repo actual (Windows, usá Bash o PowerShell).
+
+Si el usuario pasó argumentos en `$ARGUMENTS`, son una pista de qué partido espera (ej. "arabia uruguay") — igual procesá cualquier otro FT pendiente que encuentres.
+
+## Pasos
+
+1. **Fixtures** — `python scripts/fetch_mundial_fixtures.py`. Actualiza `data/fixtures/mundial.json` (estados y scores).
+
+2. **Detectar partidos FT sin procesar** — leé `data/fixtures/mundial.json` y buscá los partidos con `status.finished === true` que **no** tengan `stats_id`. Para cada uno, seteá `stats_id = "{home.slug}-{away.slug}"` y guardá el JSON.
+   - Los slugs salen del nombre en minúsculas sin espacios. Verificá contra `data/planteles/` que el slug exista.
+   - Slugs especiales (ver `scripts/fetch_mundial_match.py → NOMBRE_A_SLUG`): `Bosnia and Herzegovina`→`bosniaandherzegovina`, `South Korea`→`southkorea`, `Czech Republic`/`Czechia`→`czechia`, `Türkiye`→`turkiye`, `Congo DR`→`congodr`, `Ivory Coast`→`ivorycoast`, `Cape Verde Islands`→`capeverdeislands`, `USA`/`United States`→`usa`.
+   - Si no hay ningún FT sin `stats_id`, **terminá acá** e informá que no hay partidos nuevos para procesar.
+
+3. **Stats globales (api-sports)** — `python scripts/fetch_mundial_match.py --auto`. Genera `data/partidos/{stats_id}.json` (lineup, eventos, stats globales) para cada FT sin archivo. Deduplica jugadores por ID automáticamente.
+
+4. **Stats individuales (FotMob, Playwright)** — `python scripts/scrape_fotmob_mundial.py --auto`.
+   - ⚠️ **Bug conocido**: el modo `--auto` suele fallar con `'str' object has no attribute 'get'`, PERO antes de fallar imprime `URL resuelta: https://www.fotmob.com/...`. Si falla para un partido, copiá esa URL y corré `python scripts/scrape_fotmob_mundial.py --url "<URL>" --id <stats_id>` (esa variante sí funciona). Repetí por cada partido pendiente.
+
+5. **Standings** — `python scripts/fetch_mundial_standings.py`.
+
+6. **Puntajes** — `python scripts/fetch_mundial_estado.py --force` (abre/cierra puntajes, ventana 24h desde el FT).
+
+7. **Verificar** cada partido nuevo:
+   - Resultado correcto (goles local/visitante coinciden con el fixture).
+   - **Sin jugadores duplicados** en `data/partidos/{stats_id}.json → jugadores[slug]`.
+   - El DT (`tipo: "dt"`) está presente en el dato (es correcto: lo usa la votación de puntajes). El frontend ya lo filtra en la sección estadísticas — **no lo saques del JSON**.
+   - Que los jugadores tengan stats (que el DT y algún suplente no tengan datos de FotMob es normal).
+
+8. **Commit + push**:
+   ```
+   git add data/partidos/ data/fixtures/mundial.json data/estado_mundial.json data/estado_torneo.json
+   git commit -m "chore: update mundial data - {Local} vs {Visitante} [skip ci]"
+   git push
+   ```
+   Si el push es rechazado (remoto adelantado): `git stash; git pull --rebase; git stash pop; git push`. Si hay conflicto en `mundial.json`, resolvé quedándote con la versión que tiene los `stats_id` que acabás de setear.
+
+## Notas
+
+- `data/partidos/` puede tener archivos sin trackear de clubes argentinos / fotos que **no** son parte de este flujo — agregá al commit solo los archivos de este pipeline (los 4 paths del paso 8), no uses `git add -A`.
+- La foto de cada jugador usa el `fid` del plantel (`data/planteles/{slug}.json`), no el `id` del partido. El frontend ya resuelve esto por nombre.

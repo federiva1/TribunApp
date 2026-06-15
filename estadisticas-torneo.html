@@ -174,6 +174,31 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
 @media (max-width: 500px) {
   .lideres-grid { grid-template-columns: 1fr !important; }
 }
+
+/* ONBOARDING */
+#ob-banner {
+  display:none;
+  align-items:center;gap:10px;
+  margin:0 0 14px;padding:11px 14px;
+  background:rgba(21,101,192,.18);
+  border:1px solid rgba(21,101,192,.4);border-radius:10px;
+  animation:obIn .35s ease;
+}
+@keyframes obIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+#ob-banner span { font-size:20px; }
+#ob-banner p {
+  flex:1;font-family:'Bebas Neue',sans-serif;font-size:15px;
+  letter-spacing:1.5px;color:#fff;
+}
+#ob-close {
+  background:none;border:none;color:rgba(255,255,255,.4);
+  font-size:20px;cursor:pointer;padding:2px 4px;line-height:1;
+}
+@keyframes obGlow {
+  0%,100%{box-shadow:0 0 0 0 rgba(21,101,192,0)}
+  50%{box-shadow:0 0 0 3px rgba(21,101,192,.6),0 0 14px rgba(21,101,192,.3)}
+}
+.ob-team-glow { animation:obGlow 1.8s ease-in-out infinite; border-radius:10px; }
 </style>
 </head>
 <body>
@@ -210,6 +235,13 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
     <div class="lideres-grid" id="lideres-grid">
       <div class="loading-msg" style="grid-column:1/-1;">Cargando…</div>
     </div>
+  </div>
+
+  <!-- ONBOARDING (primera visita) -->
+  <div id="ob-banner">
+    <span>👆</span>
+    <p>Elegí tu equipo para comenzar</p>
+    <button id="ob-close" onclick="obDismiss()" aria-label="Cerrar">×</button>
   </div>
 
   <!-- EQUIPOS -->
@@ -367,6 +399,8 @@ function renderEquipos(equipos, conStats, filtro=''){
       ${tieneStats?'<span class="er-arrow">›</span>':''}`;
     grid.appendChild(row);
   });
+
+  if (!filtro) obInit();
 }
 
 async function init(){
@@ -411,6 +445,37 @@ async function init(){
 }
 
 init();
+
+// ── Onboarding primera visita ────────────────────────────────────────────
+const OB_KEY = 'tb_mundial_ob_v1';
+
+function obDismiss() {
+  const b = document.getElementById('ob-banner');
+  b.style.transition = 'opacity .25s';
+  b.style.opacity = '0';
+  setTimeout(() => b.style.display = 'none', 250);
+  document.querySelectorAll('.ob-team-glow').forEach(el => el.classList.remove('ob-team-glow'));
+  localStorage.setItem(OB_KEY, '1');
+}
+
+function obInit() {
+  if (localStorage.getItem(OB_KEY)) return;
+
+  // Mostrar banner
+  document.getElementById('ob-banner').style.display = 'flex';
+
+  // Glow en Suiza (siempre primera de la lista con stats)
+  const suiza = [...document.querySelectorAll('#equipos-grid a.equipo-row')]
+    .find(el => el.querySelector('.er-nombre')?.textContent.includes('Suiza'))
+    || document.querySelector('#equipos-grid a.equipo-row');
+  if (suiza) suiza.classList.add('ob-team-glow');
+
+  // Auto-dismiss a los 5 segundos
+  setTimeout(obDismiss, 5000);
+
+  // Dismiss al tocar cualquier equipo
+  document.getElementById('equipos-grid').addEventListener('click', obDismiss, { once: true });
+}
 </script>
 <script src="js/ui-help.js"></script>
 </body>

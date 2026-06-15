@@ -295,9 +295,26 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   border-top: 1px solid rgba(255,255,255,0.05);
   margin-top: 20px;
 }
+/* ONBOARDING */
+#ob-tip {
+  display:none;position:fixed;top:88px;left:50%;transform:translateX(-50%);
+  z-index:200;white-space:nowrap;
+  background:rgba(21,101,192,.92);backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,.2);border-radius:20px;
+  padding:8px 18px;gap:8px;align-items:center;
+  font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1.5px;color:#fff;
+  animation:obTipIn .4s ease;box-shadow:0 4px 20px rgba(0,0,0,.4);
+}
+@keyframes obTipIn{from{opacity:0;top:76px}to{opacity:1;top:88px}}
+@keyframes obGlow{
+  0%,100%{box-shadow:0 0 0 0 rgba(21,101,192,0)}
+  50%{box-shadow:0 0 0 4px rgba(21,101,192,.7),0 0 18px rgba(21,101,192,.35)}
+}
+.ob-glow { animation:obGlow 1.6s ease-in-out infinite; border-radius:8px; }
 </style>
 </head>
 <body>
+<div id="ob-tip">👇 Elegí un equipo para empezar a jugar</div>
 
 <!-- HEADER -->
 <header id="site-header">
@@ -591,6 +608,44 @@ function renderGrupos(equipos, estado) {
 }
 
 cargar();
+
+// ── Onboarding primera visita ────────────────────────────────────────────
+(function(){
+  const OB_KEY = 'tb_mundial_ob_v1';
+  if (localStorage.getItem(OB_KEY)) return;
+
+  function obDismiss() {
+    const tip = document.getElementById('ob-tip');
+    tip.style.transition = 'opacity .3s';
+    tip.style.opacity = '0';
+    setTimeout(() => tip.style.display = 'none', 300);
+    document.querySelectorAll('.ob-glow').forEach(el => el.classList.remove('ob-glow'));
+    localStorage.setItem(OB_KEY, '1');
+  }
+
+  function obInit() {
+    if (localStorage.getItem(OB_KEY)) return; // ya visitó
+    // Mostrar pill
+    document.getElementById('ob-tip').style.display = 'flex';
+    // Glow en Suiza
+    const suiza = document.querySelector('a.equipo-row[href*="argentina"]');
+    if (suiza) {
+      suiza.classList.add('ob-glow');
+      setTimeout(() => suiza.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300);
+    }
+    // Auto-dismiss a los 5s
+    setTimeout(obDismiss, 5000);
+    // Dismiss al tocar cualquier equipo
+    document.getElementById('grupos-wrap').addEventListener('click', obDismiss, { once: true });
+  }
+
+  // Esperar a que cargar() renderice los grupos
+  function waitGroups(n) {
+    if (document.querySelector('a.equipo-row[href*="switzerland"]')) { obInit(); }
+    else if (n > 0) setTimeout(() => waitGroups(n-1), 300);
+  }
+  setTimeout(() => waitGroups(15), 500);
+})();
 </script>
 <script src="js/ui-help.js"></script>
 </body>
