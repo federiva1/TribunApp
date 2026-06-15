@@ -162,17 +162,24 @@ function calcFormaciones(rows) {
 }
 
 function calcPuntajes(rows) {
-  var totals = {}, counts = {};
+  var totals = {}, counts = {}, seen = {};
   rows.forEach(function(r) {
     Object.entries(r.puntajes || {}).forEach(function(entry) {
       var num = entry[0], val = entry[1];
-      totals[num] = (totals[num] || 0) + Number(val);
+      seen[num] = (seen[num] || 0) + 1;
+      if (val === null || val === undefined || val === '') return; // S/P no cuenta para el promedio
+      var n = Number(val);
+      if (isNaN(n)) return;
+      totals[num] = (totals[num] || 0) + n;
       counts[num] = (counts[num] || 0) + 1;
     });
   });
-  return Object.keys(totals).map(function(num) {
-    return { num: num, avg: +(totals[num] / counts[num]).toFixed(1), votes: counts[num] };
-  }).sort(function(a, b) { return b.avg - a.avg; });
+  return Object.keys(seen).map(function(num) {
+    var c = counts[num] || 0;
+    return { num: num, avg: c > 0 ? +(totals[num] / c).toFixed(1) : null, votes: c };
+  }).sort(function(a, b) {
+    return (b.avg == null ? -1 : b.avg) - (a.avg == null ? -1 : a.avg);
+  });
 }
 
 function renderFormList(players, container) {
@@ -228,7 +235,7 @@ function renderPodio(players, container, squad) {
     item.innerHTML = foto +
       '<div class="podio-medal">' + medals[i] + '</div>' +
       '<div class="podio-name">' + puntName(p.num, squad) + '</div>' +
-      '<div class="podio-val">' + p.avg + '</div>' +
+      '<div class="podio-val">' + (p.avg == null ? '—' : p.avg) + '</div>' +
       '<div class="podio-label">' + p.votes + ' voto' + (p.votes !== 1 ? 's' : '') + '</div>';
     podioEl.appendChild(item);
   });
@@ -247,7 +254,7 @@ function renderPodio(players, container, squad) {
       var foto = fid ? '<img class="form-row-foto" src="fotos/' + fid + '.png" alt="" onerror="this.style.opacity=\'.1\'">' : '<div class="form-row-foto"></div>';
       row.innerHTML = foto +
         '<div class="form-row-name">' + puntName(p.num, squad) + '</div>' +
-        '<div class="form-row-pct" style="color:var(--gold)">' + p.avg + '</div>';
+        '<div class="form-row-pct" style="color:var(--gold)">' + (p.avg == null ? '—' : p.avg) + '</div>';
       list.appendChild(row);
     });
     container.appendChild(list);
