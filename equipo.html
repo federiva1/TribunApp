@@ -365,6 +365,51 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 }
 #scores-results-screen h2 { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: #fff; letter-spacing: 2px; text-align: center; margin-bottom: 4px; }
 
+/* ===== MIS PUNTAJES (post-voto) ===== */
+.mp-view-toggle { display:flex; border:1px solid rgba(255,255,255,0.12); border-radius:8px; overflow:hidden; margin-bottom:14px; }
+.mp-view-toggle button { flex:1; padding:8px; font-family:'Barlow Condensed',sans-serif; font-size:12px; letter-spacing:2px; text-transform:uppercase; background:none; border:none; color:rgba(255,255,255,0.4); cursor:pointer; transition:all 0.2s; }
+.mp-view-toggle button.active { background:rgba(255,255,255,0.08); color:#fff; }
+
+/* cancha puntajes — misma estética que la cancha de formación */
+#mp-pitch {
+  width:100%; aspect-ratio:0.82; background:#2d7a3a;
+  border-radius:8px; border:2px solid rgba(255,255,255,0.15);
+  position:relative; overflow:hidden; margin-bottom:12px;
+}
+#mp-pitch .player-on-pitch { cursor:default; }
+.mp-score-pill {
+  position:absolute; top:-7px; right:-9px;
+  font-family:'Bebas Neue',sans-serif; font-size:var(--ntfs,11px); color:#fff;
+  padding:1px 5px; border-radius:8px; border:1.5px solid #fff; line-height:1.3; white-space:nowrap;
+}
+.mp-star { position:absolute; top:-8px; left:-8px; font-size:14px; color:#EF9F27; line-height:1; text-shadow:0 0 4px rgba(239,159,39,0.8); }
+.sc10 { background:#BA7517; } .sc89 { background:#185FA5; } .sc57 { background:#3B6D11; } .sc14 { background:#A32D2D; }
+.sc10t { color:#EF9F27; } .sc89t { color:#64B5F6; } .sc57t { color:#81C784; } .sc14t { color:#EF9A9A; }
+
+/* suplentes bench */
+.mp-bench-title { font-family:'Barlow Condensed',sans-serif; font-size:11px; letter-spacing:2px; color:rgba(255,255,255,0.3); text-transform:uppercase; margin:10px 0 6px; }
+.mp-bench-row { display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.03); border-radius:8px; padding:7px 10px; margin-bottom:5px; border:1px solid rgba(255,255,255,0.06); }
+.mp-bench-av { width:30px; height:30px; border-radius:50%; background:var(--acento); display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue',sans-serif; font-size:11px; color:#fff; overflow:hidden; position:relative; flex-shrink:0; }
+.mp-bench-av img { width:100%; height:100%; object-fit:cover; object-position:top; position:absolute; display:none; }
+.mp-bench-name { flex:1; font-size:13px; color:#fff; }
+.mp-bench-score { font-size:16px; font-weight:600; }
+
+/* podio */
+.mp-podio-grid1 { display:grid; grid-template-columns:1fr; gap:6px; margin-bottom:6px; }
+.mp-podio-grid2 { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:6px; }
+.mp-podio-grid4 { display:grid; grid-template-columns:repeat(4,1fr); gap:4px; margin-bottom:6px; }
+.mp-podio-card { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:10px 6px; display:flex; flex-direction:column; align-items:center; gap:5px; position:relative; }
+.mp-podio-card.gold { border-color:rgba(239,159,39,0.45); }
+.mp-podio-card.silver { border-color:rgba(255,255,255,0.2); }
+.mp-podio-rank { position:absolute; top:6px; left:7px; font-size:12px; }
+.mp-podio-star { position:absolute; top:5px; right:7px; font-size:12px; color:#EF9F27; }
+.mp-podio-av { width:40px; height:40px; border-radius:50%; background:var(--acento); display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue',sans-serif; font-size:13px; color:#fff; overflow:hidden; position:relative; border:2px solid rgba(255,255,255,0.15); }
+.mp-podio-av.sm { width:32px; height:32px; font-size:11px; }
+.mp-podio-av img { width:100%; height:100%; object-fit:cover; object-position:top; position:absolute; display:none; }
+.mp-podio-name { font-size:11px; color:rgba(255,255,255,0.6); text-align:center; line-height:1.2; }
+.mp-podio-val { font-size:22px; font-weight:600; line-height:1; }
+.mp-podio-val.sm { font-size:17px; } .mp-podio-val.xs { font-size:14px; }
+
 /* ===== LOADING / PRONTO ===== */
 .loading-msg { text-align: center; padding: 60px 20px; color: rgba(255,255,255,0.25); font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 3px; }
 .loading-spinner { width: 28px; height: 28px; border: 3px solid rgba(255,255,255,0.08); border-top-color: var(--acento); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
@@ -720,7 +765,6 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
     <div class="hero-panel" onclick="openSection('formacion')">
       <div class="hero-bg" id="bg-formacion" style="background-image:url('fotos/bg-formacion.png')"></div>
       <div class="hero-overlay"></div>
-      <span class="help-icon" style="position:absolute;top:10px;right:10px;z-index:5;background:rgba(0,0,0,0.45);" data-help="Armá tu 11 ideal para el próximo partido y compartilo. También podés ver la formación más votada por la comunidad."></span>
       <div class="hero-content">
         <div class="hero-badge abierto" id="badge-formacion">ABIERTO</div>
       </div>
@@ -728,7 +772,6 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
     <div class="hero-panel" onclick="openSection('puntajes')">
       <div class="hero-bg" id="bg-puntajes" style="background-image:url('fotos/bg-puntajes.png')"></div>
       <div class="hero-overlay"></div>
-      <span class="help-icon" style="position:absolute;top:10px;right:10px;z-index:5;background:rgba(0,0,0,0.45);" data-help="Después del partido, calificá del 1 al 10 a cada jugador. Tu voto se promedia con el de toda la comunidad."></span>
       <div class="hero-content">
         <div class="hero-badge abierto" id="badge-puntajes">ABIERTO</div>
       </div>
@@ -736,7 +779,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   </div>
 
   <div class="secondary-row">
-    <button class="sec-btn" onclick="openSection('estadisticas')">📊 Estadísticas <span class="help-icon" data-help="Estadísticas reales del equipo y de cada jugador, partido por partido."></span></button>
+    <button class="sec-btn" onclick="openSection('estadisticas')">📊 Estadísticas</button>
     <a class="sec-btn" id="btn-tribunapp" href="#" style="text-decoration:none;">📣 Est. TribunApp</a>
   </div>
 
@@ -1756,6 +1799,196 @@ async function initPuntajes() {
   renderScores();
 }
 
+// ── helpers puntajes post-voto ──────────────────────────────────────────────
+function scoreClass(v) {
+  if (v >= 10) return 'sc10'; if (v >= 8) return 'sc89'; if (v >= 5) return 'sc57'; return 'sc14';
+}
+function scoreTxtClass(v) {
+  if (v >= 10) return 'sc10t'; if (v >= 8) return 'sc89t'; if (v >= 5) return 'sc57t'; return 'sc14t';
+}
+function makeAvBubble(p, cls='mp-podio-av') {
+  const av = document.createElement('div'); av.className = cls;
+  const img = document.createElement('img'); img.src = p.foto || FOTO(p.fid);
+  const fb  = document.createElement('span'); fb.textContent = p.tipo === 'dt' ? 'DT' : (p.num||'?');
+  img.onload  = () => { img.style.display = 'block'; };
+  img.onerror = () => {};
+  av.appendChild(img); av.appendChild(fb); return av;
+}
+// HTML decorativo idéntico al de #pitch (stripes + líneas + círculos)
+const PITCH_DECOR_HTML =
+  '<div class="stripe" style="left:0%"></div><div class="stripe" style="left:12.5%"></div>' +
+  '<div class="stripe" style="left:25%"></div><div class="stripe" style="left:37.5%"></div>' +
+  '<div class="stripe" style="left:50%"></div><div class="stripe" style="left:62.5%"></div>' +
+  '<div class="stripe" style="left:75%"></div><div class="stripe" style="left:87.5%"></div>' +
+  '<div class="pl" style="left:5%;right:5%;top:0;border-top:1.5px solid rgba(255,255,255,0.5);border-left:none;border-right:none;border-bottom:none;height:0"></div>' +
+  '<div class="pl" style="left:5%;right:5%;bottom:0;border-bottom:1.5px solid rgba(255,255,255,0.5);border-left:none;border-right:none;border-top:none;height:0"></div>' +
+  '<div class="pl" style="left:5%;top:0;bottom:0;width:0;border-left:1.5px solid rgba(255,255,255,0.5);"></div>' +
+  '<div class="pl" style="right:5%;top:0;bottom:0;width:0;border-left:1.5px solid rgba(255,255,255,0.5);"></div>' +
+  '<div class="pl" style="left:5%;right:5%;top:50%;height:0;border-top:1.5px solid rgba(255,255,255,0.5);border-left:none;border-right:none;border-bottom:none;"></div>' +
+  '<div class="pc" style="left:50%;top:50%;width:18%;padding-top:18%;transform:translate(-50%,-50%);"></div>' +
+  '<div class="pc" style="left:50%;top:50%;width:3%;padding-top:3%;transform:translate(-50%,-50%);background:rgba(255,255,255,0.5);border:none;"></div>' +
+  '<div class="pl" style="left:21%;right:21%;top:0;height:18%;border:1.5px solid rgba(255,255,255,0.5);border-top:none;"></div>' +
+  '<div class="pl" style="left:21%;right:21%;bottom:0;height:18%;border:1.5px solid rgba(255,255,255,0.5);border-bottom:none;"></div>' +
+  '<div class="pl" style="left:33%;right:33%;top:0;height:9%;border:1.5px solid rgba(255,255,255,0.5);border-top:none;"></div>' +
+  '<div class="pl" style="left:33%;right:33%;bottom:0;height:9%;border:1.5px solid rgba(255,255,255,0.5);border-bottom:none;"></div>';
+
+function makeScorePlayer(p, val, isFigura) {
+  const el = document.createElement('div'); el.className = 'player-on-pitch';
+  const bubble = document.createElement('div'); bubble.className = 'player-bubble';
+  if (isFigura) bubble.style.borderColor = '#EF9F27';
+  const img = document.createElement('img'); img.src = p.foto || FOTO(p.fid); img.alt = '';
+  img.style.cssText = 'width:100%;height:100%;object-fit:cover;object-position:top center;display:none;';
+  const fb = document.createElement('div'); fb.className = 'fallback-num'; fb.textContent = p.tipo === 'dt' ? 'DT' : p.num;
+  img.onload  = () => { img.style.display = 'block'; fb.style.display = 'none'; };
+  img.onerror = () => { img.style.display = 'none'; fb.style.display = 'flex'; };
+  bubble.appendChild(img); bubble.appendChild(fb);
+  if (val != null) {
+    const pill = document.createElement('div'); pill.className = `mp-score-pill ${scoreClass(val)}`;
+    pill.textContent = val; bubble.appendChild(pill);
+  }
+  if (isFigura) { const star = document.createElement('div'); star.className = 'mp-star'; star.textContent = '★'; bubble.appendChild(star); }
+  const tag = document.createElement('div'); tag.className = 'player-numtag';
+  tag.textContent = `${p.num} · ${apellido(p.name)}`;
+  el.appendChild(bubble); el.appendChild(tag);
+  return el;
+}
+
+function renderMisPuntajesCancha(container, sq, scores) {
+  const titulares = sq.filter(p => p.tipo === 'titular');
+  // Agrupa titulares por posición — mismo orden/orientación que la cancha de formación
+  const zones = { GK:[], DEF:[], MED:[], DEL:[] };
+  titulares.forEach(p => { (zones[p.posicion] || zones.DEL).push(p); });
+  const yMap = { GK: 87, DEF: 71, MED: 50, DEL: 26 }; // GK abajo, ataca hacia arriba
+
+  const pitch = document.createElement('div'); pitch.id = 'mp-pitch';
+  pitch.innerHTML = PITCH_DECOR_HTML;
+
+  // Figura: jugador con score más alto
+  const figuraNum = Object.entries(scores).filter(([,v]) => v != null).sort((a,b) => b[1]-a[1])[0]?.[0];
+
+  Object.entries(zones).forEach(([pos, players]) => {
+    if (!players.length) return;
+    const y = yMap[pos] ?? 50;
+    const n = players.length;
+    players.forEach((p, i) => {
+      const margin = 16;
+      const x = n === 1 ? 50 : margin + (i / (n - 1)) * (100 - margin * 2);
+      const isFig = String(p.num) === String(figuraNum);
+      const el = makeScorePlayer(p, scores[p.num], isFig);
+      el.style.left = x + '%'; el.style.top = y + '%';
+      pitch.appendChild(el);
+    });
+  });
+  container.appendChild(pitch);
+
+  // Sizing de burbujas igual que en formación (--ps / --pfs / --ntfs)
+  requestAnimationFrame(() => {
+    const w = pitch.offsetWidth || 340;
+    const size = Math.round(w * 0.09);
+    pitch.style.setProperty('--ps', size + 'px');
+    pitch.style.setProperty('--pfs', Math.round(size * 0.4) + 'px');
+    pitch.style.setProperty('--ntfs', Math.round(size * 0.27) + 'px');
+  });
+
+  // Suplentes
+  const suplentes = sq.filter(p => p.tipo === 'suplente');
+  const dt        = sq.filter(p => p.tipo === 'dt');
+  if (suplentes.length || dt.length) {
+    const lbl = document.createElement('div'); lbl.className = 'mp-bench-title';
+    lbl.textContent = 'SUPLENTES'; container.appendChild(lbl);
+    [...suplentes, ...dt].forEach(p => {
+      const row = document.createElement('div'); row.className = 'mp-bench-row';
+      const av  = document.createElement('div'); av.className = 'mp-bench-av';
+      const img = document.createElement('img'); img.src = p.foto || FOTO(p.fid);
+      img.onload = () => img.style.display = 'block';
+      const fb = document.createElement('span'); fb.textContent = p.tipo === 'dt' ? 'DT' : (p.num || '?');
+      av.appendChild(img); av.appendChild(fb);
+      const nm  = document.createElement('div'); nm.className = 'mp-bench-name'; nm.textContent = apellido(p.name);
+      const val = scores[p.num];
+      const sc  = document.createElement('div'); sc.className = `mp-bench-score ${scoreTxtClass(val ?? 5)}`;
+      sc.textContent = val != null ? val : '—';
+      row.appendChild(av); row.appendChild(nm); row.appendChild(sc);
+      container.appendChild(row);
+    });
+  }
+}
+
+function renderMisPuntajesPodio(container, sq, scores) {
+  const titulares = sq.filter(p => p.tipo === 'titular');
+  const suplentes = sq.filter(p => p.tipo !== 'titular');
+  const figuraNum = Object.entries(scores).filter(([,v]) => v != null).sort((a,b) => b[1]-a[1])[0]?.[0];
+
+  const sorted = titulares.map(p => ({...p, val: scores[p.num] ?? 0})).sort((a,b) => b.val - a.val);
+
+  function makeCard(p, rank, large=false) {
+    const card = document.createElement('div');
+    card.className = 'mp-podio-card' + (rank === 0 ? ' gold' : rank <= 2 ? ' silver' : '');
+    const medals = ['🥇','🥈','🥉'];
+    const rkEl = document.createElement('div'); rkEl.className = 'mp-podio-rank';
+    rkEl.textContent = rank < 3 ? medals[rank] : `${rank+1}°`; card.appendChild(rkEl);
+    if (String(p.num) === String(figuraNum)) {
+      const star = document.createElement('div'); star.className = 'mp-podio-star'; star.textContent = '★'; card.appendChild(star);
+    }
+    const av = makeAvBubble(p, 'mp-podio-av' + (large ? '' : ' sm')); card.appendChild(av);
+    const nm = document.createElement('div'); nm.className = 'mp-podio-name'; nm.textContent = apellido(p.name); card.appendChild(nm);
+    const vEl = document.createElement('div');
+    vEl.className = `mp-podio-val ${large ? '' : rank < 3 ? 'sm' : 'xs'} ${scoreTxtClass(p.val)}`;
+    vEl.textContent = p.val || '—'; card.appendChild(vEl);
+    return card;
+  }
+  function addGrid(cls, players, startRank, large=false) {
+    if (!players.length) return;
+    const g = document.createElement('div'); g.className = cls;
+    players.forEach((p, i) => g.appendChild(makeCard(p, startRank + i, large)));
+    container.appendChild(g);
+  }
+
+  const lbl = document.createElement('div'); lbl.className = 'scores-section-title'; lbl.textContent = 'TITULARES'; container.appendChild(lbl);
+  addGrid('mp-podio-grid1', sorted.slice(0,1), 0, true);
+  addGrid('mp-podio-grid2', sorted.slice(1,3), 1, false);
+  addGrid('mp-podio-grid4', sorted.slice(3,7), 3, false);
+  if (sorted.length > 7) addGrid('mp-podio-grid4', sorted.slice(7), 7, false);
+
+  if (suplentes.length) {
+    const lbl2 = document.createElement('div'); lbl2.className = 'scores-section-title'; lbl2.textContent = 'SUPLENTES'; container.appendChild(lbl2);
+    suplentes.forEach(p => {
+      const row = document.createElement('div'); row.className = 'mp-bench-row';
+      const av = makeAvBubble(p, 'mp-bench-av'); const nm = document.createElement('div');
+      nm.className = 'mp-bench-name'; nm.textContent = apellido(p.name);
+      const val = scores[p.num];
+      const sc = document.createElement('div'); sc.className = `mp-bench-score ${scoreTxtClass(val ?? 5)}`;
+      sc.textContent = val != null ? val : '—';
+      row.appendChild(av); row.appendChild(nm); row.appendChild(sc); container.appendChild(row);
+    });
+  }
+}
+
+let _mpView = localStorage.getItem('mp_view') || 'cancha';
+function renderMisPuntajes() {
+  const list = document.getElementById('scores-list');
+  list.innerHTML = '';
+  const sq = window._squadPuntajes || squad;
+  const scores = userScores;
+
+  // Toggle
+  const toggle = document.createElement('div'); toggle.className = 'mp-view-toggle';
+  ['CANCHA','PODIO'].forEach(v => {
+    const btn = document.createElement('button'); btn.textContent = v;
+    if (v.toLowerCase() === _mpView) btn.classList.add('active');
+    btn.addEventListener('click', () => {
+      _mpView = v.toLowerCase();
+      try { localStorage.setItem('mp_view', _mpView); } catch(_) {}
+      renderMisPuntajes();
+    });
+    toggle.appendChild(btn);
+  });
+  list.appendChild(toggle);
+
+  if (_mpView === 'cancha') renderMisPuntajesCancha(list, sq, scores);
+  else renderMisPuntajesPodio(list, sq, scores);
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 function renderScores() {
   const list = document.getElementById('scores-list');
   list.innerHTML = '';
@@ -1765,6 +1998,7 @@ function renderScores() {
     return;
   }
   const alreadyVoted = !!localStorage.getItem(lsScoresKey());
+  if (alreadyVoted && Object.keys(userScores).length) { renderMisPuntajes(); return; }
 
   const POS_SORT = { GK: 0, DEF: 1, MED: 2, DEL: 3, TEC: 4 };
   const byPos = (a, b) => (POS_SORT[a.posicion] ?? 3) - (POS_SORT[b.posicion] ?? 3);
