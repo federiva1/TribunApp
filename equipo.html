@@ -373,7 +373,8 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 /* lista puntajes — orden de mayor a menor */
 .mp-list-row { display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.03); border-radius:8px; padding:7px 10px; margin-bottom:5px; border:1px solid rgba(255,255,255,0.06); }
 .mp-list-row.figura { border-color:rgba(239,159,39,0.45); }
-.mp-list-row.dt { border-color:var(--acento); background:rgba(255,255,255,0.06); }
+.mp-list-row.dt, .mp-bench-row.dt { border-color:var(--acento); background:rgba(255,255,255,0.06); }
+.mp-bench-row.dt .mp-bench-name { color:var(--acento-light); }
 .mp-list-row.dt .mp-list-rank { color:var(--acento-light); font-size:12px; }
 .mp-list-row.dt .mp-bench-name { color:var(--acento-light); }
 .mp-list-rank { font-family:'Bebas Neue',sans-serif; font-size:15px; color:rgba(255,255,255,0.4); min-width:22px; text-align:center; flex-shrink:0; }
@@ -1878,12 +1879,16 @@ function renderMisPuntajesPodio(container, sq, scores) {
   addGrid('mp-podio-grid4', sorted.slice(3,7), 3, false);
   if (sorted.length > 7) addGrid('mp-podio-grid4', sorted.slice(7), 7, false);
 
-  if (suplentes.length) {
+  // Suplentes primero, DT siempre al final
+  const suplNoDT = suplentes.filter(p => p.tipo !== 'dt');
+  const dts      = suplentes.filter(p => p.tipo === 'dt');
+  if (suplNoDT.length || dts.length) {
     const lbl2 = document.createElement('div'); lbl2.className = 'scores-section-title'; lbl2.textContent = 'SUPLENTES'; container.appendChild(lbl2);
-    suplentes.forEach(p => {
-      const row = document.createElement('div'); row.className = 'mp-bench-row';
+    [...suplNoDT, ...dts].forEach(p => {
+      const isDT = p.tipo === 'dt';
+      const row = document.createElement('div'); row.className = 'mp-bench-row' + (isDT ? ' dt' : '');
       const av = makeAvBubble(p, 'mp-bench-av'); const nm = document.createElement('div');
-      nm.className = 'mp-bench-name'; nm.textContent = apellido(p.name);
+      nm.className = 'mp-bench-name'; nm.textContent = apellido(p.name) + (isDT ? ' · DT' : '');
       const val = scores[p.num];
       const sc = document.createElement('div'); sc.className = `mp-bench-score ${scoreTxtClass(val ?? 5)}`;
       sc.textContent = val != null ? val : '—';
