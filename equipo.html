@@ -287,6 +287,30 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   z-index: 200; padding: 16px; overflow-y: auto;
 }
 #formacion-results-screen h2 { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: #fff; letter-spacing: 2px; text-align: center; margin-bottom: 4px; }
+/* Equipos de la gente */
+.eq-sec-title { font-family: 'Bebas Neue', sans-serif; font-size: 17px; color: #fff; letter-spacing: 1.5px; margin: 22px 0 10px; }
+.eq-card { margin-bottom: 12px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07); border-radius: 14px; overflow: hidden; position: relative; }
+.eq-card.top { border-color: rgba(245,197,24,.45); }
+.eq-card.mine { border-color: var(--acento); }
+.eq-badge { position: absolute; top: 8px; right: 8px; font-family: 'Bebas Neue', sans-serif; font-size: 10px; letter-spacing: 1px; padding: 3px 9px; border-radius: 20px; z-index: 5; }
+.eq-hdr { display: flex; align-items: center; padding: 9px 12px 4px; }
+.eq-hdr-name { flex: 1; font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 1px; color: rgba(255,255,255,.4); }
+.eq-hdr-date { font-size: 10px; color: rgba(255,255,255,.18); }
+.eq-pitch { width: 100%; aspect-ratio: .82; background: #2d7a3a; position: relative; overflow: hidden; }
+.eq-pl { position: absolute; }
+.eq-pc { position: absolute; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.45); }
+.eq-stripe { position: absolute; top: 0; bottom: 0; width: 12.5%; }
+.eq-stripe.odd { background: rgba(0,0,0,.06); }
+.eq-pp { position: absolute; transform: translate(-50%,-50%); display: flex; flex-direction: column; align-items: center; gap: 1px; z-index: 2; }
+.eq-bubble { width: 30px; height: 30px; border-radius: 50%; border: 2px solid rgba(255,255,255,.9); overflow: hidden; background: var(--acento); display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,.5); }
+.eq-bubble img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.eq-bubble span { font-family: 'Bebas Neue', sans-serif; font-size: 11px; color: #fff; }
+.eq-pp-name { font-family: 'Bebas Neue', sans-serif; font-size: 8px; color: #fff; background: rgba(0,0,0,.7); border: 1px solid rgba(255,255,255,.5); border-radius: 4px; padding: 0 4px; line-height: 1.5; white-space: nowrap; max-width: 60px; overflow: hidden; text-overflow: ellipsis; }
+.eq-footer { display: flex; align-items: center; padding: 8px 12px; }
+.eq-like { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); border-radius: 20px; padding: 5px 14px; cursor: pointer; font-size: 13px; color: #aaa; transition: all .15s; }
+.eq-like.liked { background: rgba(229,57,53,.18); border-color: #e53935; color: #e53935; }
+.eq-like b { font-family: 'Bebas Neue', sans-serif; font-size: 14px; font-weight: 400; }
+.eq-mine-likes { font-size: 12px; color: rgba(255,255,255,.4); }
 .subtitle { font-size: 11px; color: rgba(255,255,255,0.35); text-align: center; margin-bottom: 14px; }
 .tier-row { display: flex; align-items: stretch; margin-bottom: 6px; border-radius: 8px; overflow: hidden; min-height: 56px; }
 .tier-label { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 54px; padding: 6px 4px; font-family: 'Bebas Neue', sans-serif; font-size: 11px; letter-spacing: 1px; text-align: center; flex-shrink: 0; line-height: 1.2; }
@@ -1632,9 +1656,10 @@ async function showFormacionResults() {
   }
   try {
     const md = estadoMundial.formacion_match_date || estadoMundial.match_date;
+    const sel = 'id,jugadores,likes,device_id,created_at';
     const url = md
-      ? `${SUPABASE_URL}/rest/v1/formaciones?select=jugadores&club=eq.${slug}&match_date=eq.${md}`
-      : `${SUPABASE_URL}/rest/v1/formaciones?select=jugadores&club=eq.${slug}`;
+      ? `${SUPABASE_URL}/rest/v1/formaciones?select=${sel}&club=eq.${slug}&match_date=eq.${md}`
+      : `${SUPABASE_URL}/rest/v1/formaciones?select=${sel}&club=eq.${slug}`;
     const res  = await fetch(url, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
     const data = await res.json();
     const total = data.length;
@@ -1660,7 +1685,100 @@ async function showFormacionResults() {
       wrap.appendChild(row);
     });
     list.appendChild(wrap);
+
+    // ── Sección 2: Equipos de la gente (fecha actual, ordenados por likes) ──
+    const feedTitle = document.createElement('div');
+    feedTitle.className = 'eq-sec-title';
+    feedTitle.textContent = '👥 Equipos de la gente';
+    list.appendChild(feedTitle);
+    renderEquiposGente(data, list);
   } catch(e) { list.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.3);padding:20px;font-size:13px;">Error al cargar resultados.</div>'; }
+}
+
+// ── Equipos de la gente: formaciones individuales con likes ──────────────────
+function getFeedLikes() { try { return JSON.parse(localStorage.getItem('mundial26_feed_likes') || '{}'); } catch(e) { return {}; } }
+function saveFeedLikes(o) { try { localStorage.setItem('mundial26_feed_likes', JSON.stringify(o)); } catch(e) {} }
+async function toggleFeedLike(rowId, curLikes) {
+  const liked = getFeedLikes(); const was = !!liked[rowId]; let nl = curLikes;
+  if (was) { delete liked[rowId]; nl = Math.max(0, nl - 1); } else { liked[rowId] = true; nl++; }
+  saveFeedLikes(liked);
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/formaciones?id=eq.${rowId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ likes: nl })
+    });
+  } catch(e) {}
+  return { likes: nl, isLiked: !!liked[rowId] };
+}
+function eqMiniPitch(jugadores) {
+  const pitch = document.createElement('div'); pitch.className = 'eq-pitch';
+  for (let i = 0; i < 8; i++) { const s = document.createElement('div'); s.className = 'eq-stripe' + (i % 2 ? ' odd' : ''); s.style.left = (i * 12.5) + '%'; pitch.appendChild(s); }
+  const marks = [
+    'left:5%;right:5%;top:0;border-top:1.5px solid rgba(255,255,255,.45);height:0',
+    'left:5%;right:5%;bottom:0;border-bottom:1.5px solid rgba(255,255,255,.45);height:0',
+    'left:5%;top:0;bottom:0;width:0;border-left:1.5px solid rgba(255,255,255,.45)',
+    'right:5%;top:0;bottom:0;width:0;border-left:1.5px solid rgba(255,255,255,.45)',
+    'left:5%;right:5%;top:50%;height:0;border-top:1.5px solid rgba(255,255,255,.45)',
+    'left:21%;right:21%;top:0;height:18%;border:1.5px solid rgba(255,255,255,.45);border-top:none',
+    'left:21%;right:21%;bottom:0;height:18%;border:1.5px solid rgba(255,255,255,.45);border-bottom:none',
+    'left:33%;right:33%;top:0;height:9%;border:1.5px solid rgba(255,255,255,.45);border-top:none',
+    'left:33%;right:33%;bottom:0;height:9%;border:1.5px solid rgba(255,255,255,.45);border-bottom:none'
+  ];
+  marks.forEach(m => { const d = document.createElement('div'); d.className = 'eq-pl'; d.style.cssText = m; pitch.appendChild(d); });
+  const c = document.createElement('div'); c.className = 'eq-pc'; c.style.cssText = 'left:50%;top:50%;width:18%;padding-top:18%;transform:translate(-50%,-50%)'; pitch.appendChild(c);
+  (jugadores || []).forEach(j => {
+    const el = document.createElement('div'); el.className = 'eq-pp'; el.style.left = (j.x != null ? j.x : 50) + '%'; el.style.top = (j.y != null ? j.y : 50) + '%';
+    const b = document.createElement('div'); b.className = 'eq-bubble';
+    if (j.fid) { const img = document.createElement('img'); img.src = FOTO(j.fid); img.onerror = function(){ this.style.display = 'none'; }; b.appendChild(img); }
+    else { const sp = document.createElement('span'); sp.textContent = j.num || ''; b.appendChild(sp); }
+    const nm = document.createElement('div'); nm.className = 'eq-pp-name'; nm.textContent = apellido(j.name || String(j.num || ''));
+    el.appendChild(b); el.appendChild(nm); pitch.appendChild(el);
+  });
+  return pitch;
+}
+function renderEquiposGente(formaciones, container) {
+  const valid = (formaciones || []).filter(f => f.jugadores && f.jugadores.length >= 10)
+    .sort((a, b) => (b.likes || 0) - (a.likes || 0) || (b.created_at || '').localeCompare(a.created_at || ''));
+  if (!valid.length) {
+    const empty = document.createElement('div'); empty.style.cssText = 'text-align:center;color:rgba(255,255,255,.3);font-size:12px;padding:14px;';
+    empty.textContent = 'Todavía no hay equipos enviados.'; container.appendChild(empty); return;
+  }
+  const deviceId = getDeviceId();
+  const likedMap = getFeedLikes();
+  valid.forEach((row, idx) => {
+    const isMine = row.device_id === deviceId;
+    const isTop = idx === 0 && (row.likes || 0) > 0;
+    const card = document.createElement('div'); card.className = 'eq-card' + (isMine ? ' mine' : isTop ? ' top' : '');
+    if (isMine || isTop) {
+      const badge = document.createElement('div'); badge.className = 'eq-badge';
+      if (isMine) { badge.textContent = '📌 TU FORMACIÓN'; badge.style.cssText += 'background:rgba(21,101,192,.2);color:var(--acento-light);border:1px solid rgba(21,101,192,.45);'; }
+      else { badge.textContent = '⭐ MÁS LIKES'; badge.style.cssText += 'background:rgba(245,197,24,.18);color:#f5c518;border:1px solid rgba(245,197,24,.4);'; }
+      card.appendChild(badge);
+    }
+    const hdr = document.createElement('div'); hdr.className = 'eq-hdr';
+    const hn = document.createElement('div'); hn.className = 'eq-hdr-name'; hn.textContent = isMine ? 'Tu formación' : 'Hincha';
+    const hd = document.createElement('div'); hd.className = 'eq-hdr-date';
+    if (row.created_at) { const dt = new Date(row.created_at); hd.textContent = dt.getDate() + '/' + (dt.getMonth() + 1); }
+    hdr.appendChild(hn); hdr.appendChild(hd); card.appendChild(hdr);
+    card.appendChild(eqMiniPitch(row.jugadores));
+    const footer = document.createElement('div'); footer.className = 'eq-footer';
+    let likes = row.likes || 0;
+    if (isMine) {
+      const ml = document.createElement('div'); ml.className = 'eq-mine-likes';
+      ml.innerHTML = '♥ <b style="font-family:\'Bebas Neue\';color:#e53935;">' + likes + '</b> like' + (likes !== 1 ? 's' : '') + ' recibido' + (likes !== 1 ? 's' : '');
+      footer.appendChild(ml);
+    } else {
+      const btn = document.createElement('button'); btn.className = 'eq-like' + (likedMap[row.id] ? ' liked' : '');
+      btn.innerHTML = '♥ <b>' + likes + '</b>';
+      btn.addEventListener('click', () => {
+        toggleFeedLike(row.id, likes).then(res => { likes = res.likes; btn.className = 'eq-like' + (res.isLiked ? ' liked' : ''); btn.innerHTML = '♥ <b>' + likes + '</b>'; });
+      });
+      footer.appendChild(btn);
+    }
+    card.appendChild(footer);
+    container.appendChild(card);
+  });
 }
 
 // ============================================================
