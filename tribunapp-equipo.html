@@ -197,13 +197,14 @@ function renderFormList(players, container) {
 }
 
 function esDT(num) { return num === '' || num == null || String(num) === '0'; }
+function dtEntry(squad) { return squad && squad.find(function(s) { return s.tipo === 'dt'; }); }
 function puntName(num, squad) {
-  if (esDT(num)) return 'D.T.';
+  if (esDT(num)) { var dt = dtEntry(squad); return dt && dt.name ? dt.name : 'D.T.'; }
   var sq = squad && squad.find(function(s) { return String(s.num) === String(num); });
   return sq ? sq.name : '#' + num;
 }
 function puntFid(num, squad) {
-  if (esDT(num)) return null;
+  if (esDT(num)) { var dt = dtEntry(squad); return dt ? dt.fid : null; }
   var sq = squad && squad.find(function(s) { return String(s.num) === String(num); });
   return sq ? sq.fid : null;
 }
@@ -293,6 +294,10 @@ async function init() {
         squad = arr.map(function(p) {
           return { num: p.num != null ? p.num : p.numero, name: p.name || p.nombre, fid: p.fid };
         });
+      }
+      // El DT (técnico) — su foto está guardada con tecnico.fid del plantel
+      if (raw.tecnico) {
+        squad.push({ num: '', name: raw.tecnico.nombre, fid: raw.tecnico.fid, tipo: 'dt' });
       }
     }
   } catch(e) {}
