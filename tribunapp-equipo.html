@@ -73,6 +73,27 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
 .fecha-btn{flex:0 0 auto;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.6);font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:1px;text-transform:uppercase;padding:6px 13px;border-radius:8px;cursor:pointer;white-space:nowrap;}
 .fecha-btn.active{background:var(--gold);border-color:var(--gold);color:#1a1a1a;font-weight:600;}
 .form-row-votes{font-family:'Barlow Condensed',sans-serif;font-size:11px;color:rgba(255,255,255,.4);white-space:nowrap;margin-right:10px;}
+/* Equipos de la gente */
+.eq-card{margin-bottom:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:14px;overflow:hidden;position:relative;}
+.eq-card.top{border-color:rgba(245,197,24,.45);}
+.eq-badge{position:absolute;top:8px;right:8px;font-family:'Bebas Neue',sans-serif;font-size:10px;letter-spacing:1px;padding:3px 9px;border-radius:20px;z-index:5;background:rgba(245,197,24,.18);color:var(--gold);border:1px solid rgba(245,197,24,.4);}
+.eq-hdr{display:flex;align-items:center;padding:9px 12px 4px;}
+.eq-hdr-name{flex:1;font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:1px;color:rgba(255,255,255,.4);}
+.eq-hdr-date{font-size:10px;color:rgba(255,255,255,.18);}
+.eq-pitch{width:100%;aspect-ratio:.82;background:#2d7a3a;position:relative;overflow:hidden;}
+.eq-pl{position:absolute;}
+.eq-pc{position:absolute;border-radius:50%;border:1.5px solid rgba(255,255,255,.45);}
+.eq-stripe{position:absolute;top:0;bottom:0;width:12.5%;}
+.eq-stripe.odd{background:rgba(0,0,0,.06);}
+.eq-pp{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:1px;z-index:2;}
+.eq-bubble{width:30px;height:30px;border-radius:50%;border:2px solid rgba(255,255,255,.9);overflow:hidden;background:var(--gold);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 5px rgba(0,0,0,.5);}
+.eq-bubble img{width:100%;height:100%;object-fit:cover;object-position:top;}
+.eq-bubble span{font-family:'Bebas Neue',sans-serif;font-size:11px;color:#1a1a1a;}
+.eq-pp-name{font-family:'Bebas Neue',sans-serif;font-size:8px;color:#fff;background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.5);border-radius:4px;padding:0 4px;line-height:1.5;white-space:nowrap;max-width:60px;overflow:hidden;text-overflow:ellipsis;}
+.eq-footer{display:flex;align-items:center;padding:8px 12px;}
+.eq-like{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:5px 14px;cursor:pointer;font-size:13px;color:#aaa;transition:all .15s;}
+.eq-like.liked{background:rgba(245,197,24,.18);border-color:var(--gold);color:var(--gold);}
+.eq-like b{font-family:'Bebas Neue',sans-serif;font-size:14px;font-weight:400;}
 .form-row.dt{background:rgba(245,197,24,.08);border-left:3px solid var(--gold);}
 .form-row.dt .form-row-name{color:var(--gold);}
 .form-row-name{flex:1;font-family:'Barlow Condensed',sans-serif;font-size:14px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -268,6 +289,91 @@ function renderPodio(players, container, squad) {
   }
 }
 
+// ── Equipos de la gente (formaciones individuales con likes) ─────────────────
+function getDeviceId() {
+  var id = localStorage.getItem('tribunapp_device_id');
+  if (!id) { id = 'dev_' + Math.random().toString(36).slice(2, 14) + Date.now().toString(36); localStorage.setItem('tribunapp_device_id', id); }
+  return id;
+}
+function getFeedLikes() { try { return JSON.parse(localStorage.getItem('tribunapp_feed_likes') || '{}'); } catch(e) { return {}; } }
+function saveFeedLikes(o) { try { localStorage.setItem('tribunapp_feed_likes', JSON.stringify(o)); } catch(e) {} }
+async function toggleLike(rowId, curLikes) {
+  var liked = getFeedLikes(); var was = !!liked[rowId]; var nl = curLikes;
+  if (was) { delete liked[rowId]; nl = Math.max(0, nl - 1); } else { liked[rowId] = true; nl++; }
+  saveFeedLikes(liked);
+  try {
+    await fetch(SB_URL + '/rest/v1/formaciones?id=eq.' + rowId, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ likes: nl })
+    });
+  } catch(e) {}
+  return { likes: nl, isLiked: !!liked[rowId] };
+}
+function eqMiniPitch(jugadores) {
+  var pitch = document.createElement('div'); pitch.className = 'eq-pitch';
+  for (var i = 0; i < 8; i++) { var s = document.createElement('div'); s.className = 'eq-stripe' + (i % 2 ? ' odd' : ''); s.style.left = (i * 12.5) + '%'; pitch.appendChild(s); }
+  var marks = [
+    'left:5%;right:5%;top:0;border-top:1.5px solid rgba(255,255,255,.45);height:0',
+    'left:5%;right:5%;bottom:0;border-bottom:1.5px solid rgba(255,255,255,.45);height:0',
+    'left:5%;top:0;bottom:0;width:0;border-left:1.5px solid rgba(255,255,255,.45)',
+    'right:5%;top:0;bottom:0;width:0;border-left:1.5px solid rgba(255,255,255,.45)',
+    'left:5%;right:5%;top:50%;height:0;border-top:1.5px solid rgba(255,255,255,.45)',
+    'left:21%;right:21%;top:0;height:18%;border:1.5px solid rgba(255,255,255,.45);border-top:none',
+    'left:21%;right:21%;bottom:0;height:18%;border:1.5px solid rgba(255,255,255,.45);border-bottom:none',
+    'left:33%;right:33%;top:0;height:9%;border:1.5px solid rgba(255,255,255,.45);border-top:none',
+    'left:33%;right:33%;bottom:0;height:9%;border:1.5px solid rgba(255,255,255,.45);border-bottom:none'
+  ];
+  marks.forEach(function(m) { var d = document.createElement('div'); d.className = 'eq-pl'; d.style.cssText = m; pitch.appendChild(d); });
+  var c = document.createElement('div'); c.className = 'eq-pc'; c.style.cssText = 'left:50%;top:50%;width:18%;padding-top:18%;transform:translate(-50%,-50%)'; pitch.appendChild(c);
+  (jugadores || []).forEach(function(j) {
+    var el = document.createElement('div'); el.className = 'eq-pp'; el.style.left = (j.x != null ? j.x : 50) + '%'; el.style.top = (j.y != null ? j.y : 50) + '%';
+    var b = document.createElement('div'); b.className = 'eq-bubble';
+    if (j.fid) { var img = document.createElement('img'); img.src = 'fotos/' + j.fid + '.png'; img.onerror = function(){ this.style.display = 'none'; }; b.appendChild(img); }
+    else { var sp = document.createElement('span'); sp.textContent = j.num || ''; b.appendChild(sp); }
+    var nm = document.createElement('div'); nm.className = 'eq-pp-name'; nm.textContent = (j.name || j.num || '').split(' ').slice(-1)[0];
+    el.appendChild(b); el.appendChild(nm); pitch.appendChild(el);
+  });
+  return pitch;
+}
+function renderEquiposGente(formaciones, container) {
+  var valid = formaciones.filter(function(f) { return f.jugadores && f.jugadores.length >= 10; })
+    .sort(function(a, b) { return (b.likes || 0) - (a.likes || 0) || (b.created_at || '').localeCompare(a.created_at || ''); });
+  if (!valid.length) return;
+  var deviceId = getDeviceId();
+  var likedMap = getFeedLikes();
+  valid.forEach(function(row, idx) {
+    var isMine = row.device_id === deviceId;
+    var isTop = idx === 0 && (row.likes || 0) > 0;
+    var card = document.createElement('div'); card.className = 'eq-card' + (isTop ? ' top' : '');
+    if (isTop || isMine) {
+      var badge = document.createElement('div'); badge.className = 'eq-badge';
+      if (isMine) { badge.textContent = 'TU FORMACIÓN'; badge.style.background = 'rgba(66,165,245,.18)'; badge.style.color = '#42a5f5'; badge.style.borderColor = 'rgba(66,165,245,.4)'; }
+      else { badge.textContent = '⭐ MÁS LIKES'; }
+      card.appendChild(badge);
+    }
+    var hdr = document.createElement('div'); hdr.className = 'eq-hdr';
+    var hn = document.createElement('div'); hn.className = 'eq-hdr-name'; hn.textContent = isMine ? 'Tu formación' : 'Hincha';
+    var hd = document.createElement('div'); hd.className = 'eq-hdr-date';
+    if (row.created_at) { var dt = new Date(row.created_at); hd.textContent = dt.getDate() + '/' + (dt.getMonth() + 1); }
+    hdr.appendChild(hn); hdr.appendChild(hd); card.appendChild(hdr);
+    card.appendChild(eqMiniPitch(row.jugadores));
+    var footer = document.createElement('div'); footer.className = 'eq-footer';
+    var likes = row.likes || 0;
+    var btn = document.createElement('button'); btn.className = 'eq-like' + (likedMap[row.id] ? ' liked' : '');
+    btn.innerHTML = '♥ <b>' + likes + '</b>';
+    btn.addEventListener('click', function() {
+      toggleLike(row.id, likes).then(function(res) {
+        likes = res.likes;
+        btn.className = 'eq-like' + (res.isLiked ? ' liked' : '');
+        btn.innerHTML = '♥ <b>' + likes + '</b>';
+      });
+    });
+    footer.appendChild(btn); card.appendChild(footer);
+    container.appendChild(card);
+  });
+}
+
 function renderContent(formaciones, puntajes, squad, contentEl, rivalName) {
   contentEl.innerHTML = '';
   if (!formaciones.length && !puntajes.length) {
@@ -286,6 +392,11 @@ function renderContent(formaciones, puntajes, squad, contentEl, rivalName) {
     sl1.textContent = 'Formación más votada' + vs + ' · ' + formaciones.length + ' voto' + (formaciones.length !== 1 ? 's' : '');
     contentEl.appendChild(sl1);
     renderFormList(calcFormaciones(formaciones), contentEl);
+
+    var sl3 = document.createElement('div'); sl3.className = 'slab';
+    sl3.textContent = 'Equipos de la gente' + vs + ' · ' + formaciones.length + ' equipo' + (formaciones.length !== 1 ? 's' : '');
+    contentEl.appendChild(sl3);
+    renderEquiposGente(formaciones, contentEl);
   }
 }
 
@@ -349,7 +460,7 @@ async function init() {
 
   var allForms = [], allPunts = [];
   try {
-    var fUrl = SB_URL + '/rest/v1/formaciones?select=jugadores,match_date,rival&club=eq.' + slug + '&order=match_date.desc';
+    var fUrl = SB_URL + '/rest/v1/formaciones?select=id,jugadores,likes,device_id,created_at,match_date,rival&club=eq.' + slug + '&order=match_date.desc';
     var pUrl = SB_URL + '/rest/v1/puntajes?select=puntajes,match_date,rival&club=eq.'    + slug + '&order=match_date.desc';
     var results = await Promise.all([fetch(fUrl, {headers: SB_H}), fetch(pUrl, {headers: SB_H})]);
     allForms = await results[0].json() || [];
