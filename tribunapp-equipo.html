@@ -202,6 +202,7 @@ function renderFormList(players, container) {
     var foto = p.fid ? '<img class="form-row-foto" src="fotos/' + p.fid + '.png" alt="" onerror="this.style.opacity=\'.2\'">' : '<div class="form-row-foto"></div>';
     row.innerHTML = foto +
       '<div class="form-row-name">' + p.name + '</div>' +
+      '<div class="form-row-votes">' + p.count + ' voto' + (p.count !== 1 ? 's' : '') + '</div>' +
       '<div class="form-row-bar"><div class="form-row-bar-fill" style="width:' + p.pct + '%"></div></div>' +
       '<div class="form-row-pct">' + p.pct + '%</div>';
     wrap.appendChild(row);
@@ -260,7 +261,6 @@ function renderPodio(players, container, squad) {
       var foto = fid ? '<img class="form-row-foto" src="fotos/' + fid + '.png" alt="" onerror="this.style.opacity=\'.1\'">' : '<div class="form-row-foto"></div>';
       row.innerHTML = foto +
         '<div class="form-row-name">' + puntName(p.num, squad) + '</div>' +
-        '<div class="form-row-votes">' + p.votes + ' voto' + (p.votes !== 1 ? 's' : '') + '</div>' +
         '<div class="form-row-pct" style="color:var(--gold)">' + (p.avg == null ? '—' : p.avg) + '</div>';
       list.appendChild(row);
     });
