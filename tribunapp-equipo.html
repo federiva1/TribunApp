@@ -382,8 +382,22 @@ async function init() {
   var sel = document.createElement('div'); sel.className = 'fecha-sel'; mainEl.appendChild(sel);
   var contentEl = document.createElement('div'); mainEl.appendChild(contentEl);
 
+  // Mapa partido -> número de fecha (round) desde mundial.json
+  var fixturesJson = [];
+  try { fixturesJson = await fetch('data/fixtures/mundial.json?v=' + Date.now()).then(function(r){ return r.json(); }); } catch(e) {}
+  function roundFor(date, riv) {
+    var f = (fixturesJson || []).find(function(p) {
+      var pDate = p.date || (p.status && p.status.utcTime ? p.status.utcTime.slice(0, 10) : '');
+      return pDate === date && p.home && p.away &&
+        ((p.home.slug === slug && p.away.slug === riv) || (p.away.slug === slug && p.home.slug === riv));
+    });
+    return f ? f.round : null;
+  }
+
   var scopes = [{ id: 'acumulado', label: 'Acumulado' }].concat(matches.map(function(m) {
-    return { id: m.key, label: (NAMES_ES[m.rival] || m.rival || '—') };
+    var rivalName = NAMES_ES[m.rival] || m.rival || '—';
+    var rd = roundFor(m.date, m.rival);
+    return { id: m.key, label: (rd ? 'F' + rd + ' - ' : '') + rivalName };
   }));
 
   function renderScope(id) {
