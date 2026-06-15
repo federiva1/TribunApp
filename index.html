@@ -295,6 +295,66 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   border-top: 1px solid rgba(255,255,255,0.05);
   margin-top: 20px;
 }
+/* BOTÓN JUGAR */
+.header-pill-jugar {
+  background:linear-gradient(135deg,#1565c0,#0d47a1);
+  border:1px solid rgba(255,255,255,.2);
+  color:#fff;cursor:pointer;
+}
+.header-pill-jugar:hover { background:linear-gradient(135deg,#1976d2,#1565c0); }
+
+/* MODAL EQUIPOS */
+#modal-equipos {
+  position:fixed;inset:0;z-index:500;
+  background:rgba(0,0,0,.75);backdrop-filter:blur(4px);
+  display:flex;align-items:flex-start;justify-content:center;
+  padding-top:70px;
+  animation:modalIn .2s ease;
+}
+@keyframes modalIn{from{opacity:0}to{opacity:1}}
+.modal-box {
+  background:#13131f;border:1px solid rgba(255,255,255,.1);
+  border-radius:14px;width:100%;max-width:420px;
+  max-height:75vh;display:flex;flex-direction:column;
+  overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.6);
+}
+.modal-header {
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 18px 10px;flex-shrink:0;
+}
+.modal-title {
+  font-family:'Bebas Neue',sans-serif;font-size:18px;
+  letter-spacing:1.5px;color:#fff;
+}
+.modal-close {
+  background:none;border:none;color:rgba(255,255,255,.4);
+  font-size:22px;cursor:pointer;line-height:1;padding:2px 6px;
+}
+.modal-close:hover{color:#fff;}
+.modal-search-wrap {
+  position:relative;padding:0 14px 12px;flex-shrink:0;
+}
+.modal-search-input {
+  width:100%;background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.1);border-radius:8px;
+  padding:9px 12px 9px 34px;
+  font-family:'Barlow Condensed',sans-serif;font-size:14px;
+  color:#fff;outline:none;
+}
+.modal-search-input:focus{border-color:rgba(21,101,192,.5);}
+.modal-search-icon{position:absolute;left:26px;top:50%;transform:translateY(-60%);opacity:.4;font-size:13px;}
+#modal-lista { overflow-y:auto;flex:1; }
+.modal-row {
+  display:flex;align-items:center;gap:12px;
+  padding:11px 18px;text-decoration:none;color:#fff;
+  border-top:1px solid rgba(255,255,255,.05);
+  transition:background .15s;
+}
+.modal-row:hover { background:rgba(255,255,255,.06); }
+.modal-row img { width:32px;height:32px;object-fit:contain;border-radius:50%;flex-shrink:0; }
+.modal-row-nombre { font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:600;flex:1; }
+.modal-row-arrow { color:rgba(255,255,255,.3);font-size:18px; }
+
 /* ONBOARDING */
 #ob-tip {
   display:none;position:fixed;top:88px;left:50%;transform:translateX(-50%);
@@ -336,8 +396,27 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       <span class="header-pill-label">TribunApp</span>
     </a>
+    <button class="header-pill header-pill-jugar" onclick="abrirModalEquipos()" aria-label="Formaciones y Puntajes">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      <span class="header-pill-label">Jugar</span>
+    </button>
   </div>
 </header>
+
+<!-- MODAL EQUIPOS -->
+<div id="modal-equipos" style="display:none;" onclick="if(event.target===this)cerrarModalEquipos()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">Elegí tu selección</div>
+      <button class="modal-close" onclick="cerrarModalEquipos()">×</button>
+    </div>
+    <div class="modal-search-wrap">
+      <span class="modal-search-icon">🔍</span>
+      <input id="modal-search" class="modal-search-input" type="text" placeholder="Buscar equipo…" oninput="filtrarModalEquipos(this.value)">
+    </div>
+    <div id="modal-lista"></div>
+  </div>
+</div>
 
 <!-- MAIN -->
 <main id="main">
@@ -491,6 +570,7 @@ async function cargar() {
 
     renderFase(estado);
     renderGrupos(equipos, estado);
+    _registrarEquiposModal(equipos);
 
     document.getElementById('loading-state').style.display = 'none';
     document.getElementById('contenido').style.display = '';
@@ -608,6 +688,46 @@ function renderGrupos(equipos, estado) {
 }
 
 cargar();
+
+// ── Modal equipos (Jugar) ─────────────────────────────────────────────────
+let _modalEquipos = [];
+
+function abrirModalEquipos() {
+  const modal = document.getElementById('modal-equipos');
+  modal.style.display = 'flex';
+  document.getElementById('modal-search').value = '';
+  document.getElementById('modal-search').focus();
+  _renderModalLista('');
+}
+
+function cerrarModalEquipos() {
+  document.getElementById('modal-equipos').style.display = 'none';
+}
+
+function filtrarModalEquipos(q) {
+  _renderModalLista(q.toLowerCase().trim());
+}
+
+function _renderModalLista(q) {
+  const lista = document.getElementById('modal-lista');
+  // Tomar equipos ya cargados del array global de grupos
+  const todos = _modalEquipos;
+  const filtrados = q ? todos.filter(e => e.nombre.toLowerCase().includes(q) || e.slug.includes(q)) : todos;
+  lista.innerHTML = filtrados.map(e => `
+    <a class="modal-row" href="equipo.html?c=${e.slug}">
+      <img src="escudos/${e.slug}.png" alt="" onerror="this.style.opacity='.2'">
+      <span class="modal-row-nombre">${e.nombre}</span>
+      <span class="modal-row-arrow">›</span>
+    </a>`).join('');
+}
+
+// Poblar _modalEquipos cuando cargar() termina (se llama desde renderGrupos)
+function _registrarEquiposModal(equipos) {
+  _modalEquipos = equipos
+    .filter(e => e.slug && e.grupo)
+    .map(e => ({ slug: e.slug, nombre: NOMBRES_ES[e.slug] || e.nombre || e.slug }))
+    .sort((a, b) => a.nombre.localeCompare(b.nombre));
+}
 
 // ── Onboarding primera visita ────────────────────────────────────────────
 (function(){
