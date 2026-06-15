@@ -1907,6 +1907,10 @@ function renderMisPuntajes() {
 
   if (_mpView === 'podio') renderMisPuntajesPodio(list, sq, scores);
   else renderMisPuntajesLista(list, sq, scores);
+
+  // El usuario siempre puede descargar sus puntajes una vez votó
+  const dlBtn = document.getElementById('scores-download-btn');
+  if (dlBtn) { dlBtn.disabled = false; dlBtn.style.opacity = '1'; dlBtn.style.cursor = 'pointer'; }
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
