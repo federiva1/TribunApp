@@ -67,6 +67,8 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
 .form-row{display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.04);}
 .form-row:last-child{border-bottom:none;}
 .form-row-foto{width:30px;height:30px;border-radius:50%;object-fit:cover;background:rgba(255,255,255,.07);flex-shrink:0;}
+.form-row.dt{background:rgba(245,197,24,.08);border-left:3px solid var(--gold);}
+.form-row.dt .form-row-name{color:var(--gold);}
 .form-row-name{flex:1;font-family:'Barlow Condensed',sans-serif;font-size:14px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .form-row-pct{width:52px;text-align:center;font-family:'Bebas Neue',sans-serif;font-size:18px;color:#42a5f5;}
 .form-row-bar{width:52px;height:3px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;margin:0 8px;}
@@ -211,7 +213,11 @@ function renderPodio(players, container, squad) {
     var d = document.createElement('div'); d.className = 'msg-center'; d.textContent = 'Sin puntajes aún';
     container.appendChild(d); return;
   }
-  var top3 = players.slice(0, 3);
+  // El DT nunca entra al podio ni se ordena con los jugadores: va siempre al final
+  var jugadores = players.filter(function(p) { return !esDT(p.num); });
+  var dts       = players.filter(function(p) { return esDT(p.num); });
+
+  var top3 = jugadores.slice(0, 3);
   var medals = ['🥇','🥈','🥉'];
   var podioEl = document.createElement('div'); podioEl.className = 'podio';
   top3.forEach(function(p, i) {
@@ -227,14 +233,16 @@ function renderPodio(players, container, squad) {
   });
   container.appendChild(podioEl);
 
-  if (players.length > 3) {
+  var resto = jugadores.slice(3).concat(dts);
+  if (resto.length) {
     var list = document.createElement('div'); list.className = 'form-list';
     var lhdr = document.createElement('div'); lhdr.className = 'form-header';
     lhdr.innerHTML = '<span>JUGADOR</span><span class="fh-col">PROM.</span>';
     list.appendChild(lhdr);
-    players.slice(3).forEach(function(p) {
+    resto.forEach(function(p) {
+      var isDT = esDT(p.num);
       var fid = puntFid(p.num, squad);
-      var row = document.createElement('div'); row.className = 'form-row';
+      var row = document.createElement('div'); row.className = 'form-row' + (isDT ? ' dt' : '');
       var foto = fid ? '<img class="form-row-foto" src="fotos/' + fid + '.png" alt="" onerror="this.style.opacity=\'.1\'">' : '<div class="form-row-foto"></div>';
       row.innerHTML = foto +
         '<div class="form-row-name">' + puntName(p.num, squad) + '</div>' +
