@@ -67,6 +67,11 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
 .form-row{display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.04);}
 .form-row:last-child{border-bottom:none;}
 .form-row-foto{width:30px;height:30px;border-radius:50%;object-fit:cover;background:rgba(255,255,255,.07);flex-shrink:0;}
+.fecha-sel{display:flex;gap:6px;overflow-x:auto;padding:0 0 10px;margin-bottom:4px;-webkit-overflow-scrolling:touch;}
+.fecha-sel::-webkit-scrollbar{height:3px;}
+.fecha-sel::-webkit-scrollbar-thumb{background:#444;border-radius:4px;}
+.fecha-btn{flex:0 0 auto;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.6);font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:1px;text-transform:uppercase;padding:6px 13px;border-radius:8px;cursor:pointer;white-space:nowrap;}
+.fecha-btn.active{background:var(--gold);border-color:var(--gold);color:#1a1a1a;font-weight:600;}
 .form-row.dt{background:rgba(245,197,24,.08);border-left:3px solid var(--gold);}
 .form-row.dt .form-row-name{color:var(--gold);}
 .form-row-name{flex:1;font-family:'Barlow Condensed',sans-serif;font-size:14px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -261,23 +266,24 @@ function renderPodio(players, container, squad) {
   }
 }
 
-function renderContent(formaciones, puntajes, squad, mainEl) {
-  mainEl.innerHTML = '';
+function renderContent(formaciones, puntajes, squad, contentEl, rivalName) {
+  contentEl.innerHTML = '';
   if (!formaciones.length && !puntajes.length) {
-    mainEl.innerHTML = '<div class="msg-center">Aún no hay votos para este partido.</div>';
+    contentEl.innerHTML = '<div class="msg-center">Aún no hay votos en este scope.</div>';
     return;
+  }
+  var vs = rivalName ? ' · vs ' + rivalName : '';
+  if (puntajes.length) {
+    var sl2 = document.createElement('div'); sl2.className = 'slab';
+    sl2.textContent = 'Puntajes' + vs + ' · ' + puntajes.length + ' voto' + (puntajes.length !== 1 ? 's' : '');
+    contentEl.appendChild(sl2);
+    renderPodio(calcPuntajes(puntajes), contentEl, squad);
   }
   if (formaciones.length) {
     var sl1 = document.createElement('div'); sl1.className = 'slab';
-    sl1.textContent = 'Elección de formación · ' + formaciones.length + ' voto' + (formaciones.length !== 1 ? 's' : '');
-    mainEl.appendChild(sl1);
-    renderFormList(calcFormaciones(formaciones), mainEl);
-  }
-  if (puntajes.length) {
-    var sl2 = document.createElement('div'); sl2.className = 'slab';
-    sl2.textContent = 'Puntajes · ' + puntajes.length + ' voto' + (puntajes.length !== 1 ? 's' : '');
-    mainEl.appendChild(sl2);
-    renderPodio(calcPuntajes(puntajes), mainEl, squad);
+    sl1.textContent = 'Formación más votada' + vs + ' · ' + formaciones.length + ' voto' + (formaciones.length !== 1 ? 's' : '');
+    contentEl.appendChild(sl1);
+    renderFormList(calcFormaciones(formaciones), contentEl);
   }
 }
 
@@ -339,21 +345,63 @@ async function init() {
 
   if (!SB_URL) { mainEl.innerHTML = '<div class="msg-center">Sin datos aún.</div>'; return; }
 
-  var formaciones = [], puntajes = [];
+  var allForms = [], allPunts = [];
   try {
-    var fBase = SB_URL + '/rest/v1/formaciones?select=jugadores,match_date,rival&club=eq.' + slug;
-    var pBase = SB_URL + '/rest/v1/puntajes?select=puntajes,match_date,rival&club=eq.'    + slug;
-    var fUrl = fBase + (matchDate && rival ? '&match_date=eq.' + matchDate + '&rival=eq.' + rival : '&order=match_date.desc');
-    var pUrl = pBase + (matchDate && rival ? '&match_date=eq.' + matchDate + '&rival=eq.' + rival : '&order=match_date.desc');
+    var fUrl = SB_URL + '/rest/v1/formaciones?select=jugadores,match_date,rival&club=eq.' + slug + '&order=match_date.desc';
+    var pUrl = SB_URL + '/rest/v1/puntajes?select=puntajes,match_date,rival&club=eq.'    + slug + '&order=match_date.desc';
     var results = await Promise.all([fetch(fUrl, {headers: SB_H}), fetch(pUrl, {headers: SB_H})]);
-    formaciones = await results[0].json() || [];
-    puntajes    = await results[1].json() || [];
+    allForms = await results[0].json() || [];
+    allPunts = await results[1].json() || [];
   } catch(e) {
     mainEl.innerHTML = '<div class="msg-center">Error cargando datos.</div>';
     return;
   }
 
-  renderContent(formaciones, puntajes, squad, mainEl);
+  // Agrupar por partido (match_date + rival)
+  var matchesMap = {};
+  function keyOf(r) { return (r.match_date || '') + '||' + (r.rival || ''); }
+  function ensure(r) {
+    var k = keyOf(r);
+    if (!matchesMap[k]) matchesMap[k] = { key: k, date: r.match_date || '', rival: r.rival || '', forms: [], punts: [] };
+    return matchesMap[k];
+  }
+  allForms.forEach(function(r) { ensure(r).forms.push(r); });
+  allPunts.forEach(function(r) { ensure(r).punts.push(r); });
+  var matches = Object.keys(matchesMap).map(function(k) { return matchesMap[k]; })
+    .sort(function(a, b) { return (b.date || '').localeCompare(a.date || ''); });
+
+  if (!matches.length) {
+    mainEl.innerHTML = '<div class="msg-center">Aún no hay votos para este equipo.</div>';
+    return;
+  }
+
+  // Selector de fecha + Acumulado y contenedor de contenido
+  mainEl.innerHTML = '';
+  var sel = document.createElement('div'); sel.className = 'fecha-sel'; mainEl.appendChild(sel);
+  var contentEl = document.createElement('div'); mainEl.appendChild(contentEl);
+
+  var scopes = [{ id: 'acumulado', label: 'Acumulado' }].concat(matches.map(function(m) {
+    return { id: m.key, label: (NAMES_ES[m.rival] || m.rival || '—') };
+  }));
+
+  function renderScope(id) {
+    Array.prototype.forEach.call(sel.children, function(b) { b.classList.toggle('active', b.dataset.id === id); });
+    if (id === 'acumulado') {
+      renderContent(allForms, allPunts, squad, contentEl, null);
+    } else {
+      var m = matchesMap[id];
+      renderContent(m.forms, m.punts, squad, contentEl, NAMES_ES[m.rival] || m.rival);
+    }
+  }
+
+  scopes.forEach(function(s) {
+    var b = document.createElement('button'); b.className = 'fecha-btn'; b.dataset.id = s.id;
+    b.textContent = s.label;
+    b.addEventListener('click', function() { renderScope(s.id); });
+    sel.appendChild(b);
+  });
+
+  renderScope('acumulado'); // default: visión global (puntos + formación)
 }
 
 init();
