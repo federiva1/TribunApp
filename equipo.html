@@ -1242,6 +1242,45 @@ const POS_ORDER  = ['GK','DEF','MED','DEL'];
 
 const FOTO = fid => `fotos/${fid}.png`;
 
+// Cruza un nombre (FotMob/api-sports) contra `squad` (plantel) y devuelve el
+// entry del plantel, o null. Misma jerarquía que la sección puntajes:
+// exact norm → fid → primer+último → token-set → apellido único → solapamiento
+// → apellido contenido. Reutilizado por puntajes y por el acumulado.
+function matchPlantel(nombre, srcId) {
+  if (!squad || !squad.length) return null;
+  const normNombre = s => (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const firstLast  = s => { const p = normNombre(s).split(/\s+/).filter(Boolean); return p.length >= 2 ? p[0] + ' ' + p[p.length-1] : normNombre(s); };
+  const tokKey  = s => normNombre(s).replace(/-/g,' ').split(/\s+/).filter(Boolean).sort().join(' ');
+  const tokSet  = s => new Set(normNombre(s).replace(/-/g,' ').split(/\s+/).filter(Boolean));
+  const lastWord= s => { const w = normNombre(s).replace(/\./g,'').split(/\s+/).filter(Boolean); return w[w.length-1] || ''; };
+  const nj = normNombre(nombre), flj = firstLast(nombre), tkj = tokKey(nombre);
+  let enPlantel = squad.find(s =>
+    normNombre(s.name) === nj ||
+    (srcId != null && String(s.fid) === String(srcId)) ||
+    firstLast(s.name) === flj ||
+    tokKey(s.name) === tkj
+  );
+  if (!enPlantel) {
+    const lw = lastWord(nombre);
+    const byLast = squad.filter(s => lastWord(s.name) === lw);
+    if (byLast.length === 1) enPlantel = byLast[0];
+  }
+  if (!enPlantel) {
+    const mine = tokSet(nombre);
+    const scored = squad.map(s => { const o = tokSet(s.name); let n = 0; mine.forEach(t => { if (o.has(t)) n++; }); return { s, n }; }).sort((a,b)=>b.n-a.n);
+    if (scored.length && scored[0].n >= 2 && (scored.length === 1 || scored[1].n < scored[0].n)) enPlantel = scored[0].s;
+  }
+  if (!enPlantel) {
+    const isInit = t => t.replace(/\./g,'').length <= 1;
+    const surn = [...tokSet(nombre)].filter(t => !isInit(t));
+    if (surn.length) {
+      const cands = squad.filter(s => { const o = tokSet(s.name); return surn.every(t => o.has(t)); });
+      if (cands.length === 1 && (surn.some(t => t.length >= 5) || surn.length >= 2)) enPlantel = cands[0];
+    }
+  }
+  return enPlantel || null;
+}
+
 let plantelData = null;
 let squad = [];  // [{num, name, fid, posicion}] — formato interno normalizado
 let slug = '';
@@ -2569,7 +2608,7 @@ function accBuildCard(j, idx, teamColor) {
   card.innerHTML = `
     <div class="player-row">
       <div class="player-avatar" style="background:${teamColor}20;border-color:${teamColor}40">
-        <img src="fotos/sin-foto.png" alt="" onerror="this.style.display='none'">
+        <img src="${j.fid ? FOTO(j.fid) : (j.srcId ? `https://media.api-sports.io/football/players/${j.srcId}.png` : 'fotos/sin-foto.png')}" alt="" onerror="this.onerror=null;this.src='fotos/sin-foto.png';this.style.display='none'">
       </div>
       <div class="player-info">
         <div class="player-name">${j.nombre}</div>
@@ -2618,9 +2657,13 @@ async function loadAcumulado() {
     const jugs = esLocal ? data.jugadores[data.partido.local] : data.jugadores[data.partido.visitante];
     if (!jugs) return;
     jugs.forEach(j => {
+      if (j.tipo === 'dt') return;   // el DT no va en estadísticas de jugadores
       if (!mapa[j.nombre]) {
+        const enPlantel = matchPlantel(j.nombre, j.id);
         mapa[j.nombre] = {
           nombre: j.nombre, portero: j.portero, pj: 0,
+          fid: enPlantel?.fid ?? null,
+          srcId: j.id ?? null,
           min: 0, goles: 0, asist: 0,
           top: {}, ataque: {}, defensa: {}, duelos: {},
           portero_stats: j.portero ? { paradas: null, goles_contra: null } : null
