@@ -373,6 +373,9 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 /* lista puntajes — orden de mayor a menor */
 .mp-list-row { display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.03); border-radius:8px; padding:7px 10px; margin-bottom:5px; border:1px solid rgba(255,255,255,0.06); }
 .mp-list-row.figura { border-color:rgba(239,159,39,0.45); }
+.mp-list-row.dt { border-color:var(--acento); background:rgba(255,255,255,0.06); }
+.mp-list-row.dt .mp-list-rank { color:var(--acento-light); font-size:12px; }
+.mp-list-row.dt .mp-bench-name { color:var(--acento-light); }
 .mp-list-rank { font-family:'Bebas Neue',sans-serif; font-size:15px; color:rgba(255,255,255,0.4); min-width:22px; text-align:center; flex-shrink:0; }
 .sc10t { color:#EF9F27; } .sc89t { color:#64B5F6; } .sc57t { color:#81C784; } .sc14t { color:#EF9A9A; }
 
@@ -1805,24 +1808,29 @@ function makeAvBubble(p, cls='mp-podio-av') {
   av.appendChild(img); av.appendChild(fb); return av;
 }
 function renderMisPuntajesLista(container, sq, scores) {
-  // Figura: jugador con score más alto
-  const figuraNum = Object.entries(scores).filter(([,v]) => v != null).sort((a,b) => b[1]-a[1])[0]?.[0];
-  // Todos los jugadores ordenados de mayor a menor puntaje (los sin puntaje al final)
-  const ranked = sq.map(p => ({ ...p, val: scores[p.num] }))
-                   .sort((a, b) => (b.val ?? -1) - (a.val ?? -1));
+  // Jugadores (sin DT) ordenados de mayor a menor; el DT siempre va último
+  const jugadores = sq.filter(p => p.tipo !== 'dt')
+                      .map(p => ({ ...p, val: scores[p.num] }))
+                      .sort((a, b) => (b.val ?? -1) - (a.val ?? -1));
+  const dts = sq.filter(p => p.tipo === 'dt').map(p => ({ ...p, val: scores[p.num] }));
+  // Figura: jugador (no DT) con score más alto
+  const figuraNum = jugadores.find(p => p.val != null)?.num;
+  const ranked = [...jugadores, ...dts];
 
   ranked.forEach((p, i) => {
-    const isFig = String(p.num) === String(figuraNum);
+    const isDT  = p.tipo === 'dt';
+    const isFig = !isDT && String(p.num) === String(figuraNum);
     const row = document.createElement('div'); row.className = 'mp-list-row';
     if (isFig) row.classList.add('figura');
+    if (isDT)  row.classList.add('dt');
 
     const rank = document.createElement('div'); rank.className = 'mp-list-rank';
-    rank.textContent = i + 1;
+    rank.textContent = isDT ? 'DT' : (i + 1);
 
     const av  = makeAvBubble(p, 'mp-bench-av');
 
     const nm  = document.createElement('div'); nm.className = 'mp-bench-name';
-    nm.textContent = apellido(p.name) + (p.tipo === 'dt' ? ' (DT)' : '');
+    nm.textContent = apellido(p.name);
     if (isFig) { const star = document.createElement('span'); star.textContent = ' ★'; star.style.color = '#EF9F27'; nm.appendChild(star); }
 
     const val = p.val;
