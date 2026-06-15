@@ -72,6 +72,9 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
 .fecha-sel::-webkit-scrollbar-thumb{background:#444;border-radius:4px;}
 .fecha-btn{flex:0 0 auto;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.6);font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:1px;text-transform:uppercase;padding:6px 13px;border-radius:8px;cursor:pointer;white-space:nowrap;}
 .fecha-btn.active{background:var(--gold);border-color:var(--gold);color:#1a1a1a;font-weight:600;}
+.sub-tabs{display:flex;gap:6px;margin:0 0 12px;flex-wrap:wrap;}
+.sub-tab{flex:0 0 auto;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.55);font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:1px;text-transform:uppercase;padding:6px 12px;border-radius:8px;cursor:pointer;white-space:nowrap;}
+.sub-tab.active{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3);color:#fff;}
 .form-row-votes{font-family:'Barlow Condensed',sans-serif;font-size:11px;color:rgba(255,255,255,.4);white-space:nowrap;margin-right:10px;}
 /* Equipos de la gente */
 .eq-card{margin-bottom:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:14px;overflow:hidden;position:relative;}
@@ -381,23 +384,40 @@ function renderContent(formaciones, puntajes, squad, contentEl, rivalName) {
     return;
   }
   var vs = rivalName ? ' · vs ' + rivalName : '';
-  if (puntajes.length) {
-    var sl2 = document.createElement('div'); sl2.className = 'slab';
-    sl2.textContent = 'Puntajes' + vs + ' · ' + puntajes.length + ' voto' + (puntajes.length !== 1 ? 's' : '');
-    contentEl.appendChild(sl2);
-    renderPodio(calcPuntajes(puntajes), contentEl, squad);
-  }
-  if (formaciones.length) {
-    var sl1 = document.createElement('div'); sl1.className = 'slab';
-    sl1.textContent = 'Formación más votada' + vs + ' · ' + formaciones.length + ' voto' + (formaciones.length !== 1 ? 's' : '');
-    contentEl.appendChild(sl1);
-    renderFormList(calcFormaciones(formaciones), contentEl);
 
-    var sl3 = document.createElement('div'); sl3.className = 'slab';
-    sl3.textContent = 'Equipos de la gente' + vs + ' · ' + formaciones.length + ' equipo' + (formaciones.length !== 1 ? 's' : '');
-    contentEl.appendChild(sl3);
-    renderEquiposGente(formaciones, contentEl);
+  // Secciones disponibles (puntajes solo si hay ≥1)
+  var sections = [];
+  if (puntajes.length) sections.push({ id: 'puntajes', label: 'Puntajes' });
+  if (formaciones.length) sections.push({ id: 'jugadores', label: 'Jugadores' });
+  if (formaciones.length) sections.push({ id: 'equipos', label: 'Equipos de la gente' });
+
+  var subSel = document.createElement('div'); subSel.className = 'sub-tabs';
+  var body = document.createElement('div');
+
+  function slab(txt) { var d = document.createElement('div'); d.className = 'slab'; d.textContent = txt; return d; }
+
+  function renderSection(id) {
+    body.innerHTML = '';
+    if (id === 'puntajes') {
+      body.appendChild(slab('Puntajes' + vs + ' · ' + puntajes.length + ' voto' + (puntajes.length !== 1 ? 's' : '')));
+      renderPodio(calcPuntajes(puntajes), body, squad);
+    } else if (id === 'jugadores') {
+      body.appendChild(slab('Formación más votada' + vs + ' · ' + formaciones.length + ' voto' + (formaciones.length !== 1 ? 's' : '')));
+      renderFormList(calcFormaciones(formaciones), body);
+    } else {
+      body.appendChild(slab('Equipos de la gente' + vs + ' · ' + formaciones.length + ' equipo' + (formaciones.length !== 1 ? 's' : '')));
+      renderEquiposGente(formaciones, body);
+    }
+    Array.prototype.forEach.call(subSel.children, function(b) { b.classList.toggle('active', b.dataset.id === id); });
   }
+
+  sections.forEach(function(s) {
+    var b = document.createElement('button'); b.className = 'sub-tab'; b.dataset.id = s.id; b.textContent = s.label;
+    b.addEventListener('click', function() { renderSection(s.id); });
+    subSel.appendChild(b);
+  });
+  contentEl.appendChild(subSel); contentEl.appendChild(body);
+  renderSection(sections[0].id);
 }
 
 async function init() {
