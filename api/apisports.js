@@ -1,26 +1,46 @@
 export const config = { runtime: 'edge' };
 
-// Fallback a la key pública del repo si la env var no está configurada en Vercel.
-// Esta misma key ya está expuesta client-side en otras páginas (standings, fixture local).
+// Fallback a la key del repo si la env var no está configurada en Vercel.
 const FALLBACK_KEY = 'b8bbfc856fd5cf12cd7d697b2b01887d';
+
+// Allowlist: solo los endpoints que la app realmente consume. Bloquea
+// /status (que filtra datos de la cuenta) y cualquier otro uso abusivo del proxy.
+const ALLOWED = ['fixtures', 'standings', 'teams', 'players'];
+
+// Orígenes permitidos (defensa adicional contra uso del proxy desde afuera).
+function originOk(req) {
+  const o = req.headers.get('origin') || req.headers.get('referer') || '';
+  if (!o) return true; // mismo-origen (sin header) — fetch interno
+  return /(^|\/\/)([a-z0-9-]+\.)*tribunapp\.com\.ar/i.test(o) ||
+         /(^|\/\/)([a-z0-9-]+\.)*vercel\.app/i.test(o);
+}
 
 export default async function handler(req) {
   const key = process.env.API_SPORTS_KEY || FALLBACK_KEY;
-
   const url = new URL(req.url);
-  // El rewrite de vercel.json (/api/apisports/:path* → /api/apisports) pasa el
-  // segmento como query param "path". Usarlo para armar la ruta y quitarlo del query.
+
+  // El rewrite de vercel.json pasa el segmento como query param "path".
   let apiPath = url.pathname.replace(/^\/api\/apisports/, '');
   const pathParam = url.searchParams.get('path');
   if (!apiPath && pathParam) apiPath = '/' + pathParam;
   url.searchParams.delete('path');
+
+  const seg = apiPath.replace(/^\/+/, '').split(/[/?]/)[0].toLowerCase();
+  if (!ALLOWED.includes(seg)) {
+    return new Response(JSON.stringify({ error: 'endpoint no permitido' }), {
+      status: 403, headers: { 'Content-Type': 'application/json' },
+    });
+  }
+  if (!originOk(req)) {
+    return new Response(JSON.stringify({ error: 'origen no permitido' }), {
+      status: 403, headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
   const qs = url.searchParams.toString();
   const upstream = 'https://v3.football.api-sports.io' + apiPath + (qs ? '?' + qs : '');
 
-  const res = await fetch(upstream, {
-    headers: { 'x-apisports-key': key },
-  });
-
+  const res = await fetch(upstream, { headers: { 'x-apisports-key': key } });
   const body = await res.arrayBuffer();
   return new Response(body, {
     status: res.status,
