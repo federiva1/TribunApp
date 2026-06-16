@@ -1,0 +1,1291 @@
+{
+  "partido": {
+    "local": "france",
+    "visitante": "senegal",
+    "goles_local": 3,
+    "goles_visitante": 1,
+    "fecha": "2026-06-16",
+    "estadio": "MetLife Stadium, East Rutherford",
+    "competicion": "FIFA World Cup 2026",
+    "goles_detalle": {
+      "local": [
+        {
+          "min": 66,
+          "jugador": "K. Mbappe",
+          "asist": "M. Olise"
+        },
+        {
+          "min": 82,
+          "jugador": "B. Barcola",
+          "asist": "A. Rabiot"
+        },
+        {
+          "min": 90,
+          "jugador": "K. Mbappe",
+          "asist": null
+        }
+      ],
+      "visitante": [
+        {
+          "min": 90,
+          "jugador": "I. Mbaye",
+          "asist": "I. Ndiaye"
+        }
+      ]
+    }
+  },
+  "top_stats": [
+    {
+      "label": "Posesion",
+      "local": 54,
+      "visitante": 46,
+      "tipo": "posesion",
+      "local_val": 54,
+      "visitante_val": 46
+    },
+    {
+      "label": "xG",
+      "local": 1.89,
+      "visitante": 0.5,
+      "tipo": "numero",
+      "local_val": 1.89,
+      "visitante_val": 0.5
+    },
+    {
+      "label": "Tiros totales",
+      "local": 11,
+      "visitante": 6,
+      "tipo": "numero",
+      "local_val": 11,
+      "visitante_val": 6
+    },
+    {
+      "label": "Tiros al arco",
+      "local": 8,
+      "visitante": 2,
+      "tipo": "numero",
+      "local_val": 8,
+      "visitante_val": 2
+    },
+    {
+      "label": "Toques en area rival",
+      "local": 7,
+      "visitante": 4,
+      "tipo": "numero",
+      "local_val": 7,
+      "visitante_val": 4
+    },
+    {
+      "label": "Corners",
+      "local": 6,
+      "visitante": 4,
+      "tipo": "numero",
+      "local_val": 6,
+      "visitante_val": 4
+    },
+    {
+      "label": "Faltas",
+      "local": 5,
+      "visitante": 9,
+      "tipo": "numero",
+      "local_val": 5,
+      "visitante_val": 9
+    },
+    {
+      "label": "Pases precisos",
+      "local": "505 (88%)",
+      "visitante": "427 (86%)",
+      "tipo": "texto",
+      "local_val": 88,
+      "visitante_val": 86
+    }
+  ],
+  "jugadores": {
+    "france": [
+      {
+        "nombre": "Mike Maignan",
+        "id": 22221,
+        "tipo": "titular",
+        "portero": true,
+        "mvp": false,
+        "num": "16",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "acc_defensivas": 0,
+          "pases_precisos": 28
+        },
+        "ataque": {
+          "toques": 50
+        },
+        "defensa": {
+          "acc_defensivas": 0,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 10,
+          "despejes": 0
+        },
+        "duelos": {
+          "ganados": 1,
+          "terrestres": 1,
+          "faltas": 0,
+          "faltas_recibidas": 1
+        },
+        "portero_stats": {
+          "paradas": 2,
+          "goles_contra": 1,
+          "goles_evitados": -0.89
+        }
+      },
+      {
+        "nombre": "Jules Koundé",
+        "id": 1257,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "5",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 1,
+          "grandes_oport": 1,
+          "acc_defensivas": 8,
+          "pases_precisos": 51
+        },
+        "ataque": {
+          "toques": 80,
+          "toques_area": 2,
+          "pases_ultimo_tercio": 3,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 8,
+          "entradas": 4,
+          "interceptaciones": 0,
+          "recuperaciones": 5,
+          "despejes": 4,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 5,
+          "perdidos": 5,
+          "terrestres": 4,
+          "aereos": 1,
+          "faltas": 1
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Dayot Upamecano",
+        "id": 1149,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "4",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 1,
+          "acc_defensivas": 11,
+          "pases_precisos": 70
+        },
+        "ataque": {
+          "toques": 95,
+          "toques_area": 0,
+          "pases_ultimo_tercio": 6,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 11,
+          "entradas": 6,
+          "interceptaciones": 3,
+          "recuperaciones": 5,
+          "despejes": 1,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 8,
+          "perdidos": 4,
+          "terrestres": 7,
+          "aereos": 1,
+          "faltas": 1,
+          "faltas_recibidas": 1
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "William Saliba",
+        "id": 22090,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "17",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 5,
+          "pases_precisos": 69
+        },
+        "ataque": {
+          "toques": 78,
+          "toques_area": 0,
+          "pases_ultimo_tercio": 1,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 5,
+          "entradas": 0,
+          "interceptaciones": 1,
+          "recuperaciones": 2,
+          "despejes": 4,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 1,
+          "aereos": 1,
+          "faltas": 0
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Theo Hernández",
+        "id": 47300,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "19",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "tiros_totales": 1,
+          "disparos_puerta": 0,
+          "oport_creadas": 0,
+          "acc_defensivas": 5,
+          "pases_precisos": 45
+        },
+        "ataque": {
+          "toques": 59,
+          "toques_area": 1,
+          "regates": 0,
+          "pases_ultimo_tercio": 3,
+          "perdida_balon": 1
+        },
+        "defensa": {
+          "acc_defensivas": 5,
+          "entradas": 2,
+          "interceptaciones": 1,
+          "recuperaciones": 5,
+          "despejes": 2,
+          "bloqueos": 1,
+          "regateado": 2
+        },
+        "duelos": {
+          "ganados": 4,
+          "perdidos": 5,
+          "terrestres": 2,
+          "aereos": 2,
+          "faltas": 0
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Aurélien Tchouaméni",
+        "id": 1271,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "8",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 5,
+          "pases_precisos": 62
+        },
+        "ataque": {
+          "toques": 78,
+          "toques_area": 1,
+          "pases_ultimo_tercio": 9,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 5,
+          "entradas": 3,
+          "interceptaciones": 2,
+          "recuperaciones": 6,
+          "despejes": 0,
+          "regateado": 1
+        },
+        "duelos": {
+          "ganados": 6,
+          "perdidos": 1,
+          "terrestres": 3,
+          "aereos": 3,
+          "faltas": 0
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Adrien Rabiot",
+        "id": 272,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "14",
+        "min": 90,
+        "goles": 0,
+        "asist": 1,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 2,
+          "grandes_oport": 1,
+          "acc_defensivas": 1,
+          "pases_precisos": 46
+        },
+        "ataque": {
+          "toques": 57,
+          "toques_area": 1,
+          "pases_ultimo_tercio": 10,
+          "perdida_balon": 1
+        },
+        "defensa": {
+          "acc_defensivas": 1,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 5,
+          "despejes": 1,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 2,
+          "perdidos": 2,
+          "terrestres": 0,
+          "aereos": 2,
+          "faltas": 1
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Michael Olise",
+        "id": 19617,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "11",
+        "min": 90,
+        "goles": 0,
+        "asist": 1,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "tiros_totales": 2,
+          "disparos_puerta": 2,
+          "oport_creadas": 4,
+          "grandes_oport": 2,
+          "acc_defensivas": 2,
+          "pases_precisos": 51
+        },
+        "ataque": {
+          "toques": 76,
+          "toques_area": 2,
+          "regates": 2,
+          "pases_ultimo_tercio": 14,
+          "perdida_balon": 1
+        },
+        "defensa": {
+          "acc_defensivas": 2,
+          "entradas": 2,
+          "interceptaciones": 0,
+          "recuperaciones": 6,
+          "despejes": 0,
+          "regateado": 1
+        },
+        "duelos": {
+          "ganados": 6,
+          "perdidos": 3,
+          "terrestres": 6,
+          "aereos": 0,
+          "faltas": 0,
+          "faltas_recibidas": 2
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Ousmane Dembélé",
+        "id": 153,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "7",
+        "min": 80,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "tiros_totales": 1,
+          "disparos_puerta": 0,
+          "oport_creadas": 0,
+          "acc_defensivas": 1,
+          "pases_precisos": 26
+        },
+        "ataque": {
+          "toques": 40,
+          "toques_area": 0,
+          "pases_ultimo_tercio": 9,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 1,
+          "entradas": 1,
+          "interceptaciones": 0,
+          "recuperaciones": 3,
+          "despejes": 0,
+          "bloqueos": 1,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 2,
+          "terrestres": 2,
+          "aereos": 0,
+          "faltas": 0,
+          "faltas_recibidas": 1
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Désiré Doué",
+        "id": 343027,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "20",
+        "min": 87,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "tiros_totales": 2,
+          "disparos_puerta": 1,
+          "oport_creadas": 1,
+          "acc_defensivas": 2,
+          "pases_precisos": 31
+        },
+        "ataque": {
+          "toques": 53,
+          "toques_area": 3,
+          "regates": 1,
+          "pases_ultimo_tercio": 4,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 2,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 4,
+          "despejes": 2,
+          "regateado": 4
+        },
+        "duelos": {
+          "ganados": 3,
+          "perdidos": 7,
+          "terrestres": 2,
+          "aereos": 1,
+          "faltas": 0,
+          "faltas_recibidas": 1
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Kylian Mbappé",
+        "id": 278,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": true,
+        "num": "10",
+        "min": 90,
+        "goles": 2,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "tiros_totales": 4,
+          "disparos_puerta": 4,
+          "oport_creadas": 0,
+          "acc_defensivas": 0,
+          "pases_precisos": 15
+        },
+        "ataque": {
+          "toques": 37,
+          "toques_area": 7,
+          "regates": 1,
+          "pases_ultimo_tercio": 1,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 0,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 2,
+          "despejes": 0,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 2,
+          "perdidos": 7,
+          "terrestres": 2,
+          "aereos": 0,
+          "faltas": 2,
+          "faltas_recibidas": 1
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Bradley Barcola",
+        "id": 161904,
+        "tipo": "suplente",
+        "portero": false,
+        "mvp": false,
+        "num": "",
+        "min": 10,
+        "goles": 1,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "tiros_totales": 1,
+          "disparos_puerta": 1,
+          "oport_creadas": 0,
+          "acc_defensivas": 0,
+          "pases_precisos": 6
+        },
+        "ataque": {
+          "toques": 12,
+          "toques_area": 2,
+          "regates": 1,
+          "pases_ultimo_tercio": 1,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 0,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 0,
+          "despejes": 0,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 2,
+          "perdidos": 1,
+          "terrestres": 1,
+          "aereos": 1,
+          "faltas": 0
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Rayan Cherki",
+        "id": 156477,
+        "tipo": "suplente",
+        "portero": false,
+        "mvp": false,
+        "num": "",
+        "min": 3,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 0,
+          "pases_precisos": 5
+        },
+        "ataque": {
+          "toques": 9,
+          "toques_area": 0,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 0,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 3,
+          "despejes": 0,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 1,
+          "terrestres": 1,
+          "aereos": 0,
+          "faltas": 0,
+          "faltas_recibidas": 1
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Didier Deschamps",
+        "id": 180,
+        "tipo": "dt",
+        "portero": false,
+        "mvp": false,
+        "num": "",
+        "min": null,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": null,
+        "ataque": null,
+        "defensa": null,
+        "duelos": null,
+        "portero_stats": null
+      }
+    ],
+    "senegal": [
+      {
+        "nombre": "Edouard Mendy",
+        "id": 2986,
+        "tipo": "titular",
+        "portero": true,
+        "mvp": false,
+        "num": "16",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "acc_defensivas": 0,
+          "pases_precisos": 31
+        },
+        "ataque": {
+          "toques": 47,
+          "pases_ultimo_tercio": 3
+        },
+        "defensa": {
+          "acc_defensivas": 0,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 13,
+          "despejes": 0
+        },
+        "duelos": {
+          "faltas": 0
+        },
+        "portero_stats": {
+          "paradas": 5,
+          "goles_contra": 3,
+          "goles_evitados": -1.04
+        }
+      },
+      {
+        "nombre": "Krépin Diatta",
+        "id": 81,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "15",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 6,
+          "pases_precisos": 43
+        },
+        "ataque": {
+          "toques": 69,
+          "toques_area": 0,
+          "regates": 3,
+          "pases_ultimo_tercio": 11,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 6,
+          "entradas": 5,
+          "interceptaciones": 1,
+          "recuperaciones": 4,
+          "despejes": 0,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 9,
+          "perdidos": 1,
+          "terrestres": 8,
+          "aereos": 1,
+          "faltas": 0
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Kalidou Koulibaly",
+        "id": 318,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "3",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 10,
+          "pases_precisos": 37
+        },
+        "ataque": {
+          "toques": 56,
+          "toques_area": 0,
+          "pases_ultimo_tercio": 4,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 10,
+          "entradas": 4,
+          "interceptaciones": 1,
+          "recuperaciones": 3,
+          "despejes": 5,
+          "regateado": 1
+        },
+        "duelos": {
+          "ganados": 4,
+          "perdidos": 1,
+          "terrestres": 4,
+          "aereos": 0,
+          "faltas": 0
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Moussa Niakhaté",
+        "id": 25916,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "19",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 5,
+          "pases_precisos": 74
+        },
+        "ataque": {
+          "toques": 90,
+          "toques_area": 1,
+          "pases_ultimo_tercio": 4,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 5,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 1,
+          "despejes": 3,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 1,
+          "terrestres": 1,
+          "aereos": 0,
+          "faltas": 0,
+          "faltas_recibidas": 1
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "El Hadji Malick Diouf",
+        "id": 409303,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "25",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": null,
+        "ataque": null,
+        "defensa": null,
+        "duelos": null,
+        "portero_stats": {
+          "paradas": null,
+          "goles_contra": null,
+          "goles_evitados": null
+        }
+      },
+      {
+        "nombre": "Idrissa Gana Gueye",
+        "id": 2990,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "5",
+        "min": 88,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 2,
+          "pases_precisos": 56
+        },
+        "ataque": {
+          "toques": 66,
+          "toques_area": 0,
+          "pases_ultimo_tercio": 5,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 2,
+          "entradas": 2,
+          "interceptaciones": 0,
+          "recuperaciones": 6,
+          "despejes": 0,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 2,
+          "perdidos": 1,
+          "terrestres": 2,
+          "aereos": 0,
+          "faltas": 1
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Pape Gueye",
+        "id": 20696,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "26",
+        "min": 83,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 4,
+          "pases_precisos": 41
+        },
+        "ataque": {
+          "toques": 58,
+          "toques_area": 0,
+          "pases_ultimo_tercio": 11,
+          "perdida_balon": 1
+        },
+        "defensa": {
+          "acc_defensivas": 4,
+          "entradas": 0,
+          "interceptaciones": 2,
+          "recuperaciones": 7,
+          "despejes": 2,
+          "regateado": 0
+        },
+        "duelos": {
+          "perdidos": 1,
+          "terrestres": 0,
+          "aereos": 0,
+          "faltas": 1
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Ismaïla Sarr",
+        "id": 2218,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "18",
+        "min": 75,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "tiros_totales": 3,
+          "disparos_puerta": 0,
+          "oport_creadas": 1,
+          "acc_defensivas": 0,
+          "pases_precisos": 11
+        },
+        "ataque": {
+          "toques": 30,
+          "toques_area": 3,
+          "regates": 2,
+          "perdida_balon": 1
+        },
+        "defensa": {
+          "acc_defensivas": 0,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 1,
+          "despejes": 0,
+          "bloqueos": 1,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 2,
+          "perdidos": 4,
+          "terrestres": 2,
+          "aereos": 0,
+          "faltas": 0
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Lamine Camara",
+        "id": 374058,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "8",
+        "min": 76,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 0,
+          "pases_precisos": 26
+        },
+        "ataque": {
+          "toques": 40,
+          "toques_area": 0,
+          "regates": 1,
+          "pases_ultimo_tercio": 2,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 0,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 3,
+          "despejes": 0,
+          "regateado": 1
+        },
+        "duelos": {
+          "ganados": 1,
+          "perdidos": 5,
+          "terrestres": 1,
+          "aereos": 0,
+          "faltas": 2
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Sadio Mané",
+        "id": 304,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "10",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "tiros_totales": 1,
+          "disparos_puerta": 1,
+          "oport_creadas": 0,
+          "acc_defensivas": 3,
+          "pases_precisos": 26
+        },
+        "ataque": {
+          "toques": 50,
+          "toques_area": 1,
+          "regates": 1,
+          "pases_ultimo_tercio": 1,
+          "perdida_balon": 1
+        },
+        "defensa": {
+          "acc_defensivas": 3,
+          "entradas": 0,
+          "interceptaciones": 2,
+          "recuperaciones": 4,
+          "despejes": 1,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 5,
+          "perdidos": 5,
+          "terrestres": 4,
+          "aereos": 1,
+          "faltas": 0,
+          "faltas_recibidas": 3
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Nicolas Jackson",
+        "id": 283058,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "11",
+        "min": 83,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "tiros_totales": 1,
+          "disparos_puerta": 0,
+          "oport_creadas": 2,
+          "acc_defensivas": 3,
+          "pases_precisos": 12
+        },
+        "ataque": {
+          "toques": 32,
+          "toques_area": 3,
+          "regates": 0,
+          "pases_ultimo_tercio": 1,
+          "perdida_balon": 4
+        },
+        "defensa": {
+          "acc_defensivas": 3,
+          "entradas": 1,
+          "interceptaciones": 0,
+          "recuperaciones": 2,
+          "despejes": 2,
+          "regateado": 1
+        },
+        "duelos": {
+          "ganados": 2,
+          "perdidos": 12,
+          "terrestres": 1,
+          "aereos": 1,
+          "faltas": 2
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Ibrahim Mbaye",
+        "id": 446249,
+        "tipo": "suplente",
+        "portero": false,
+        "mvp": false,
+        "num": "",
+        "min": 15,
+        "goles": 1,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "tiros_totales": 1,
+          "disparos_puerta": 1,
+          "oport_creadas": 0,
+          "acc_defensivas": 0,
+          "pases_precisos": 7
+        },
+        "ataque": {
+          "toques": 15,
+          "toques_area": 2,
+          "regates": 1,
+          "pases_ultimo_tercio": 1,
+          "perdida_balon": 2
+        },
+        "defensa": {
+          "acc_defensivas": 0,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 2,
+          "despejes": 0,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 1,
+          "perdidos": 3,
+          "terrestres": 1,
+          "aereos": 0,
+          "faltas": 0
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Habib Diarra",
+        "id": 327631,
+        "tipo": "suplente",
+        "portero": false,
+        "mvp": false,
+        "num": "",
+        "min": 14,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 0,
+          "pases_precisos": 8
+        },
+        "ataque": {
+          "toques": 13,
+          "toques_area": 0,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 0,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 2,
+          "despejes": 0,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 1,
+          "perdidos": 2,
+          "terrestres": 1,
+          "aereos": 0,
+          "faltas": 2,
+          "faltas_recibidas": 1
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Cherif Ndiaye",
+        "id": 18592,
+        "tipo": "suplente",
+        "portero": false,
+        "mvp": false,
+        "num": "",
+        "min": 7,
+        "goles": 0,
+        "asist": 1,
+        "amarilla": false,
+        "roja": false,
+        "top": null,
+        "ataque": null,
+        "defensa": null,
+        "duelos": null,
+        "portero_stats": null
+      },
+      {
+        "nombre": "Bamba Dieng",
+        "id": 284072,
+        "tipo": "suplente",
+        "portero": false,
+        "mvp": false,
+        "num": "",
+        "min": 7,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 0,
+          "pases_precisos": 3
+        },
+        "ataque": {
+          "toques": 4,
+          "toques_area": 0,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 0,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 1,
+          "despejes": 0,
+          "regateado": 0
+        },
+        "duelos": {
+          "perdidos": 1,
+          "aereos": 0,
+          "faltas": 0
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Pathé Ciss",
+        "id": 41552,
+        "tipo": "suplente",
+        "portero": false,
+        "mvp": false,
+        "num": "",
+        "min": 2,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 0,
+          "pases_precisos": 12
+        },
+        "ataque": {
+          "toques": 16,
+          "toques_area": 1,
+          "pases_ultimo_tercio": 2,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 0,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 0,
+          "despejes": 0,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 1,
+          "aereos": 1,
+          "faltas": 0
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Bouna Thiaw Pape",
+        "id": 17636,
+        "tipo": "dt",
+        "portero": false,
+        "mvp": false,
+        "num": "",
+        "min": null,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": null,
+        "ataque": null,
+        "defensa": null,
+        "duelos": null,
+        "portero_stats": null
+      }
+    ]
+  }
+}
