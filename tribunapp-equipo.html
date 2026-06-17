@@ -196,21 +196,29 @@ function calcFormaciones(rows) {
 }
 
 function calcPuntajes(rows) {
-  var totals = {}, counts = {}, seen = {};
+  // Agregar por jugador: suma y cantidad de votos reales + cantidad de S/P (null/'')
+  var agg = {};
   rows.forEach(function(r) {
     Object.entries(r.puntajes || {}).forEach(function(entry) {
       var num = entry[0], val = entry[1];
-      seen[num] = (seen[num] || 0) + 1;
-      if (val === null || val === undefined || val === '') return; // S/P no cuenta para el promedio
+      if (!agg[num]) agg[num] = { realSum: 0, realCount: 0, spCount: 0 };
+      if (val === null || val === undefined || val === '') { agg[num].spCount++; return; }
       var n = Number(val);
       if (isNaN(n)) return;
-      totals[num] = (totals[num] || 0) + n;
-      counts[num] = (counts[num] || 0) + 1;
+      agg[num].realSum += n; agg[num].realCount++;
     });
   });
-  return Object.keys(seen).map(function(num) {
-    var c = counts[num] || 0;
-    return { num: num, avg: c > 0 ? +(totals[num] / c).toFixed(1) : null, votes: c };
+  // Regla S/P: como el formulario obliga a puntuar a todos, el total de votos incluye los S/P.
+  // Si >50% son S/P → cada S/P pesa 0; si ≤50% → cada S/P pesa 2 (no le baja tanto).
+  return Object.keys(agg).map(function(num) {
+    var a = agg[num];
+    var total = a.realCount + a.spCount;
+    var avg = null;
+    if (total > 0) {
+      var spVal = (a.spCount / total) > 0.5 ? 0 : 2;
+      avg = +((a.realSum + spVal * a.spCount) / total).toFixed(1);
+    }
+    return { num: num, avg: avg, votes: total };
   }).sort(function(a, b) {
     return (b.avg == null ? -1 : b.avg) - (a.avg == null ? -1 : a.avg);
   });

@@ -2297,32 +2297,70 @@ async function showScoresResults() {
     if (!data.length) { list.innerHTML = '<div style="color:rgba(255,255,255,0.3);text-align:center;padding:20px;">Sin resultados aún.</div>'; totalEl.textContent = ''; return; }
     const totalVoters = data.length;
     totalEl.textContent = `${totalVoters} hincha${totalVoters !== 1 ? 's' : ''} votaron`;
-    const totals = {}, countMap = {};
-    data.forEach(row => { Object.entries(row.puntajes || {}).forEach(([num, val]) => { totals[num] = (totals[num] || 0) + Number(val); countMap[num] = (countMap[num] || 0) + 1; }); });
+    // Agregar por jugador: suma y cantidad de votos reales + cantidad de S/P (null)
+    const agg = {};
+    data.forEach(row => {
+      Object.entries(row.puntajes || {}).forEach(([num, val]) => {
+        if (!agg[num]) agg[num] = { realSum: 0, realCount: 0, spCount: 0 };
+        if (val === null || val === undefined || val === '') { agg[num].spCount++; }
+        else { const n = Number(val); if (!isNaN(n)) { agg[num].realSum += n; agg[num].realCount++; } }
+      });
+    });
+    // Regla S/P: como el formulario obliga a puntuar a todos, el total de votos incluye los S/P.
+    // Si >50% de los votos de un jugador son S/P → cada S/P pesa 0; si ≤50% → cada S/P pesa 2 (no le baja tanto).
+    const computeAvg = a => {
+      const total = a.realCount + a.spCount;
+      if (!total) return { avg: null, votes: 0 };
+      const spVal = (a.spCount / total) > 0.5 ? 0 : 2;
+      return { avg: (a.realSum + spVal * a.spCount) / total, votes: total };
+    };
+    const isDT = num => num === '' || num == null || String(num) === '0';
     const sqR = window._squadPuntajes || squad;
-    const results = Object.keys(totals)
-      .filter(num => num !== '' && num != null && String(num) !== '0')   // excluir DT (num 0 / vacío) de votos viejos
+    const results = Object.keys(agg)
+      .filter(num => !isDT(num))
       .map(num => {
         const p = sqR.find(s => String(s.num) === String(num));
-        return { num: Number(num), name: p?.name || `#${num}`, fid: p?.fid || 0, foto: p?.foto || (p?.fid ? FOTO(p.fid) : ''), avg: totals[num] / countMap[num] };
-      }).sort((a, b) => b.avg - a.avg);
+        const c = computeAvg(agg[num]);
+        return { num: Number(num), name: p?.name || `#${num}`, fid: p?.fid || 0, foto: p?.foto || (p?.fid ? FOTO(p.fid) : ''), avg: c.avg, votes: c.votes };
+      })
+      .filter(r => r.avg != null)
+      .sort((a, b) => b.avg - a.avg);
+
+    // DT (votos legacy con clave vacía/0): mismo cálculo, va al final distinguido
+    const dtKey = Object.keys(agg).find(isDT);
+    let dtResult = null;
+    if (dtKey != null) {
+      const c = computeAvg(agg[dtKey]);
+      if (c.avg != null) {
+        const tec = plantelData && plantelData.tecnico;
+        const dtName = tec ? (typeof tec === 'object' ? tec.nombre : tec) : 'D.T.';
+        const dtFid  = (tec && typeof tec === 'object') ? (tec.fid || 0) : 0;
+        dtResult = { name: dtName, fid: dtFid, foto: dtFid ? FOTO(dtFid) : '', avg: c.avg, votes: c.votes };
+      }
+    }
 
     list.innerHTML = '';
-    results.forEach((p, rank) => {
-      const medals = ['🥇','🥈','🥉'];
-      const row = document.createElement('div'); row.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:8px;';
+    const medals = ['🥇','🥈','🥉'];
+    const makeRow = (p, rankLabel, esDT) => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:8px;' + (esDT ? 'padding-top:10px;margin-top:6px;border-top:1px solid rgba(255,255,255,0.08);' : '');
       const rankEl = document.createElement('div'); rankEl.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:14px;color:rgba(255,255,255,0.3);min-width:24px;text-align:center;';
-      rankEl.textContent = rank < 3 ? medals[rank] : `${rank+1}°`;
-      const av = makeAvatar(p.foto || FOTO(p.fid), p.num, 38); av.style.flexShrink = '0';
+      rankEl.textContent = rankLabel;
+      const av = makeAvatar(p.foto || FOTO(p.fid), esDT ? 'DT' : p.num, 38); av.style.flexShrink = '0';
       const info = document.createElement('div'); info.style.cssText = 'flex:1;min-width:0;';
-      const nameEl = document.createElement('div'); nameEl.style.cssText = 'font-size:13px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'; nameEl.textContent = apellido(p.name);
+      const nameEl = document.createElement('div'); nameEl.style.cssText = 'font-size:13px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+      if (esDT) { const tag = document.createElement('span'); tag.textContent = 'DT '; tag.style.cssText = 'color:var(--acento-light);font-weight:700;'; nameEl.appendChild(tag); }
+      const nameTxt = document.createElement('span'); nameTxt.textContent = apellido(p.name); nameEl.appendChild(nameTxt);
+      const vEl = document.createElement('span'); vEl.style.cssText = 'color:rgba(255,255,255,0.3);font-size:11px;'; vEl.textContent = ` · ${p.votes} voto${p.votes !== 1 ? 's' : ''}`; nameEl.appendChild(vEl);
       const barWrap = document.createElement('div'); barWrap.style.cssText = 'background:rgba(255,255,255,0.07);border-radius:4px;height:5px;overflow:hidden;margin-top:4px;';
       const bar = document.createElement('div'); bar.style.cssText = `height:100%;background:var(--acento);border-radius:4px;width:${p.avg * 10}%;transition:width 0.6s;`;
       barWrap.appendChild(bar); info.appendChild(nameEl); info.appendChild(barWrap);
       const valEl = document.createElement('div'); valEl.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:22px;color:var(--acento-light);line-height:1;min-width:36px;text-align:right;'; valEl.textContent = p.avg.toFixed(1);
       row.appendChild(rankEl); row.appendChild(av); row.appendChild(info); row.appendChild(valEl);
       list.appendChild(row);
-    });
+    };
+    results.forEach((p, rank) => makeRow(p, rank < 3 ? medals[rank] : `${rank+1}°`, false));
+    if (dtResult) makeRow(dtResult, 'DT', true);
   } catch(e) { list.innerHTML = '<div style="color:rgba(255,255,255,0.3)">Error al cargar.</div>'; }
 }
 
