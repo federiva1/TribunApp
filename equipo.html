@@ -1893,9 +1893,9 @@ async function initPuntajes() {
         const pRes = await fetch(`data/partidos/${partido.id}.json?v=${Date.now()}`);
         const pData = await pRes.json();
         const jugsRaw = pData.jugadores[slug] || [];
-        // Solo titulares y suplentes que efectivamente ingresaron (min > 0); el DT no se puntúa
+        // Titulares, DT, y suplentes que efectivamente ingresaron (min > 0)
         const jugs = jugsRaw.filter(j =>
-          j.tipo === 'titular' ||
+          j.tipo === 'titular' || j.tipo === 'dt' ||
           (j.tipo === 'suplente' && j.min != null && j.min > 0)
         );
         const normNombre = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
@@ -1962,7 +1962,16 @@ async function initPuntajes() {
     } catch(e) { console.error('Error cargando jugadores del partido'); }
   }
 
-  // El DT no se incluye en puntajes
+  // Añadir técnico desde plantelData solo si no viene ya en el JSON del partido
+  const yaHayDt = squadPuntajes.some(p => p.tipo === 'dt');
+  if (!yaHayDt) {
+    const tecnico = plantelData.tecnico || null;
+    if (tecnico) {
+      const dtNombre = typeof tecnico === 'object' ? tecnico.nombre : tecnico;
+      const dtFid    = typeof tecnico === 'object' ? (tecnico.fid || 0) : 0;
+      squadPuntajes.push({ num: 0, name: dtNombre, fid: dtFid, foto: dtFid ? FOTO(dtFid) : '', posicion: 'TEC', tipo: 'dt' });
+    }
+  }
 
   // Si no cargó nada del partido, fallback al squad completo
   if (!squadPuntajes.length) squadPuntajes = squad;
@@ -2184,6 +2193,7 @@ function renderScores() {
 
   renderGroup('TITULARES', titulares);
   renderGroup('SUPLENTES QUE INGRESARON', suplentes, true);
+  renderGroup('DIRECTOR TÉCNICO', dt);
 }
 
 function checkScoresReady() {
