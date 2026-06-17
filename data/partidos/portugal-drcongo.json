@@ -1,0 +1,1415 @@
+{
+  "partido": {
+    "local": "portugal",
+    "visitante": "drcongo",
+    "goles_local": 1,
+    "goles_visitante": 1,
+    "fecha": "2026-06-17",
+    "estadio": "NRG Stadium, Houston",
+    "competicion": "FIFA World Cup 2026",
+    "goles_detalle": {
+      "local": [
+        {
+          "min": 6,
+          "jugador": "J. Neves",
+          "asist": "P. Neto"
+        }
+      ],
+      "visitante": [
+        {
+          "min": 45,
+          "jugador": "Y. Wissa",
+          "asist": "A. Masuaku"
+        }
+      ]
+    }
+  },
+  "top_stats": [
+    {
+      "label": "Posesion",
+      "local": 75,
+      "visitante": 25,
+      "tipo": "posesion",
+      "local_val": 75,
+      "visitante_val": 25
+    },
+    {
+      "label": "xG",
+      "local": 0.69,
+      "visitante": 0.82,
+      "tipo": "numero",
+      "local_val": 0.69,
+      "visitante_val": 0.82
+    },
+    {
+      "label": "Tiros totales",
+      "local": 7,
+      "visitante": 8,
+      "tipo": "numero",
+      "local_val": 7,
+      "visitante_val": 8
+    },
+    {
+      "label": "Tiros al arco",
+      "local": 1,
+      "visitante": 2,
+      "tipo": "numero",
+      "local_val": 1,
+      "visitante_val": 2
+    },
+    {
+      "label": "Toques en area rival",
+      "local": 5,
+      "visitante": 2,
+      "tipo": "numero",
+      "local_val": 5,
+      "visitante_val": 2
+    },
+    {
+      "label": "Corners",
+      "local": 5,
+      "visitante": 4,
+      "tipo": "numero",
+      "local_val": 5,
+      "visitante_val": 4
+    },
+    {
+      "label": "Faltas",
+      "local": 9,
+      "visitante": 10,
+      "tipo": "numero",
+      "local_val": 9,
+      "visitante_val": 10
+    },
+    {
+      "label": "Tarjetas amarillas",
+      "local": 3,
+      "visitante": 1,
+      "tipo": "numero",
+      "local_val": 3,
+      "visitante_val": 1
+    },
+    {
+      "label": "Pases precisos",
+      "local": "723 (92%)",
+      "visitante": "197 (78%)",
+      "tipo": "texto",
+      "local_val": 92,
+      "visitante_val": 78
+    }
+  ],
+  "jugadores": {
+    "portugal": [
+      {
+        "nombre": "Diogo Costa",
+        "id": 369,
+        "tipo": "titular",
+        "portero": true,
+        "mvp": false,
+        "num": "1",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "acc_defensivas": 0,
+          "pases_precisos": 24
+        },
+        "ataque": {
+          "toques": 37,
+          "pases_ultimo_tercio": 3
+        },
+        "defensa": {
+          "acc_defensivas": 0,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 9,
+          "despejes": 0
+        },
+        "duelos": {
+          "faltas": 0
+        },
+        "portero_stats": {
+          "paradas": 1,
+          "goles_contra": 1,
+          "goles_evitados": -0.03
+        }
+      },
+      {
+        "nombre": "João Cancelo",
+        "id": 855,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "20",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 7,
+          "pases_precisos": 53
+        },
+        "ataque": {
+          "toques": 99,
+          "toques_area": 2,
+          "regates": 2,
+          "pases_ultimo_tercio": 5,
+          "perdida_balon": 2
+        },
+        "defensa": {
+          "acc_defensivas": 7,
+          "entradas": 2,
+          "interceptaciones": 1,
+          "recuperaciones": 6,
+          "despejes": 4,
+          "regateado": 1
+        },
+        "duelos": {
+          "ganados": 5,
+          "perdidos": 7,
+          "terrestres": 5,
+          "aereos": 0,
+          "faltas": 2,
+          "faltas_recibidas": 1
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Tomás Araújo",
+        "id": 161939,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "4",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": true,
+        "roja": false,
+        "top": {
+          "oport_creadas": 1,
+          "acc_defensivas": 4,
+          "pases_precisos": 98
+        },
+        "ataque": {
+          "toques": 109,
+          "toques_area": 0,
+          "pases_ultimo_tercio": 14,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 4,
+          "entradas": 0,
+          "interceptaciones": 1,
+          "recuperaciones": 7,
+          "despejes": 2,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 1,
+          "perdidos": 2,
+          "terrestres": 0,
+          "aereos": 1,
+          "faltas": 1
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Renato Veiga",
+        "id": 336671,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "13",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 5,
+          "pases_precisos": 88
+        },
+        "ataque": {
+          "toques": 103,
+          "toques_area": 0,
+          "regates": 0,
+          "pases_ultimo_tercio": 12,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 5,
+          "entradas": 2,
+          "interceptaciones": 0,
+          "recuperaciones": 4,
+          "despejes": 3,
+          "regateado": 1
+        },
+        "duelos": {
+          "ganados": 4,
+          "perdidos": 4,
+          "terrestres": 3,
+          "aereos": 1,
+          "faltas": 1,
+          "faltas_recibidas": 1
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Nuno Mendes",
+        "id": 263482,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "25",
+        "min": 72,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 2,
+          "pases_precisos": 62
+        },
+        "ataque": {
+          "toques": 88,
+          "toques_area": 6,
+          "regates": 1,
+          "pases_ultimo_tercio": 6,
+          "perdida_balon": 1
+        },
+        "defensa": {
+          "acc_defensivas": 2,
+          "entradas": 1,
+          "interceptaciones": 0,
+          "recuperaciones": 1,
+          "despejes": 1,
+          "regateado": 3
+        },
+        "duelos": {
+          "ganados": 6,
+          "perdidos": 7,
+          "terrestres": 5,
+          "aereos": 1,
+          "faltas": 0,
+          "faltas_recibidas": 3
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "João Neves",
+        "id": 335051,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": true,
+        "num": "15",
+        "min": 90,
+        "goles": 1,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "tiros_totales": 1,
+          "disparos_puerta": 1,
+          "oport_creadas": 1,
+          "acc_defensivas": 2,
+          "pases_precisos": 87
+        },
+        "ataque": {
+          "toques": 97,
+          "toques_area": 3,
+          "pases_ultimo_tercio": 10,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 2,
+          "entradas": 1,
+          "interceptaciones": 1,
+          "recuperaciones": 4,
+          "despejes": 0,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 3,
+          "perdidos": 1,
+          "terrestres": 2,
+          "aereos": 1,
+          "faltas": 0,
+          "faltas_recibidas": 1
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Vitinha",
+        "id": 128384,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "23",
+        "min": 83,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 1,
+          "pases_precisos": 121
+        },
+        "ataque": {
+          "toques": 134,
+          "toques_area": 0,
+          "regates": 1,
+          "pases_ultimo_tercio": 23,
+          "perdida_balon": 1
+        },
+        "defensa": {
+          "acc_defensivas": 1,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 4,
+          "despejes": 0,
+          "regateado": 1
+        },
+        "duelos": {
+          "ganados": 1,
+          "perdidos": 3,
+          "terrestres": 1,
+          "aereos": 0,
+          "faltas": 1
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Bernardo Silva",
+        "id": 636,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "10",
+        "min": 46,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": true,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 1,
+          "pases_precisos": 17
+        },
+        "ataque": {
+          "toques": 23,
+          "toques_area": 0,
+          "pases_ultimo_tercio": 4,
+          "perdida_balon": 2
+        },
+        "defensa": {
+          "acc_defensivas": 1,
+          "entradas": 1,
+          "interceptaciones": 0,
+          "recuperaciones": 1,
+          "despejes": 0,
+          "regateado": 1
+        },
+        "duelos": {
+          "ganados": 1,
+          "perdidos": 4,
+          "terrestres": 1,
+          "aereos": 0,
+          "faltas": 1
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Bruno Fernandes",
+        "id": 1485,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "8",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "tiros_totales": 2,
+          "disparos_puerta": 0,
+          "oport_creadas": 1,
+          "acc_defensivas": 3,
+          "pases_precisos": 67
+        },
+        "ataque": {
+          "toques": 96,
+          "toques_area": 2,
+          "pases_ultimo_tercio": 15,
+          "perdida_balon": 1
+        },
+        "defensa": {
+          "acc_defensivas": 3,
+          "entradas": 3,
+          "interceptaciones": 0,
+          "recuperaciones": 1,
+          "despejes": 0,
+          "bloqueos": 1,
+          "regateado": 1
+        },
+        "duelos": {
+          "ganados": 7,
+          "perdidos": 3,
+          "terrestres": 5,
+          "aereos": 2,
+          "faltas": 1,
+          "faltas_recibidas": 2
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Pedro Neto",
+        "id": 1864,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "18",
+        "min": 71,
+        "goles": 0,
+        "asist": 1,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 1,
+          "acc_defensivas": 1,
+          "pases_precisos": 39
+        },
+        "ataque": {
+          "toques": 54,
+          "toques_area": 3,
+          "regates": 0,
+          "pases_ultimo_tercio": 2,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 1,
+          "entradas": 1,
+          "interceptaciones": 0,
+          "recuperaciones": 1,
+          "despejes": 0,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 2,
+          "perdidos": 2,
+          "terrestres": 1,
+          "aereos": 1,
+          "faltas": 0,
+          "faltas_recibidas": 1
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Cristiano Ronaldo",
+        "id": 874,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "7",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "tiros_totales": 3,
+          "disparos_puerta": 0,
+          "oport_creadas": 0,
+          "acc_defensivas": 0,
+          "pases_precisos": 19
+        },
+        "ataque": {
+          "toques": 25,
+          "toques_area": 5,
+          "pases_ultimo_tercio": 1,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 0,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 1,
+          "despejes": 0,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 2,
+          "perdidos": 1,
+          "aereos": 2,
+          "faltas": 0
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Francisco Conceição",
+        "id": 161585,
+        "tipo": "suplente",
+        "portero": false,
+        "mvp": false,
+        "num": "",
+        "min": 44,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "tiros_totales": 1,
+          "disparos_puerta": 0,
+          "oport_creadas": 2,
+          "acc_defensivas": 1,
+          "pases_precisos": 25
+        },
+        "ataque": {
+          "toques": 37,
+          "toques_area": 5,
+          "regates": 0,
+          "perdida_balon": 2
+        },
+        "defensa": {
+          "acc_defensivas": 1,
+          "entradas": 1,
+          "interceptaciones": 0,
+          "recuperaciones": 2,
+          "despejes": 0,
+          "bloqueos": 1,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 1,
+          "perdidos": 4,
+          "terrestres": 1,
+          "aereos": 0,
+          "faltas": 1
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Rafael Leão",
+        "id": 22236,
+        "tipo": "suplente",
+        "portero": false,
+        "mvp": false,
+        "num": "",
+        "min": 19,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 1,
+          "acc_defensivas": 0,
+          "pases_precisos": 9
+        },
+        "ataque": {
+          "toques": 14,
+          "toques_area": 1,
+          "regates": 0,
+          "pases_ultimo_tercio": 1,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 0,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 0,
+          "despejes": 0,
+          "regateado": 0
+        },
+        "duelos": {
+          "perdidos": 2,
+          "terrestres": 0,
+          "aereos": 0,
+          "faltas": 0
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Nélson Semedo",
+        "id": 130,
+        "tipo": "suplente",
+        "portero": false,
+        "mvp": false,
+        "num": "",
+        "min": 18,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": true,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 0,
+          "pases_precisos": 13
+        },
+        "ataque": {
+          "toques": 19,
+          "toques_area": 2,
+          "regates": 1,
+          "pases_ultimo_tercio": 5,
+          "perdida_balon": 1
+        },
+        "defensa": {
+          "acc_defensivas": 0,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 0,
+          "despejes": 0,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 1,
+          "perdidos": 2,
+          "terrestres": 1,
+          "aereos": 0,
+          "faltas": 1
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Gonçalo Ramos",
+        "id": 41585,
+        "tipo": "suplente",
+        "portero": false,
+        "mvp": false,
+        "num": "",
+        "min": 7,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 0,
+          "pases_precisos": 2
+        },
+        "ataque": {
+          "toques": 3,
+          "toques_area": 0,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 0,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 0,
+          "despejes": 0,
+          "regateado": 0
+        },
+        "duelos": {
+          "aereos": 0,
+          "faltas": 0
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Roberto Martinez",
+        "id": 48,
+        "tipo": "dt",
+        "portero": false,
+        "mvp": false,
+        "num": "",
+        "min": null,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": null,
+        "ataque": null,
+        "defensa": null,
+        "duelos": null,
+        "portero_stats": null
+      }
+    ],
+    "drcongo": [
+      {
+        "nombre": "Lionel Mpasi Nzau",
+        "id": 24012,
+        "tipo": "titular",
+        "portero": true,
+        "mvp": false,
+        "num": "1",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "acc_defensivas": 2,
+          "pases_precisos": 9
+        },
+        "ataque": {
+          "toques": 35,
+          "pases_ultimo_tercio": 8
+        },
+        "defensa": {
+          "acc_defensivas": 2,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 7,
+          "despejes": 2
+        },
+        "duelos": {
+          "faltas": 0
+        },
+        "portero_stats": {
+          "paradas": 0,
+          "goles_contra": 1,
+          "goles_evitados": -0.47
+        }
+      },
+      {
+        "nombre": "Aaron Wan-Bissaka",
+        "id": 18846,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "2",
+        "min": 85,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 10,
+          "pases_precisos": 17
+        },
+        "ataque": {
+          "toques": 43,
+          "toques_area": 0,
+          "regates": 1,
+          "pases_ultimo_tercio": 4,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 10,
+          "entradas": 2,
+          "interceptaciones": 1,
+          "recuperaciones": 5,
+          "despejes": 7,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 4,
+          "perdidos": 4,
+          "terrestres": 3,
+          "aereos": 1,
+          "faltas": 1
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Chancel Mbemba",
+        "id": 375,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "22",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": true,
+        "roja": false,
+        "top": {
+          "oport_creadas": 1,
+          "acc_defensivas": 9,
+          "pases_precisos": 22
+        },
+        "ataque": {
+          "toques": 44,
+          "toques_area": 0,
+          "pases_ultimo_tercio": 6,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 9,
+          "entradas": 2,
+          "interceptaciones": 1,
+          "recuperaciones": 4,
+          "despejes": 5,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 2,
+          "perdidos": 2,
+          "terrestres": 2,
+          "aereos": 0,
+          "faltas": 1
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Axel Tuanzebe",
+        "id": 19182,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "4",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 7,
+          "pases_precisos": 13
+        },
+        "ataque": {
+          "toques": 25,
+          "toques_area": 0,
+          "pases_ultimo_tercio": 2,
+          "perdida_balon": 1
+        },
+        "defensa": {
+          "acc_defensivas": 7,
+          "entradas": 1,
+          "interceptaciones": 1,
+          "recuperaciones": 2,
+          "despejes": 5,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 1,
+          "perdidos": 3,
+          "terrestres": 1,
+          "aereos": 0,
+          "faltas": 0
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Steve Kapuadi",
+        "id": 199767,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "3",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "tiros_totales": 1,
+          "disparos_puerta": 0,
+          "oport_creadas": 1,
+          "acc_defensivas": 4,
+          "pases_precisos": 18
+        },
+        "ataque": {
+          "toques": 28,
+          "toques_area": 1,
+          "pases_ultimo_tercio": 2,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 4,
+          "entradas": 1,
+          "interceptaciones": 0,
+          "recuperaciones": 1,
+          "despejes": 3,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 2,
+          "terrestres": 1,
+          "aereos": 1,
+          "faltas": 0
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Arthur Masuaku",
+        "id": 18816,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "26",
+        "min": 74,
+        "goles": 0,
+        "asist": 1,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 2,
+          "grandes_oport": 1,
+          "acc_defensivas": 3,
+          "pases_precisos": 13
+        },
+        "ataque": {
+          "toques": 34,
+          "toques_area": 0,
+          "regates": 1,
+          "pases_ultimo_tercio": 1,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 3,
+          "entradas": 1,
+          "interceptaciones": 0,
+          "recuperaciones": 3,
+          "despejes": 2,
+          "regateado": 1
+        },
+        "duelos": {
+          "ganados": 3,
+          "perdidos": 3,
+          "terrestres": 3,
+          "aereos": 0,
+          "faltas": 0,
+          "faltas_recibidas": 1
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Ngal'ayel Mukau",
+        "id": 375598,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "6",
+        "min": 57,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 3,
+          "pases_precisos": 18
+        },
+        "ataque": {
+          "toques": 33,
+          "toques_area": 2,
+          "regates": 1,
+          "pases_ultimo_tercio": 1,
+          "perdida_balon": 2
+        },
+        "defensa": {
+          "acc_defensivas": 3,
+          "entradas": 0,
+          "interceptaciones": 2,
+          "recuperaciones": 2,
+          "despejes": 1,
+          "regateado": 1
+        },
+        "duelos": {
+          "ganados": 1,
+          "perdidos": 3,
+          "terrestres": 1,
+          "aereos": 0,
+          "faltas": 0
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Samuel Moutoussamy",
+        "id": 21101,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "8",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "tiros_totales": 2,
+          "disparos_puerta": 0,
+          "oport_creadas": 0,
+          "acc_defensivas": 2,
+          "pases_precisos": 21
+        },
+        "ataque": {
+          "toques": 33,
+          "toques_area": 0,
+          "regates": 1,
+          "pases_ultimo_tercio": 3,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 2,
+          "entradas": 2,
+          "interceptaciones": 0,
+          "recuperaciones": 4,
+          "despejes": 0,
+          "bloqueos": 2,
+          "regateado": 1
+        },
+        "duelos": {
+          "ganados": 4,
+          "perdidos": 5,
+          "terrestres": 4,
+          "aereos": 0,
+          "faltas": 2,
+          "faltas_recibidas": 1
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Edo Kayembe",
+        "id": 1424,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "25",
+        "min": 74,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "tiros_totales": 1,
+          "disparos_puerta": 1,
+          "oport_creadas": 1,
+          "acc_defensivas": 2,
+          "pases_precisos": 15
+        },
+        "ataque": {
+          "toques": 30,
+          "toques_area": 1,
+          "regates": 2,
+          "pases_ultimo_tercio": 2,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 2,
+          "entradas": 2,
+          "interceptaciones": 0,
+          "recuperaciones": 5,
+          "despejes": 0,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 7,
+          "perdidos": 2,
+          "terrestres": 6,
+          "aereos": 1,
+          "faltas": 2,
+          "faltas_recibidas": 2
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Yoane Wissa",
+        "id": 20649,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "20",
+        "min": 90,
+        "goles": 1,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "tiros_totales": 2,
+          "disparos_puerta": 1,
+          "oport_creadas": 0,
+          "acc_defensivas": 2,
+          "pases_precisos": 16
+        },
+        "ataque": {
+          "toques": 35,
+          "toques_area": 3,
+          "regates": 0,
+          "pases_ultimo_tercio": 2,
+          "perdida_balon": 1
+        },
+        "defensa": {
+          "acc_defensivas": 2,
+          "entradas": 1,
+          "interceptaciones": 0,
+          "recuperaciones": 2,
+          "despejes": 1,
+          "regateado": 2
+        },
+        "duelos": {
+          "ganados": 4,
+          "perdidos": 7,
+          "terrestres": 4,
+          "aereos": 0,
+          "faltas": 3,
+          "faltas_recibidas": 3
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Cédric Bakambu",
+        "id": 3033,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "17",
+        "min": 85,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "tiros_totales": 2,
+          "disparos_puerta": 0,
+          "oport_creadas": 1,
+          "acc_defensivas": 0,
+          "pases_precisos": 10
+        },
+        "ataque": {
+          "toques": 24,
+          "toques_area": 1,
+          "regates": 2,
+          "pases_ultimo_tercio": 1,
+          "perdida_balon": 1
+        },
+        "defensa": {
+          "acc_defensivas": 0,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 2,
+          "despejes": 0,
+          "bloqueos": 1,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 6,
+          "perdidos": 3,
+          "terrestres": 3,
+          "aereos": 3,
+          "faltas": 1,
+          "faltas_recibidas": 1
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Noah Sadiki",
+        "id": 365331,
+        "tipo": "suplente",
+        "portero": false,
+        "mvp": false,
+        "num": "",
+        "min": 33,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 1,
+          "acc_defensivas": 2,
+          "pases_precisos": 7
+        },
+        "ataque": {
+          "toques": 13,
+          "toques_area": 1,
+          "regates": 0,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 2,
+          "entradas": 2,
+          "interceptaciones": 0,
+          "recuperaciones": 0,
+          "despejes": 0,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 2,
+          "perdidos": 1,
+          "terrestres": 2,
+          "aereos": 0,
+          "faltas": 0
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Charles Pickel",
+        "id": 48555,
+        "tipo": "suplente",
+        "portero": false,
+        "mvp": false,
+        "num": "",
+        "min": 16,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 0,
+          "pases_precisos": 8
+        },
+        "ataque": {
+          "toques": 10,
+          "toques_area": 0,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 0,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 0,
+          "despejes": 0,
+          "regateado": 0
+        },
+        "duelos": {
+          "aereos": 0,
+          "faltas": 0
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Edo Kayembe",
+        "id": 21098,
+        "tipo": "suplente",
+        "portero": false,
+        "mvp": false,
+        "num": "",
+        "min": 16,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "tiros_totales": 1,
+          "disparos_puerta": 1,
+          "oport_creadas": 1,
+          "acc_defensivas": 2,
+          "pases_precisos": 15
+        },
+        "ataque": {
+          "toques": 30,
+          "toques_area": 1,
+          "regates": 2,
+          "pases_ultimo_tercio": 2,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 2,
+          "entradas": 2,
+          "interceptaciones": 0,
+          "recuperaciones": 5,
+          "despejes": 0,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 7,
+          "perdidos": 2,
+          "terrestres": 6,
+          "aereos": 1,
+          "faltas": 2,
+          "faltas_recibidas": 2
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Gédéon Kalulu",
+        "id": 24245,
+        "tipo": "suplente",
+        "portero": false,
+        "mvp": false,
+        "num": "",
+        "min": 5,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 1,
+          "pases_precisos": 4
+        },
+        "ataque": {
+          "toques": 8,
+          "toques_area": 0,
+          "pases_ultimo_tercio": 1,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 1,
+          "entradas": 1,
+          "interceptaciones": 0,
+          "recuperaciones": 0,
+          "despejes": 0,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 2,
+          "terrestres": 1,
+          "aereos": 1,
+          "faltas": 0
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Simon Banza",
+        "id": 20674,
+        "tipo": "suplente",
+        "portero": false,
+        "mvp": false,
+        "num": "",
+        "min": 5,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 0,
+          "pases_precisos": 1
+        },
+        "ataque": {
+          "toques": 5,
+          "toques_area": 0,
+          "regates": 0,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 0,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 0,
+          "despejes": 0,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 1,
+          "perdidos": 1,
+          "terrestres": 0,
+          "aereos": 1,
+          "faltas": 0
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Sebastien Desabre",
+        "id": 370,
+        "tipo": "dt",
+        "portero": false,
+        "mvp": false,
+        "num": "",
+        "min": null,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": null,
+        "ataque": null,
+        "defensa": null,
+        "duelos": null,
+        "portero_stats": null
+      }
+    ]
+  }
+}
