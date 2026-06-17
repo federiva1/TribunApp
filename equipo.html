@@ -2301,7 +2301,7 @@ async function showScoresResults() {
     data.forEach(row => { Object.entries(row.puntajes || {}).forEach(([num, val]) => { totals[num] = (totals[num] || 0) + Number(val); countMap[num] = (countMap[num] || 0) + 1; }); });
     const sqR = window._squadPuntajes || squad;
     const results = Object.keys(totals)
-      .filter(num => String(num) !== '0')   // excluir DT (num 0) de votos viejos
+      .filter(num => num !== '' && num != null && String(num) !== '0')   // excluir DT (num 0 / vacío) de votos viejos
       .map(num => {
         const p = sqR.find(s => String(s.num) === String(num));
         return { num: Number(num), name: p?.name || `#${num}`, fid: p?.fid || 0, foto: p?.foto || (p?.fid ? FOTO(p.fid) : ''), avg: totals[num] / countMap[num] };
