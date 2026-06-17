@@ -2300,10 +2300,12 @@ async function showScoresResults() {
     const totals = {}, countMap = {};
     data.forEach(row => { Object.entries(row.puntajes || {}).forEach(([num, val]) => { totals[num] = (totals[num] || 0) + Number(val); countMap[num] = (countMap[num] || 0) + 1; }); });
     const sqR = window._squadPuntajes || squad;
-    const results = Object.keys(totals).map(num => {
-      const p = sqR.find(s => String(s.num) === String(num));
-      return { num: Number(num), name: p?.name || `#${num}`, fid: p?.fid || 0, foto: p?.foto || (p?.fid ? FOTO(p.fid) : ''), avg: totals[num] / countMap[num] };
-    }).sort((a, b) => b.avg - a.avg);
+    const results = Object.keys(totals)
+      .filter(num => String(num) !== '0')   // excluir DT (num 0) de votos viejos
+      .map(num => {
+        const p = sqR.find(s => String(s.num) === String(num));
+        return { num: Number(num), name: p?.name || `#${num}`, fid: p?.fid || 0, foto: p?.foto || (p?.fid ? FOTO(p.fid) : ''), avg: totals[num] / countMap[num] };
+      }).sort((a, b) => b.avg - a.avg);
 
     list.innerHTML = '';
     results.forEach((p, rank) => {
