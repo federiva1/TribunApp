@@ -472,23 +472,33 @@ def process_fixture(fixture_id: int, output_id: str, local_slug: str,
 
 
 def auto_mode(force: bool):
-    """Procesa todos los partidos FT en mundial.json que tienen api_id y stats_id."""
+    """Procesa todos los partidos FT en mundial.json que tienen api_id.
+    Si stats_id es null, lo deriva de {local_slug}-{visitante_slug} y lo guarda en mundial.json."""
     mundial = json.loads(MUNDIAL_JSON.read_text(encoding='utf-8'))
     pending = []
+    mundial_changed = False
     for m in mundial:
         if not m.get('status', {}).get('finished'):
             continue
-        api_id   = m.get('api_id')
-        stats_id = m.get('stats_id')
-        if not api_id or not stats_id:
+        api_id = m.get('api_id')
+        if not api_id:
             continue
+        local_slug     = m.get('home', {}).get('slug') or name_to_slug(m.get('home', {}).get('name', ''))
+        visitante_slug = m.get('away', {}).get('slug') or name_to_slug(m.get('away', {}).get('name', ''))
+        stats_id = m.get('stats_id') or f'{local_slug}-{visitante_slug}'
+        # Grabar stats_id derivado si faltaba
+        if not m.get('stats_id'):
+            m['stats_id'] = stats_id
+            mundial_changed = True
         out_file = PARTIDOS_DIR / f'{stats_id}.json'
         if out_file.exists() and not force:
             print(f'  Saltando {stats_id} (ya existe, usa --force para sobreescribir)')
             continue
-        local_slug    = m.get('home', {}).get('slug') or name_to_slug(m.get('home', {}).get('name', ''))
-        visitante_slug = m.get('away', {}).get('slug') or name_to_slug(m.get('away', {}).get('name', ''))
         pending.append((int(api_id), stats_id, local_slug, visitante_slug))
+
+    if mundial_changed:
+        MUNDIAL_JSON.write_text(json.dumps(mundial, ensure_ascii=False, indent=2), encoding='utf-8')
+        print('  mundial.json actualizado con stats_id derivados.')
 
     if not pending:
         print('Nada que procesar.')
