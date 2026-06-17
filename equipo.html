@@ -2351,7 +2351,8 @@ async function showScoresResults() {
       const nameEl = document.createElement('div'); nameEl.style.cssText = 'font-size:13px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
       if (esDT) { const tag = document.createElement('span'); tag.textContent = 'DT '; tag.style.cssText = 'color:var(--acento-light);font-weight:700;'; nameEl.appendChild(tag); }
       const nameTxt = document.createElement('span'); nameTxt.textContent = apellido(p.name); nameEl.appendChild(nameTxt);
-      const vEl = document.createElement('span'); vEl.style.cssText = 'color:rgba(255,255,255,0.3);font-size:11px;'; vEl.textContent = ` · ${p.votes} voto${p.votes !== 1 ? 's' : ''}`; nameEl.appendChild(vEl);
+      // El DT ya no es votable: su conteo no es comparable con el de los jugadores, no se muestra
+      if (!esDT) { const vEl = document.createElement('span'); vEl.style.cssText = 'color:rgba(255,255,255,0.3);font-size:11px;'; vEl.textContent = ` · ${p.votes} voto${p.votes !== 1 ? 's' : ''}`; nameEl.appendChild(vEl); }
       const barWrap = document.createElement('div'); barWrap.style.cssText = 'background:rgba(255,255,255,0.07);border-radius:4px;height:5px;overflow:hidden;margin-top:4px;';
       const bar = document.createElement('div'); bar.style.cssText = `height:100%;background:var(--acento);border-radius:4px;width:${p.avg * 10}%;transition:width 0.6s;`;
       barWrap.appendChild(bar); info.appendChild(nameEl); info.appendChild(barWrap);
