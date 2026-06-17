@@ -42,3 +42,27 @@ Si el usuario pasó argumentos en `$ARGUMENTS`, son una pista de qué partido es
 
 - `data/partidos/` puede tener archivos sin trackear de clubes argentinos / fotos que **no** son parte de este flujo — agregá al commit solo los archivos de este pipeline (los 4 paths del paso 8), no uses `git add -A`.
 - La foto de cada jugador usa el `fid` del plantel (`data/planteles/{slug}.json`), no el `id` del partido. El frontend ya resuelve esto por nombre.
+
+## CSS de puntajes en `equipo.html` — estado correcto
+
+El layout de cada fila de jugador en la sección puntajes (`#scores-list`) debe verse así en mobile:
+
+```
+[ foto ]  Apellido / #num
+[ 1 ][ 2 ][ 3 ][ 4 ][ 5 ][ 6 ][ 7 ][ 8 ][ 9 ][ 10 ][ S/P ]
+```
+
+Los botones van en la **segunda fila** (debajo del nombre), no al lado. Si ves solo `#num` sin nombre, el CSS está mal. El CSS correcto en `equipo.html`:
+
+```css
+.score-player-row {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px;
+  /* flex-wrap: wrap permite que los botones bajen a la segunda fila */
+}
+.score-player-info { flex: 1; min-width: 80px; }
+/* min-width: 80px garantiza espacio para el nombre aunque los botones sean muchos */
+.score-btns { display: flex; gap: 3px; flex-wrap: wrap; width: 100%; justify-content: flex-start; }
+/* width: 100% fuerza a los botones a ocupar toda la fila propia */
+```
+
+El bug que se corrigió: `.score-player-info` tenía `flex: 1` (flex-basis: 0) sin `min-width`, y los 11 botones (~316px) consumían todo el ancho disponible en mobile, dejando el nombre con 0px.
