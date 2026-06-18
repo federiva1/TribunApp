@@ -954,7 +954,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 <!-- ===== OVERLAY: ESTADÍSTICAS ===== -->
 <div class="overlay-screen" id="estadisticas-screen">
 <div class="overlay-inner">
-  <button class="back-btn" onclick="closeSection('estadisticas')">← Volver</button>
+  <button class="back-btn" onclick="new URLSearchParams(location.search).get('s')==='estadisticas' ? (location.href='estadisticas-torneo.html') : closeSection('estadisticas')">← Volver</button>
   <div class="screen-title">ESTADÍSTICAS</div>
   <div class="screen-sub" id="stats-sub">Rendimiento del equipo</div>
   <div id="stats-partidos-lista">
