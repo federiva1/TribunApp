@@ -31,40 +31,43 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 #home-app { background: var(--dark2); max-width: 480px; margin: 0 auto; min-height: 100vh; position: relative; }
 
 /* ===== HEADER ===== */
-.club-header {
-  display: flex; align-items: center; gap: 12px;
-  padding: 14px 14px 12px;
-  background: linear-gradient(180deg, rgba(21,101,192,0.2) 0%, transparent 100%);
+#site-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 20px 10px;
+  background: linear-gradient(180deg, rgba(21,101,192,0.15) 0%, transparent 100%);
   border-bottom: 1px solid rgba(255,255,255,0.07);
-  position: sticky; top: 0; z-index: 20; backdrop-filter: blur(10px);
+  position: sticky; top: 0; z-index: 50;
+  backdrop-filter: blur(10px); gap: 12px;
 }
-.club-header-back {
-  font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 1px;
-  color: rgba(255,255,255,0.5); cursor: pointer; border: none; background: none;
-  padding: 0; text-decoration: none; display: flex; align-items: center; gap: 4px;
-  transition: color 0.2s; flex-shrink: 0;
+.logo-wrap { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.header-chip {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--gold); background: rgba(245,197,24,0.12);
+  border: 1px solid rgba(245,197,24,0.3); border-radius: 6px; padding: 3px 8px;
 }
-.club-header-back:hover { color: #fff; }
-.club-header-escudo { width: 42px; height: 42px; object-fit: contain; filter: drop-shadow(0 2px 8px rgba(0,0,0,0.6)); }
-.club-header-info { flex: 1; min-width: 0; }
-.club-header-nombre {
-  font-family: 'Bebas Neue', sans-serif; font-size: 21px; letter-spacing: 2px;
-  color: #fff; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+.header-actions { display: flex; gap: 8px; align-items: center; }
+.header-pill {
+  display: flex; align-items: center; gap: 7px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px; padding: 7px 13px;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 0.5px;
+  color: rgba(255,255,255,0.85); cursor: pointer; text-decoration: none;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
 }
-.club-header-sub {
-  font-family: 'Barlow Condensed', sans-serif; font-size: 10px;
-  letter-spacing: 1.5px; color: rgba(255,255,255,0.35); margin-top: 2px;
+.header-pill svg { width: 15px; height: 15px; flex-shrink: 0; }
+.header-pill:hover { background: rgba(21,101,192,0.18); border-color: rgba(21,101,192,0.45); color: #fff; }
+.header-pill.primary { background: rgba(21,101,192,0.18); border-color: rgba(21,101,192,0.45); color: #fff; }
+.header-pill.primary:hover { background: rgba(21,101,192,0.3); }
+.header-pill-label { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 0.5px; }
+.header-pill-jugar { background: linear-gradient(135deg,#1565c0,#0d47a1); border-color: #1976d2; color: #fff; }
+.header-pill-jugar:hover { background: linear-gradient(135deg,#1976d2,#1565c0); }
+@media (max-width: 560px) {
+  .header-pill-label { display: none; }
+  .header-pill { width: 36px; height: 36px; padding: 0; gap: 0; justify-content: center; }
+  .header-actions { gap: 6px; }
 }
-.club-header-pills {
-  display: flex; flex-direction: column; gap: 5px; flex-shrink: 0; align-items: flex-end;
-}
-.club-header-pill {
-  font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600;
-  letter-spacing: 1.2px; text-transform: uppercase; padding: 4px 9px; border-radius: 4px;
-  text-decoration: none; transition: background 0.15s; white-space: nowrap;
-  background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.6);
-}
-.club-header-pill:hover { background: rgba(255,255,255,0.13); color: #fff; }
+@media (max-width: 430px) { .header-chip { display: none; } }
 
 /* ===== HERO PANELS ===== */
 .hero-panels { display: flex; flex-direction: column; }
@@ -768,15 +771,38 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 <div id="home-screen">
 <div id="home-app">
 
-  <header class="club-header">
-    <a class="club-header-back" href="index.html">← Inicio</a>
-    <img class="club-header-escudo" id="club-escudo" src="" alt="">
-    <div class="club-header-info">
-      <div class="club-header-nombre" id="club-nombre">Cargando...</div>
-      <div class="club-header-sub" id="club-sub"></div>
+  <header id="site-header">
+    <a class="logo-wrap" href="index.html">
+      <img src="Logo.png" alt="TribunApp" style="height:56px;object-fit:contain;">
+      <span class="header-chip">Mundial 2026</span>
+    </a>
+    <div class="header-actions">
+      <a class="header-pill" href="fixture.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span class="header-pill-label">Fixture</span>
+      </a>
+      <a class="header-pill" href="estadisticas-torneo.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <span class="header-pill-label">Estadísticas</span>
+      </a>
+      <a class="header-pill" href="estadisticas-tribunapp.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span class="header-pill-label">TribunApp</span>
+      </a>
+      <a class="header-pill header-pill-jugar" href="index.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        <span class="header-pill-label">Jugar</span>
+      </a>
+      <button id="auth-header-btn" onclick="window._authOpenModal()"></button>
     </div>
-    <button id="auth-header-btn" onclick="window._authOpenModal()"></button>
   </header>
+  <div id="team-context-bar" style="display:flex;align-items:center;gap:10px;padding:10px 16px 8px;border-bottom:1px solid rgba(255,255,255,0.06);background:var(--dark2);">
+    <img id="club-escudo" src="" alt="" style="width:32px;height:32px;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5));">
+    <div>
+      <div id="club-nombre" style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#fff;line-height:1;">Cargando...</div>
+      <div id="club-sub" style="font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1.5px;color:rgba(255,255,255,0.35);margin-top:2px;text-transform:uppercase;"></div>
+    </div>
+  </div>
 
   <!-- HERO PANELS -->
   <div class="hero-panels" id="hero-panels">

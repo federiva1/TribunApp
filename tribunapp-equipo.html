@@ -21,20 +21,43 @@
 html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark);color:#fff;}
 #app{background:var(--dark2);max-width:480px;margin:0 auto;min-height:100vh;}
 
-.header{
-  display:flex;align-items:center;gap:12px;padding:14px 14px 12px;
+#site-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 20px 10px;
+  background:linear-gradient(180deg,rgba(21,101,192,0.15) 0%,transparent 100%);
   border-bottom:1px solid rgba(255,255,255,.07);
-  position:sticky;top:0;z-index:20;backdrop-filter:blur(10px);background-color:var(--dark2);
+  position:sticky;top:0;z-index:50;
+  backdrop-filter:blur(10px);gap:12px;
 }
-.header-back{
-  font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:1px;
-  color:rgba(255,255,255,.5);text-decoration:none;display:flex;align-items:center;gap:4px;
+.logo-wrap{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.header-chip{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--gold);background:rgba(245,197,24,0.12);
+  border:1px solid rgba(245,197,24,0.3);border-radius:6px;padding:3px 8px;
 }
-.header-back:hover{color:#fff;}
-.header-info{flex:1;display:flex;align-items:center;gap:10px;}
-.header-escudo{width:32px;height:32px;object-fit:contain;}
-.header-nombre{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;}
-.header-sub{font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1.5px;color:rgba(255,255,255,.35);}
+.header-actions{display:flex;gap:8px;align-items:center;}
+.header-pill{
+  display:flex;align-items:center;gap:7px;
+  background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);
+  border-radius:10px;padding:7px 13px;
+  font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:0.5px;
+  color:rgba(255,255,255,0.85);cursor:pointer;text-decoration:none;
+  transition:background .2s,color .2s,border-color .2s;
+}
+.header-pill svg{width:15px;height:15px;flex-shrink:0;}
+.header-pill:hover{background:rgba(21,101,192,0.18);border-color:rgba(21,101,192,0.45);color:#fff;}
+.header-pill.primary{background:rgba(21,101,192,0.18);border-color:rgba(21,101,192,0.45);color:#fff;}
+.header-pill.primary:hover{background:rgba(21,101,192,0.3);}
+.header-pill-label{font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:0.5px;}
+.header-pill-jugar{background:linear-gradient(135deg,#1565c0,#0d47a1);border-color:#1976d2;color:#fff;}
+.header-pill-jugar:hover{background:linear-gradient(135deg,#1976d2,#1565c0);}
+@media(max-width:560px){
+  .header-pill-label{display:none;}
+  .header-pill{width:36px;height:36px;padding:0;gap:0;justify-content:center;}
+  .header-actions{gap:6px;}
+}
+@media(max-width:430px){.header-chip{display:none;}}
 
 /* MATCH BANNER */
 .match-banner{
@@ -116,14 +139,35 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
 </head>
 <body>
 <div id="app">
-  <div class="header">
-    <a class="header-back" href="estadisticas-tribunapp.html">&#8592; Volver</a>
-    <div class="header-info">
-      <img class="header-escudo" id="h-escudo" src="" alt="">
-      <div>
-        <div class="header-nombre" id="h-nombre"></div>
-        <div class="header-sub">TRIBUNAPP &middot; MUNDIAL 2026</div>
-      </div>
+  <header id="site-header">
+    <a class="logo-wrap" href="index.html">
+      <img src="Logo.png" alt="TribunApp" style="height:56px;object-fit:contain;">
+      <span class="header-chip">Mundial 2026</span>
+    </a>
+    <div class="header-actions">
+      <a class="header-pill" href="fixture.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span class="header-pill-label">Fixture</span>
+      </a>
+      <a class="header-pill" href="estadisticas-torneo.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <span class="header-pill-label">Estadísticas</span>
+      </a>
+      <a class="header-pill primary" href="estadisticas-tribunapp.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span class="header-pill-label">TribunApp</span>
+      </a>
+      <a class="header-pill header-pill-jugar" href="index.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        <span class="header-pill-label">Jugar</span>
+      </a>
+    </div>
+  </header>
+  <div style="display:flex;align-items:center;gap:10px;padding:10px 16px 8px;border-bottom:1px solid rgba(255,255,255,0.06);background:var(--dark2,#0d111f);">
+    <img id="h-escudo" src="" alt="" style="width:28px;height:28px;object-fit:contain;">
+    <div>
+      <div id="h-nombre" style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#fff;line-height:1;"></div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:9px;letter-spacing:1.5px;color:rgba(255,255,255,.35);text-transform:uppercase;">TribunApp · Mundial 2026</div>
     </div>
   </div>
 
