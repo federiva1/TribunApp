@@ -27,16 +27,16 @@
 html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: var(--dark); color: #fff; }
 
 /* ===== PANTALLA PRINCIPAL ===== */
-#home-screen { background: var(--dark); padding-top: 60px; }
+#home-screen { background: var(--dark); }
 #home-app { background: var(--dark2); max-width: 480px; margin: 0 auto; min-height: 100vh; position: relative; }
 
 /* ===== HEADER ===== */
 #site-header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 12px 20px 10px;
-  background: rgba(10,14,26,0.97);
+  background: linear-gradient(180deg, rgba(21,101,192,0.15) 0%, transparent 100%);
   border-bottom: 1px solid rgba(255,255,255,0.07);
-  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  position: sticky; top: 0; z-index: 50;
   backdrop-filter: blur(10px); gap: 12px;
 }
 .logo-wrap { display: flex; align-items: center; gap: 10px; text-decoration: none; }
@@ -131,7 +131,6 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .overlay-screen {
   display: none; position: fixed; inset: 0; z-index: 100;
   background: var(--dark); overflow-y: auto;
-  padding-top: 60px;
 }
 .overlay-inner {
   background: var(--dark2); max-width: 480px; margin: 0 auto;
