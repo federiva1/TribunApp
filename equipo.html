@@ -767,42 +767,42 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 </head>
 <body>
 
+<header id="site-header">
+  <a class="logo-wrap" href="index.html">
+    <img src="Logo.png" alt="TribunApp" style="height:56px;object-fit:contain;">
+    <span class="header-chip">Mundial 2026</span>
+  </a>
+  <div class="header-actions">
+    <a class="header-pill" href="fixture.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span class="header-pill-label">Fixture</span>
+    </a>
+    <a class="header-pill" href="estadisticas-torneo.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span class="header-pill-label">Estadísticas</span>
+    </a>
+    <a class="header-pill" href="estadisticas-tribunapp.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span class="header-pill-label">TribunApp</span>
+    </a>
+    <a class="header-pill header-pill-jugar" href="index.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      <span class="header-pill-label">Jugar</span>
+    </a>
+    <button id="auth-header-btn" onclick="window._authOpenModal()"></button>
+  </div>
+</header>
+<div id="team-context-bar" style="display:flex;align-items:center;gap:10px;padding:10px 16px 8px;border-bottom:1px solid rgba(255,255,255,0.06);background:var(--dark2);max-width:480px;margin:0 auto;">
+  <img id="club-escudo" src="" alt="" style="width:32px;height:32px;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5));">
+  <div>
+    <div id="club-nombre" style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#fff;line-height:1;">Cargando...</div>
+    <div id="club-sub" style="font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1.5px;color:rgba(255,255,255,0.35);margin-top:2px;text-transform:uppercase;"></div>
+  </div>
+</div>
+
 <!-- ===== PANTALLA PRINCIPAL ===== -->
 <div id="home-screen">
 <div id="home-app">
-
-  <header id="site-header">
-    <a class="logo-wrap" href="index.html">
-      <img src="Logo.png" alt="TribunApp" style="height:56px;object-fit:contain;">
-      <span class="header-chip">Mundial 2026</span>
-    </a>
-    <div class="header-actions">
-      <a class="header-pill" href="fixture.html">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        <span class="header-pill-label">Fixture</span>
-      </a>
-      <a class="header-pill" href="estadisticas-torneo.html">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-        <span class="header-pill-label">Estadísticas</span>
-      </a>
-      <a class="header-pill" href="estadisticas-tribunapp.html">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        <span class="header-pill-label">TribunApp</span>
-      </a>
-      <a class="header-pill header-pill-jugar" href="index.html">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-        <span class="header-pill-label">Jugar</span>
-      </a>
-      <button id="auth-header-btn" onclick="window._authOpenModal()"></button>
-    </div>
-  </header>
-  <div id="team-context-bar" style="display:flex;align-items:center;gap:10px;padding:10px 16px 8px;border-bottom:1px solid rgba(255,255,255,0.06);background:var(--dark2);">
-    <img id="club-escudo" src="" alt="" style="width:32px;height:32px;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5));">
-    <div>
-      <div id="club-nombre" style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#fff;line-height:1;">Cargando...</div>
-      <div id="club-sub" style="font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1.5px;color:rgba(255,255,255,0.35);margin-top:2px;text-transform:uppercase;"></div>
-    </div>
-  </div>
 
   <!-- HERO PANELS -->
   <div class="hero-panels" id="hero-panels">
