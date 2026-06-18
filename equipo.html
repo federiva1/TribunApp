@@ -792,12 +792,16 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
     <button id="auth-header-btn" onclick="window._authOpenModal()"></button>
   </div>
 </header>
-<div id="team-context-bar" style="display:flex;align-items:center;gap:10px;padding:10px 16px 8px;border-bottom:1px solid rgba(255,255,255,0.06);background:var(--dark2);max-width:480px;margin:0 auto;">
-  <a href="index.html" style="font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:1px;color:rgba(255,255,255,0.5);text-decoration:none;flex-shrink:0;transition:color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.5)'">← Inicio</a>
-  <img id="club-escudo" src="" alt="" style="width:32px;height:32px;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5));">
-  <div>
-    <div id="club-nombre" style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#fff;line-height:1;">Cargando...</div>
-    <div id="club-sub" style="font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1.5px;color:rgba(255,255,255,0.35);margin-top:2px;text-transform:uppercase;"></div>
+<div style="max-width:480px;margin:0 auto;background:var(--dark2);">
+  <div style="padding:8px 16px 0;">
+    <a href="index.html" style="font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:1px;color:rgba(255,255,255,0.5);text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.5)'">← Inicio</a>
+  </div>
+  <div id="team-context-bar" style="display:flex;align-items:center;gap:10px;padding:6px 16px 8px;border-bottom:1px solid rgba(255,255,255,0.06);">
+    <img id="club-escudo" src="" alt="" style="width:32px;height:32px;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5));">
+    <div>
+      <div id="club-nombre" style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#fff;line-height:1;">Cargando...</div>
+      <div id="club-sub" style="font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1.5px;color:rgba(255,255,255,0.35);margin-top:2px;text-transform:uppercase;"></div>
+    </div>
   </div>
 </div>
 
