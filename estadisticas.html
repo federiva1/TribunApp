@@ -576,7 +576,10 @@ async function init(){
   const cLocal = col(p.local);
   const cVisit = col(p.visitante);
 
-  document.getElementById('back-btn').href = `estadisticas-torneo.html`;
+  const backSlug = new URLSearchParams(location.search).get('c');
+  document.getElementById('back-btn').href = backSlug
+    ? `equipo.html?c=${backSlug}&s=estadisticas`
+    : `estadisticas-torneo.html`;
 
   // Header mini
   document.getElementById('h-comp').textContent  = p.competicion.toUpperCase();
