@@ -576,9 +576,7 @@ async function init(){
   const cLocal = col(p.local);
   const cVisit = col(p.visitante);
 
-  // Back btn: si viene de un equipo, vuelve a ese equipo
-  const backSlug = fromSlug || p.local;
-  document.getElementById('back-btn').href = `equipo.html?c=${backSlug}&s=estadisticas`;
+  document.getElementById('back-btn').href = `estadisticas-torneo.html`;
 
   // Header mini
   document.getElementById('h-comp').textContent  = p.competicion.toUpperCase();
