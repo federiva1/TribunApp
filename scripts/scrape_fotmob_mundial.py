@@ -241,7 +241,7 @@ def resolve_fotmob_url(stats_id: str, date_str: str, local_slug: str) -> str:
     print(f'  Buscando URL FotMob (team={fotmob_id}, fecha={date_str})...')
     with sync_playwright() as pw:
         browser = pw.chromium.launch(headless=True)
-        ctx = browser.new_context(user_agent=UA)
+        ctx = browser.new_context(user_agent=UA, ignore_https_errors=True)
         page = ctx.new_page()
         page.goto(f'https://www.fotmob.com/teams/{fotmob_id}/fixtures',
                   wait_until='domcontentloaded', timeout=60000)
@@ -330,7 +330,8 @@ def _fetch_next_data(url: str, headed: bool = False) -> dict:
     with sync_playwright() as pw:
         browser = pw.chromium.launch(headless=not headed, slow_mo=80)
         ctx = browser.new_context(user_agent=UA, locale='es-AR',
-                                  viewport={'width': 1280, 'height': 900})
+                                  viewport={'width': 1280, 'height': 900},
+                                  ignore_https_errors=True)
         page = ctx.new_page()
         page.goto(url, wait_until='domcontentloaded', timeout=60000)
         print('Esperando FotMob...')
