@@ -15,6 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/partido-card.css">
 <style>
 :root {
   --dark:  #0d0d1a;
@@ -425,6 +426,8 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
     <div class="loading-msg">CARGANDO...</div>
   </div>
   <div id="contenido" style="display:none;">
+    <!-- partido en vivo (replicado de fixture.html — se oculta si no hay) -->
+    <div id="live-match" class="live-match" style="display:none;"></div>
     <!-- fase banner -->
     <div class="fase-banner" id="fase-banner">
       <div class="fase-nombre" id="fase-nombre">FASE DE GRUPOS</div>
@@ -767,6 +770,8 @@ function _registrarEquiposModal(equipos) {
   setTimeout(() => waitGroups(15), 500);
 })();
 </script>
+<script src="js/partido-card.js"></script>
+<script>LiveMatch.init();</script>
 <script src="js/ui-help.js"></script>
 </body>
 </html>
