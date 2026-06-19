@@ -1229,8 +1229,9 @@ async function cargar() {
       if (!p.api_id) continue;
       if (p.status?.finished || p.status?.cancelled) continue;
       const utc = p.status?.utcTime ? new Date(p.status.utcTime).getTime() : null;
-      // Incluir si ya debería haber empezado (hasta 3h después del horario previsto)
-      const posiblementeEnCurso = utc && (now >= utc) && (now <= utc + 3 * 60 * 60 * 1000);
+      // Incluir si ya debería haber empezado (hasta 6h después del horario previsto)
+      // 6h cubre: partido (2h) + tiempo extra + margen si el pipeline tarda en correr
+      const posiblementeEnCurso = utc && (now >= utc) && (now <= utc + 6 * 60 * 60 * 1000);
       const yaEnCurso = ['1H','HT','2H','ET','BT','P','SUSP'].includes(p.status?.short);
       if (!posiblementeEnCurso && !yaEnCurso) continue;
       const cardEl = document.querySelector(`[data-api-id="${p.api_id}"]`);
@@ -1342,7 +1343,7 @@ document.addEventListener('visibilitychange', () => {
       if (!p.api_id) continue;
       if (p.status?.finished || p.status?.cancelled) continue;
       const utc = p.status?.utcTime ? new Date(p.status.utcTime).getTime() : null;
-      const posible = utc && (now2 >= utc) && (now2 <= utc + 3 * 60 * 60 * 1000);
+      const posible = utc && (now2 >= utc) && (now2 <= utc + 6 * 60 * 60 * 1000);
       const yaLive = ['1H','HT','2H','ET','BT','P','SUSP'].includes(p.status?.short);
       if (!posible && !yaLive) continue;
       const cardEl = document.querySelector(`[data-api-id="${p.api_id}"]`);
