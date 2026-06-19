@@ -8,6 +8,8 @@ Si el usuario pasó argumentos en `$ARGUMENTS`, son una pista de qué partido es
 
 ## Pasos
 
+0. **Sincronizar repo** — `git pull --rebase` antes de todo. Esto evita conflictos cuando otra sesión (celu/compu) ya procesó un partido y lo pusheó — el script de fixtures preserva los `stats_id` existentes, pero solo si el archivo local ya los tiene.
+
 1. **Fixtures** — `python scripts/fetch_mundial_fixtures.py`. Actualiza `data/fixtures/mundial.json` (estados y scores).
 
 2. **Detectar partidos FT sin procesar** — leé `data/fixtures/mundial.json` y buscá los partidos con `status.finished === true` que **no** tengan `stats_id`. Para cada uno, seteá `stats_id = "{home.slug}-{away.slug}"` y guardá el JSON.
