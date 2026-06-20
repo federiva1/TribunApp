@@ -116,6 +116,37 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 }
 .dia-badge.hoy { background: rgba(42,213,114,0.15); border-color: rgba(42,213,114,0.4); color: var(--verde); }
 
+/* ===== ACORDEÓN DE JORNADA (solo fase Grupos) ===== */
+.jornada-acc { margin-bottom: 18px; }
+.jornada-head {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; text-align: left; cursor: pointer;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px; padding: 12px 16px;
+  transition: background 0.15s, border-color 0.15s;
+}
+.jornada-head:hover { background: rgba(255,255,255,0.07); border-color: rgba(21,101,192,0.3); }
+.jor-chevron {
+  font-size: 12px; color: rgba(255,255,255,0.45);
+  transition: transform 0.2s; flex-shrink: 0; width: 14px; text-align: center;
+}
+.jornada-acc.colapsada .jor-chevron { transform: rotate(-90deg); }
+.jor-titulo {
+  font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 2px;
+  color: #fff; line-height: 1;
+}
+.jor-estado {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 2px;
+  text-transform: uppercase; border-radius: 20px; padding: 2px 9px; border: 1px solid transparent;
+}
+.jor-estado.fin  { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.12); color: rgba(255,255,255,0.4); }
+.jor-estado.live { background: rgba(42,213,114,0.15); border-color: rgba(42,213,114,0.4); color: var(--verde); }
+.jor-estado.prox { background: rgba(21,101,192,0.2); border-color: rgba(21,101,192,0.35); color: var(--acento-light); }
+.jor-count { margin-left: auto; font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 1px; color: rgba(255,255,255,0.3); }
+.jornada-body { padding-top: 16px; }
+.jornada-acc.colapsada .jornada-body { display: none; }
+
 /* ===== CARD DE PARTIDO ===== */
 .partido-card {
   background: rgba(255,255,255,0.03);
@@ -470,21 +501,73 @@ function renderPartidos() {
     return;
   }
 
-  // Agrupar por día Argentina
+  // Fase Grupos: agrupar por jornada (Fecha 1/2/3) en acordeones colapsables.
+  // Una jornada totalmente terminada arranca colapsada; la actual y las
+  // futuras arrancan abiertas. El resto de las fases va plano (una sola ronda).
+  if (faseActiva === 'grupos') {
+    for (const round of fase.rounds) {
+      const ms = filtrados.filter(p => p.round === round);
+      if (!ms.length) continue;
+      wrap.appendChild(crearAcordeonJornada(round, ms));
+    }
+  } else {
+    renderDiasEn(wrap, filtrados);
+  }
+}
+
+// Construye el acordeón de una jornada (Fecha N) con sus partidos agrupados por día.
+function crearAcordeonJornada(round, ms) {
+  const total = ms.length;
+  const fin   = ms.filter(m => m.status?.finished).length;
+  const live  = ms.some(m => m.status?.started && !m.status?.finished);
+
+  let estado, cls;
+  if (fin === total)        { estado = 'Finalizada'; cls = 'fin';  }
+  else if (live || fin > 0) { estado = 'En juego';   cls = 'live'; }
+  else                      { estado = 'Próxima';    cls = 'prox'; }
+
+  // Colapsada solo si la jornada terminó por completo.
+  const colapsada = (fin === total);
+
+  const acc = document.createElement('div');
+  acc.className = 'jornada-acc' + (colapsada ? ' colapsada' : '');
+
+  const head = document.createElement('button');
+  head.className = 'jornada-head';
+  head.type = 'button';
+  head.innerHTML = `
+    <span class="jor-chevron">▾</span>
+    <span class="jor-titulo">Fecha ${round}</span>
+    <span class="jor-estado ${cls}">${estado}</span>
+    <span class="jor-count">${total} partidos</span>
+  `;
+  head.addEventListener('click', () => acc.classList.toggle('colapsada'));
+
+  const body = document.createElement('div');
+  body.className = 'jornada-body';
+  renderDiasEn(body, ms);
+
+  acc.appendChild(head);
+  acc.appendChild(body);
+  return acc;
+}
+
+// Renderiza una lista de partidos agrupados por día dentro de un contenedor.
+function renderDiasEn(container, partidos) {
   const porDia = {};
-  for (const p of filtrados) {
+  for (const p of partidos) {
     const dk = diaKey(p.status.utcTime);
     if (!porDia[dk]) porDia[dk] = [];
     porDia[dk].push(p);
   }
 
   for (const dk of Object.keys(porDia).sort()) {
-    const partidos = porDia[dk];
+    const lista = porDia[dk];
     const bloque = document.createElement('div');
     bloque.className = 'dia-bloque';
 
-    const hoy = esHoy(partidos[0].status.utcTime);
-    const fechaStr = formatearFecha(partidos[0].status.utcTime);
+    const hoy = esHoy(lista[0].status.utcTime);
+    const fechaStr = formatearFecha(lista[0].status.utcTime);
 
     bloque.innerHTML = `
       <div class="dia-header">
@@ -493,11 +576,11 @@ function renderPartidos() {
       </div>
     `;
 
-    for (const p of partidos) {
+    for (const p of lista) {
       bloque.appendChild(crearCardPartido(p));
     }
 
-    wrap.appendChild(bloque);
+    container.appendChild(bloque);
   }
 }
 
