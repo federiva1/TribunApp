@@ -636,13 +636,6 @@ function startLivePolling(liveCards, contEl) {
     const headers = getApiHeaders();
 
     const activos = liveCards.filter(({ p }) => !p.status?.finished);
-    if (!activos.length) {
-      clearInterval(_liveTimer);
-      _liveTimer = null;
-      // Todos los partidos del widget terminaron → ocultar el bloque
-      if (contEl) contEl.style.display = 'none';
-      return;
-    }
 
     for (const { p, card } of activos) {
       try {
@@ -699,6 +692,14 @@ function startLivePolling(liveCards, contEl) {
         }
       } catch(e) { /* ignorar error individual */ }
     }
+
+    // Si ya no queda ningún partido en juego, ocultar el bloque y frenar el
+    // polling en el mismo tick en que se detecta el FT (sin esperar 60s más).
+    if (liveCards.every(({ p }) => p.status?.finished)) {
+      clearInterval(_liveTimer);
+      _liveTimer = null;
+      if (contEl) contEl.style.display = 'none';
+    }
   }
 
   tick();
@@ -725,10 +726,10 @@ async function init() {
       if (eq.grupo) grupoPorSlug[eq.slug] = eq.grupo;
     }
 
-    // Partido(s) en juego: no terminado, con api_id, dentro de la ventana de
-    // 24h desde el kickoff (o ya marcado en vivo por la API).
+    // Candidatos a "en juego": no terminado en el JSON, con api_id, dentro de la
+    // ventana de 24h desde el kickoff (o ya marcado en vivo por la API).
     const now = Date.now();
-    const live = partidos.filter(p => {
+    const candidatos = partidos.filter(p => {
       if (!p.api_id) return false;
       if (p.status?.finished || p.status?.cancelled) return false;
       const utc = p.status?.utcTime ? new Date(p.status.utcTime).getTime() : null;
@@ -736,6 +737,31 @@ async function init() {
       const yaEnCurso = LIVE_SHORT.includes(p.status?.short);
       return dentroVentana || yaEnCurso;
     });
+
+    if (!candidatos.length) { cont.style.display = 'none'; return; }
+
+    // mundial.json es estático y puede quedar desactualizado tras el FT (lo
+    // actualiza el pipeline post-partido). Confirmamos el estado real con la API:
+    // si el partido ya terminó, no se muestra. Si la API falla, usamos el dato
+    // optimista del JSON (mejor mostrarlo de más que esconder uno en vivo).
+    const base = getApiBase(), headers = getApiHeaders();
+    const live = [];
+    for (const p of candidatos) {
+      try {
+        const r = await fetch(`${base}/fixtures?id=${p.api_id}`, { headers });
+        if (r.ok) {
+          const fx = (await r.json()).response?.[0];
+          const short = fx?.fixture?.status?.short;
+          if (['FT','AET','PEN'].includes(short)) continue;   // ya terminó → omitir
+          if (fx) {
+            if (fx.goals?.home != null) p.home_score = fx.goals.home;
+            if (fx.goals?.away != null) p.away_score = fx.goals.away;
+            if (short) { p.status.short = short; p.status.started = true; }
+          }
+        }
+      } catch (_) { /* API caída → usar el dato optimista del JSON */ }
+      live.push(p);
+    }
 
     if (!live.length) { cont.style.display = 'none'; return; }
 
