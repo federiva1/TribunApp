@@ -134,6 +134,8 @@ def normalize(s: str) -> str:
     api-sports da diacriticos completos ('Matej Kovar' con hacek/acute) y FotMob
     versiones parcialmente despojadas; stripear TODO combining mark uniforma ambos.
     """
+    if not s:
+        return ''
     s = s.lower().strip()
     s = unicodedata.normalize('NFD', s)
     s = ''.join(c for c in s if unicodedata.category(c) != 'Mn')
