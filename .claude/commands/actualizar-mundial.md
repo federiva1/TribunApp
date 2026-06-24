@@ -14,7 +14,8 @@ Si el usuario pasó argumentos en `$ARGUMENTS`, son una pista de qué partido es
 
 2. **Detectar partidos FT sin procesar** — leé `data/fixtures/mundial.json` y buscá los partidos con `status.finished === true` que **no** tengan `stats_id`. Para cada uno, seteá `stats_id = "{home.slug}-{away.slug}"` y guardá el JSON.
    - Los slugs salen del nombre en minúsculas sin espacios. Verificá contra `data/planteles/` que el slug exista.
-   - Slugs especiales (ver `scripts/fetch_mundial_match.py → NOMBRE_A_SLUG`): `Bosnia and Herzegovina`→`bosniaandherzegovina`, `South Korea`→`southkorea`, `Czech Republic`/`Czechia`→`czechia`, `Türkiye`→`turkiye`, `Congo DR`→`congodr`, `Ivory Coast`→`ivorycoast`, `Cape Verde Islands`→`capeverdeislands`, `USA`/`United States`→`usa`.
+   - Los nombres pueden traer tildes/caracteres no-ASCII (ej. `Curaçao`) — **normalizá con NFD y sacá los diacríticos** antes de slugificar, si no el filename queda roto (`curaao`).
+   - Slugs especiales (ver `scripts/fetch_mundial_match.py → NOMBRE_A_SLUG`): `Bosnia and Herzegovina`→`bosniaandherzegovina`, `South Korea`→`southkorea`, `Czech Republic`/`Czechia`→`czechia`, `Türkiye`→`turkiye`, `Congo DR`/`DR Congo`→`drcongo` (⚠️ NO `congodr` — el plantel es `drcongo.json`), `Ivory Coast`→`ivorycoast`, `Cape Verde Islands`→`capeverdeislands`, `Curaçao`→`curacao`, `USA`/`United States`→`usa`.
    - Si no hay ningún FT sin `stats_id`, **terminá acá** e informá que no hay partidos nuevos para procesar.
 
 3. **Stats globales (api-sports)** — `python scripts/fetch_mundial_match.py --auto`. Genera `data/partidos/{stats_id}.json` (lineup, eventos, stats globales) para cada FT sin archivo. Deduplica jugadores por ID automáticamente.
