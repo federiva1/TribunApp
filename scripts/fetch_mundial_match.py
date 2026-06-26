@@ -20,6 +20,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import unicodedata
 import urllib.request
 import urllib.error
 from pathlib import Path
@@ -91,11 +92,25 @@ NOMBRE_A_SLUG: dict[str, str] = {
 }
 
 
+def _strip_accents(s: str) -> str:
+    """Saca diacriticos via NFD (Curaçao -> Curacao, Türkiye -> Turkiye)."""
+    return ''.join(c for c in unicodedata.normalize('NFD', s)
+                   if unicodedata.category(c) != 'Mn')
+
+# Version normalizada (sin tildes, minusculas) del mapeo, para que el lookup no
+# dependa de la normalizacion unicode exacta con la que api-sports manda el nombre.
+_NORM_SLUG = {_strip_accents(k).lower(): v for k, v in NOMBRE_A_SLUG.items()}
+
 def name_to_slug(name: str) -> str:
     if name in NOMBRE_A_SLUG:
         return NOMBRE_A_SLUG[name]
-    # Fallback: minusculas sin espacios
-    return name.lower().replace(' ', '').replace('-', '')
+    key = _strip_accents(name).lower()
+    if key in _NORM_SLUG:
+        return _NORM_SLUG[key]
+    # Fallback: minusculas sin tildes ni espacios. Sacar las tildes es clave:
+    # si no, "Curaçao" -> "curaçao" != "curacao" y home_is_local da False,
+    # invirtiendo local/visitante (marcador, goles y jugadores) del partido.
+    return key.replace(' ', '').replace('-', '')
 
 
 def api_get(path: str) -> dict:
