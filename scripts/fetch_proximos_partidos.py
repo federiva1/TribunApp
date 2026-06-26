@@ -9,7 +9,7 @@ import re
 import urllib.request
 from datetime import datetime, timezone
 
-API_KEY = 'b8bbfc856fd5cf12cd7d697b2b01887d'
+from apikey import API_KEY
 LEAGUE  = 128
 SEASON  = 2026
 

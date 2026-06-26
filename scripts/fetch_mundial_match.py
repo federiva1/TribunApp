@@ -30,7 +30,7 @@ PARTIDOS_DIR = ROOT / 'data' / 'partidos'
 INDEX_FILE   = PARTIDOS_DIR / 'index.json'
 MUNDIAL_JSON = ROOT / 'data' / 'fixtures' / 'mundial.json'
 
-API_KEY  = 'b8bbfc856fd5cf12cd7d697b2b01887d'
+from apikey import API_KEY
 API_BASE = 'https://v3.football.api-sports.io'
 
 # Mapeo nombre api-sports -> slug (para equipos del Mundial)

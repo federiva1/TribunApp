@@ -26,7 +26,7 @@ import urllib.request
 import urllib.error
 
 # ── Config ────────────────────────────────────────────────────────────────────
-API_KEY    = "b8bbfc856fd5cf12cd7d697b2b01887d"
+from apikey import API_KEY
 TEAM_ID    = 6       # Argentina en api-sports.io
 LEAGUE_ID  = 1       # FIFA World Cup (cambia a 10 para WC Qualifying CONMEBOL)
 # También probar: league=10 (WC Qualification CONMEBOL), season=2026

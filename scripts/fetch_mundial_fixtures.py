@@ -9,7 +9,7 @@ from pathlib import Path
 ROOT = Path(__file__).parent.parent
 OUT  = ROOT / 'data' / 'fixtures' / 'mundial.json'
 
-API_KEY = os.environ.get('API_SPORTS_KEY', 'b8bbfc856fd5cf12cd7d697b2b01887d')
+from apikey import API_KEY
 LEAGUE  = 1
 SEASON  = 2026
 

@@ -17,7 +17,7 @@ import time
 import urllib.request
 from pathlib import Path
 
-API_KEY    = os.environ.get('API_SPORTS_KEY', 'b8bbfc856fd5cf12cd7d697b2b01887d')
+from apikey import API_KEY
 SEASON     = 2026
 OUTPUT_DIR = Path(__file__).parent.parent / 'data' / 'fixtures'
 

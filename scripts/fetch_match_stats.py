@@ -30,7 +30,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / 'scripts'))
 from clubes_map import lookup, league_id, estadisticas_path  # noqa: E402
 
-API_KEY = os.environ.get('API_SPORTS_KEY', 'b8bbfc856fd5cf12cd7d697b2b01887d')
+from apikey import API_KEY
 SEASON = 2026
 
 # Default: rivales con votos migrados de Formaaajcion (solo AAAJ).
