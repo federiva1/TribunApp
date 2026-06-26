@@ -11,20 +11,26 @@
       "local": [
         {
           "min": 54,
-          "jugador": "Hazem Mastouri",
-          "asist": "Hannibal Mejbri"
+          "jugador": "H. Mastouri",
+          "asist": "H. Mejbri"
         }
       ],
       "visitante": [
         {
+          "min": 3,
+          "jugador": "E. Skhiri",
+          "asist": null,
+          "en_contra": true
+        },
+        {
           "min": 7,
-          "jugador": "Brian Brobbey",
-          "asist": "Virgil van Dijk"
+          "jugador": "B. Brobbey",
+          "asist": "V. van Dijk"
         },
         {
           "min": 62,
-          "jugador": "Jan Paul van Hecke",
-          "asist": "Tijjani Reijnders"
+          "jugador": "J. P. van Hecke",
+          "asist": "T. Reijnders"
         }
       ]
     }
@@ -170,45 +176,6 @@
         "portero_stats": null
       },
       {
-        "nombre": "Rani Khedira",
-        "id": 25300,
-        "tipo": "titular",
-        "portero": false,
-        "mvp": false,
-        "num": "13",
-        "min": 67,
-        "goles": 0,
-        "asist": 0,
-        "amarilla": false,
-        "roja": false,
-        "top": {
-          "oport_creadas": 0,
-          "acc_defensivas": 1,
-          "pases_precisos": 10
-        },
-        "ataque": {
-          "toques": 16,
-          "toques_area": 0,
-          "perdida_balon": 0
-        },
-        "defensa": {
-          "acc_defensivas": 1,
-          "entradas": 1,
-          "interceptaciones": 0,
-          "recuperaciones": 1,
-          "despejes": 0,
-          "regateado": 0
-        },
-        "duelos": {
-          "ganados": 1,
-          "perdidos": 3,
-          "terrestres": 1,
-          "aereos": 0,
-          "faltas": 2
-        },
-        "portero_stats": null
-      },
-      {
         "nombre": "Montassar Talbi",
         "id": 50030,
         "tipo": "titular",
@@ -249,7 +216,48 @@
         "portero_stats": null
       },
       {
-        "nombre": "A. Ben Hmida",
+        "nombre": "Ellyes Skhiri",
+        "id": 21587,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "17",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 7,
+          "pases_precisos": 35
+        },
+        "ataque": {
+          "toques": 49,
+          "toques_area": 0,
+          "pases_ultimo_tercio": 3,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 7,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 2,
+          "despejes": 4,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 1,
+          "perdidos": 1,
+          "terrestres": 1,
+          "aereos": 0,
+          "faltas": 0,
+          "faltas_recibidas": 1
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Amine Ben Hmida",
         "id": 135059,
         "tipo": "titular",
         "portero": false,
@@ -309,43 +317,125 @@
         "portero_stats": null
       },
       {
-        "nombre": "Ellyes Skhiri",
-        "id": 21587,
+        "nombre": "Anis Ben Slimane",
+        "id": 199310,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
-        "num": "17",
-        "min": 90,
+        "num": "25",
+        "min": 68,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "tiros_totales": 1,
+          "disparos_puerta": 1,
+          "oport_creadas": 1,
+          "acc_defensivas": 5,
+          "pases_precisos": 5
+        },
+        "ataque": {
+          "toques": 24,
+          "toques_area": 4,
+          "pases_ultimo_tercio": 3,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 5,
+          "entradas": 0,
+          "interceptaciones": 1,
+          "recuperaciones": 1,
+          "despejes": 4,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 1,
+          "perdidos": 2,
+          "aereos": 1,
+          "faltas": 0
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Ismael Gharbi",
+        "id": 310196,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "11",
+        "min": 75,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "tiros_totales": 2,
+          "disparos_puerta": 0,
+          "oport_creadas": 0,
+          "acc_defensivas": 6,
+          "pases_precisos": 23
+        },
+        "ataque": {
+          "toques": 36,
+          "toques_area": 1,
+          "regates": 0,
+          "pases_ultimo_tercio": 1,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 6,
+          "entradas": 4,
+          "interceptaciones": 0,
+          "recuperaciones": 3,
+          "despejes": 2,
+          "regateado": 1
+        },
+        "duelos": {
+          "ganados": 4,
+          "perdidos": 2,
+          "terrestres": 4,
+          "aereos": 0,
+          "faltas": 0
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Rani Khedira",
+        "id": 25300,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "13",
+        "min": 67,
         "goles": 0,
         "asist": 0,
         "amarilla": false,
         "roja": false,
         "top": {
           "oport_creadas": 0,
-          "acc_defensivas": 7,
-          "pases_precisos": 35
+          "acc_defensivas": 1,
+          "pases_precisos": 10
         },
         "ataque": {
-          "toques": 49,
+          "toques": 16,
           "toques_area": 0,
-          "pases_ultimo_tercio": 3,
           "perdida_balon": 0
         },
         "defensa": {
-          "acc_defensivas": 7,
-          "entradas": 0,
+          "acc_defensivas": 1,
+          "entradas": 1,
           "interceptaciones": 0,
-          "recuperaciones": 2,
-          "despejes": 4,
+          "recuperaciones": 1,
+          "despejes": 0,
           "regateado": 0
         },
         "duelos": {
           "ganados": 1,
-          "perdidos": 1,
+          "perdidos": 3,
           "terrestres": 1,
           "aereos": 0,
-          "faltas": 0,
-          "faltas_recibidas": 1
+          "faltas": 2
         },
         "portero_stats": null
       },
@@ -395,49 +485,6 @@
         "portero_stats": null
       },
       {
-        "nombre": "Ismaël Gharbi",
-        "id": 310196,
-        "tipo": "titular",
-        "portero": false,
-        "mvp": false,
-        "num": "11",
-        "min": 75,
-        "goles": 0,
-        "asist": 0,
-        "amarilla": false,
-        "roja": false,
-        "top": {
-          "tiros_totales": 2,
-          "disparos_puerta": 0,
-          "oport_creadas": 0,
-          "acc_defensivas": 6,
-          "pases_precisos": 23
-        },
-        "ataque": {
-          "toques": 36,
-          "toques_area": 1,
-          "regates": 0,
-          "pases_ultimo_tercio": 1,
-          "perdida_balon": 0
-        },
-        "defensa": {
-          "acc_defensivas": 6,
-          "entradas": 4,
-          "interceptaciones": 0,
-          "recuperaciones": 3,
-          "despejes": 2,
-          "regateado": 1
-        },
-        "duelos": {
-          "ganados": 4,
-          "perdidos": 2,
-          "terrestres": 4,
-          "aereos": 0,
-          "faltas": 0
-        },
-        "portero_stats": null
-      },
-      {
         "nombre": "Hazem Mastouri",
         "id": 344862,
         "tipo": "titular",
@@ -483,48 +530,7 @@
         "portero_stats": null
       },
       {
-        "nombre": "Anis Ben Slimane",
-        "id": 199310,
-        "tipo": "titular",
-        "portero": false,
-        "mvp": false,
-        "num": "25",
-        "min": 68,
-        "goles": 0,
-        "asist": 0,
-        "amarilla": false,
-        "roja": false,
-        "top": {
-          "tiros_totales": 1,
-          "disparos_puerta": 1,
-          "oport_creadas": 1,
-          "acc_defensivas": 5,
-          "pases_precisos": 5
-        },
-        "ataque": {
-          "toques": 24,
-          "toques_area": 4,
-          "pases_ultimo_tercio": 3,
-          "perdida_balon": 0
-        },
-        "defensa": {
-          "acc_defensivas": 5,
-          "entradas": 0,
-          "interceptaciones": 1,
-          "recuperaciones": 1,
-          "despejes": 4,
-          "regateado": 0
-        },
-        "duelos": {
-          "ganados": 1,
-          "perdidos": 2,
-          "aereos": 1,
-          "faltas": 0
-        },
-        "portero_stats": null
-      },
-      {
-        "nombre": "Mohamed Hadj Mahmoud",
+        "nombre": "M. Belhadj",
         "id": 67195,
         "tipo": "suplente",
         "portero": false,
@@ -562,7 +568,7 @@
         "portero_stats": null
       },
       {
-        "nombre": "Elias Achouri",
+        "nombre": "E. Achouri",
         "id": 42012,
         "tipo": "suplente",
         "portero": false,
@@ -606,7 +612,7 @@
         "portero_stats": null
       },
       {
-        "nombre": "Mortadha Ben Ouanes",
+        "nombre": "M. Ben Ouanes",
         "id": 49469,
         "tipo": "suplente",
         "portero": false,
@@ -647,7 +653,7 @@
         "portero_stats": null
       },
       {
-        "nombre": "Firas Chaouat",
+        "nombre": "F. Chaouat",
         "id": 2962,
         "tipo": "suplente",
         "portero": false,
@@ -686,7 +692,7 @@
         "portero_stats": null
       },
       {
-        "nombre": "Sebastian Tounekti",
+        "nombre": "S. Tounekti",
         "id": 57518,
         "tipo": "suplente",
         "portero": false,
@@ -722,8 +728,8 @@
         "portero_stats": null
       },
       {
-        "nombre": "Hervé Renard",
-        "id": 0,
+        "nombre": "Herve Renard",
+        "id": 344,
         "tipo": "dt",
         "portero": false,
         "mvp": false,
@@ -1213,7 +1219,7 @@
         "portero_stats": null
       },
       {
-        "nombre": "Teun Koopmeiners",
+        "nombre": "T. Koopmeiners",
         "id": 36899,
         "tipo": "suplente",
         "portero": false,
@@ -1253,7 +1259,7 @@
         "portero_stats": null
       },
       {
-        "nombre": "Justin Kluivert",
+        "nombre": "J. Kluivert",
         "id": 792,
         "tipo": "suplente",
         "portero": false,
@@ -1292,7 +1298,7 @@
         "portero_stats": null
       },
       {
-        "nombre": "Crysencio Summerville",
+        "nombre": "C. Summerville",
         "id": 37724,
         "tipo": "suplente",
         "portero": false,
@@ -1332,7 +1338,7 @@
         "portero_stats": null
       },
       {
-        "nombre": "Memphis Depay",
+        "nombre": "M. Depay",
         "id": 667,
         "tipo": "suplente",
         "portero": false,
@@ -1369,7 +1375,7 @@
         "portero_stats": null
       },
       {
-        "nombre": "Noa Lang",
+        "nombre": "N. Lang",
         "id": 544,
         "tipo": "suplente",
         "portero": false,
@@ -1410,7 +1416,7 @@
         "portero_stats": null
       },
       {
-        "nombre": "R. Koeman",
+        "nombre": "Ronald Koeman",
         "id": 73,
         "tipo": "dt",
         "portero": false,

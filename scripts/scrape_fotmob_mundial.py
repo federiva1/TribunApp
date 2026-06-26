@@ -169,6 +169,12 @@ def enrich_players(players: list, ps_by_name: dict) -> list:
             tokset_index.setdefault(toks, (fm_name, fm_data))
             fm_list.append((toks, fm_name, fm_data))
 
+    # Una entrada FotMob no puede asignarse a dos jugadores distintos: si el
+    # apellido colisiona (ej. dos "Gueye" / "Ndiaye" en la misma seleccion) el
+    # match por apellido/solapamiento copiaba las MISMAS stats a ambos y producia
+    # duplicados. Reservar cada FotMob una sola vez evita ese caso.
+    used_fm: set[str] = set()
+
     for p in players:
         nombre = p.get('nombre', '')
         norm_nombre = normalize(nombre)
@@ -180,7 +186,11 @@ def enrich_players(players: list, ps_by_name: dict) -> list:
             # 2. Apellido normalizado (api-sports da "R. Jimenez" -> apellido "jimenez")
             parts = norm_nombre.split()
             apellido = parts[-1] if parts else ''
-            match = norm_index.get(apellido)
+            cand = norm_index.get(apellido)
+            # Solo aceptar el match por apellido si ese FotMob aun no fue usado
+            # (si ya esta tomado, el apellido es ambiguo -> no arriesgar).
+            if cand and cand[0] not in used_fm:
+                match = cand
 
         if not match:
             # 3. Conjunto de tokens exacto (orden-independiente)
@@ -200,6 +210,11 @@ def enrich_players(players: list, ps_by_name: dict) -> list:
 
         fm_name, pd = match
 
+        # Si esta entrada FotMob ya fue asignada a otro jugador, no duplicar stats.
+        if fm_name in used_fm:
+            continue
+        used_fm.add(fm_name)
+
         flat = flatten_stats(pd.get('stats', []))
         is_gk = pd.get('isGoalkeeper', False)
 
@@ -218,10 +233,10 @@ def enrich_players(players: list, ps_by_name: dict) -> list:
                 'goles_evitados': gev,
             }
 
-        # Nombre completo desde FotMob (mejor que la abreviatura de api-sports)
-        fm_name = pd.get('name', '').strip()
-        if fm_name and len(fm_name) > len(nombre):
-            p['nombre'] = fm_name
+        # NO sobreescribir el nombre con el de FotMob: los nombres de api-sports
+        # (lineup del Mundial) son completos y autoritativos. El overwrite por
+        # match difuso renombraba mal cuando el apellido colisionaba (ej. Pape
+        # Gueye -> "Idrissa Gana Gueye"), generando duplicados.
 
         # xG individual (para recalculo si es necesario)
         xg = to_num(flat.get('Expected goals (xG)'))

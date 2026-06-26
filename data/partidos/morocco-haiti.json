@@ -11,30 +11,36 @@
       "local": [
         {
           "min": 39,
-          "jugador": "Achraf Hakimi",
+          "jugador": "A. Hakimi",
           "asist": null
         },
         {
           "min": 45,
-          "jugador": "Ismael Saibari",
-          "asist": "Achraf Hakimi"
+          "jugador": "I. Saibari",
+          "asist": "A. Hakimi"
         },
         {
           "min": 78,
-          "jugador": "Soufiane Rahimi",
-          "asist": "Chadi Riad"
+          "jugador": "S. Rahimi",
+          "asist": "C. Riad"
         },
         {
           "min": 89,
-          "jugador": "Gessime Yassine",
-          "asist": "Soufiane Rahimi"
+          "jugador": "G. Yassine",
+          "asist": "S. Rahimi"
         }
       ],
       "visitante": [
         {
+          "min": 10,
+          "jugador": "Bono",
+          "asist": null,
+          "en_contra": true
+        },
+        {
           "min": 43,
-          "jugador": "Wilson Isidor",
-          "asist": "Jean-Kévin Duverne"
+          "jugador": "W. Isidor",
+          "asist": "J. Duverne"
         }
       ]
     }
@@ -116,7 +122,7 @@
   "jugadores": {
     "morocco": [
       {
-        "nombre": "Yassine Bounou",
+        "nombre": "Bono",
         "id": 2701,
         "tipo": "titular",
         "portero": true,
@@ -151,7 +157,7 @@
         }
       },
       {
-        "nombre": "Achraf Hakimi",
+        "nombre": "A. Hakimi",
         "id": 9,
         "tipo": "titular",
         "portero": false,
@@ -197,7 +203,7 @@
         "portero_stats": null
       },
       {
-        "nombre": "Redouane Halhal",
+        "nombre": "R. Halhal",
         "id": 326183,
         "tipo": "titular",
         "portero": false,
@@ -238,7 +244,7 @@
         "portero_stats": null
       },
       {
-        "nombre": "Chadi Riad",
+        "nombre": "C. Riad",
         "id": 278898,
         "tipo": "titular",
         "portero": false,
@@ -281,7 +287,7 @@
         "portero_stats": null
       },
       {
-        "nombre": "Anass Salah-Eddine",
+        "nombre": "A. Salah-Eddine",
         "id": 162451,
         "tipo": "titular",
         "portero": false,
@@ -324,7 +330,7 @@
         "portero_stats": null
       },
       {
-        "nombre": "Neil El Aynaoui",
+        "nombre": "N. El Aynaoui",
         "id": 277003,
         "tipo": "titular",
         "portero": false,
@@ -367,7 +373,7 @@
         "portero_stats": null
       },
       {
-        "nombre": "Sofyan Amrabat",
+        "nombre": "S. Amrabat",
         "id": 74,
         "tipo": "titular",
         "portero": false,
@@ -409,7 +415,7 @@
         "portero_stats": null
       },
       {
-        "nombre": "Brahim Díaz",
+        "nombre": "B. Diaz",
         "id": 744,
         "tipo": "titular",
         "portero": false,
@@ -453,7 +459,7 @@
         "portero_stats": null
       },
       {
-        "nombre": "Ismael Saibari",
+        "nombre": "I. Saibari",
         "id": 161897,
         "tipo": "titular",
         "portero": false,
@@ -498,7 +504,7 @@
         "portero_stats": null
       },
       {
-        "nombre": "Bilal El Khannouss",
+        "nombre": "B. El Khannouss",
         "id": 340573,
         "tipo": "titular",
         "portero": false,
@@ -543,7 +549,7 @@
         "portero_stats": null
       },
       {
-        "nombre": "Ayoub El Kaabi",
+        "nombre": "A. El Kaabi",
         "id": 2722,
         "tipo": "titular",
         "portero": false,
@@ -586,7 +592,7 @@
         "portero_stats": null
       },
       {
-        "nombre": "Gessime Yassine",
+        "nombre": "G. Yassine",
         "id": 369544,
         "tipo": "suplente",
         "portero": false,
@@ -629,7 +635,7 @@
         "portero_stats": null
       },
       {
-        "nombre": "Azzedine Ounahi",
+        "nombre": "A. Ounahi",
         "id": 129678,
         "tipo": "suplente",
         "portero": false,
@@ -669,7 +675,7 @@
         "portero_stats": null
       },
       {
-        "nombre": "Soufiane Rahimi",
+        "nombre": "S. Rahimi",
         "id": 36579,
         "tipo": "suplente",
         "portero": false,
@@ -715,47 +721,7 @@
         "portero_stats": null
       },
       {
-        "nombre": "Samir El Mourabet",
-        "id": 415431,
-        "tipo": "suplente",
-        "portero": false,
-        "mvp": false,
-        "num": "",
-        "min": 7,
-        "goles": 0,
-        "asist": 0,
-        "amarilla": false,
-        "roja": false,
-        "top": {
-          "oport_creadas": 0,
-          "acc_defensivas": 2,
-          "pases_precisos": 4
-        },
-        "ataque": {
-          "toques": 8,
-          "toques_area": 1,
-          "regates": 1,
-          "perdida_balon": 0
-        },
-        "defensa": {
-          "acc_defensivas": 2,
-          "entradas": 1,
-          "interceptaciones": 1,
-          "recuperaciones": 0,
-          "despejes": 0,
-          "regateado": 1
-        },
-        "duelos": {
-          "ganados": 2,
-          "perdidos": 1,
-          "terrestres": 2,
-          "aereos": 0,
-          "faltas": 0
-        },
-        "portero_stats": null
-      },
-      {
-        "nombre": "Noussair Mazraoui",
+        "nombre": "N. Mazraoui",
         "id": 545,
         "tipo": "suplente",
         "portero": false,
@@ -795,6 +761,46 @@
         "portero_stats": null
       },
       {
+        "nombre": "S. El Mourabet",
+        "id": 415431,
+        "tipo": "suplente",
+        "portero": false,
+        "mvp": false,
+        "num": "",
+        "min": 7,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 2,
+          "pases_precisos": 4
+        },
+        "ataque": {
+          "toques": 8,
+          "toques_area": 1,
+          "regates": 1,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 2,
+          "entradas": 1,
+          "interceptaciones": 1,
+          "recuperaciones": 0,
+          "despejes": 0,
+          "regateado": 1
+        },
+        "duelos": {
+          "ganados": 2,
+          "perdidos": 1,
+          "terrestres": 2,
+          "aereos": 0,
+          "faltas": 0
+        },
+        "portero_stats": null
+      },
+      {
         "nombre": "Mohamed Ouahbi",
         "id": 28221,
         "tipo": "dt",
@@ -815,7 +821,7 @@
     ],
     "haiti": [
       {
-        "nombre": "Johny Placide",
+        "nombre": "J. Placide",
         "id": 87789,
         "tipo": "titular",
         "portero": true,
@@ -851,7 +857,7 @@
         }
       },
       {
-        "nombre": "Jean-Kévin Duverne",
+        "nombre": "J. Duverne",
         "id": 20655,
         "tipo": "titular",
         "portero": false,
@@ -893,7 +899,7 @@
         "portero_stats": null
       },
       {
-        "nombre": "Ricardo Adé",
+        "nombre": "R. Ade",
         "id": 12303,
         "tipo": "titular",
         "portero": false,
@@ -935,7 +941,7 @@
         "portero_stats": null
       },
       {
-        "nombre": "Hannes Delcroix",
+        "nombre": "H. Delcroix",
         "id": 1411,
         "tipo": "titular",
         "portero": false,
@@ -975,7 +981,7 @@
         "portero_stats": null
       },
       {
-        "nombre": "Martin Expérience",
+        "nombre": "M. Experience",
         "id": 190747,
         "tipo": "titular",
         "portero": false,
@@ -1015,7 +1021,7 @@
         "portero_stats": null
       },
       {
-        "nombre": "Josué Casimir",
+        "nombre": "J. Casimir",
         "id": 174915,
         "tipo": "titular",
         "portero": false,
@@ -1057,7 +1063,7 @@
         "portero_stats": null
       },
       {
-        "nombre": "Danley Jean Jacques",
+        "nombre": "D. Jean Jacques",
         "id": 338367,
         "tipo": "titular",
         "portero": false,
@@ -1097,7 +1103,7 @@
         "portero_stats": null
       },
       {
-        "nombre": "Jean-Ricner Bellegarde",
+        "nombre": "J. Bellegarde",
         "id": 20665,
         "tipo": "titular",
         "portero": false,
@@ -1142,7 +1148,7 @@
         "portero_stats": null
       },
       {
-        "nombre": "Ruben Providence",
+        "nombre": "R. Providence",
         "id": 162733,
         "tipo": "titular",
         "portero": false,
@@ -1183,7 +1189,7 @@
         "portero_stats": null
       },
       {
-        "nombre": "Wilson Isidor",
+        "nombre": "W. Isidor",
         "id": 84087,
         "tipo": "titular",
         "portero": false,
@@ -1226,7 +1232,7 @@
         "portero_stats": null
       },
       {
-        "nombre": "Lenny Joseph",
+        "nombre": "L. Joseph",
         "id": 21613,
         "tipo": "titular",
         "portero": false,
@@ -1270,7 +1276,50 @@
         "portero_stats": null
       },
       {
-        "nombre": "Louicius Don Deedson",
+        "nombre": "D. Nazon",
+        "id": 45020,
+        "tipo": "suplente",
+        "portero": false,
+        "mvp": false,
+        "num": "",
+        "min": 23,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": true,
+        "roja": false,
+        "top": {
+          "tiros_totales": 1,
+          "disparos_puerta": 1,
+          "oport_creadas": 0,
+          "acc_defensivas": 0,
+          "pases_precisos": 1
+        },
+        "ataque": {
+          "toques": 7,
+          "toques_area": 0,
+          "regates": 1,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 0,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 0,
+          "despejes": 0,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 2,
+          "perdidos": 1,
+          "terrestres": 2,
+          "aereos": 0,
+          "faltas": 0,
+          "faltas_recibidas": 1
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "L. Deedson",
         "id": 128766,
         "tipo": "suplente",
         "portero": false,
@@ -1314,50 +1363,7 @@
         "portero_stats": null
       },
       {
-        "nombre": "Duckens Nazon",
-        "id": 45020,
-        "tipo": "suplente",
-        "portero": false,
-        "mvp": false,
-        "num": "",
-        "min": 23,
-        "goles": 0,
-        "asist": 0,
-        "amarilla": true,
-        "roja": false,
-        "top": {
-          "tiros_totales": 1,
-          "disparos_puerta": 1,
-          "oport_creadas": 0,
-          "acc_defensivas": 0,
-          "pases_precisos": 1
-        },
-        "ataque": {
-          "toques": 7,
-          "toques_area": 0,
-          "regates": 1,
-          "perdida_balon": 0
-        },
-        "defensa": {
-          "acc_defensivas": 0,
-          "entradas": 0,
-          "interceptaciones": 0,
-          "recuperaciones": 0,
-          "despejes": 0,
-          "regateado": 0
-        },
-        "duelos": {
-          "ganados": 2,
-          "perdidos": 1,
-          "terrestres": 2,
-          "aereos": 0,
-          "faltas": 0,
-          "faltas_recibidas": 1
-        },
-        "portero_stats": null
-      },
-      {
-        "nombre": "Dominique Simon",
+        "nombre": "D. Simon",
         "id": 194242,
         "tipo": "suplente",
         "portero": false,
@@ -1397,7 +1403,7 @@
         "portero_stats": null
       },
       {
-        "nombre": "Carlens Arcus",
+        "nombre": "C. Arcus",
         "id": 20850,
         "tipo": "suplente",
         "portero": false,
@@ -1437,7 +1443,7 @@
         "portero_stats": null
       },
       {
-        "nombre": "Frantzdy Pierrot",
+        "nombre": "F. Pierrot",
         "id": 8601,
         "tipo": "suplente",
         "portero": false,

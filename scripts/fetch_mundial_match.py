@@ -43,6 +43,7 @@ NOMBRE_A_SLUG: dict[str, str] = {
     'Czechia':              'czechia',
     'Bosnia':               'bosniaandherzegovina',
     'Bosnia and Herzegovina': 'bosniaandherzegovina',
+    'Bosnia & Herzegovina': 'bosniaandherzegovina',
     'Canada':               'canada',
     'Qatar':                'qatar',
     'Switzerland':          'switzerland',
@@ -211,12 +212,24 @@ def build_partidos_json(raw: dict, local_slug: str, visitante_slug: str,
         pid     = player.get('id')
         aid     = assist.get('id')
 
-        if etype == 'Goal' and detail != 'Own Goal':
-            if pid:
-                get_ev(pid)['goles'] += 1
-            if aid:
-                get_ev(aid)['asist'] += 1
+        if etype == 'Goal':
+            if detail == 'Missed Penalty':
+                continue  # penal errado: NO es gol
+            if not pid:
+                continue  # evento gol sin jugador atribuido (glitch api-sports): descartar
             entry = {'min': minute, 'jugador': player.get('name', ''), 'asist': assist.get('name')}
+            if detail == 'Own Goal':
+                # Gol en contra: api-sports pone en team_id al equipo BENEFICIADO
+                # (no al del jugador que lo metió). Suma al marcador de ese equipo,
+                # pero NO se le acredita gol al jugador.
+                entry['asist'] = None
+                entry['en_contra'] = True
+            else:
+                # Gol normal o penal convertido (detail 'Penalty')
+                if pid:
+                    get_ev(pid)['goles'] += 1
+                if aid:
+                    get_ev(aid)['asist'] += 1
             if team_id == (local_api_id if home_is_local else visit_api_id):
                 goles_local.append(entry)
             else:
@@ -255,6 +268,15 @@ def build_partidos_json(raw: dict, local_slug: str, visitante_slug: str,
 
         goles_recibidos = (visitante_goals if is_local else local_goals) or 0
 
+        # Nombre completo por ID desde el lineup (startXI + substitutes). Los
+        # eventos de cambio dan el nombre abreviado ("P. Gueye"); el lineup tiene
+        # el completo ("Pape Gueye"), necesario para matchear con FotMob.
+        full_name_by_id: dict = {}
+        for p in lu.get('startXI', []) + lu.get('substitutes', []):
+            pl = p.get('player', {})
+            if pl.get('id'):
+                full_name_by_id[pl['id']] = pl.get('name', '')
+
         # Titulares
         for p in lu.get('startXI', []):
             pl   = p.get('player', {})
@@ -288,7 +310,7 @@ def build_partidos_json(raw: dict, local_slug: str, visitante_slug: str,
         # Suplentes que ingresaron
         for s in subs_in.get(team_api_id, []):
             entry = {
-                'nombre':  s['name'],
+                'nombre':  full_name_by_id.get(s['id']) or s['name'],
                 'id':      s['id'],
                 'tipo':    'suplente',
                 'portero': False,

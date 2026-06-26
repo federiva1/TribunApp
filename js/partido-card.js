@@ -351,6 +351,10 @@ function renderFichaFromJson(data, plantelLocal, plantelVisit) {
     const renderGolesCol = (arr, slug) => {
       const jgsDelEquipo = jugadores[slug] || [];
       return (arr || []).map(g => {
+        // Gol en contra: el goleador es rival; se anota para este equipo
+        if (g.en_contra) {
+          return `<div class="ficha-gol-fila"><span class="ficha-gol-min">${g.min}'</span> <span class="ficha-gol-jugador">⚽ ${escapeHtml(g.jugador)} <span class="ficha-gol-asist">(e/c)</span></span></div>`;
+        }
         const apellido = ultimaPalabra(g.jugador);
         const match = jgsDelEquipo.find(j => ultimaPalabra(j.nombre) === apellido);
         const esSuplente = match?.tipo === 'suplente';

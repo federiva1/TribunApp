@@ -618,19 +618,21 @@ async function init(){
   const jugsVisit = (data.jugadores||{})[p.visitante]||[];
   function fmtGol(g, jugs){
     if(typeof g==='string') return '⚽ '+g;
+    // Gol en contra: el goleador es rival; se anota para este equipo
+    if(g.en_contra) return `⚽ ${g.min ? g.min+"' " : ''}${g.jugador||''} (e/c)`;
     let t=`⚽ ${g.min ? g.min+"' " : ''}${g.jugador||''}`;
     // El asistente solo cuando el goleador entró desde el banco
     const m=_matchSquad(g.jugador, jugs);
     if(g.asist && m?.tipo==='suplente') t+=` (E: ${g.asist})`;
     return t;
   }
+  const isOG=g=>typeof g==='object'&&(g.en_contra||(g.jugador||'').includes('OG'));
   (p.goles_detalle.local||[]).forEach(g=>{
-    const d=document.createElement('div');d.className='goal-item';d.textContent=fmtGol(g, jugsLocal);gl.appendChild(d);
+    const d=document.createElement('div');d.className='goal-item'+(isOG(g)?' og':'');d.textContent=fmtGol(g, jugsLocal);gl.appendChild(d);
   });
   (p.goles_detalle.visitante||[]).forEach(g=>{
-    const isOG=typeof g==='object'&&(g.jugador||'').includes('OG');
     const d=document.createElement('div');
-    d.className='goal-item'+(isOG?' og':'');
+    d.className='goal-item'+(isOG(g)?' og':'');
     d.textContent=fmtGol(g, jugsVisit);gv.appendChild(d);
   });
 
