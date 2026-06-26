@@ -1,7 +1,6 @@
 export const config = { runtime: 'edge' };
 
-// Fallback a la key del repo si la env var no está configurada en Vercel.
-const FALLBACK_KEY = 'b8bbfc856fd5cf12cd7d697b2b01887d';
+// La API key vive solo en la env var API_SPORTS_KEY de Vercel — nunca en el repo.
 
 // Allowlist: solo los endpoints que la app realmente consume. Bloquea
 // /status (que filtra datos de la cuenta) y cualquier otro uso abusivo del proxy.
@@ -16,7 +15,12 @@ function originOk(req) {
 }
 
 export default async function handler(req) {
-  const key = process.env.API_SPORTS_KEY || FALLBACK_KEY;
+  const key = process.env.API_SPORTS_KEY;
+  if (!key) {
+    return new Response(JSON.stringify({ error: 'API_SPORTS_KEY no configurada' }), {
+      status: 500, headers: { 'Content-Type': 'application/json' },
+    });
+  }
   const url = new URL(req.url);
 
   // El rewrite de vercel.json pasa el segmento como query param "path".
