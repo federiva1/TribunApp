@@ -51,6 +51,14 @@ function formatearHora(utcStr) {
   return `${h}:${m}`;
 }
 
+// Escapa HTML — los nombres de jugadores/equipos vienen de FotMob/api-sports
+// (fuentes externas no confiables) y se interpolan en innerHTML.
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+}
+
 // Siempre vía el proxy serverless — la API key vive solo en el servidor.
 function getApiBase() { return '/api/apisports'; }
 function getApiHeaders() { return {}; }
@@ -71,8 +79,8 @@ function crearCardPartido(p) {
 
   const slugHome = p.home.slug || slugPorId[p.home.id] || slugDeNombre(p.home.name);
   const slugAway = p.away.slug || slugPorId[p.away.id] || slugDeNombre(p.away.name);
-  const nomHome = NOMBRES_ES[slugHome] || p.home.name;
-  const nomAway = NOMBRES_ES[slugAway] || p.away.name;
+  const nomHome = escapeHtml(NOMBRES_ES[slugHome] || p.home.name);
+  const nomAway = escapeHtml(NOMBRES_ES[slugAway] || p.away.name);
 
   const golesHome = p.home.score ?? p.home_score ?? null;
   const golesAway = p.away.score ?? p.away_score ?? null;
@@ -299,7 +307,7 @@ function renderFichaFromJson(data, plantelLocal, plantelVisit) {
         ${foto ? `<img class="ficha-jugador-foto" src="${foto}" alt="" onerror="this.style.display='none'">` : '<span class="ficha-jugador-foto"></span>'}
         <span class="ficha-jugador-num">${num}</span>
         <div class="ficha-jugador-info">
-          <div class="ficha-jugador-nombre">${j.nombre}</div>
+          <div class="ficha-jugador-nombre">${escapeHtml(j.nombre)}</div>
         </div>
         <div class="ficha-jugador-eventos">${movHTML || ''}${eventosIconos(j)}</div>
       </div>`;
@@ -311,7 +319,7 @@ function renderFichaFromJson(data, plantelLocal, plantelVisit) {
     const suplentes = jgs.filter(j => j.tipo === 'suplente' && j.min > 0);
     const nombre = NOMBRES_ES[slug] || slug;
 
-    let html = `<div class="ficha-equipo-titulo">${nombre}</div>`;
+    let html = `<div class="ficha-equipo-titulo">${escapeHtml(nombre)}</div>`;
 
     for (const j of titulares) {
       const movHTML = (j.min != null && j.min < 90)
@@ -347,8 +355,8 @@ function renderFichaFromJson(data, plantelLocal, plantelVisit) {
         const match = jgsDelEquipo.find(j => ultimaPalabra(j.nombre) === apellido);
         const esSuplente = match?.tipo === 'suplente';
         const subIcon = esSuplente ? '<span class="ficha-gol-suplente">↑</span> ' : '';
-        const asistHTML = (esSuplente && g.asist) ? ` <span class="ficha-gol-asist">(${g.asist})</span>` : '';
-        return `<div class="ficha-gol-fila"><span class="ficha-gol-min">${g.min}'</span> <span class="ficha-gol-jugador">⚽ ${subIcon}${g.jugador}${asistHTML}</span></div>`;
+        const asistHTML = (esSuplente && g.asist) ? ` <span class="ficha-gol-asist">(${escapeHtml(g.asist)})</span>` : '';
+        return `<div class="ficha-gol-fila"><span class="ficha-gol-min">${g.min}'</span> <span class="ficha-gol-jugador">⚽ ${subIcon}${escapeHtml(g.jugador)}${asistHTML}</span></div>`;
       }).join('');
     };
     golesHTML = `<div class="ficha-goles"><div>${renderGolesCol(gd.local, p.local)}</div><div>${renderGolesCol(gd.visitante, p.visitante)}</div></div>`;
@@ -425,8 +433,8 @@ function renderFichaDetalle(entry) {
       <div class="fd-header">
         ${fotoTag}
         <div class="fd-info">
-          <div class="fd-nombre">${(j.num || j.numero) ? `<span class="fd-num">${j.num || j.numero}</span>` : ''}${j.nombre}</div>
-          <div class="fd-meta">${teamName} · ${tipoLabel}</div>
+          <div class="fd-nombre">${(j.num || j.numero) ? `<span class="fd-num">${escapeHtml(j.num || j.numero)}</span>` : ''}${escapeHtml(j.nombre)}</div>
+          <div class="fd-meta">${escapeHtml(teamName)} · ${tipoLabel}</div>
           <div class="fd-badges">${badges.join('')}</div>
         </div>
         <button class="fd-close" data-ficha-close aria-label="Cerrar">✕</button>
@@ -589,13 +597,13 @@ function renderFichaEnhanced(lineups, events, p, plantelLocal, plantelVisit, pla
           <img class="ficha-jugador-foto" src="${fotoSrc}" alt="" onerror="this.src='data:image/svg+xml,<svg xmlns=\\'http://www.w3.org/2000/svg\\'/>'" >
           <span class="ficha-jugador-num">${number || ''}</span>
           <div class="ficha-jugador-info">
-            <div class="ficha-jugador-nombre${capClass}">${name}</div>
+            <div class="ficha-jugador-nombre${capClass}">${escapeHtml(name)}</div>
           </div>
           <div class="ficha-jugador-eventos">${movHTML || ''}${iconosJugador(pid)}</div>
         </div>`;
     }
 
-    let html = `<div class="ficha-equipo-titulo">${teamName}</div>`;
+    let html = `<div class="ficha-equipo-titulo">${escapeHtml(teamName)}</div>`;
 
     for (const j of titulares) {
       const pl = j.player;

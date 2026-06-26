@@ -218,6 +218,11 @@ function groupLetter(groupName) {
 function escudoSlug(teamId) {
   return ESCUDO_MAP[teamId] || null;
 }
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+}
 
 function renderGrupos(groups, containerId, tipo) {
   const wrap = document.getElementById(containerId);
@@ -248,7 +253,7 @@ function renderGrupos(groups, containerId, tipo) {
         <td class="pos">${t.rank}</td>
         <td class="team-name">
           ${slug ? `<img class="escudo-mini" src="escudos/${slug}.png" onerror="this.style.display='none'">` : ''}
-          ${t.team.name}
+          ${escapeHtml(t.team.name)}
         </td>
         <td>${t.all.played}</td>
         <td>${t.all.win}</td>

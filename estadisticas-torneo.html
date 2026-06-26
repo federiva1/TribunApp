@@ -301,6 +301,11 @@ let todosEquipos = [];
 let partidosIndex = [];
 
 function esc(slug){ return `escudos/${slug}.png`; }
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+}
 function nbSlug(s){
   const map={argentina:'Argentina',france:'Francia',brazil:'Brasil',germany:'Alemania',
     spain:'España',england:'Inglaterra',portugal:'Portugal',mexico:'México',
@@ -364,7 +369,7 @@ function buildLiderBloque(titulo, mapa, info, top=5){
       <span class="lider-pos">${i+1}</span>
       <img class="lider-flag" src="escudos/${eq}.png" alt="" onerror="this.style.opacity='.1'">
       <div class="lider-info">
-        <div class="lider-nombre">${nombre}</div>
+        <div class="lider-nombre">${escapeHtml(nombre)}</div>
         <div class="lider-equipo">${nbSlug(eq)}</div>
       </div>
       <span class="lider-val">${val}</span>

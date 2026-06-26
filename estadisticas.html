@@ -401,6 +401,11 @@ const COLORES={
 const nb  = s => NOMBRES[s] || (s.charAt(0).toUpperCase()+s.slice(1));
 const col = s => COLORES[s] || '#1565c0';
 const esc = s => `escudos/${s}.png`;
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+}
 
 function formatFecha(f){
   const d = new Date(f+'T12:00:00');
@@ -417,7 +422,7 @@ function buildGrid(obj, labels){
   const rows = Object.entries(labels).map(([k,l])=>{
     const raw = obj[k];
     const isNull = raw===null||raw===undefined;
-    return `<div class="pstat-row"><span class="pstat-label">${l}</span><span class="pstat-val${isNull?' null-val':''}">${isNull?'—':raw}</span></div>`;
+    return `<div class="pstat-row"><span class="pstat-label">${l}</span><span class="pstat-val${isNull?' null-val':''}">${isNull?'—':escapeHtml(raw)}</span></div>`;
   });
   const mid = Math.ceil(rows.length/2);
   return `<div class="pstat-grid"><div>${rows.slice(0,mid).join('')}</div><div>${rows.slice(mid).join('')}</div></div>`;
@@ -522,7 +527,7 @@ function renderPlayers(jugs, teamSlug, containerId, squad){
         </div>
         <div class="player-info">
           <div class="player-name">
-            ${j.nombre}
+            ${escapeHtml(j.nombre)}
           </div>
           <div class="player-meta">${j.min}' · ${j.portero?'Portero':'Jugador'}</div>
           ${badges.length?'<div class="player-badges">'+badges.join('')+'</div>':''}
@@ -636,19 +641,19 @@ async function init(){
     if(s.tipo==='posesion'){
       const div=document.createElement('div');
       div.innerHTML=`
-        <div class="posesion-label">${s.label}</div>
+        <div class="posesion-label">${escapeHtml(s.label)}</div>
         <div class="posesion-bar">
-          <div class="posesion-local"  style="width:${s.local_val}%;background:${cLocal}">${s.local}</div>
-          <div class="posesion-visitante" style="width:${s.visitante_val}%;background:${cVisit}">${s.visitante}</div>
+          <div class="posesion-local"  style="width:${s.local_val}%;background:${cLocal}">${escapeHtml(s.local)}</div>
+          <div class="posesion-visitante" style="width:${s.visitante_val}%;background:${cVisit}">${escapeHtml(s.visitante)}</div>
         </div>`;
       sc.appendChild(div);
     }else{
       const div=document.createElement('div');
       div.className='stat-simple';
       div.innerHTML=`
-        <div class="stat-simple-val local" style="color:${cLocal}">${s.local}</div>
-        <div class="stat-simple-label">${s.label}</div>
-        <div class="stat-simple-val visitante" style="color:${cVisit}">${s.visitante}</div>`;
+        <div class="stat-simple-val local" style="color:${cLocal}">${escapeHtml(s.local)}</div>
+        <div class="stat-simple-label">${escapeHtml(s.label)}</div>
+        <div class="stat-simple-val visitante" style="color:${cVisit}">${escapeHtml(s.visitante)}</div>`;
       sc.appendChild(div);
     }
   });

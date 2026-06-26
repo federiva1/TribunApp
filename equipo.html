@@ -1272,6 +1272,11 @@ const POS_LABELS = { GK:'Arqueros', DEF:'Defensores', MED:'Mediocampistas', DEL:
 const POS_ORDER  = ['GK','DEF','MED','DEL'];
 
 const FOTO = fid => `fotos/${fid}.png`;
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+}
 
 // Cruza un nombre (FotMob/api-sports) contra `squad` (plantel) y devuelve el
 // entry del plantel, o null. Misma jerarquía que la sección puntajes:
@@ -1409,10 +1414,10 @@ function renderPlantel() {
       card.innerHTML = `
         ${numHTML}
         <div class="jugador-foto-wrap">
-          <img class="jugador-foto" src="fotos/${j.fid}.png" alt="${j.nombre}"
+          <img class="jugador-foto" src="fotos/${j.fid}.png" alt="${escapeHtml(j.nombre)}"
                onerror="this.parentElement.innerHTML='<div class=\\'jugador-foto-placeholder\\'>👤</div>'">
         </div>
-        <span class="jugador-nombre">${apellido(j.nombre)}</span>
+        <span class="jugador-nombre">${escapeHtml(apellido(j.nombre))}</span>
       `;
       grid.appendChild(card);
     }
@@ -2591,11 +2596,11 @@ async function loadPartidosStats() {
         </div>
         <div class="pc-info">
           <div class="pc-resultado">
-            ${nbR(p.local).toUpperCase()}
+            ${escapeHtml(nbR(p.local).toUpperCase())}
             <span class="pc-score">${p.goles_local} - ${p.goles_visitante}</span>
-            ${nbR(p.visitante).toUpperCase()}
+            ${escapeHtml(nbR(p.visitante).toUpperCase())}
           </div>
-          <div class="pc-comp">${p.competicion} · ${fecha}</div>
+          <div class="pc-comp">${escapeHtml(p.competicion)} · ${fecha}</div>
         </div>
         <div class="pc-arrow">›</div>`;
       wrap.appendChild(card);
@@ -2683,7 +2688,7 @@ function accBuildCard(j, idx, teamColor) {
         <img src="${j.fid ? FOTO(j.fid) : (j.srcId ? `https://media.api-sports.io/football/players/${j.srcId}.png` : 'fotos/sin-foto.png')}" alt="" onerror="this.onerror=null;this.src='fotos/sin-foto.png';this.style.display='none'">
       </div>
       <div class="player-info">
-        <div class="player-name">${j.nombre}</div>
+        <div class="player-name">${escapeHtml(j.nombre)}</div>
         <div class="player-meta">${j.min}' · ${j.portero?'Portero':'Jugador'} · ${j.pj} PJ</div>
         ${badges.length ? '<div class="player-badges">'+badges.join('')+'</div>' : ''}
       </div>

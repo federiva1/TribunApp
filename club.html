@@ -797,6 +797,12 @@ const CLUB_SLUG = params.get('c') || '';
 const COPA      = params.get('copa') || '';  // 'libertadores' | 'sudamericana' | ''
 const CLUB = CLUBES_CONFIG[CLUB_SLUG];
 
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+}
+
 if (!CLUB) {
   document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:Bebas Neue,sans-serif;font-size:24px;color:#e53935;text-align:center;">Club no encontrado.<br><a href="index.html" style="font-size:16px;color:#aaa;text-decoration:none;">← Volver al inicio</a></div>';
   throw new Error('Club not found: ' + CLUB_SLUG);
@@ -1758,8 +1764,8 @@ function _renderFixtureList(fixtures, cont) {
     const main = document.createElement('div');
     main.className = 'fixture-teams-main';
     main.innerHTML = isHome
-      ? `<span style="color:var(--club-color);">${CLUB.nombreCorto}</span> vs ${opp.name}`
-      : `${opp.name} vs <span style="color:var(--club-color);">${CLUB.nombreCorto}</span>`;
+      ? `<span style="color:var(--club-color);">${CLUB.nombreCorto}</span> vs ${escapeHtml(opp.name)}`
+      : `${escapeHtml(opp.name)} vs <span style="color:var(--club-color);">${CLUB.nombreCorto}</span>`;
     const loc = document.createElement('div');
     loc.className = 'fixture-loc';
     loc.textContent = isHome ? '🏠 Local' : '✈️ Visitante';
@@ -2270,9 +2276,9 @@ function _statsTopBlock(partido) {
 function _statsMatchHeader(partido) {
   const h = document.createElement('div'); h.className = 'stats-match-header';
   h.innerHTML = `
-    <div class="stats-match-rival">${CLUB.nombreCorto} vs ${partido.rival}</div>
-    <div class="stats-match-meta">F${partido.fecha} · ${partido.date} · ${partido.condicion}</div>
-    <div class="stats-match-result">${partido.resultado}</div>
+    <div class="stats-match-rival">${CLUB.nombreCorto} vs ${escapeHtml(partido.rival)}</div>
+    <div class="stats-match-meta">F${partido.fecha} · ${partido.date} · ${escapeHtml(partido.condicion)}</div>
+    <div class="stats-match-result">${escapeHtml(partido.resultado)}</div>
   `;
   return h;
 }
@@ -2331,7 +2337,7 @@ function _statsBuildTable(rows, cols, isAcum) {
 
 async function openPrevFecha(f) {
   document.getElementById('prev-fecha-screen').style.display = 'block';
-  document.getElementById('prev-fecha-header').innerHTML = `<div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:#fff;letter-spacing:2px;">FECHA ${f.num}</div><div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:rgba(255,255,255,0.5);letter-spacing:1px;">${CLUB.nombreCorto} vs ${f.rival}</div>`;
+  document.getElementById('prev-fecha-header').innerHTML = `<div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:#fff;letter-spacing:2px;">FECHA ${f.num}</div><div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:rgba(255,255,255,0.5);letter-spacing:1px;">${CLUB.nombreCorto} vs ${escapeHtml(f.rival)}</div>`;
   document.getElementById('prev-fecha-formations').innerHTML = '<div style="text-align:center;color:#555;padding:20px;font-size:13px;">Cargando...</div>';
   document.getElementById('prev-fecha-scores').innerHTML = '<div style="text-align:center;color:#555;padding:20px;font-size:13px;">Cargando...</div>';
   document.getElementById('back-prev-fecha-btn').onclick = () => { document.getElementById('prev-fecha-screen').style.display = 'none'; };
