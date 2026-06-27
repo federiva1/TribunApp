@@ -72,6 +72,7 @@ NOMBRE_A_SLUG: dict[str, str] = {
     'New Zealand':          'newzealand',
     'Spain':                'spain',
     'Cape Verde':           'capeverde',
+    'Cape Verde Islands':   'capeverde',
     'Saudi Arabia':         'saudiarabia',
     'Uruguay':              'uruguay',
     'France':               'france',
