@@ -346,9 +346,14 @@ async function computarLideres(index){
     for(const team of [data.partido.local, data.partido.visitante]){
       const jugs = data.jugadores[team]||[];
       jugs.forEach(j=>{
-        if(!info[j.nombre]) info[j.nombre]={equipo:team,nombre:j.nombre};
-        if(j.goles>0) goles[j.nombre]=(goles[j.nombre]||0)+j.goles;
-        if(j.asist>0) asists[j.nombre]=(asists[j.nombre]||0)+j.asist;
+        // Agrupar por player ID (estable entre partidos). El nombre puede variar
+        // entre archivos ("Lionel Messi" vs "L. Messi"); agrupar por nombre partía
+        // al jugador en dos y lo dejaba fuera del top. Mostrar el nombre más completo.
+        const key = (j.id!=null) ? ('id'+j.id) : ('n'+(j.nombre||''));
+        if(!info[key]) info[key]={equipo:team,nombre:j.nombre||''};
+        if((j.nombre||'').length > (info[key].nombre||'').length) info[key].nombre=j.nombre;
+        if(j.goles>0) goles[key]=(goles[key]||0)+j.goles;
+        if(j.asist>0) asists[key]=(asists[key]||0)+j.asist;
       });
     }
   }
@@ -363,8 +368,9 @@ function buildLiderBloque(titulo, mapa, info, top=5){
       <div class="lider-pronto">Sin datos aún</div>
     </div>`;
   }
-  const items = sorted.map(([nombre,val],i)=>{
-    const eq = info[nombre]?.equipo||'';
+  const items = sorted.map(([key,val],i)=>{
+    const eq = info[key]?.equipo||'';
+    const nombre = info[key]?.nombre||'';
     return `<div class="lider-item">
       <span class="lider-pos">${i+1}</span>
       <img class="lider-flag" src="escudos/${eq}.png" alt="" onerror="this.style.opacity='.1'">
