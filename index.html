@@ -387,12 +387,12 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 /* ===== BRACKET ===== */
 .bracket-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:10px; }
 .bracket {
-  --bk-gap:13px; --bkline:rgba(255,255,255,.16);
+  --bk-gap:10px; --bkline:rgba(255,255,255,.16);
   display:flex; align-items:stretch; gap:var(--bk-gap);
-  min-height:560px; min-width:max-content; margin:0 auto;
+  min-height:560px; width:max-content; margin:0 auto;
 }
-.bk-col { display:flex; flex-direction:column; flex:0 0 auto; width:106px; }
-.bk-col.center { width:122px; justify-content:center; }
+.bk-col { display:flex; flex-direction:column; flex:0 0 auto; width:104px; }
+.bk-col.center { width:118px; justify-content:center; }
 .bk-match {
   flex:1 1 0; position:relative; display:flex; flex-direction:column;
   justify-content:center; padding:5px 0;
@@ -601,6 +601,21 @@ const NOMBRES_ES = {
   panama:               'Panamá',
 };
 
+// Nombres cortos SOLO para los nodos del bracket (los largos se cortaban con "…").
+// El popover y el resto de la app siguen usando NOMBRES_ES (nombre completo).
+const NOMBRES_CORTO = {
+  bosniaandherzegovina: 'Bosnia',
+  drcongo:              'R.D. Congo',
+  ivorycoast:           'C. Marfil',
+  netherlands:          'P. Bajos',
+  usa:                  'EE.UU.',
+  saudiarabia:          'Arabia S.',
+  southafrica:          'Sudáfrica',
+  southkorea:           'Corea Sur',
+  newzealand:           'N. Zelanda',
+  capeverde:            'Cabo Verde',
+};
+
 const FASE_NOMBRES = {
   grupos: 'FASE DE GRUPOS',
   octavos: 'OCTAVOS DE FINAL',
@@ -771,7 +786,7 @@ function _bkTeamHTML(team, winnerSlug, score) {
   }
   const isW = winnerSlug === team.slug;
   const sc  = (score != null) ? `<span class="bk-score">${score}</span>` : '';
-  const nombre = NOMBRES_ES[team.slug] || team.name;
+  const nombre = NOMBRES_CORTO[team.slug] || NOMBRES_ES[team.slug] || team.name;
   return `<a class="bk-team ${isW ? 'winner' : ''}" href="equipo.html?c=${team.slug}">
     <img src="escudos/${team.slug}.png" alt="${nombre}" onerror="this.style.opacity='.2'">
     <span class="bk-name">${nombre}</span>${sc}</a>`;
