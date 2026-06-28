@@ -85,6 +85,7 @@ NOMBRE_A_SLUG: dict[str, str] = {
     'Jordan':               'jordan',
     'Colombia':             'colombia',
     'DR Congo':             'drcongo',
+    'Congo DR':             'drcongo',
     'Portugal':             'portugal',
     'Uzbekistan':           'uzbekistan',
     'Croatia':              'croatia',
