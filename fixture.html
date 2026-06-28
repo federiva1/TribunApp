@@ -416,11 +416,12 @@ let grupoPorSlug = {};   // slug → letra de grupo del Mundial (A-L), desde equ
 
 // Mapeo de rondas
 const FASES = [
-  { key: 'grupos',   label: 'Grupos',   rounds: ['1','2','3'], visible: true },
-  { key: 'octavos',  label: 'Octavos',  rounds: ['1/16'],      visible: false },
-  { key: 'cuartos',  label: 'Cuartos',  rounds: ['1/8'],       visible: false },
-  { key: 'semis',    label: 'Semis',    rounds: ['1/4'],       visible: false },
-  { key: 'final',    label: 'Final',    rounds: ['1/2','bronze','final'], visible: false },
+  { key: 'grupos',        label: 'Grupos',        rounds: ['1','2','3'], visible: true },
+  { key: 'dieciseisavos', label: 'Dieciseisavos', rounds: ['1/32'],      visible: false },
+  { key: 'octavos',       label: 'Octavos',       rounds: ['1/16'],      visible: false },
+  { key: 'cuartos',       label: 'Cuartos',       rounds: ['1/8'],       visible: false },
+  { key: 'semis',         label: 'Semis',         rounds: ['1/4'],       visible: false },
+  { key: 'final',         label: 'Final',         rounds: ['1/2','bronze','final'], visible: false },
 ];
 
 const DIAS_ES = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
@@ -636,6 +637,7 @@ function crearCardPartido(p) {
   // La letra real (A-L) sale del equipo (data/equipos.json → grupoPorSlug).
   const grupoLetra = grupoPorSlug[p.home?.slug] || grupoPorSlug[p.away?.slug] || null;
   if (p.group) metaLabel = grupoLetra ? `Grupo ${grupoLetra}` : 'Fase de Grupos';
+  else if (p.round === '1/32') metaLabel = 'Dieciseisavos de Final';
   else if (p.round === '1/16') metaLabel = 'Octavos de Final';
   else if (p.round === '1/8')  metaLabel = 'Cuartos de Final';
   else if (p.round === '1/4')  metaLabel = 'Semifinal';
@@ -1305,6 +1307,14 @@ async function cargar() {
       if (eq.api_id) slugPorId[String(eq.api_id)] = eq.slug;
       if (eq.grupo) grupoPorSlug[eq.slug] = eq.grupo;
     }
+
+    // Mostrar solo las fases que tienen partidos cargados; abrir en la más avanzada.
+    const roundsConPartidos = new Set(todosPartidos.map(p => p.round));
+    for (const f of FASES) {
+      f.visible = f.rounds.some(r => roundsConPartidos.has(r));
+    }
+    const ultimaVisible = [...FASES].reverse().find(f => f.visible);
+    if (ultimaVisible) faseActiva = ultimaVisible.key;
 
     renderFaseTabs();
     renderPartidos();
