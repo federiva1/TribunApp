@@ -30,16 +30,20 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 import time
 import unicodedata
+import urllib.request
 from pathlib import Path
 
+# Playwright es opcional: el camino primario es HTTP (urllib), que funciona detrás
+# del proxy del entorno cloud y en GitHub Actions donde FotMob bloquea el browser.
+# Playwright queda como fallback (útil en la compu local).
 try:
     from playwright.sync_api import sync_playwright
 except ImportError:
-    print("ERROR: playwright no instalado. Corre: pip install playwright && playwright install chromium")
-    sys.exit(1)
+    sync_playwright = None
 
 ROOT         = Path(__file__).resolve().parent.parent
 PARTIDOS_DIR = ROOT / 'data' / 'partidos'
@@ -246,6 +250,49 @@ def enrich_players(players: list, ps_by_name: dict) -> list:
     return players
 
 
+def _next_data_http(url: str) -> dict | None:
+    """Descarga la página y extrae el JSON de <script id="__NEXT_DATA__">.
+    FotMob hace SSR, así que playerStats/fixtures vienen embebidos en el HTML —
+    no hace falta browser. Usa el proxy del entorno vía las env vars HTTPS_PROXY.
+    Devuelve None si falla (para que el caller caiga a Playwright)."""
+    try:
+        req = urllib.request.Request(url, headers={
+            'User-Agent': UA,
+            'Accept': 'text/html,application/xhtml+xml',
+            'Accept-Language': 'es-AR,es;q=0.9,en;q=0.8',
+        })
+        with urllib.request.urlopen(req, timeout=30) as r:
+            html = r.read().decode('utf-8', 'replace')
+        m = re.search(r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>',
+                      html, re.DOTALL)
+        return json.loads(m.group(1)) if m else None
+    except Exception:
+        return None
+
+
+def _next_data_browser(url: str, headed: bool = False) -> dict:
+    """Fallback con Playwright (para la compu local donde el browser sí llega)."""
+    if sync_playwright is None:
+        raise RuntimeError('playwright no instalado y el camino HTTP falló')
+    with sync_playwright() as pw:
+        browser = pw.chromium.launch(headless=not headed, slow_mo=80)
+        ctx = browser.new_context(user_agent=UA, locale='es-AR',
+                                  viewport={'width': 1280, 'height': 900},
+                                  ignore_https_errors=True)
+        page = ctx.new_page()
+        page.goto(url, wait_until='domcontentloaded', timeout=60000)
+        print('Esperando FotMob...')
+        time.sleep(8)
+        nd = page.evaluate('() => window.__NEXT_DATA__')
+        if not nd:
+            page.wait_for_load_state('networkidle', timeout=30000)
+            nd = page.evaluate('() => window.__NEXT_DATA__')
+        browser.close()
+    if not nd:
+        raise RuntimeError('Sin __NEXT_DATA__')
+    return nd
+
+
 def resolve_fotmob_url(stats_id: str, date_str: str, local_slug: str) -> str:
     """Busca la URL de FotMob del partido usando la página de fixtures del equipo local."""
     plantel_file = ROOT / 'data' / 'planteles' / f'{local_slug}.json'
@@ -256,19 +303,11 @@ def resolve_fotmob_url(stats_id: str, date_str: str, local_slug: str) -> str:
         raise ValueError(f'fotmob_id no encontrado para {local_slug}')
 
     print(f'  Buscando URL FotMob (team={fotmob_id}, fecha={date_str})...')
-    with sync_playwright() as pw:
-        browser = pw.chromium.launch(headless=True)
-        ctx = browser.new_context(user_agent=UA, ignore_https_errors=True)
-        page = ctx.new_page()
-        page.goto(f'https://www.fotmob.com/teams/{fotmob_id}/fixtures',
-                  wait_until='domcontentloaded', timeout=60000)
-        data = page.evaluate('() => document.getElementById("__NEXT_DATA__")?.textContent')
-        browser.close()
+    fixtures_url = f'https://www.fotmob.com/teams/{fotmob_id}/fixtures'
+    d = _next_data_http(fixtures_url)        # camino primario: HTTP (proxy)
+    if d is None:                            # fallback: browser
+        d = _next_data_browser(fixtures_url)
 
-    if not data:
-        raise RuntimeError('No se pudo obtener __NEXT_DATA__ de la página de fixtures')
-
-    d = json.loads(data)
     fx = d['props']['pageProps']['fallback'][f'team-{fotmob_id}']['fixtures']
     fixtures = fx.get('allFixtures', {}).get('fixtures', fx) if isinstance(fx, dict) else fx
     for m in fixtures:
@@ -329,7 +368,7 @@ def auto_mode(headed: bool = False) -> int:
         payload = json.loads(out_file.read_text(encoding='utf-8'))
         try:
             nd = _fetch_next_data(url, headed)
-            enriched = enrich_players(nd, payload)
+            enriched = _enrich_payload_from_nd(nd, payload)
             out_file.write_text(json.dumps(enriched, ensure_ascii=False, indent=2), encoding='utf-8')
             print(f'  Enriquecido: data/partidos/{sid}.json')
         except Exception as e:
@@ -343,24 +382,82 @@ def auto_mode(headed: bool = False) -> int:
 
 
 def _fetch_next_data(url: str, headed: bool = False) -> dict:
-    """Navega a la URL de FotMob y retorna __NEXT_DATA__."""
-    with sync_playwright() as pw:
-        browser = pw.chromium.launch(headless=not headed, slow_mo=80)
-        ctx = browser.new_context(user_agent=UA, locale='es-AR',
-                                  viewport={'width': 1280, 'height': 900},
-                                  ignore_https_errors=True)
-        page = ctx.new_page()
-        page.goto(url, wait_until='domcontentloaded', timeout=60000)
-        print('Esperando FotMob...')
-        time.sleep(8)
-        nd = page.evaluate('() => window.__NEXT_DATA__')
-        if not nd:
-            page.wait_for_load_state('networkidle', timeout=30000)
-            nd = page.evaluate('() => window.__NEXT_DATA__')
-        browser.close()
-    if not nd:
-        raise RuntimeError('Sin __NEXT_DATA__')
-    return nd
+    """Retorna __NEXT_DATA__ del partido. Primario: HTTP (urllib/proxy);
+    fallback: Playwright (compu local)."""
+    nd = _next_data_http(url)
+    if nd is not None:
+        return nd
+    return _next_data_browser(url, headed)
+
+
+def _enrich_payload_from_nd(nd: dict, payload: dict) -> dict:
+    """Extrae playerStats del __NEXT_DATA__ de FotMob y enriquece el payload del
+    partido (top/ataque/defensa/duelos, MVP, xG). Devuelve el payload modificado.
+    Lo usan tanto main() (--url) como auto_mode() (--auto)."""
+    content = nd['props']['pageProps']['content']
+    gen     = nd['props']['pageProps'].get('general', {})
+
+    home_id = gen.get('homeTeam', {}).get('id')
+    away_id = gen.get('awayTeam', {}).get('id')
+
+    ps_raw = content.get('playerStats', {}) or {}
+    ps_by_team: dict = {}
+    for _pid, p in ps_raw.items():
+        tid = p.get('teamId')
+        ps_by_team.setdefault(tid, {})
+        ps_by_team[tid][(p.get('name') or '').strip()] = p
+
+    local_slug     = payload['partido']['local']
+    visitante_slug = payload['partido']['visitante']
+
+    _sys = sys
+    _sys.path.insert(0, str(ROOT / 'scripts'))
+    from fetch_mundial_match import name_to_slug
+    fotmob_home_slug = name_to_slug(gen.get('homeTeam', {}).get('name') or '')
+
+    if fotmob_home_slug == local_slug:
+        local_team_id, visitante_team_id = home_id, away_id
+    else:
+        local_team_id, visitante_team_id = away_id, home_id
+
+    ps_local     = ps_by_team.get(local_team_id, {})
+    ps_visitante = ps_by_team.get(visitante_team_id, {})
+    print(f'FotMob players: {local_slug}={len(ps_local)}  {visitante_slug}={len(ps_visitante)}')
+
+    # MVP — FotMob da name como string o dict {firstName,lastName,fullName}
+    potm = content.get('matchFacts', {}).get('playerOfTheMatch', {}) or {}
+    mvp_name_raw = potm.get('name') or ''
+    mvp_fotmob_name = (mvp_name_raw.get('fullName') or '').strip() \
+        if isinstance(mvp_name_raw, dict) else str(mvp_name_raw).strip()
+    mvp_id = potm.get('id')
+
+    payload['jugadores'][local_slug]     = enrich_players(payload['jugadores'].get(local_slug, []),     ps_local)
+    payload['jugadores'][visitante_slug] = enrich_players(payload['jugadores'].get(visitante_slug, []), ps_visitante)
+
+    mvp_tokset = _tokset(normalize(mvp_fotmob_name)) if mvp_fotmob_name else frozenset()
+    for slug in (local_slug, visitante_slug):
+        for p in payload['jugadores'].get(slug, []):
+            es_mvp = (mvp_id is not None and p.get('id') == mvp_id) or \
+                     (mvp_tokset and _tokset(normalize(p['nombre'])) == mvp_tokset)
+            if es_mvp:
+                p['mvp'] = True
+
+    def sum_xg(players):
+        vals = [p.get('_xg') for p in players if p.get('_xg') is not None and (p.get('min') or 0) > 0]
+        return round(sum(vals), 2) if vals else None
+
+    local_xg     = sum_xg(payload['jugadores'].get(local_slug, []))
+    visitante_xg = sum_xg(payload['jugadores'].get(visitante_slug, []))
+    for s in payload.get('top_stats', []):
+        if s['label'] == 'xG' and s.get('local') is None:
+            if local_xg is not None:     s['local'] = local_xg;     s['local_val'] = local_xg
+            if visitante_xg is not None: s['visitante'] = visitante_xg; s['visitante_val'] = visitante_xg
+
+    for slug in (local_slug, visitante_slug):
+        for p in payload['jugadores'].get(slug, []):
+            p.pop('_xg', None)
+
+    return payload
 
 
 def main() -> int:
@@ -425,91 +522,7 @@ def main() -> int:
         print('ERROR: sin __NEXT_DATA__')
         return 1
 
-    # ── Extraer playerStats agrupados por equipo ───────────────────────────
-    content = nd['props']['pageProps']['content']
-    gen     = nd['props']['pageProps'].get('general', {})
-
-    home_id = gen.get('homeTeam', {}).get('id')
-    away_id = gen.get('awayTeam', {}).get('id')
-
-    ps_raw = content.get('playerStats', {}) or {}
-
-    # Agrupar por teamId -> {nombre: player_data}
-    ps_by_team: dict[int, dict[str, dict]] = {}
-    for pid_str, p in ps_raw.items():
-        tid = p.get('teamId')
-        if tid not in ps_by_team:
-            ps_by_team[tid] = {}
-        name = (p.get('name') or '').strip()
-        ps_by_team[tid][name] = p
-
-    # Determinar qué teamId FotMob corresponde a local/visitante
-    local_slug    = payload['partido']['local']
-    visitante_slug = payload['partido']['visitante']
-
-    # Heuristica: home de FotMob = primer equipo de la URL
-    # Pero lo mas seguro es verificar por nombre del equipo
-    home_name = (gen.get('homeTeam', {}).get('name') or '').lower()
-
-    import sys as _sys
-    _sys.path.insert(0, str(ROOT / 'scripts'))
-    from fetch_mundial_match import name_to_slug
-    fotmob_home_slug = name_to_slug(gen.get('homeTeam', {}).get('name') or '')
-    fotmob_away_slug = name_to_slug(gen.get('awayTeam', {}).get('name') or '')
-
-    if fotmob_home_slug == local_slug:
-        local_team_id    = home_id
-        visitante_team_id = away_id
-    else:
-        local_team_id    = away_id
-        visitante_team_id = home_id
-
-    ps_local    = ps_by_team.get(local_team_id, {})
-    ps_visitante = ps_by_team.get(visitante_team_id, {})
-
-    print(f'FotMob players: {local_slug}={len(ps_local)}  {visitante_slug}={len(ps_visitante)}')
-
-    # ── MVP ────────────────────────────────────────────────────────────────
-    # FotMob a veces da name como string, a veces como dict {firstName,lastName,fullName}
-    potm = content.get('matchFacts', {}).get('playerOfTheMatch', {}) or {}
-    mvp_name_raw = potm.get('name') or ''
-    if isinstance(mvp_name_raw, dict):
-        mvp_fotmob_name = (mvp_name_raw.get('fullName') or '').strip()
-    else:
-        mvp_fotmob_name = str(mvp_name_raw).strip()
-    mvp_id = potm.get('id')
-
-    # ── Enriquecer jugadores ──────────────────────────────────────────────
-    payload['jugadores'][local_slug]     = enrich_players(payload['jugadores'].get(local_slug, []),     ps_local)
-    payload['jugadores'][visitante_slug] = enrich_players(payload['jugadores'].get(visitante_slug, []), ps_visitante)
-
-    # Marcar MVP — por id de FotMob (robusto) o por conjunto de tokens del nombre
-    mvp_tokset = _tokset(normalize(mvp_fotmob_name)) if mvp_fotmob_name else frozenset()
-    for slug in (local_slug, visitante_slug):
-        for p in payload['jugadores'].get(slug, []):
-            es_mvp = (mvp_id is not None and p.get('id') == mvp_id) or \
-                     (mvp_tokset and _tokset(normalize(p['nombre'])) == mvp_tokset)
-            if es_mvp:
-                p['mvp'] = True
-
-    # Recalcular xG del partido si vino null de api-sports
-    def sum_xg(players):
-        vals = [p.get('_xg') for p in players if p.get('_xg') is not None and (p.get('min') or 0) > 0]
-        return round(sum(vals), 2) if vals else None
-
-    local_xg    = sum_xg(payload['jugadores'].get(local_slug, []))
-    visitante_xg = sum_xg(payload['jugadores'].get(visitante_slug, []))
-
-    for s in payload.get('top_stats', []):
-        if s['label'] == 'xG' and s.get('local') is None:
-            if local_xg is not None:    s['local'] = local_xg; s['local_val'] = local_xg
-            if visitante_xg is not None: s['visitante'] = visitante_xg; s['visitante_val'] = visitante_xg
-
-    # Limpiar _xg interno
-    for slug in (local_slug, visitante_slug):
-        for p in payload['jugadores'].get(slug, []):
-            p.pop('_xg', None)
-
+    payload = _enrich_payload_from_nd(nd, payload)
     out_file.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
     print(f'Enriquecido: data/partidos/{args.id}.json')
     return 0
