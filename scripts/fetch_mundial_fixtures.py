@@ -105,6 +105,19 @@ def build_entry(f, existing_by_id):
     # Preservar stats_id y pageUrl del JSON existente si había entrada previa
     prev = existing_by_id.get(api_id, {})
 
+    # Penales + ganador (eliminatorias). api-sports marca teams.X.winner aun
+    # cuando el partido se define por penales (score 1-1 → winner por tanda).
+    score    = f.get('score', {}) or {}
+    pen      = score.get('penalty') or {}
+    home_pen = pen.get('home')
+    away_pen = pen.get('away')
+    if teams['home'].get('winner'):
+        winner_slug = home_slug
+    elif teams['away'].get('winner'):
+        winner_slug = away_slug
+    else:
+        winner_slug = None
+
     return {
         'round':      round_key,
         'roundName':  ROUND_NAME.get(round_key, round_key),
@@ -125,6 +138,9 @@ def build_entry(f, existing_by_id):
         },
         'home_score': goals['home'],
         'away_score': goals['away'],
+        'home_pen':   home_pen,
+        'away_pen':   away_pen,
+        'winner':     winner_slug,
         'group':      league.get('round', '').replace('Group Stage - ', 'Group ') if 'Group Stage' in league.get('round','') else None,
         'status': {
             'utcTime':   fix['date'],

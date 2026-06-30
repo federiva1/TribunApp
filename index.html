@@ -409,9 +409,11 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1;
 }
 .bk-team .bk-score {
-  font-family:'Bebas Neue',sans-serif; font-size:15px; min-width:16px; text-align:center;
-  color:rgba(255,255,255,.85);
+  font-family:'Bebas Neue',sans-serif; font-size:15px; min-width:16px; text-align:right;
+  color:rgba(255,255,255,.85); white-space:nowrap;
 }
+.bk-team .bk-pen { font-size:11px; color:rgba(255,255,255,.55); }
+.bk-team.winner .bk-pen { color:var(--gold); }
 .bk-team.winner { background:rgba(245,197,24,.08); }
 .bk-team.winner .bk-name, .bk-team.winner .bk-score { color:var(--gold); }
 .bk-team.tbd { color:rgba(255,255,255,.32); }
@@ -446,7 +448,9 @@ a.bk-team:hover { background:rgba(21,101,192,.16); }
 #bk-pop .bkp-team + .bkp-team { margin-top:8px; }
 #bk-pop .bkp-team img { width:28px; height:28px; object-fit:contain; flex-shrink:0; }
 #bk-pop .bkp-team .bkp-name { flex:1; font-family:'Barlow Condensed',sans-serif; font-weight:600; font-size:16px; }
-#bk-pop .bkp-team .bkp-score { font-family:'Bebas Neue',sans-serif; font-size:20px; }
+#bk-pop .bkp-team .bkp-score { font-family:'Bebas Neue',sans-serif; font-size:20px; white-space:nowrap; }
+#bk-pop .bkp-team .bkp-pen { font-size:12px; color:rgba(255,255,255,.55); }
+#bk-pop .bkp-team.winner .bkp-pen { color:var(--gold); }
 #bk-pop .bkp-team.winner .bkp-name, #bk-pop .bkp-team.winner .bkp-score { color:var(--gold); }
 #bk-pop .bkp-team.tbd { color:rgba(255,255,255,.4); }
 #bk-pop .bkp-go { font-size:11px; color:rgba(255,255,255,.4); margin-left:auto; }
@@ -704,11 +708,15 @@ function _bkNode(homeSlug, awaySlug, partidos, round) {
   };
   const m = _bkLookup(partidos, homeSlug, awaySlug);
   if (m && m.status && m.status.finished) {
-    let hs, as;
-    if (m.home.slug === homeSlug) { hs = m.home_score; as = m.away_score; }
-    else                          { hs = m.away_score; as = m.home_score; }
-    node.hscore = hs; node.ascore = as; node.finished = true;
-    if (hs != null && as != null && hs !== as) {
+    let hs, as, hp, ap;
+    if (m.home.slug === homeSlug) { hs = m.home_score; as = m.away_score; hp = m.home_pen; ap = m.away_pen; }
+    else                          { hs = m.away_score; as = m.home_score; hp = m.away_pen; ap = m.home_pen; }
+    node.hscore = hs; node.ascore = as; node.hpen = hp; node.apen = ap; node.finished = true;
+    // Ganador: usar m.winner (cubre penales/prórroga) si está; si no, por marcador.
+    if (m.winner) {
+      node.winner = m.winner;
+      node.loser  = (m.winner === homeSlug) ? awaySlug : homeSlug;
+    } else if (hs != null && as != null && hs !== as) {
       node.winner = hs > as ? homeSlug : awaySlug;
       node.loser  = hs > as ? awaySlug : homeSlug;
     }
@@ -774,18 +782,19 @@ function _bkMatchHTML(node) {
   _bkMatches.push(node);
   return `<div class="bk-match" data-mi="${mi}">
     <div class="bk-card">
-      ${_bkTeamHTML(node.home, node.winner, node.hscore)}
-      ${_bkTeamHTML(node.away, node.winner, node.ascore)}
+      ${_bkTeamHTML(node.home, node.winner, node.hscore, node.hpen)}
+      ${_bkTeamHTML(node.away, node.winner, node.ascore, node.apen)}
     </div>
   </div>`;
 }
 
-function _bkTeamHTML(team, winnerSlug, score) {
+function _bkTeamHTML(team, winnerSlug, score, pen) {
   if (!team) {
     return `<div class="bk-team tbd"><span class="bk-flag-q">?</span><span class="bk-name">A definir</span></div>`;
   }
   const isW = winnerSlug === team.slug;
-  const sc  = (score != null) ? `<span class="bk-score">${score}</span>` : '';
+  const penTxt = (pen != null) ? ` <span class="bk-pen">(${pen})</span>` : '';
+  const sc  = (score != null) ? `<span class="bk-score">${score}${penTxt}</span>` : '';
   const nombre = NOMBRES_CORTO[team.slug] || NOMBRES_ES[team.slug] || team.name;
   return `<a class="bk-team ${isW ? 'winner' : ''}" href="equipo.html?c=${team.slug}">
     <img src="escudos/${team.slug}.png" alt="${nombre}" onerror="this.style.opacity='.2'">
@@ -803,18 +812,19 @@ function cambiarVista(vista) {
 
 // ── Popover de un cruce (tap en mobile) ───────────────────────────────────
 function _abrirBkPop(node) {
-  const teamRow = (team, winnerSlug, score) => {
+  const teamRow = (team, winnerSlug, score, pen) => {
     if (!team) return `<div class="bkp-team tbd"><span class="bk-flag-q">?</span><span class="bkp-name">A definir</span></div>`;
     const isW = winnerSlug === team.slug;
     const nombre = NOMBRES_ES[team.slug] || team.name;
-    const sc = (score != null) ? `<span class="bkp-score">${score}</span>` : '';
+    const penTxt = (pen != null) ? ` <span class="bkp-pen">(${pen} pen)</span>` : '';
+    const sc = (score != null) ? `<span class="bkp-score">${score}${penTxt}</span>` : '';
     return `<a class="bkp-team ${isW ? 'winner' : ''}" href="equipo.html?c=${team.slug}">
       <img src="escudos/${team.slug}.png" alt="${nombre}" onerror="this.style.opacity='.2'">
       <span class="bkp-name">${nombre}</span>${sc}<span class="bkp-go">ver ›</span></a>`;
   };
   document.getElementById('bk-pop-round').textContent = node.round || '';
   document.getElementById('bk-pop-body').innerHTML =
-    teamRow(node.home, node.winner, node.hscore) + teamRow(node.away, node.winner, node.ascore);
+    teamRow(node.home, node.winner, node.hscore, node.hpen) + teamRow(node.away, node.winner, node.ascore, node.apen);
   document.getElementById('bk-pop').style.display = 'block';
   document.getElementById('bk-pop-backdrop').style.display = 'block';
 }

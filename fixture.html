@@ -326,10 +326,15 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .partido-nombre.perdedor { color: rgba(255,255,255,0.4); }
 
 /* Marcador central */
+.marcador-wrap { display: flex; flex-direction: column; align-items: center; gap: 2px; flex-shrink: 0; }
 .marcador {
   display: flex; align-items: center; gap: 6px;
   font-family: 'Bebas Neue', sans-serif;
   flex-shrink: 0;
+}
+.marcador-pen {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 1px;
+  color: var(--gold); line-height: 1; white-space: nowrap;
 }
 .marcador-gol {
   font-size: 28px; letter-spacing: 0; color: #fff; line-height: 1;
@@ -630,6 +635,9 @@ function crearCardPartido(p) {
   if (finished && hayMarcador) {
     if (golesHome > golesAway) { claseNomHome += ' ganador'; claseNomAway += ' perdedor'; }
     else if (golesAway > golesHome) { claseNomAway += ' ganador'; claseNomHome += ' perdedor'; }
+    // Empate definido por penales: el ganador sale de p.winner
+    else if (p.winner === slugHome) { claseNomHome += ' ganador'; claseNomAway += ' perdedor'; }
+    else if (p.winner === slugAway) { claseNomAway += ' ganador'; claseNomHome += ' perdedor'; }
   }
 
   let metaLabel = '';
@@ -656,11 +664,15 @@ function crearCardPartido(p) {
 
   let marcadorHTML = '';
   if (hayMarcador) {
+    const penHTML = (p.home_pen != null && p.away_pen != null)
+      ? `<div class="marcador-pen">Pen ${p.home_pen}-${p.away_pen}</div>` : '';
     marcadorHTML = `
-      <div class="marcador">
-        <span class="marcador-gol">${golesHome}</span>
-        <span class="marcador-sep">-</span>
-        <span class="marcador-gol">${golesAway}</span>
+      <div class="marcador-wrap">
+        <div class="marcador">
+          <span class="marcador-gol">${golesHome}</span>
+          <span class="marcador-sep">-</span>
+          <span class="marcador-gol">${golesAway}</span>
+        </div>${penHTML}
       </div>`;
   } else {
     marcadorHTML = `<div class="marcador"><span class="marcador-vs">VS</span></div>`;
