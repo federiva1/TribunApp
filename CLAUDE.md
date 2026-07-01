@@ -56,10 +56,10 @@ python scripts/fetch_mundial_fixtures.py
 python scripts/fetch_mundial_match.py --auto
 python scripts/fetch_mundial_match.py --fixture-id 1234567 --id germany-curacao  # manual
 
-# 3. Enriquecer con stats individuales FotMob (Playwright)
+# 3. Enriquecer con stats individuales FotMob (HTTP/urllib; Playwright solo fallback local)
 python scripts/scrape_fotmob_mundial.py --auto                          # todos los pendientes
 python scripts/scrape_fotmob_mundial.py --url "https://..." --id germany-curacao  # manual
-python scripts/scrape_fotmob_mundial.py --auto --headed                 # browser visible (debug)
+python scripts/scrape_fotmob_mundial.py --auto --headed                 # browser visible (debug, fallback)
 
 # 4. Actualizar tabla de posiciones del mundial
 python scripts/fetch_mundial_standings.py
@@ -212,8 +212,8 @@ In `club.html`, `PUNTAJES_OPEN` is loaded async from `estado.json` (only for lig
 ### copas.html
 Hardcoded arrays `LIBERTADORES_SLUGS` and `SUDAMERICANA_SLUGS` define Argentine participants. Groups fetched live from api-sports (Libertadores: `league=13`, Sudamericana: `league=11`).
 
-### Simulator (index.html tabla overlay)
-`FIXTURE_T` is a hardcoded object with remaining fixture lists for Zona A and Zona B (fechas 13–16). Sim mode stores a `tSimState` object with current points per team and a `resultados` map keyed by `"fecha-homeId-awayId"`. The playoff bracket renders as an inline SVG.
+### index.html — hoy es la home del Mundial 2026
+`index.html` es la landing del Mundial (title "TribunApp — Mundial 2026"), **no** un índice de clubes argentinos (el viejo simulador `FIXTURE_T`/`tSimState` fue removido). Ver "Mundial 2026 Module → index.html (bracket de eliminatorias)". Las páginas de clubes argentinos (`club.html`, `copas.html`, `seleccion.html`) siguen en el repo pero ya no cuelgan de `index.html`.
 
 ### seleccion.html
 Manages a `convocados` array (up to 26 players). Players sourced from `data/seleccion.json` plus live search across all 30 `data/planteles/{slug}.json` files.
@@ -224,14 +224,25 @@ Módulo separado del flujo de clubes argentinos. Todas las páginas del Mundial 
 
 ### Páginas
 
-- **`fixture.html`** — Fixture del Mundial. Muestra amistosos + todas las fases (Fase de Grupos, Octavos, Cuartos, Semis, Final). Datos en `data/fixtures/mundial.json`. La pill "Estadísticas" del header apunta a `estadisticas-torneo.html`.
+- **`index.html`** — Home del Mundial. Header + partido en vivo + toggle **ELIMINATORIA (default) / FASE DE GRUPOS**. Ver "index.html (bracket de eliminatorias)" abajo.
+- **`fixture.html`** — Fixture del Mundial. Muestra amistosos + todas las fases (Fase de Grupos, **Dieciseisavos** (round `1/32`), Octavos, Cuartos, Semis, Final). Los tabs de fase se muestran solos cuando esa ronda tiene partidos en `mundial.json`, y abre en la más avanzada disponible (`FASES` con `visible` recalculado al cargar). Partidos definidos por penales muestran "Pen X-Y" bajo el marcador y marcan al ganador vía `p.winner`. Datos en `data/fixtures/mundial.json`. La pill "Estadísticas" del header apunta a `estadisticas-torneo.html`.
 - **`estadisticas-torneo.html`** — Landing de estadísticas del torneo. Sección superior: goleadores y asistidores globales (computados dinámicamente leyendo todos los JSONs de `data/partidos/`). Sección inferior: grilla de 48 selecciones. Selecciones con datos (`data/partidos/index.json` tiene entradas para ese slug) muestran "VER STATS" y linkan a `equipo.html?c={slug}`.
 - **`equipo.html`** — Perfil de selección. Tiene una sección "estadísticas" que llama a `loadPartidosStats()`: busca en `data/partidos/index.json` los partidos de ese slug, muestra una card Acumulado + cards por partido. Cada card es un `<a href="estadisticas.html?p={id}&c={slug}">`.
 - **`estadisticas.html`** — Vista de un partido específico. URL: `?p={partido-id}` + `?c={slug-equipo}` (opcional, para auto-seleccionar el tab del equipo visitante si se entra desde su perfil). Tiene dos tabs: **Estadísticas** (stats globales del partido) y **Jugadores** (switcher Local/Visitante con cards expandibles por jugador).
 
+### index.html (bracket de eliminatorias)
+
+Vista **ELIMINATORIA** (default) — cuadro de 32 equipos que se completa solo a medida que el pipeline procesa partidos. Vista **FASE DE GRUPOS** — grilla estática de los 12 grupos leída de `data/estado_torneo.json` (se **quitó** el fetch live a `/api/apisports/standings`; los grupos ya no dependen de la API).
+
+- **Estructura fija**: la constante `BRACKET = { left:[...8 pares...], right:[...8 pares...] }` define el orden del cuadro (pares `[homeSlug, awaySlug]` de la Ronda de 32, de arriba a abajo). Pares **adyacentes** alimentan cada nodo de octavos. El orden **no** sale de `mundial.json` (ese array es cronológico) — se mantiene a mano según el sorteo. Si un cruce queda mal emparejado, se reordena acá (cross-check contra los octavos ya definidos en `mundial.json`).
+- **Auto-avance**: `_bkNode(home, away, partidos)` busca el partido en `mundial.json` por slugs (sin importar local/visitante) y, si está `finished`, saca el ganador de `match.winner` (cubre penales; fallback a comparar marcador). `_bkNext()` propaga ganadores a la ronda siguiente. Nodos sin definir = "A definir" (`?`). Penales se muestran como `1 (4)` en el nodo y `(4 pen)` en el popover.
+- **Híbrido responsive**: desktop = cuadro completo con nombre (usa `NOMBRES_CORTO` para los largos: EE.UU., P. Bajos, R.D. Congo, C. Marfil…); mobile (`≤720px`) = condensado solo-escudos, y tocar un cruce abre un popover con nombres + link a `equipo.html?c={slug}`. Los conectores son pseudo-elementos (`.has-child`/`.has-parent` + `.side-right`) sobre columnas flex con `flex:1`.
+- **Ancho**: `.bracket { width:max-content; margin:0 auto }` para centrar y evitar barra horizontal; achicar columnas/gap si se pasa del contenedor.
+- Tocar una bandera → `equipo.html?c={slug}` (misma metodología de formación/puntajes que en grupos).
+
 ### Data
 
-- **`data/fixtures/mundial.json`** — Array de partidos. Campos clave: `round`, `roundName`, `id` (FotMob ID), `stats_id` (ID del JSON en `data/partidos/`), `home`/`away` con `name`/`id`, `home_score`/`away_score`, `status.finished`. Si `stats_id` está presente y el partido está finalizado, `fixture.html` genera un link a `estadisticas.html?p={stats_id}`.
+- **`data/fixtures/mundial.json`** — Array de partidos. Campos clave: `round`, `roundName`, `api_id`, `stats_id` (ID del JSON en `data/partidos/`), `home`/`away` con `name`/`slug`/`id`, `home_score`/`away_score`, `status.finished`/`status.short`/`status.utcTime`. **Eliminatorias**: `winner` (slug del ganador — lo pone `fetch_mundial_fixtures.py` desde `teams.X.winner` de api-sports; cubre penales/prórroga aunque el marcador sea empate) y `home_pen`/`away_pen` (marcador de la tanda, `null` si no hubo). Si `stats_id` está presente y el partido está finalizado, `fixture.html` genera un link a `estadisticas.html?p={stats_id}`. El orden del array **no** es orden de bracket (es cronológico) — el cuadro usa un mapeo fijo (ver "index.html (bracket de eliminatorias)").
 - **`data/partidos/index.json`** — Array de entradas de partidos con estadísticas disponibles: `{ id, local, visitante, fecha, goles_local, goles_visitante, competicion, estadio }`. El `id` es el filename base (ej. `"brazil-panama"`).
 - **`data/partidos/{id}.json`** — Stats de un partido específico. Schema:
   ```json
@@ -303,13 +314,13 @@ Fetched by `equipo.html` on load (with `?v=${Date.now()}` cache bust). Controls 
 3. Load match-specific players from `data/partidos/index.json` → `data/partidos/{id}.json` for the puntajes section (only players who actually played in that match)
 4. Include `rival` and `match_date` in Supabase insert payloads
 
-### Extracción de stats FotMob (manual vía Chrome MCP)
+### Extracción de stats FotMob — vía HTTP (no browser)
 
-La API de FotMob para playerStats usa `stats` por sección como **objeto** (dict), no array. Al iterar:
-```js
-Object.entries(sec.stats || {}).forEach(([label, data]) => { ... })
-```
-Para Panama/selecciones, `p.name` es string directo (no `p.name.fullName`). El Chrome MCP trunca outputs largos — extraer un jugador a la vez con `JSON.stringify(window.__data[i])`.
+`scrape_fotmob_mundial.py` baja el `__NEXT_DATA__` **por HTTP con `urllib`** (`_next_data_http`), no con Playwright. FotMob hace SSR: `props.pageProps.content.playerStats` (del match) y `...fallback[team-{id}].fixtures` (de la página del equipo) vienen embebidos en `<script id="__NEXT_DATA__">` del HTML. Esto es clave porque **el chromium de Playwright está bloqueado por el proxy del entorno cloud y por la IP de GitHub Actions** (`ERR_CONNECTION_CLOSED`), pero urllib usa el proxy y sí llega. Playwright quedó solo como **fallback** (`_next_data_browser`, para la compu local). Por eso `sync_playwright` es import opcional.
+
+- El flujo `--auto` (`resolve_fotmob_url` → `_fetch_next_data` → `_enrich_payload_from_nd`) ya funciona derecho; **no** hace falta el viejo workaround de copiar la "URL resuelta" y correr `--url` a mano.
+- Bug histórico ya corregido: `--auto` llamaba `enrich_players(nd, payload)` salteando la extracción de `playerStats` y el matching local/visitante (daba `'str' object has no attribute 'get'`). Esa lógica vive en `_enrich_payload_from_nd(nd, payload)`, compartida por `--auto` y `--url`.
+- Estructura FotMob: `playerStats` es dict `{pid: {name, teamId, isGoalkeeper, stats:[{title, stats:{label:{stat:{value}}}}]}}`. `stats` por sección es **objeto** (dict), no array. Para selecciones `p.name` es string directo (no `p.name.fullName`), pero el MVP (`matchFacts.playerOfTheMatch.name`) puede venir string o dict.
 
 ## Key Conventions
 
@@ -336,7 +347,7 @@ Para Panama/selecciones, `p.name` es string directo (no `p.name.fullName`). El C
 |--------|--------|--------|
 | `fetch_mundial_fixtures.py` | api-sports league=1 | `data/fixtures/mundial.json` |
 | `fetch_mundial_match.py --auto` | api-sports fixtures/{id} | `data/partidos/{stats_id}.json` |
-| `scrape_fotmob_mundial.py --auto` | FotMob Playwright | enriquece jugadores en el mismo JSON |
+| `scrape_fotmob_mundial.py --auto` | FotMob vía HTTP (urllib, fallback Playwright) | enriquece jugadores en el mismo JSON |
 | `fetch_mundial_standings.py` | api-sports standings | `data/partidos/standings.json` |
 | `fetch_mundial_estado.py --force` | lee mundial.json | `data/estado_mundial.json` |
 
@@ -344,7 +355,7 @@ Para Panama/selecciones, `p.name` es string directo (no `p.name.fullName`). El C
 
 **Deduplicación jugadores**: `fetch_mundial_match.py` deduplica por player ID antes de devolver — api-sports double-lista jugadores que juegan los 90' como titular Y suplente. El fix evita que aparezcan duplicados en stats/puntajes.
 
-**Resolución URL FotMob auto**: `scrape_fotmob_mundial.py` tiene `resolve_fotmob_url(stats_id, date_str, local_slug)` que navega `fotmob.com/teams/{fotmob_id}/fixtures`, extrae `__NEXT_DATA__`, encuentra el partido por fecha y devuelve la URL exacta — sin tener que buscarla manualmente.
+**Resolución URL FotMob auto**: `scrape_fotmob_mundial.py` tiene `resolve_fotmob_url(stats_id, date_str, local_slug)` que baja `fotmob.com/teams/{fotmob_id}/fixtures` (por HTTP), extrae `__NEXT_DATA__`, encuentra el partido por fecha y devuelve la URL exacta — sin tener que buscarla manualmente.
 
 **Photo matching** (`estadisticas.html` + `equipo.html`): jerarquía de 5 niveles:
 1. Exacto normalizado (tildes/case)
@@ -370,7 +381,7 @@ Para Panama/selecciones, `p.name` es string directo (no `p.name.fullName`). El C
 - **No usa IA** — scripts Python determinísticos corriendo en runners de GitHub
 - **Requiere**: nada (funciona 24/7 sin compu)
 - **Costo**: $0 (gratis en repos públicos)
-- **Limitación conocida**: FotMob puede bloquear Playwright en Ubuntu (IP de GitHub). Si falla, el workflow continúa igualmente con stats de api-sports (sin stats individuales por jugador).
+- **Nota FotMob**: el scraper ahora baja los datos **por HTTP (urllib)**, no con el browser, así que el bloqueo de Playwright en la IP de GitHub ya no aplica. Si aun así FotMob fallara, el workflow continúa con stats de api-sports (sin stats individuales por jugador).
 
 #### 🤖 Opción "Agente Cloud" (todavía no implementada)
 - **Mecanismo**: servidor cloud (AWS Lambda / Render / Railway) + API de Anthropic corriendo Claude Code como agente autónomo
