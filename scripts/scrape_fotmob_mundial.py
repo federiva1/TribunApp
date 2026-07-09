@@ -434,12 +434,27 @@ def _enrich_payload_from_nd(nd: dict, payload: dict) -> dict:
     payload['jugadores'][local_slug]     = enrich_players(payload['jugadores'].get(local_slug, []),     ps_local)
     payload['jugadores'][visitante_slug] = enrich_players(payload['jugadores'].get(visitante_slug, []), ps_visitante)
 
+    # El id del POTM es de FotMob (≠ id api-sports), así que el match es por nombre.
+    # api-sports suele abreviar ("L. Messi") y no matchea el tokset exacto con
+    # "Lionel Messi" → fallback: mismo apellido + (primer token igual o inicial).
+    mp = normalize(mvp_fotmob_name).split() if mvp_fotmob_name else []
     mvp_tokset = _tokset(normalize(mvp_fotmob_name)) if mvp_fotmob_name else frozenset()
+
+    def _es_mvp(nombre):
+        if not mvp_fotmob_name:
+            return False
+        ntok = _tokset(normalize(nombre))
+        if ntok == mvp_tokset:
+            return True
+        np = normalize(nombre).split()
+        if np and mp and np[-1] == mp[-1]:                       # mismo apellido
+            if np[0] == mp[0] or (len(np[0]) == 1 and mp[0].startswith(np[0])):
+                return True                                       # "l" ~ "lionel"
+        return False
+
     for slug in (local_slug, visitante_slug):
         for p in payload['jugadores'].get(slug, []):
-            es_mvp = (mvp_id is not None and p.get('id') == mvp_id) or \
-                     (mvp_tokset and _tokset(normalize(p['nombre'])) == mvp_tokset)
-            if es_mvp:
+            if (mvp_id is not None and p.get('id') == mvp_id) or _es_mvp(p['nombre']):
                 p['mvp'] = True
 
     def sum_xg(players):
