@@ -116,6 +116,25 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .equipo-card:hover { background: rgba(79,195,247,0.14); border-color: rgba(79,195,247,0.45); transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.35); }
 .equipo-card.lib:hover { background: rgba(27,94,32,0.2); border-color: rgba(102,187,106,0.5); }
 .equipo-card.sud:hover { background: rgba(230,81,0,0.15); border-color: rgba(255,167,38,0.5); }
+
+/* ===== COPAS (mismo look que copas.html) ===== */
+.sec-ronda { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; }
+.sec-ronda.lib { color: var(--lib-light); }
+.sec-ronda.sud { color: var(--sud-light); }
+.copa-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.copa-card {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px; padding: 16px 8px 13px; gap: 8px; cursor: pointer; text-decoration: none;
+  transition: background 0.18s, transform 0.15s, border-color 0.18s, box-shadow 0.18s;
+}
+.copa-card.lib:hover { background: rgba(27,94,32,0.2); border-color: rgba(102,187,106,0.5); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(27,94,32,0.25); }
+.copa-card.sud:hover { background: rgba(230,81,0,0.15); border-color: rgba(255,167,38,0.5); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(230,81,0,0.2); }
+.copa-card .escudo-img { width: 44px; height: 44px; }
+.copa-card .equipo-nombre { font-size: 13px; color: rgba(255,255,255,0.9); }
+.copa-rival { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; color: rgba(255,255,255,0.4); text-align: center; }
+.copa-result { font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 1px; color: var(--gold); }
+.copa-empty { text-align: center; padding: 22px 8px; color: rgba(255,255,255,0.3); font-family: 'Barlow Condensed', sans-serif; letter-spacing: 1px; grid-column: 1 / -1; }
 .escudo-img { width: 42px; height: 42px; object-fit: contain; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5)); }
 .equipo-nombre {
   font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 600;
@@ -194,18 +213,18 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
         <section>
           <div class="sec-header lib">
             <span class="sec-title">LIBERTADORES</span>
+            <span class="sec-ronda lib" id="lib-ronda"></span>
             <span class="sec-badge lib">2026</span>
           </div>
-          <div class="equipos-grid" id="lib-grid"></div>
-          <a class="ver-mas" href="copas.html">Ver grupos y tabla →</a>
+          <div class="copa-grid" id="lib-grid"></div>
         </section>
         <section>
           <div class="sec-header sud">
             <span class="sec-title">SUDAMERICANA</span>
+            <span class="sec-ronda sud" id="sud-ronda"></span>
             <span class="sec-badge sud">2026</span>
           </div>
-          <div class="equipos-grid" id="sud-grid"></div>
-          <a class="ver-mas" href="copas.html">Ver grupos y tabla →</a>
+          <div class="copa-grid" id="sud-grid"></div>
         </section>
       </div>
     </div>
@@ -217,11 +236,6 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 // Zonas de la Liga Profesional (fijas para la temporada — Apertura y Clausura comparten división)
 const ZONA_A = ['estudiantes','bocajuniors','velezsarsfield','talleres','independiente','lanus','sanlorenzo','union','instituto','defensayjusticia','gimnasiamendoza','clubatleticoplatense','centralcordobadesantiago','newellsoldboys','deportivoriestra'];
 const ZONA_B = ['independienterivadavia','riverplate','argentinosjuniors','rosariocentral','belgrano','gimnasialp','huracan','racingclub','barracascentral','tigre','sarmiento','banfield','atleticotucuman','aldosivi','estudiantesderiocuarto'];
-// Participantes ACTUALES en copas internacionales 2026 (solo los que siguen en carrera).
-// Actualizar a medida que avanzan las rondas / quedan eliminados.
-const LIBERTADORES = ['estudiantes','independienterivadavia','clubatleticoplatense','rosariocentral'];
-const SUDAMERICANA  = ['bocajuniors','lanus','tigre'];
-
 function nombreCorto(slug) {
   const c = (typeof CLUBES_CONFIG !== 'undefined') ? CLUBES_CONFIG[slug] : null;
   return (c && c.nombreCorto) || slug;
@@ -253,13 +267,58 @@ function cambiarVista(v) {
   document.getElementById('btn-copas').classList.toggle('active', !local);
 }
 
+// ── COPAS: misma interfaz que copas.html (rival + resultado + ronda, desde copas.json) ──
+function copaInfoEquipos(copa) {
+  const info = {};
+  (copa.partidos || []).forEach(p => {
+    const arg = p.home.slug ? p.home : (p.away.slug ? p.away : null);
+    if (!arg) return;
+    const argIsHome = p.home.slug === arg.slug;
+    const riv = argIsHome ? p.away : p.home;
+    const it = info[arg.slug] || { rival: riv.name, resultados: [] };
+    if (p.home_score != null && p.away_score != null) {
+      const gf = argIsHome ? p.home_score : p.away_score;
+      const gc = argIsHome ? p.away_score : p.home_score;
+      it.resultados.push(`${gf}-${gc}`);
+    }
+    info[arg.slug] = it;
+  });
+  return info;
+}
+function renderCopaGrid(copaObj, cls, gridId, rondaId) {
+  copaObj = copaObj || {};
+  document.getElementById(rondaId).textContent = copaObj.ronda || '';
+  const grid = document.getElementById(gridId);
+  grid.innerHTML = '';
+  const slugs = [...new Set((copaObj.partidos || []).map(p => p.home.slug || p.away.slug).filter(Boolean))];
+  if (!slugs.length) { grid.innerHTML = '<div class="copa-empty">Sin equipos en carrera</div>'; return; }
+  const info = copaInfoEquipos(copaObj);
+  slugs.sort((a, b) => nombreCorto(a).localeCompare(nombreCorto(b), 'es')).forEach(slug => {
+    const nombre = nombreCorto(slug);
+    const i = info[slug] || {};
+    const rival = i.rival ? `<div class="copa-rival">vs ${i.rival}</div>` : '';
+    const res = (i.resultados && i.resultados.length) ? `<div class="copa-result">${i.resultados.join('  ·  ')}</div>` : '';
+    const a = document.createElement('a');
+    a.className = `copa-card ${cls}`;
+    a.href = `club.html?c=${slug}&copa=${cls === 'lib' ? 'libertadores' : 'sudamericana'}`;
+    a.innerHTML =
+      `<img class="escudo-img" src="escudos/${slug}.png" alt="${nombre}" onerror="this.style.opacity=0.3">` +
+      `<div class="equipo-nombre">${nombre}</div>${rival}${res}`;
+    grid.appendChild(a);
+  });
+}
+
 // Render inicial
 renderGrid(ZONA_A, 'zonaA-grid');
 renderGrid(ZONA_B, 'zonaB-grid');
-renderGrid(LIBERTADORES, 'lib-grid', { cls: 'lib', hrefExtra: '&copa=libertadores' });
-renderGrid(SUDAMERICANA, 'sud-grid', { cls: 'sud', hrefExtra: '&copa=sudamericana' });
 document.getElementById('cnt-a').textContent = ZONA_A.length + ' equipos';
 document.getElementById('cnt-b').textContent = ZONA_B.length + ' equipos';
+(async () => {
+  let copas = {};
+  try { copas = await (await fetch(`data/fixtures/copas.json?t=${Date.now()}`)).json(); } catch (e) {}
+  renderCopaGrid(copas.libertadores, 'lib', 'lib-grid', 'lib-ronda');
+  renderCopaGrid(copas.sudamericana, 'sud', 'sud-grid', 'sud-ronda');
+})();
 document.getElementById('loading-state').style.display = 'none';
 document.getElementById('contenido').style.display = '';
 </script>
