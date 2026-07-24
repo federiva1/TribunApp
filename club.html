@@ -964,19 +964,57 @@ function getDeviceId() {
 function getFeedLikes() { try { return JSON.parse(localStorage.getItem(CLUB_SLUG + '_feed_likes') || '{}'); } catch(e) { return {}; } }
 function saveFeedLikes(obj) { try { localStorage.setItem(CLUB_SLUG + '_feed_likes', JSON.stringify(obj)); } catch(e) {} }
 
-function makeAvatar(src, num, size) {
+// ============================================================
+// KIT CHIPS — círculo con la identidad (camiseta) del club + número.
+// Reemplaza las fotos de los jugadores. Cada club puede declarar su
+// patrón en KITS; los que no lo tengan usan un sólido con su color.
+// ============================================================
+const KITS = {
+  // Sarmiento de Junín — verdiblanco (bastones verticales verde/blanco)
+  sarmiento:         { type: 'stripesV', colors: ['#1b8a3e', '#ffffff'], num: '#0e4020' },
+  // Argentinos Juniors — rojo con vivo blanco
+  argentinosjuniors: { type: 'solid',    colors: ['#e12026'],            num: '#ffffff' },
+};
+
+function clubKit(slug) {
+  if (KITS[slug]) return KITS[slug];
+  const c = (typeof CLUBES_CONFIG !== 'undefined' && CLUBES_CONFIG[slug]) || {};
+  return { type: 'solid', colors: [c.color || '#444'], num: '#fff' };
+}
+
+// Devuelve el `background` CSS del kit, con anchos de bastón proporcionales al tamaño.
+function kitBackground(kit, size) {
+  const a = kit.colors[0], b = kit.colors[1] || '#ffffff';
+  const w = Math.max(4, Math.round(size / 6));
+  switch (kit.type) {
+    case 'stripesV': return `repeating-linear-gradient(90deg, ${a} 0 ${w}px, ${b} ${w}px ${2 * w}px)`;
+    case 'stripesH': return `repeating-linear-gradient(0deg, ${a} 0 ${w}px, ${b} ${w}px ${2 * w}px)`;
+    case 'halves':   return `linear-gradient(90deg, ${a} 0 50%, ${b} 50% 100%)`;
+    case 'band':     return `linear-gradient(0deg, ${a} 0 36%, ${b} 36% 64%, ${a} 64% 100%)`;
+    case 'sash':     return `linear-gradient(45deg, ${a} 0 42%, ${b} 42% 58%, ${a} 58% 100%)`;
+    default:         return a;
+  }
+}
+
+// Chip circular: fondo = kit del club, número centrado (con sombra para legibilidad).
+function kitChip(slug, num, size) {
+  const kit = clubKit(slug);
   const wrap = document.createElement('div');
-  wrap.style.cssText = `width:${size}px;height:${size}px;border-radius:50%;overflow:hidden;background:${CLUB.color};display:flex;align-items:center;justify-content:center;flex-shrink:0;`;
-  const img = document.createElement('img');
-  img.src = src;
-  img.style.cssText = 'width:100%;height:100%;object-fit:cover;object-position:top center;display:none;';
-  const fb = document.createElement('span');
-  fb.style.cssText = `font-family:'Bebas Neue',sans-serif;color:#fff;font-size:${Math.round(size * 0.38)}px;`;
-  fb.textContent = num;
-  img.onload = () => { img.style.display = 'block'; fb.style.display = 'none'; };
-  img.onerror = () => { img.style.display = 'none'; fb.style.display = 'block'; };
-  wrap.appendChild(img); wrap.appendChild(fb);
+  wrap.className = 'kit-chip';
+  wrap.style.cssText = `width:${size}px;height:${size}px;border-radius:50%;background:${kitBackground(kit, size)};`
+    + `display:flex;align-items:center;justify-content:center;flex-shrink:0;box-sizing:border-box;`
+    + `border:2px solid rgba(255,255,255,0.9);box-shadow:0 1px 3px rgba(0,0,0,0.45);`;
+  const n = document.createElement('span');
+  n.textContent = num;
+  n.style.cssText = `font-family:'Bebas Neue',sans-serif;font-size:${Math.round(size * 0.46)}px;line-height:1;`
+    + `color:${kit.num};text-shadow:0 1px 2px rgba(0,0,0,0.5),0 0 2px rgba(0,0,0,0.35);`;
+  wrap.appendChild(n);
   return wrap;
+}
+
+// Compat: makeAvatar mantiene la firma (src se ignora — ya no usamos fotos).
+function makeAvatar(src, num, size) {
+  return kitChip(CLUB_SLUG, num, size);
 }
 
 // ============================================================
@@ -995,8 +1033,7 @@ function renderGrid() {
     const blocked = isInjured || isSuspended;
     const chip = document.createElement('div');
     chip.className = 'player-chip' + (used ? ' used' : '') + (blocked ? ' injured' : '');
-    chip.appendChild(makeAvatar(FOTO(p.fid), p.num, 32));
-    const num = document.createElement('span'); num.className = 'chip-num'; num.textContent = p.num; chip.appendChild(num);
+    chip.appendChild(makeAvatar(FOTO(p.fid), p.num, 34));
     const nm = document.createElement('span'); nm.className = 'chip-name'; nm.textContent = p.name; chip.appendChild(nm);
     if (isInjured) { const b = document.createElement('div'); b.className = 'injury-badge'; b.textContent = '🏥'; chip.appendChild(b); }
     if (isSuspended) { const b = document.createElement('div'); b.className = 'injury-badge'; b.style.background = '#f9a825'; b.textContent = '🟨'; chip.appendChild(b); }
@@ -1019,12 +1056,11 @@ function makePitchPlayer(p) {
   const el = document.createElement('div');
   el.className = 'player-on-pitch';
   const bubble = document.createElement('div'); bubble.className = 'player-bubble';
-  const img = document.createElement('img'); img.src = FOTO(p.fid); img.alt = '';
-  img.style.cssText = 'width:100%;height:100%;object-fit:cover;object-position:top center;display:none;';
+  const kit = clubKit(CLUB_SLUG);
+  bubble.style.background = kitBackground(kit, 44);
   const fb = document.createElement('div'); fb.className = 'fallback-num'; fb.textContent = p.num;
-  img.onload = () => { img.style.display = 'block'; fb.style.display = 'none'; };
-  img.onerror = () => { img.style.display = 'none'; fb.style.display = 'flex'; };
-  bubble.appendChild(img); bubble.appendChild(fb);
+  fb.style.cssText = `display:flex;color:${kit.num};text-shadow:0 1px 2px rgba(0,0,0,0.5),0 0 2px rgba(0,0,0,0.35);`;
+  bubble.appendChild(fb);
   const numTag = document.createElement('div'); numTag.className = 'player-numtag';
   numTag.textContent = `${p.num} · ${p.name}`;
   el.appendChild(bubble); el.appendChild(numTag);
