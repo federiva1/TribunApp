@@ -870,7 +870,8 @@ const FOTO = fid => `fotos/${CLUB_SLUG}/${fid}.png`;
 
 // ---- Render header ----
 document.getElementById('back-btn').onclick = () => {
-  window.location.href = COPA ? 'copas.html' : 'index.html';
+  // La home unifica torneo local + copas, así que "volver" siempre va al index.
+  window.location.href = 'index.html';
 };
 document.getElementById('club-escudo-header').src = `escudos/${CLUB_SLUG}.png`;
 document.getElementById('club-nombre-header').textContent = CLUB.nombre;

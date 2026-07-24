@@ -117,7 +117,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .equipo-card.lib:hover { background: rgba(27,94,32,0.2); border-color: rgba(102,187,106,0.5); }
 .equipo-card.sud:hover { background: rgba(230,81,0,0.15); border-color: rgba(255,167,38,0.5); }
 
-/* ===== COPAS (mismo look que copas.html) ===== */
+/* ===== COPAS ===== */
 .sec-ronda { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; }
 .sec-ronda.lib { color: var(--lib-light); }
 .sec-ronda.sud { color: var(--sud-light); }
@@ -141,13 +141,6 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   letter-spacing: 0.3px; color: rgba(255,255,255,0.85); text-align: center; line-height: 1.15;
 }
 
-/* link a copas.html */
-.ver-mas {
-  display: inline-flex; align-items: center; gap: 5px; margin-top: 14px;
-  font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 1px;
-  color: rgba(255,255,255,0.5); text-decoration: none; transition: color 0.2s;
-}
-.ver-mas:hover { color: #fff; }
 
 #loading-state { text-align: center; padding: 60px 20px; }
 .loading-msg { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 3px; color: rgba(255,255,255,0.25); }
@@ -267,7 +260,7 @@ function cambiarVista(v) {
   document.getElementById('btn-copas').classList.toggle('active', !local);
 }
 
-// ── COPAS: misma interfaz que copas.html (rival + resultado + ronda, desde copas.json) ──
+// ── COPAS: equipos en carrera con rival + resultado + ronda (desde copas.json) ──
 function copaInfoEquipos(copa) {
   const info = {};
   (copa.partidos || []).forEach(p => {
