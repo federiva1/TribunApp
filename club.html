@@ -970,10 +970,10 @@ function saveFeedLikes(obj) { try { localStorage.setItem(CLUB_SLUG + '_feed_like
 // patrón en KITS; los que no lo tengan usan un sólido con su color.
 // ============================================================
 const KITS = {
-  // Sarmiento de Junín — verdiblanco (bastones verticales verde/blanco)
-  sarmiento:         { type: 'stripesV', colors: ['#1b8a3e', '#ffffff'], num: '#0e4020' },
-  // Argentinos Juniors — rojo con vivo blanco
-  argentinosjuniors: { type: 'solid',    colors: ['#e12026'],            num: '#ffffff' },
+  // Sarmiento de Junín — verde pleno
+  sarmiento:         { type: 'solid', colors: ['#1b8a3e'],            num: '#ffffff' },
+  // Argentinos Juniors — rojo con franja blanca diagonal (arriba-izq → abajo-der)
+  argentinosjuniors: { type: 'sash',  colors: ['#e12026', '#ffffff'], num: '#a20d12' },
 };
 
 function clubKit(slug) {
@@ -991,7 +991,7 @@ function kitBackground(kit, size) {
     case 'stripesH': return `repeating-linear-gradient(0deg, ${a} 0 ${w}px, ${b} ${w}px ${2 * w}px)`;
     case 'halves':   return `linear-gradient(90deg, ${a} 0 50%, ${b} 50% 100%)`;
     case 'band':     return `linear-gradient(0deg, ${a} 0 36%, ${b} 36% 64%, ${a} 64% 100%)`;
-    case 'sash':     return `linear-gradient(45deg, ${a} 0 42%, ${b} 42% 58%, ${a} 58% 100%)`;
+    case 'sash':     return `linear-gradient(135deg, ${a} 0 42%, ${b} 42% 58%, ${a} 58% 100%)`;
     default:         return a;
   }
 }
