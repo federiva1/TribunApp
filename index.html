@@ -217,9 +217,10 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 // Zonas de la Liga Profesional (fijas para la temporada — Apertura y Clausura comparten división)
 const ZONA_A = ['estudiantes','bocajuniors','velezsarsfield','talleres','independiente','lanus','sanlorenzo','union','instituto','defensayjusticia','gimnasiamendoza','clubatleticoplatense','centralcordobadesantiago','newellsoldboys','deportivoriestra'];
 const ZONA_B = ['independienterivadavia','riverplate','argentinosjuniors','rosariocentral','belgrano','gimnasialp','huracan','racingclub','barracascentral','tigre','sarmiento','banfield','atleticotucuman','aldosivi','estudiantesderiocuarto'];
-// Participantes en copas internacionales 2026
-const LIBERTADORES = ['estudiantes','independienterivadavia','bocajuniors','clubatleticoplatense','lanus','rosariocentral'];
-const SUDAMERICANA  = ['tigre','sanlorenzo','racingclub','deportivoriestra','riverplate','barracascentral'];
+// Participantes ACTUALES en copas internacionales 2026 (solo los que siguen en carrera).
+// Actualizar a medida que avanzan las rondas / quedan eliminados.
+const LIBERTADORES = ['estudiantes','independienterivadavia','clubatleticoplatense','rosariocentral'];
+const SUDAMERICANA  = ['bocajuniors','lanus','tigre'];
 
 function nombreCorto(slug) {
   const c = (typeof CLUBES_CONFIG !== 'undefined') ? CLUBES_CONFIG[slug] : null;
