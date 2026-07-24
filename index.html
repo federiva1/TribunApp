@@ -186,14 +186,12 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
         <section>
           <div class="sec-header zonaA">
             <span class="sec-title">ZONA A</span>
-            <span class="sec-badge zonaA" id="cnt-a"></span>
           </div>
           <div class="equipos-grid" id="zonaA-grid"></div>
         </section>
         <section>
           <div class="sec-header zonaB">
             <span class="sec-title">ZONA B</span>
-            <span class="sec-badge zonaB" id="cnt-b"></span>
           </div>
           <div class="equipos-grid" id="zonaB-grid"></div>
         </section>
@@ -304,8 +302,6 @@ function renderCopaGrid(copaObj, cls, gridId, rondaId) {
 // Render inicial
 renderGrid(ZONA_A, 'zonaA-grid');
 renderGrid(ZONA_B, 'zonaB-grid');
-document.getElementById('cnt-a').textContent = ZONA_A.length + ' equipos';
-document.getElementById('cnt-b').textContent = ZONA_B.length + ' equipos';
 (async () => {
   let copas = {};
   try { copas = await (await fetch(`data/fixtures/copas.json?t=${Date.now()}`)).json(); } catch (e) {}
