@@ -20,9 +20,12 @@
   --dark:  #0d0d1a;
   --dark2: #13131f;
   --celeste: #4fc3f7;
-  --celeste-dark: #1e88e5;
   --verde: #2ad572;
   --gold: #f5c518;
+  --lib-light: #66bb6a;
+  --lib-color: #1b5e20;
+  --sud-light: #ffa726;
+  --sud-color: #e65100;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: var(--dark); color: #fff; overflow-x: hidden; }
@@ -64,10 +67,23 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 }
 
 /* ===== MAIN ===== */
-#main { padding: 20px 16px 50px; max-width: 720px; margin: 0 auto; }
+#main { padding: 18px 16px 50px; max-width: 720px; margin: 0 auto; }
 
-/* ===== TABS DE TORNEO ===== */
-.fase-tabs { display: flex; gap: 8px; justify-content: center; margin-bottom: 22px; flex-wrap: wrap; }
+/* ===== FILTRO DE EQUIPO ===== */
+.team-filter-row { display: flex; align-items: center; gap: 9px; justify-content: center; margin-bottom: 18px; }
+.team-filter-row label {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 1px;
+  text-transform: uppercase; color: rgba(255,255,255,0.4);
+}
+#team-filter {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 600; letter-spacing: 0.5px;
+  color: #fff; background: var(--dark2); border: 1px solid rgba(79,195,247,0.35);
+  border-radius: 10px; padding: 8px 12px; cursor: pointer; max-width: 240px;
+}
+#team-filter:focus { outline: none; border-color: var(--celeste); }
+
+/* ===== TABS / SUB-TABS ===== */
+.fase-tabs { display: flex; gap: 8px; justify-content: center; margin-bottom: 14px; flex-wrap: wrap; }
 .fase-tab {
   font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 600;
   letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.6);
@@ -77,19 +93,22 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .fase-tab:hover { color: #fff; border-color: rgba(255,255,255,0.25); }
 .fase-tab.active { color: #fff; background: rgba(79,195,247,0.18); border-color: rgba(79,195,247,0.5); }
 
+.copa-subtabs { display: flex; gap: 8px; justify-content: center; margin-bottom: 18px; }
+.copa-subtab {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 600;
+  letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.6);
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px; padding: 6px 16px; cursor: pointer; transition: all 0.2s;
+}
+.copa-subtab.lib.active { color: #fff; background: rgba(27,94,32,0.35); border-color: rgba(102,187,106,0.6); }
+.copa-subtab.sud.active { color: #fff; background: rgba(230,81,0,0.25); border-color: rgba(255,167,38,0.6); }
+
 /* ===== ACORDEÓN DE FECHA ===== */
 .fecha-acc { margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; overflow: hidden; background: rgba(255,255,255,0.02); }
-.fecha-head {
-  width: 100%; display: flex; align-items: center; gap: 10px;
-  padding: 12px 16px; cursor: pointer; background: none; border: none; text-align: left;
-  transition: background 0.15s;
-}
+.fecha-head { width: 100%; display: flex; align-items: center; gap: 10px; padding: 12px 16px; cursor: pointer; background: none; border: none; text-align: left; transition: background 0.15s; }
 .fecha-head:hover { background: rgba(255,255,255,0.03); }
 .fecha-num { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 2px; color: #fff; }
-.fecha-estado {
-  font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 1.5px;
-  text-transform: uppercase; padding: 2px 9px; border-radius: 20px;
-}
+.fecha-estado { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; padding: 2px 9px; border-radius: 20px; }
 .fecha-estado.fin  { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.4); }
 .fecha-estado.live { background: rgba(42,213,114,0.15); border: 1px solid rgba(42,213,114,0.4); color: var(--verde); }
 .fecha-estado.prox { background: rgba(79,195,247,0.12); border: 1px solid rgba(79,195,247,0.35); color: var(--celeste); }
@@ -98,10 +117,20 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .fecha-body { padding: 4px 10px 10px; display: flex; flex-direction: column; gap: 6px; }
 .fecha-acc.colapsada .fecha-body { display: none; }
 
+/* ===== LISTA PLANA (equipo filtrado / copas) ===== */
+.lista-plana { display: flex; flex-direction: column; gap: 8px; }
+.copa-ronda-title { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 2px; text-align: center; margin-bottom: 4px; }
+.copa-ronda-title.lib { color: var(--lib-light); }
+.copa-ronda-title.sud { color: var(--sud-light); }
+
 /* ===== TARJETA DE PARTIDO ===== */
-.partido-card { display: flex; flex-direction: column; gap: 6px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 11px; padding: 9px 12px; }
-.partido-meta { display: flex; align-items: center; justify-content: flex-end; }
-.partido-hora { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 1px; color: rgba(255,255,255,0.35); }
+.partido-card { display: flex; flex-direction: column; gap: 6px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 11px; padding: 9px 12px; border-left: 3px solid transparent; }
+.partido-card.lib { border-left-color: rgba(102,187,106,0.55); }
+.partido-card.sud { border-left-color: rgba(255,167,38,0.55); }
+.partido-meta { display: flex; align-items: center; gap: 8px; }
+.partido-meta .etq { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.4); }
+.partido-meta .etq.leg { padding: 1px 7px; border-radius: 10px; background: rgba(255,255,255,0.06); }
+.partido-hora { margin-left: auto; font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 1px; color: rgba(255,255,255,0.35); }
 .partido-hora.en-curso { color: var(--verde); font-weight: 600; }
 .partido-hora.fin { color: rgba(255,255,255,0.3); }
 .partido-fila { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; }
@@ -109,11 +138,9 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .equipo-lado.home { justify-content: flex-end; }
 .equipo-lado.away { justify-content: flex-start; }
 .equipo-lado img { width: 30px; height: 30px; object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5)); }
-.equipo-lado .nom {
-  font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 600;
-  color: rgba(255,255,255,0.85); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.equipo-lado:hover .nom { color: #fff; }
+.escudo-ph { width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,0.09); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 0.3px; color: rgba(255,255,255,0.6); }
+.equipo-lado .nom { font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.85); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.equipo-lado.link:hover .nom { color: #fff; }
 .equipo-lado.ganador .nom { color: #fff; font-weight: 700; }
 .equipo-lado.perdedor .nom { color: rgba(255,255,255,0.4); }
 .marcador { display: flex; flex-direction: column; align-items: center; gap: 1px; flex-shrink: 0; min-width: 54px; }
@@ -154,7 +181,15 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 <main id="main">
   <div id="loading-state"><div class="loading-msg">CARGANDO...</div></div>
   <div id="contenido" style="display:none;">
+    <div class="team-filter-row">
+      <label for="team-filter">Ver:</label>
+      <select id="team-filter"><option value="">Todos los equipos</option></select>
+    </div>
     <div class="fase-tabs" id="fase-tabs"></div>
+    <div class="copa-subtabs" id="copa-subtabs" style="display:none;">
+      <button class="copa-subtab lib active" data-copa="libertadores">Libertadores</button>
+      <button class="copa-subtab sud" data-copa="sudamericana">Sudamericana</button>
+    </div>
     <div id="partidos-wrap"></div>
   </div>
 </main>
@@ -163,36 +198,50 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 <script>
 const DIAS_ES  = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 const MESES_ES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const EN_CURSO = new Set(['1H','HT','2H','ET','BT','P','SUSP']);
 
-let PARTIDOS = [];
-let faseActiva = 'clausura';
-const FASES = [{ key: 'clausura', label: 'Clausura' }];
+let LIGA = [], COPAS = {};
+let faseActiva = 'clausura';   // 'clausura' | 'copas'
+let copaActiva = 'libertadores';
+let teamFilter = '';           // slug o ''
+
+const FASES = [{ key: 'clausura', label: 'Clausura' }, { key: 'copas', label: 'Copas' }];
 
 function nombreCorto(slug) {
   const c = (typeof CLUBES_CONFIG !== 'undefined') ? CLUBES_CONFIG[slug] : null;
   return (c && c.nombreCorto) || slug;
 }
-function horaAR(utc) {
-  const d = new Date(utc); d.setHours(d.getHours() - 3);
-  return `${String(d.getUTCHours()).padStart(2,'0')}:${String(d.getUTCMinutes()).padStart(2,'0')}`;
-}
-function fechaAR(utc) {
-  const d = new Date(utc); d.setHours(d.getHours() - 3);
-  return `${DIAS_ES[d.getUTCDay()]} ${d.getUTCDate()} ${MESES_ES[d.getUTCMonth()]}`;
-}
-const EN_CURSO = new Set(['1H','HT','2H','ET','BT','P','SUSP']);
+function horaAR(utc) { const d = new Date(utc); d.setHours(d.getHours()-3); return `${String(d.getUTCHours()).padStart(2,'0')}:${String(d.getUTCMinutes()).padStart(2,'0')}`; }
+function fechaAR(utc) { const d = new Date(utc); d.setHours(d.getHours()-3); return `${DIAS_ES[d.getUTCDay()]} ${d.getUTCDate()} ${MESES_ES[d.getUTCMonth()]}`; }
 
 async function cargar() {
   try {
-    const res = await fetch(`data/fixtures/liga.json?t=${Date.now()}`);
-    PARTIDOS = await res.json();
+    const [rl, rc] = await Promise.all([
+      fetch(`data/fixtures/liga.json?t=${Date.now()}`),
+      fetch(`data/fixtures/copas.json?t=${Date.now()}`).catch(() => null),
+    ]);
+    LIGA = await rl.json();
+    COPAS = rc && rc.ok ? await rc.json() : {};
+    poblarFiltro();
     renderTabs();
-    renderPartidos();
+    render();
     document.getElementById('loading-state').style.display = 'none';
     document.getElementById('contenido').style.display = '';
   } catch (e) {
     document.getElementById('loading-state').innerHTML = `<div class="loading-msg">Error: ${e.message}</div>`;
   }
+}
+
+function poblarFiltro() {
+  const sel = document.getElementById('team-filter');
+  const slugs = (typeof CLUBES_CONFIG !== 'undefined' ? Object.keys(CLUBES_CONFIG) : [])
+    .sort((a, b) => nombreCorto(a).localeCompare(nombreCorto(b), 'es'));
+  slugs.forEach(s => {
+    const o = document.createElement('option');
+    o.value = s; o.textContent = nombreCorto(s);
+    sel.appendChild(o);
+  });
+  sel.onchange = () => { teamFilter = sel.value; render(); };
 }
 
 function renderTabs() {
@@ -202,97 +251,180 @@ function renderTabs() {
     const b = document.createElement('button');
     b.className = 'fase-tab' + (f.key === faseActiva ? ' active' : '');
     b.textContent = f.label;
-    b.onclick = () => { faseActiva = f.key; renderTabs(); renderPartidos(); };
+    b.onclick = () => { faseActiva = f.key; renderTabs(); render(); };
     wrap.appendChild(b);
+  });
+  // sub-tabs de copa
+  document.querySelectorAll('.copa-subtab').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.copa === copaActiva);
+    btn.onclick = () => { copaActiva = btn.dataset.copa; renderTabs(); render(); };
   });
 }
 
-function renderPartidos() {
+function render() {
+  document.getElementById('copa-subtabs').style.display = (faseActiva === 'copas') ? 'flex' : 'none';
+  if (faseActiva === 'copas') renderCopas();
+  else renderClausura();
+}
+
+// ── CLAUSURA ──────────────────────────────────────────────────────────────
+function renderClausura() {
   const wrap = document.getElementById('partidos-wrap');
   wrap.innerHTML = '';
-  // Agrupar por fecha
+  let partidos = LIGA;
+  if (teamFilter) partidos = partidos.filter(p => p.home.slug === teamFilter || p.away.slug === teamFilter);
+  if (!partidos.length) { wrap.innerHTML = '<div class="empty-msg">Sin partidos</div>'; return; }
+
+  // Con filtro de equipo: lista plana cronológica con etiqueta de fecha
+  if (teamFilter) {
+    const lista = document.createElement('div');
+    lista.className = 'lista-plana';
+    partidos.slice().sort((a, b) => (a.fecha||0) - (b.fecha||0))
+      .forEach(p => lista.appendChild(cardLiga(p, `Fecha ${p.fecha}`)));
+    wrap.appendChild(lista);
+    return;
+  }
+
+  // Sin filtro: acordeón por fecha, solo la actual abierta
   const porFecha = {};
-  PARTIDOS.forEach(p => { (porFecha[p.fecha] = porFecha[p.fecha] || []).push(p); });
+  partidos.forEach(p => { (porFecha[p.fecha] = porFecha[p.fecha] || []).push(p); });
   const fechas = Object.keys(porFecha).map(Number).sort((a, b) => a - b);
-  if (!fechas.length) { wrap.innerHTML = '<div class="empty-msg">Sin partidos todavía</div>'; return; }
-
-  // La fecha "actual" = la primera que no está toda terminada (para abrirla)
   const fechaActual = fechas.find(n => porFecha[n].some(p => !p.status.finished)) ?? fechas[fechas.length - 1];
-
   fechas.forEach(n => {
     const ms = porFecha[n];
-    const fin  = ms.filter(m => m.status.finished).length;
+    const fin = ms.filter(m => m.status.finished).length;
     const live = ms.some(m => EN_CURSO.has(m.status.short));
     let estado, cls;
-    if (fin === ms.length)      { estado = 'Finalizada'; cls = 'fin';  }
-    else if (live || fin > 0)   { estado = 'En juego';   cls = 'live'; }
-    else                        { estado = 'Próxima';    cls = 'prox'; }
-    // Solo la fecha actual arranca abierta; el resto colapsado (son 16 fechas)
-    const colapsada = n !== fechaActual;
-
+    if (fin === ms.length)    { estado = 'Finalizada'; cls = 'fin';  }
+    else if (live || fin > 0) { estado = 'En juego';   cls = 'live'; }
+    else                      { estado = 'Próxima';    cls = 'prox'; }
     const acc = document.createElement('div');
-    acc.className = 'fecha-acc' + (colapsada ? ' colapsada' : '');
+    acc.className = 'fecha-acc' + (n !== fechaActual ? ' colapsada' : '');
     const head = document.createElement('button');
     head.className = 'fecha-head';
-    head.innerHTML = `<span class="fecha-num">FECHA ${n}</span>
-      <span class="fecha-estado ${cls}">${estado}</span>
-      <span class="fecha-chevron">▼</span>`;
+    head.innerHTML = `<span class="fecha-num">FECHA ${n}</span><span class="fecha-estado ${cls}">${estado}</span><span class="fecha-chevron">▼</span>`;
     head.onclick = () => acc.classList.toggle('colapsada');
     acc.appendChild(head);
-
     const body = document.createElement('div');
     body.className = 'fecha-body';
-    ms.slice().sort((a, b) => (a.status.utcTime || '').localeCompare(b.status.utcTime || ''))
-      .forEach(p => body.appendChild(cardPartido(p)));
+    ms.slice().sort((a, b) => (a.status.utcTime||'').localeCompare(b.status.utcTime||''))
+      .forEach(p => body.appendChild(cardLiga(p)));
     acc.appendChild(body);
     wrap.appendChild(acc);
   });
 }
 
-function cardPartido(p) {
-  const hs = p.home_score, as = p.away_score;
-  const hay = hs != null && as != null;
-  const finished = p.status.finished;
-  const enCurso = EN_CURSO.has(p.status.short);
+// ── COPAS ─────────────────────────────────────────────────────────────────
+function renderCopas() {
+  const wrap = document.getElementById('partidos-wrap');
+  wrap.innerHTML = '';
+  const copa = COPAS[copaActiva];
+  if (!copa || !copa.partidos || !copa.partidos.length) {
+    wrap.innerHTML = '<div class="empty-msg">Sin partidos de esta copa</div>'; return;
+  }
+  let partidos = copa.partidos;
+  if (teamFilter) partidos = partidos.filter(p => p.home.slug === teamFilter || p.away.slug === teamFilter);
+  const cls = copaActiva === 'libertadores' ? 'lib' : 'sud';
+  const title = document.createElement('div');
+  title.className = `copa-ronda-title ${cls}`;
+  title.textContent = copa.ronda || '';
+  wrap.appendChild(title);
+  if (!partidos.length) {
+    const nombre = teamFilter ? nombreCorto(teamFilter) : '';
+    wrap.innerHTML += `<div class="empty-msg">${nombre ? nombre + ' no juega esta copa' : 'Sin partidos'}</div>`;
+    return;
+  }
+  // etiqueta ida/vuelta: si existe un partido anterior entre los mismos equipos → Vuelta
+  const legLabel = (p, idx, arr) => {
+    const key = [p.home.name, p.away.name].sort().join('|');
+    const before = arr.slice(0, idx).some(q => [q.home.name, q.away.name].sort().join('|') === key);
+    return before ? 'Vuelta' : 'Ida';
+  };
+  const lista = document.createElement('div');
+  lista.className = 'lista-plana';
+  partidos.forEach((p, i) => lista.appendChild(cardCopa(p, cls, legLabel(p, i, partidos))));
+  wrap.appendChild(lista);
+}
 
-  // ganador (por marcador o penales)
+// ── Tarjetas ──────────────────────────────────────────────────────────────
+function ladoLiga(t, cls) {
+  const inner = cls.includes('home')
+    ? `<span class="nom">${nombreCorto(t.slug)}</span><img src="escudos/${t.slug}.png" alt="" onerror="this.style.opacity=0.2">`
+    : `<img src="escudos/${t.slug}.png" alt="" onerror="this.style.opacity=0.2"><span class="nom">${nombreCorto(t.slug)}</span>`;
+  return `<a class="${cls} link" href="club.html?c=${t.slug}">${inner}</a>`;
+}
+
+function marcador(hs, as, hp, ap) {
+  if (hs == null || as == null) return `<div class="marcador"><span class="marcador-vs">VS</span></div>`;
+  const pen = (hp != null && ap != null) ? `<span class="marcador-pen">Pen ${hp}-${ap}</span>` : '';
+  return `<div class="marcador"><span class="marcador-goles">${hs} - ${as}</span>${pen}</div>`;
+}
+
+function ganadorClases(p, homeIsA, awayIsA) {
   let clsH = 'equipo-lado home', clsA = 'equipo-lado away';
-  if (finished && hay) {
-    let win = p.winner;
-    if (!win && hs !== as) win = hs > as ? p.home.slug : p.away.slug;
-    if (win === p.home.slug) { clsH += ' ganador'; clsA += ' perdedor'; }
-    else if (win === p.away.slug) { clsA += ' ganador'; clsH += ' perdedor'; }
+  const hs = p.home_score, as = p.away_score;
+  if (p.status.finished !== false && hs != null && as != null && hs !== as) {
+    if (hs > as) { clsH += ' ganador'; clsA += ' perdedor'; }
+    else         { clsA += ' ganador'; clsH += ' perdedor'; }
   }
+  return [clsH, clsA];
+}
 
-  // hora / estado
-  let horaHTML;
-  if (enCurso)      horaHTML = `<span class="partido-hora en-curso">● EN VIVO</span>`;
-  else if (finished) horaHTML = `<span class="partido-hora fin">FIN · ${fechaAR(p.status.utcTime)}</span>`;
-  else              horaHTML = `<span class="partido-hora">${fechaAR(p.status.utcTime)} · ${horaAR(p.status.utcTime)} hs</span>`;
+function metaHora(p) {
+  const enCurso = EN_CURSO.has(p.short || p.status.short);
+  const finished = (p.status ? p.status.finished : ['FT','AET','PEN'].includes(p.short));
+  const utc = p.status ? p.status.utcTime : p.utcTime;
+  if (enCurso)      return `<span class="partido-hora en-curso">● EN VIVO</span>`;
+  if (finished)     return `<span class="partido-hora fin">FIN · ${fechaAR(utc)}</span>`;
+  return `<span class="partido-hora">${fechaAR(utc)} · ${horaAR(utc)} hs</span>`;
+}
 
-  // marcador
-  let marcHTML;
-  if (hay) {
-    const pen = (p.home_pen != null && p.away_pen != null) ? `<span class="marcador-pen">Pen ${p.home_pen}-${p.away_pen}</span>` : '';
-    marcHTML = `<div class="marcador"><span class="marcador-goles">${hs} - ${as}</span>${pen}</div>`;
-  } else {
-    marcHTML = `<div class="marcador"><span class="marcador-vs">VS</span></div>`;
-  }
-
-  const ladoHome = `<a class="${clsH}" href="club.html?c=${p.home.slug}">
-       <span class="nom">${nombreCorto(p.home.slug)}</span>
-       <img src="escudos/${p.home.slug}.png" alt="" onerror="this.style.opacity=0.2">
-     </a>`;
-  const ladoAway = `<a class="${clsA}" href="club.html?c=${p.away.slug}">
-       <img src="escudos/${p.away.slug}.png" alt="" onerror="this.style.opacity=0.2">
-       <span class="nom">${nombreCorto(p.away.slug)}</span>
-     </a>`;
-
+function cardLiga(p, etiqueta) {
+  const [clsH, clsA] = ganadorClases({ ...p, status: p.status });
+  const etq = etiqueta ? `<span class="etq">${etiqueta}</span>` : '';
   const card = document.createElement('div');
   card.className = 'partido-card';
   card.innerHTML =
-    `<div class="partido-meta">${horaHTML}</div>
-     <div class="partido-fila">${ladoHome}${marcHTML}${ladoAway}</div>`;
+    `<div class="partido-meta">${etq}${metaHora(p)}</div>
+     <div class="partido-fila">${ladoLiga(p.home, clsH)}${marcador(p.home_score, p.away_score, p.home_pen, p.away_pen)}${ladoLiga(p.away, clsA)}</div>`;
+  return card;
+}
+
+function _logoFallback(img) {
+  const s = document.createElement('span');
+  s.className = 'escudo-ph';
+  s.textContent = img.dataset.ini || '?';
+  img.replaceWith(s);
+}
+function escudoTagCopa(t) {
+  if (t.slug) return `<img src="escudos/${t.slug}.png" alt="" onerror="this.style.opacity=0.2">`;
+  const ini = (t.name || '').split(/\s+/).map(w => w[0] || '').join('').slice(0, 3).toUpperCase();
+  if (t.logo) return `<img src="${t.logo}" data-ini="${ini}" alt="" onerror="_logoFallback(this)">`;
+  return `<span class="escudo-ph">${ini}</span>`;
+}
+function ladoCopa(t, cls) {
+  const nom = t.slug ? nombreCorto(t.slug) : t.name;
+  const imgTag = escudoTagCopa(t);
+  const nomTag = `<span class="nom">${nom}</span>`;
+  const inner = cls.includes('home') ? `${nomTag}${imgTag}` : `${imgTag}${nomTag}`;
+  return t.slug ? `<a class="${cls} link" href="club.html?c=${t.slug}">${inner}</a>` : `<div class="${cls}">${inner}</div>`;
+}
+
+function cardCopa(p, copaCls, leg) {
+  // ganador por marcador de esa llave (leg)
+  let clsH = 'equipo-lado home', clsA = 'equipo-lado away';
+  const hs = p.home_score, as = p.away_score;
+  const finished = ['FT','AET','PEN'].includes(p.short);
+  if (finished && hs != null && as != null && hs !== as) {
+    if (hs > as) { clsH += ' ganador'; clsA += ' perdedor'; }
+    else         { clsA += ' ganador'; clsH += ' perdedor'; }
+  }
+  const pseudo = { short: p.short, utcTime: p.utcTime, status: null };
+  const card = document.createElement('div');
+  card.className = `partido-card ${copaCls}`;
+  card.innerHTML =
+    `<div class="partido-meta"><span class="etq leg">${leg}</span>${metaHora(pseudo)}</div>
+     <div class="partido-fila">${ladoCopa(p.home, clsH)}${marcador(hs, as, p.home_pen, p.away_pen)}${ladoCopa(p.away, clsA)}</div>`;
   return card;
 }
 
