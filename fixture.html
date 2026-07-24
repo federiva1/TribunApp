@@ -231,13 +231,35 @@ async function cargar() {
   }
 }
 
+// Slugs disponibles según el contexto activo:
+//  - Clausura  → los 30 clubes de la liga
+//  - Copas     → solo los equipos argentinos de la copa seleccionada
+function equiposContexto() {
+  if (faseActiva === 'copas') {
+    const copa = COPAS && COPAS[copaActiva];
+    const partidos = (copa && copa.partidos) || [];
+    const set = new Set();
+    partidos.forEach(p => {
+      if (p.home && p.home.slug) set.add(p.home.slug);
+      if (p.away && p.away.slug) set.add(p.away.slug);
+    });
+    return [...set];
+  }
+  return typeof CLUBES_CONFIG !== 'undefined' ? Object.keys(CLUBES_CONFIG) : [];
+}
+
 function poblarFiltro() {
   const sel = document.getElementById('team-filter');
-  const slugs = (typeof CLUBES_CONFIG !== 'undefined' ? Object.keys(CLUBES_CONFIG) : [])
+  const slugs = equiposContexto()
     .sort((a, b) => nombreCorto(a).localeCompare(nombreCorto(b), 'es'));
+  // Si el equipo filtrado no está en el contexto actual, se resetea.
+  if (teamFilter && !slugs.includes(teamFilter)) teamFilter = '';
+  // Mantener la opción "Todos" (primera) y reconstruir el resto.
+  sel.innerHTML = '<option value="">Todos los equipos</option>';
   slugs.forEach(s => {
     const o = document.createElement('option');
     o.value = s; o.textContent = nombreCorto(s);
+    if (s === teamFilter) o.selected = true;
     sel.appendChild(o);
   });
   sel.onchange = () => { teamFilter = sel.value; render(); };
@@ -250,13 +272,13 @@ function renderTabs() {
     const b = document.createElement('button');
     b.className = 'fase-tab' + (f.key === faseActiva ? ' active' : '');
     b.textContent = f.label;
-    b.onclick = () => { faseActiva = f.key; renderTabs(); render(); };
+    b.onclick = () => { faseActiva = f.key; poblarFiltro(); renderTabs(); render(); };
     wrap.appendChild(b);
   });
   // sub-tabs de copa
   document.querySelectorAll('.copa-subtab').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.copa === copaActiva);
-    btn.onclick = () => { copaActiva = btn.dataset.copa; renderTabs(); render(); };
+    btn.onclick = () => { copaActiva = btn.dataset.copa; poblarFiltro(); renderTabs(); render(); };
   });
 }
 
