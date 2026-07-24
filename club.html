@@ -996,7 +996,12 @@ function kitBackground(kit, size) {
   }
 }
 
-// Chip circular: fondo = kit del club, número centrado (con sombra para legibilidad).
+// Números siempre en blanco, con contorno oscuro para que se lean sobre cualquier
+// fondo (incluida la franja blanca de Argentinos).
+const NUM_OUTLINE = '-1px -1px 0 rgba(0,0,0,0.55),1px -1px 0 rgba(0,0,0,0.55),'
+  + '-1px 1px 0 rgba(0,0,0,0.55),1px 1px 0 rgba(0,0,0,0.55),0 2px 3px rgba(0,0,0,0.5)';
+
+// Chip circular: fondo = kit del club, número centrado (blanco con contorno).
 function kitChip(slug, num, size) {
   const kit = clubKit(slug);
   const wrap = document.createElement('div');
@@ -1006,8 +1011,8 @@ function kitChip(slug, num, size) {
     + `border:2px solid rgba(255,255,255,0.9);box-shadow:0 1px 3px rgba(0,0,0,0.45);`;
   const n = document.createElement('span');
   n.textContent = num;
-  n.style.cssText = `font-family:'Bebas Neue',sans-serif;font-size:${Math.round(size * 0.46)}px;line-height:1;`
-    + `color:${kit.num};text-shadow:0 1px 2px rgba(0,0,0,0.5),0 0 2px rgba(0,0,0,0.35);`;
+  n.style.cssText = `font-family:'Bebas Neue',sans-serif;font-size:${Math.round(size * 0.54)}px;line-height:1;`
+    + `color:#fff;text-shadow:${NUM_OUTLINE};`;
   wrap.appendChild(n);
   return wrap;
 }
@@ -1033,13 +1038,18 @@ function renderGrid() {
     const blocked = isInjured || isSuspended;
     const chip = document.createElement('div');
     chip.className = 'player-chip' + (used ? ' used' : '') + (blocked ? ' injured' : '');
-    chip.appendChild(makeAvatar(FOTO(p.fid), p.num, 34));
+    chip.appendChild(makeAvatar(FOTO(p.fid), p.num, 36));
     const nm = document.createElement('span'); nm.className = 'chip-name'; nm.textContent = p.name; chip.appendChild(nm);
     if (isInjured) { const b = document.createElement('div'); b.className = 'injury-badge'; b.textContent = '🏥'; chip.appendChild(b); }
     if (isSuspended) { const b = document.createElement('div'); b.className = 'injury-badge'; b.style.background = '#f9a825'; b.textContent = '🟨'; chip.appendChild(b); }
     if (!used && !blocked) {
-      chip.addEventListener('touchstart', e => { e.preventDefault(); draggingNew = p; }, { passive: false });
+      // Arrastrar sigue funcionando; un tap (sin desplazamiento) ubica al jugador solo.
+      let sx = 0, sy = 0, moved = false;
+      chip.addEventListener('touchstart', e => { const t = e.touches[0]; sx = t.clientX; sy = t.clientY; moved = false; draggingNew = p; }, { passive: true });
+      chip.addEventListener('touchmove', e => { const t = e.touches[0]; if (Math.hypot(t.clientX - sx, t.clientY - sy) > 12) moved = true; }, { passive: true });
+      chip.addEventListener('touchend', e => { const t = e.changedTouches[0]; if (!moved && !isOver(pitch, t.clientX, t.clientY)) placeFromBench(p); });
       chip.addEventListener('mousedown', e => { e.preventDefault(); draggingNew = p; });
+      chip.addEventListener('click', e => { if (!isOver(pitch, e.clientX, e.clientY)) placeFromBench(p); });
     }
     grid.appendChild(chip);
   });
@@ -1059,7 +1069,7 @@ function makePitchPlayer(p) {
   const kit = clubKit(CLUB_SLUG);
   bubble.style.background = kitBackground(kit, 44);
   const fb = document.createElement('div'); fb.className = 'fallback-num'; fb.textContent = p.num;
-  fb.style.cssText = `display:flex;color:${kit.num};text-shadow:0 1px 2px rgba(0,0,0,0.5),0 0 2px rgba(0,0,0,0.35);`;
+  fb.style.cssText = `display:flex;color:#fff;font-size:22px;text-shadow:${NUM_OUTLINE};`;
   bubble.appendChild(fb);
   const numTag = document.createElement('div'); numTag.className = 'player-numtag';
   numTag.textContent = p.name;
@@ -1068,6 +1078,41 @@ function makePitchPlayer(p) {
   xbtn.addEventListener('click', e => { e.stopPropagation(); removePlayer(p.num); });
   el.appendChild(xbtn);
   return el;
+}
+
+// Tap-to-place: al tocar un jugador del banco se ubica solo en la cancha según su
+// posición, con separación en espiral para no encimarse (criterio de Formaaajcion).
+const POSICION_ZONE = {
+  keepers:     { x: 50, y: 88 },
+  defenders:   { x: 50, y: 71 },
+  midfielders: { x: 50, y: 50 },
+  attackers:   { x: 50, y: 28 },
+};
+function placeFromBench(p) {
+  if (onPitch.find(x => x.num === p.num)) return;
+  if (onPitch.length >= 11) { showToast('Ya tenés 11 en la cancha'); return; }
+  const zone = POSICION_ZONE[p.position] || { x: 50, y: 50 };
+  const occupied = (tx, ty) => onPitch.some(o => Math.hypot(o.xPct - tx, o.yPct - ty) < 12);
+  let x = zone.x, y = zone.y;
+  if (occupied(x, y)) {
+    let done = false;
+    // 1) abrir la línea en horizontal (misma altura): 50 → ±13 → ±26 → ±39 …
+    for (let d = 1; d <= 3 && !done; d++) {
+      for (const dx of [d * 13, -d * 13]) {
+        const nx = Math.max(8, Math.min(92, zone.x + dx));
+        if (!occupied(nx, zone.y)) { x = nx; y = zone.y; done = true; break; }
+      }
+    }
+    // 2) si la línea está llena, escalonar levemente en vertical
+    for (let r = 1; r <= 4 && !done; r++) {
+      for (const [dx, dy] of [[0, 9], [13, 9], [-13, 9], [0, -9], [13, -9], [-13, -9]]) {
+        const nx = Math.max(8, Math.min(92, zone.x + dx * r));
+        const ny = Math.max(8, Math.min(93, zone.y + dy * r));
+        if (!occupied(nx, ny)) { x = nx; y = ny; done = true; break; }
+      }
+    }
+  }
+  addToPitch(p, x, y);
 }
 
 function addToPitch(p, xPct, yPct, silent = false) {
