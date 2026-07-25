@@ -213,10 +213,7 @@ In `club.html`, `PUNTAJES_OPEN` is loaded async from `estado.json` (only for lig
 Hardcoded arrays `LIBERTADORES_SLUGS` and `SUDAMERICANA_SLUGS` define Argentine participants. Groups fetched live from api-sports (Libertadores: `league=13`, Sudamericana: `league=11`).
 
 ### index.html — hoy es la home del Mundial 2026
-`index.html` es la landing del Mundial (title "TribunApp — Mundial 2026"), **no** un índice de clubes argentinos (el viejo simulador `FIXTURE_T`/`tSimState` fue removido). Ver "Mundial 2026 Module → index.html (bracket de eliminatorias)". Las páginas de clubes argentinos (`club.html`, `copas.html`, `seleccion.html`) siguen en el repo pero ya no cuelgan de `index.html`.
-
-### seleccion.html
-Manages a `convocados` array (up to 26 players). Players sourced from `data/seleccion.json` plus live search across all 30 `data/planteles/{slug}.json` files.
+`index.html` es la landing del Mundial (title "TribunApp — Mundial 2026"), **no** un índice de clubes argentinos (el viejo simulador `FIXTURE_T`/`tSimState` fue removido). Ver "Mundial 2026 Module → index.html (bracket de eliminatorias)". Las páginas de clubes argentinos (`club.html`, `copas.html`) siguen en el repo pero ya no cuelgan de `index.html`. La sección Selección (`seleccion.html`) fue removida — no se usa por ahora.
 
 ## Mundial 2026 Module
 
