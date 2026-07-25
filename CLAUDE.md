@@ -20,9 +20,6 @@ Run from the project root:
 # Scrape player squads + photos for all 30 clubs from FotMob
 python scripts/scraper_planteles.py
 
-# Scrape eligible players for the Selección
-python scripts/scraper_seleccion.py
-
 # Update rivalActual for each club in js/clubes.js (reads next fixtures from API)
 python scripts/fetch_proximos_partidos.py
 
