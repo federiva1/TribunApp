@@ -1400,9 +1400,16 @@ document.getElementById('confirm-btn').addEventListener('click', async () => {
       updateCounter();
       document.getElementById('formation-success').style.display = 'flex';
     } else {
-      showToast('Error al guardar. Intentá de nuevo.');
+      const body = await res.text().catch(() => '');
+      console.error('formaciones insert failed', res.status, body);
+      showToast(`Error ${res.status}: ${(body || 'no se pudo guardar').slice(0, 90)}`);
+      btn.textContent = 'Enviar a encuesta'; btn.disabled = false;
     }
-  } catch(e) { showToast('Error de conexión.'); }
+  } catch(e) {
+    console.error('formaciones insert exception', e);
+    showToast('Error de conexión: ' + (e && e.message ? e.message : e));
+    btn.textContent = 'Enviar a encuesta'; btn.disabled = false;
+  }
   finally { sending = false; }
 });
 
@@ -1649,7 +1656,13 @@ document.getElementById('scores-confirm-btn').addEventListener('click', async ()
       scoresPayload.user_id = currentUser.id;
       scoresPayload.equipo_hincha = currentUser.equipoHincha || null;
     }
-    await fetch(`${SUPABASE_URL}/rest/v1/puntajes`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' }, body: JSON.stringify(scoresPayload) });
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/puntajes`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' }, body: JSON.stringify(scoresPayload) });
+    if (!res.ok && res.status !== 201) {
+      const body = await res.text().catch(() => '');
+      console.error('puntajes insert failed', res.status, body);
+      showToast(`Error ${res.status}: ${(body || 'no se pudo guardar').slice(0, 90)}`);
+      return;
+    }
     try {
       if (currentUser) {
         localStorage.setItem(LS_SCORES_KEY + '_user_' + currentUser.id, '1');
@@ -1658,8 +1671,11 @@ document.getElementById('scores-confirm-btn').addEventListener('click', async ()
       }
     } catch(e) {}
     btn.textContent = '⬇ Descargar puntajes'; btn.style.background = '#2e7d32'; btn.style.opacity = '1'; btn.classList.remove('ready');
-    await showScoresResults();
-  } catch(e) { showToast('Error de conexión.'); }
+    showToast('¡Puntajes enviados! 🔥');
+  } catch(e) {
+    console.error('puntajes insert exception', e);
+    showToast('Error de conexión: ' + (e && e.message ? e.message : e));
+  }
 });
 
 document.getElementById('scores-ver-resultados-btn').addEventListener('click', () => {
