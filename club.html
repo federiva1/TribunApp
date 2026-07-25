@@ -1361,6 +1361,17 @@ document.getElementById('confirm-btn').addEventListener('click', async () => {
       // Vistazo único: sacamos de la cancha y mostramos los resultados globales.
       document.getElementById('formation-success').style.display = 'none';
       enterPostSubmitResults();
+    } else if (res.status === 409) {
+      // Este dispositivo ya votó este partido (constraint única club+fecha+device).
+      // No es un error: lo marcamos como "ya enviaste" y mostramos la votación global.
+      try {
+        localStorage.setItem(LS_KEY, '1');
+        localStorage.setItem(LS_FORMATION_KEY, JSON.stringify(jugadores));
+      } catch(e) {}
+      showToast('Ya habías votado este partido en este dispositivo.');
+      updateCounter();
+      document.getElementById('formation-success').style.display = 'none';
+      enterPostSubmitResults();
     } else {
       const body = await res.text().catch(() => '');
       console.error('formaciones insert failed', res.status, body);
