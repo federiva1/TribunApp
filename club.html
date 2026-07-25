@@ -1572,8 +1572,18 @@ async function openFeed() {
 function _scoresDispNum(p) {
   if (p.tipo === 'dt') return 'DT';
   if (p.num) return p.num;
-  const norm = s => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
-  const m = (typeof squad !== 'undefined' ? squad : []).find(s => norm(s.name) === norm(p.name));
+  const norm = s => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z ]/g, ' ').replace(/\s+/g, ' ').trim();
+  const sq = (typeof squad !== 'undefined' ? squad : []);
+  const pt = norm(p.name).split(' ').filter(Boolean);
+  // 1) match exacto
+  let m = sq.find(s => norm(s.name) === pt.join(' '));
+  // 2) tokens de un nombre contenidos en el otro (ej. "Hernán López" ⊂ "Hernán López Muñoz")
+  if (!m) {
+    const cands = sq.filter(s => { const st = norm(s.name).split(' ').filter(Boolean); return st.length && (st.every(t => pt.includes(t)) || pt.every(t => st.includes(t))); });
+    if (cands.length === 1) m = cands[0];
+  }
+  // 3) por apellido (último token) único
+  if (!m) { const last = pt[pt.length - 1]; const byLast = sq.filter(s => norm(s.name).split(' ').includes(last)); if (byLast.length === 1) m = byLast[0]; }
   return m ? m.num : '';
 }
 
@@ -2693,7 +2703,9 @@ async function resolveScoresContext(ultimo) {
   if (!ultimo) return;
   SCORES_RIVAL = _matchInfo(ultimo).rival;
   const utc = ultimo.status && ultimo.status.utcTime;
-  if (utc) SCORES_FT = new Date(utc);
+  // match_date canónico = día local AR del kickoff (misma derivación que la formación,
+  // así formaciones y puntajes del mismo partido agrupan bajo la misma fecha).
+  if (utc) { SCORES_FT = new Date(utc); SCORES_MATCH_DATE = new Date(SCORES_FT.getTime() - 3 * 3600 * 1000).toISOString().slice(0, 10); }
   try {
     const idx = await fetch(`data/partidos/index.json?t=${Date.now()}`).then(r => r.ok ? r.json() : []);
     const mine = idx.filter(e => e.local === CLUB_SLUG || e.visitante === CLUB_SLUG)
@@ -2701,7 +2713,6 @@ async function resolveScoresContext(ultimo) {
     const entry = mine[mine.length - 1];   // el partido con datos más reciente
     if (!entry) return;
     scoresMatchId = entry.id;
-    SCORES_MATCH_DATE = entry.fecha;        // fecha canónica del partido (YYYY-MM-DD)
     const data = await fetch(`data/partidos/${entry.id}.json?t=${Date.now()}`).then(r => r.ok ? r.json() : null);
     const jug = data && data.jugadores && data.jugadores[CLUB_SLUG];
     if (jug) {
@@ -2868,72 +2879,131 @@ async function renderEstadClub() {
 // ============================================================
 // SECCIÓN EST. TRIBUNAPP (votos de la gente) — Supabase
 // ============================================================
+let _ta = { fechaSel: null, view: 'votos', forms: [], punts: [] };
+let _taSquadCache = null;
+
+// Índice id→jugador (nombre, num, tipo) de TODOS los partidos con datos del club.
+// Necesario para mostrar nombre/dorsal de los puntajes (guardados por id de FotMob).
+async function _taSquadIndex() {
+  if (_taSquadCache) return _taSquadCache;
+  const idx = {};
+  try {
+    const list = await fetch(`data/partidos/index.json?t=${Date.now()}`).then(r => r.ok ? r.json() : []);
+    const mine = list.filter(e => e.local === CLUB_SLUG || e.visitante === CLUB_SLUG);
+    for (const e of mine) {
+      const data = await fetch(`data/partidos/${e.id}.json?t=${Date.now()}`).then(r => r.ok ? r.json() : null);
+      const jug = (data && data.jugadores && data.jugadores[CLUB_SLUG]) || [];
+      jug.forEach(j => { if (j.id != null && !idx[String(j.id)]) idx[String(j.id)] = { id: j.id, name: j.nombre, num: j.num || '', tipo: j.tipo }; });
+    }
+  } catch (e) {}
+  _taSquadCache = idx;
+  return idx;
+}
+
+// Mapa fecha-local → {fecha, rival} de los partidos del club (para etiquetar las solapas).
+async function _taMatchByDate() {
+  const { mine } = await clubLigaMatches();
+  const map = {};
+  (mine || []).forEach(m => {
+    const utc = m.status && m.status.utcTime; if (!utc) return;
+    const d = new Date(new Date(utc).getTime() - 3 * 3600 * 1000).toISOString().slice(0, 10);
+    map[d] = { fecha: m.fecha, rival: _matchInfo(m).rival };
+  });
+  return map;
+}
+
 async function renderTribunApp() {
   const cont = document.getElementById('tribunapp-content');
   const label = document.getElementById('tribunapp-label');
+  if (label) label.textContent = 'Lo que vota la gente';
   cont.innerHTML = '<div style="text-align:center;color:#555;padding:30px;font-size:13px;">Cargando...</div>';
-  if (label) label.innerHTML = 'Lo que vota la gente';
-  // Formaciones → contexto de formación (próximo); Puntajes → contexto de puntajes (último).
-  const fFilter = FECHA_ACTUAL ? `&match_date=eq.${FECHA_ACTUAL}` : '';
-  const pFilter = SCORES_MATCH_DATE ? `&match_date=eq.${SCORES_MATCH_DATE}` : '';
-  let forms = [], punts = [];
   try {
     const [fr, pr] = await Promise.all([
-      fetch(`${SUPABASE_URL}/rest/v1/formaciones?select=jugadores&club=eq.${CLUB_SLUG}${fFilter}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
-      fetch(`${SUPABASE_URL}/rest/v1/puntajes?select=puntajes&club=eq.${CLUB_SLUG}${pFilter}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
+      fetch(`${SUPABASE_URL}/rest/v1/formaciones?select=id,jugadores,likes,device_id,created_at,match_date&club=eq.${CLUB_SLUG}&order=likes.desc,created_at.desc`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
+      fetch(`${SUPABASE_URL}/rest/v1/puntajes?select=puntajes,match_date&club=eq.${CLUB_SLUG}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
     ]);
-    forms = fr.ok ? await fr.json() : [];
-    punts = pr.ok ? await pr.json() : [];
-  } catch (e) { forms = []; punts = []; }
+    _ta.forms = fr.ok ? await fr.json() : [];
+    _ta.punts = pr.ok ? await pr.json() : [];
+  } catch (e) { _ta.forms = []; _ta.punts = []; }
 
-  if (!forms.length && !punts.length) {
+  const dateMap = await _taMatchByDate();
+  // solo fechas que mapean a un partido de liga.json (descarta filas viejas huérfanas)
+  const dates = [...new Set([..._ta.forms, ..._ta.punts].map(r => r.match_date).filter(d => d && dateMap[d]))];
+  const fechas = dates.map(d => ({ date: d, fecha: dateMap[d].fecha, rival: dateMap[d].rival }))
+    .sort((a, b) => a.fecha - b.fecha);
+
+  if (!fechas.length) {
     cont.innerHTML = `<div class="stats-empty">👥<br><br>Todavía no hay votos de la gente.<br><span style="font-size:12px;color:#666;">Armá tu formación o poné tus puntajes para sumar el primero.</span></div>`;
     return;
   }
+  if (_ta.fechaSel !== 'acumulado' && !dates.includes(_ta.fechaSel)) _ta.fechaSel = fechas[fechas.length - 1].date;
+  await _taRenderLayout(fechas, dateMap);
+}
 
+async function _taRenderLayout(fechas, dateMap) {
+  const cont = document.getElementById('tribunapp-content');
+  const fechaBtns = fechas.map(f =>
+    `<button class="estad-fecha-btn ${_ta.fechaSel === f.date ? 'active' : ''}" data-date="${f.date}"><span>Fecha ${f.fecha}</span><small>vs ${escapeHtml(f.rival)}</small></button>`
+  ).join('') + `<button class="estad-fecha-btn ${_ta.fechaSel === 'acumulado' ? 'active' : ''}" data-date="acumulado"><span>Acumulado</span><small>todas</small></button>`;
+  const tab = active => `flex:1;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1px;border:none;border-radius:7px;padding:8px 4px;cursor:pointer;background:${active ? 'var(--club-color)' : 'transparent'};color:${active ? '#fff' : 'rgba(255,255,255,0.4)'};`;
+  cont.innerHTML = `
+    <div class="estad-fecha-bar" style="display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:8px;">${fechaBtns}</div>
+    <div style="display:flex;gap:4px;background:rgba(255,255,255,0.05);border-radius:10px;padding:4px;margin-bottom:12px;">
+      <button id="ta-tab-votos" style="${tab(_ta.view === 'votos')}">📊 Votos</button>
+      <button id="ta-tab-equipos" style="${tab(_ta.view === 'equipos')}">👥 Equipos de la gente</button>
+    </div>
+    <div id="ta-body"></div>`;
+  cont.querySelectorAll('.estad-fecha-btn').forEach(b => b.onclick = () => { _ta.fechaSel = b.dataset.date; _taRenderLayout(fechas, dateMap); });
+  document.getElementById('ta-tab-votos').onclick = () => { _ta.view = 'votos'; _taRenderLayout(fechas, dateMap); };
+  document.getElementById('ta-tab-equipos').onclick = () => { _ta.view = 'equipos'; _taRenderLayout(fechas, dateMap); };
+  if (_ta.view === 'votos') await _taRenderVotos(); else _taRenderEquipos(fechas);
+}
+
+async function _taRenderVotos() {
+  const body = document.getElementById('ta-body');
+  const acum = _ta.fechaSel === 'acumulado';
+  const forms = (acum ? _ta.forms : _ta.forms.filter(r => r.match_date === _ta.fechaSel)).filter(r => r.jugadores && r.jugadores.length);
+  const punts = acum ? _ta.punts : _ta.punts.filter(r => r.match_date === _ta.fechaSel);
+  if (!forms.length && !punts.length) { body.innerHTML = '<div class="stats-empty">Sin votos para esta fecha.</div>'; return; }
   const html = [];
-  // ── Formaciones (próximo partido) — clave por num ──
   if (forms.length) {
-    const count = {}; const meta = {};
-    forms.forEach(f => (f.jugadores || []).forEach(j => {
-      const k = String(j.num);
-      count[k] = (count[k] || 0) + 1;
-      if (!meta[k]) meta[k] = { num: j.num, name: j.name };
-    }));
-    const top = Object.keys(count).map(k => ({ ...meta[k], pct: Math.round(count[k] / forms.length * 100), n: count[k] }))
-      .sort((a, b) => b.pct - a.pct).slice(0, 11);
-    const flabel = (RIVAL && RIVAL !== 'Por definir') ? ` · vs ${escapeHtml(RIVAL)}` : '';
-    html.push(`<div class="ta-sec-title">⚽ Jugadores más elegidos${flabel} <span>${forms.length} formación${forms.length !== 1 ? 'es' : ''}</span></div>`);
-    html.push('<div class="ta-list">' + top.map(p => `
-      <div class="ta-item">
-        <div class="ta-av" data-num="${escapeHtml(p.num)}"></div>
-        <div class="ta-name">${escapeHtml(p.name || ('#' + p.num))}</div>
-        <div class="ta-barwrap"><div class="ta-bar" style="width:${p.pct}%"></div></div>
-        <div class="ta-pct">${p.pct}%</div>
-      </div>`).join('') + '</div>');
+    const count = {}, meta = {};
+    forms.forEach(f => (f.jugadores || []).forEach(j => { const k = String(j.num); count[k] = (count[k] || 0) + 1; if (!meta[k]) meta[k] = { num: j.num, name: j.name }; }));
+    const top = Object.keys(count).map(k => ({ ...meta[k], pct: Math.round(count[k] / forms.length * 100) })).sort((a, b) => b.pct - a.pct).slice(0, 11);
+    html.push(`<div class="ta-sec-title">⚽ Jugadores más elegidos <span>${forms.length} formación${forms.length !== 1 ? 'es' : ''}</span></div>`);
+    html.push('<div class="ta-list">' + top.map(p => `<div class="ta-item"><div class="ta-av" data-num="${escapeHtml(p.num)}"></div><div class="ta-name">${escapeHtml(p.name || ('#' + p.num))}</div><div class="ta-barwrap"><div class="ta-bar" style="width:${p.pct}%"></div></div><div class="ta-pct">${p.pct}%</div></div>`).join('') + '</div>');
   }
-  // ── Puntajes (último partido jugado) — clave por id (FotMob), nombre/dorsal desde scoresSquad ──
   if (punts.length) {
+    const squadIdx = await _taSquadIndex();
     const sum = {}, cnt = {};
-    punts.forEach(row => {
-      const obj = row.puntajes || {};
-      Object.keys(obj).forEach(k => { const v = Number(obj[k]); if (isNaN(v)) return; sum[k] = (sum[k] || 0) + v; cnt[k] = (cnt[k] || 0) + 1; });
-    });
-    const byId = {}; scoresSquad.forEach(p => byId[String(p.id)] = p);
-    const rank = Object.keys(sum).map(k => { const p = byId[k]; return { name: p ? p.name : ('#' + k), disp: p ? _scoresDispNum(p) : '', avg: sum[k] / cnt[k] }; })
-      .sort((a, b) => b.avg - a.avg).slice(0, 11);
-    const plabel = SCORES_RIVAL ? ` · vs ${escapeHtml(SCORES_RIVAL)}` : '';
-    html.push(`<div class="ta-sec-title" style="margin-top:18px;">⭐ Puntajes de la gente${plabel} <span>${punts.length} voto${punts.length !== 1 ? 's' : ''}</span></div>`);
-    html.push('<div class="ta-list">' + rank.map(p => `
-      <div class="ta-item">
-        <div class="ta-av" data-num="${escapeHtml(p.disp)}"></div>
-        <div class="ta-name">${escapeHtml(p.name)}</div>
-        <div class="ta-score">${p.avg.toFixed(1)}</div>
-      </div>`).join('') + '</div>');
+    punts.forEach(row => { const o = row.puntajes || {}; Object.keys(o).forEach(k => { const v = Number(o[k]); if (isNaN(v)) return; sum[k] = (sum[k] || 0) + v; cnt[k] = (cnt[k] || 0) + 1; }); });
+    const rank = Object.keys(sum).map(k => { const p = squadIdx[k]; return { name: p ? p.name : ('#' + k), disp: p ? _scoresDispNum(p) : '', avg: sum[k] / cnt[k] }; }).sort((a, b) => b.avg - a.avg).slice(0, 11);
+    html.push(`<div class="ta-sec-title" style="margin-top:18px;">⭐ Puntajes de la gente <span>${punts.length} voto${punts.length !== 1 ? 's' : ''}</span></div>`);
+    html.push('<div class="ta-list">' + rank.map(p => `<div class="ta-item"><div class="ta-av" data-num="${escapeHtml(p.disp)}"></div><div class="ta-name">${escapeHtml(p.name)}</div><div class="ta-score">${p.avg.toFixed(1)}</div></div>`).join('') + '</div>');
   }
-  cont.innerHTML = html.join('');
-  // rellenar avatares con kit chip
-  cont.querySelectorAll('.ta-av').forEach(el => { el.appendChild(kitChip(CLUB_SLUG, el.dataset.num || '', 30)); });
+  body.innerHTML = html.join('');
+  body.querySelectorAll('.ta-av').forEach(el => el.appendChild(kitChip(CLUB_SLUG, el.dataset.num || '', 30)));
+}
+
+function _taRenderEquipos(fechas) {
+  const body = document.getElementById('ta-body');
+  const targetDate = _ta.fechaSel === 'acumulado' ? fechas[fechas.length - 1].date : _ta.fechaSel;
+  const rows = _ta.forms.filter(r => r.match_date === targetDate && r.jugadores && r.jugadores.length === 11);
+  const deviceId = getDeviceId();
+  const myRow = rows.find(r => r.device_id === deviceId);
+  const others = rows.filter(r => r.id !== (myRow && myRow.id)).sort((a, b) => (b.likes || 0) - (a.likes || 0));
+  body.innerHTML = '';
+  if (_ta.fechaSel === 'acumulado') {
+    const note = document.createElement('div'); note.style.cssText = 'font-size:11px;color:#666;text-align:center;padding:0 0 6px;'; note.textContent = 'Los equipos son por partido — mostrando la última fecha.'; body.appendChild(note);
+  }
+  if (myRow) body.appendChild(buildFeedCard(myRow, true, false));
+  if (others.length) {
+    const lbl = document.createElement('div'); lbl.style.cssText = 'font-family:"Barlow Condensed",sans-serif;font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.25);text-transform:uppercase;padding:14px 14px 0;'; lbl.textContent = 'Otros hinchas';
+    body.appendChild(lbl);
+    others.forEach((r, i) => body.appendChild(buildFeedCard(r, false, i === 0 && r.likes > 0)));
+  } else if (!myRow) {
+    body.innerHTML = '<div class="stats-empty">Todavía no hay equipos de la gente para esta fecha.</div>';
+  }
 }
 </script>
 <script>
