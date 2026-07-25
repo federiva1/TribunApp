@@ -11,7 +11,7 @@
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Estadísticas — Mundial 2026</title>
+<title>Estadísticas del partido — TribunApp</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
@@ -280,24 +280,19 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
 <header id="site-header">
   <a class="logo-wrap" href="index.html">
     <img src="Logo.png" alt="TribunApp" style="height:56px;object-fit:contain;">
-    <span class="header-chip">Mundial 2026</span>
   </a>
   <div class="header-actions">
     <a class="header-pill" href="fixture.html">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       <span class="header-pill-label">Fixture</span>
     </a>
-    <a class="header-pill primary" href="estadisticas-torneo.html">
+    <a class="header-pill" href="estadisticas-torneo.html">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
       <span class="header-pill-label">Estadísticas</span>
     </a>
     <a class="header-pill" href="estadisticas-tribunapp.html">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       <span class="header-pill-label">TribunApp</span>
-    </a>
-    <a class="header-pill header-pill-jugar" href="index.html">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-      <span class="header-pill-label">Jugar</span>
     </a>
   </div>
 </header>
@@ -368,9 +363,10 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
 
 </div>
 
+<script src="js/clubes.js"></script>
 <script>
 const params  = new URLSearchParams(location.search);
-const matchId = params.get('p') || 'brazil-panama';
+const matchId = params.get('p') || '';
 // también soporta entrada por equipo: ?c=brazil (busca su primer partido)
 const fromSlug = params.get('c') || null;
 
@@ -398,8 +394,9 @@ const COLORES={
   panama:'#da121a',algeria:'#006233',ecuador:'#ffd100',canada:'#d80621',
 };
 
-const nb  = s => NOMBRES[s] || (s.charAt(0).toUpperCase()+s.slice(1));
-const col = s => COLORES[s] || '#1565c0';
+const _cfg = s => (typeof CLUBES_CONFIG !== 'undefined' && CLUBES_CONFIG[s]) || null;
+const nb  = s => { const c = _cfg(s); return (c && (c.nombreCorto || c.nombre)) || NOMBRES[s] || (s.charAt(0).toUpperCase()+s.slice(1)); };
+const col = s => { const c = _cfg(s); return (c && c.color) || COLORES[s] || '#1565c0'; };
 const esc = s => `escudos/${s}.png`;
 function escapeHtml(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, c => (
@@ -513,17 +510,16 @@ function renderPlayers(jugs, teamSlug, containerId, squad){
     const detail = buildDetailPanel(j, cardId);
 
     const enPlantel = _matchSquad(j.nombre, squad);
-    // Foto: plantel local → fallback a la imagen de api-sports (el id del partido es de api-sports)
-    const apiFoto = j.id ? `https://media.api-sports.io/football/players/${j.id}.png` : '';
-    const fotoSrc = enPlantel && enPlantel.fid ? `fotos/${enPlantel.fid}.png` : apiFoto;
+    // Sin fotos: la "avatar" es un círculo con el color del club y el dorsal.
+    const dorsal = (enPlantel && enPlantel.num) || j.num || '';
 
     const card = document.createElement('div');
     card.className='player-card';
     card.id=cardId;
     card.innerHTML=`
       <div class="player-row">
-        <div class="player-avatar" style="background:${teamCol}20;border-color:${teamCol}40">
-          ${fotoSrc?`<img src="${fotoSrc}" alt="" onerror="this.style.display='none'">`:``}
+        <div class="player-avatar" style="background:${teamCol};border-color:rgba(255,255,255,.25)">
+          <span style="font-family:'Bebas Neue',sans-serif;color:#fff;font-size:17px;text-shadow:0 1px 2px rgba(0,0,0,.5);">${escapeHtml(dorsal)}</span>
         </div>
         <div class="player-info">
           <div class="player-name">
@@ -583,8 +579,8 @@ async function init(){
 
   const backSlug = new URLSearchParams(location.search).get('c');
   document.getElementById('back-btn').href = backSlug
-    ? `equipo.html?c=${backSlug}&s=estadisticas`
-    : `estadisticas-torneo.html`;
+    ? `club.html?c=${backSlug}`
+    : `fixture.html`;
 
   // Header mini
   document.getElementById('h-comp').textContent  = p.competicion.toUpperCase();
@@ -601,7 +597,7 @@ async function init(){
     if (!img) return;
     const slug = id.includes('visit') ? p.visitante : p.local;
     const a = document.createElement('a');
-    a.href = `equipo.html?c=${slug}`;
+    a.href = `club.html?c=${slug}`;
     img.parentNode.insertBefore(a, img);
     a.appendChild(img);
     a.style.cssText = 'display:inline-flex;align-items:center;flex-shrink:0;';

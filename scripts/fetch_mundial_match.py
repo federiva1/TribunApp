@@ -116,6 +116,28 @@ def name_to_slug(name: str) -> str:
     return key.replace(' ', '').replace('-', '')
 
 
+# Mapeo api-sports ID -> slug de los clubes argentinos (fuente: js/clubes.js).
+# Permite reutilizar este script para partidos de la Liga (no solo Mundial):
+# el ID es un identificador estable, a diferencia del nombre.
+def _clubes_id_slug() -> dict:
+    import re
+    src = (ROOT / 'js' / 'clubes.js').read_text(encoding='utf-8')
+    return {int(m.group(2)): m.group(1)
+            for m in re.finditer(r'^\s{2}([a-z0-9]+):\s*\{[^}]*?\bid:\s*(\d+)',
+                                 src, re.MULTILINE | re.DOTALL)}
+
+try:
+    ID_SLUG = _clubes_id_slug()
+except Exception:
+    ID_SLUG = {}
+
+def team_slug(api_id, api_name: str) -> str:
+    """Resuelve slug por ID api-sports (clubes argentinos) o por nombre (Mundial)."""
+    if api_id in ID_SLUG:
+        return ID_SLUG[api_id]
+    return name_to_slug(api_name)
+
+
 def api_get(path: str) -> dict:
     url = f'{API_BASE}/{path}'
     req = urllib.request.Request(url, headers={'x-apisports-key': API_KEY})
@@ -178,7 +200,7 @@ def build_partidos_json(raw: dict, local_slug: str, visitante_slug: str,
 
     # Respetar el orden local/visitante del usuario
     # La API siempre tiene home/away; el usuario define cual es "local" en el JSON
-    home_is_local = (name_to_slug(home_name) == local_slug)
+    home_is_local = (team_slug(home_id, home_name) == local_slug)
 
     local_goals    = goals['home'] if home_is_local else goals['away']
     visitante_goals = goals['away'] if home_is_local else goals['home']

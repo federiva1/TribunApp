@@ -134,6 +134,9 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .partido-hora.en-curso { color: var(--verde); font-weight: 600; }
 .partido-hora.fin { color: rgba(255,255,255,0.3); }
 .partido-fila { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; }
+.stats-link { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 3px; padding-top: 7px; border-top: 1px solid rgba(255,255,255,0.06); font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 0.8px; text-transform: uppercase; color: var(--celeste, #4fc3f7); text-decoration: none; transition: color .15s; }
+.stats-link:hover { color: #fff; }
+.stats-link svg { width: 13px; height: 13px; }
 .equipo-lado { display: flex; align-items: center; gap: 9px; text-decoration: none; min-width: 0; }
 .equipo-lado.home { justify-content: flex-end; }
 .equipo-lado.away { justify-content: flex-start; }
@@ -199,7 +202,7 @@ const DIAS_ES  = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 const MESES_ES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const EN_CURSO = new Set(['1H','HT','2H','ET','BT','P','SUSP']);
 
-let LIGA = [], COPAS = {};
+let LIGA = [], COPAS = {}, STATS_IDX = {};
 let faseActiva = 'clausura';   // 'clausura' | 'copas'
 let copaActiva = 'libertadores';
 let teamFilter = '';           // slug o ''
@@ -215,12 +218,17 @@ function fechaAR(utc) { const d = new Date(utc); d.setHours(d.getHours()-3); ret
 
 async function cargar() {
   try {
-    const [rl, rc] = await Promise.all([
+    const [rl, rc, ri] = await Promise.all([
       fetch(`data/fixtures/liga.json?t=${Date.now()}`),
       fetch(`data/fixtures/copas.json?t=${Date.now()}`).catch(() => null),
+      fetch(`data/partidos/index.json?t=${Date.now()}`).catch(() => null),
     ]);
     LIGA = await rl.json();
     COPAS = rc && rc.ok ? await rc.json() : {};
+    // Índice de partidos con estadísticas cargadas: clave local|visitante|fecha → id
+    const idx = ri && ri.ok ? await ri.json() : [];
+    STATS_IDX = {};
+    idx.forEach(e => { STATS_IDX[`${e.local}|${e.visitante}|${e.fecha}`] = e.id; });
     poblarFiltro();
     renderTabs();
     render();
@@ -400,14 +408,27 @@ function metaHora(p) {
   return `<span class="partido-hora">${fechaAR(utc)} · ${horaAR(utc)} hs</span>`;
 }
 
+// Devuelve el id de estadísticas del partido si existe (partido finalizado con JSON cargado).
+function statsIdFor(p) {
+  const fecha = (p.status && p.status.utcTime || '').slice(0, 10);
+  return STATS_IDX[`${p.home.slug}|${p.away.slug}|${fecha}`] || null;
+}
+
 function cardLiga(p, etiqueta) {
   const [clsH, clsA] = ganadorClases({ ...p, status: p.status });
   const etq = etiqueta ? `<span class="etq">${etiqueta}</span>` : '';
   const card = document.createElement('div');
   card.className = 'partido-card';
+  const sid = statsIdFor(p);
+  const statsLink = sid
+    ? `<a class="stats-link" href="estadisticas.html?p=${sid}">
+         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+         Ver estadísticas del partido</a>`
+    : '';
   card.innerHTML =
     `<div class="partido-meta">${etq}${metaHora(p)}</div>
-     <div class="partido-fila">${ladoLiga(p.home, clsH)}${marcador(p.home_score, p.away_score, p.home_pen, p.away_pen)}${ladoLiga(p.away, clsA)}</div>`;
+     <div class="partido-fila">${ladoLiga(p.home, clsH)}${marcador(p.home_score, p.away_score, p.home_pen, p.away_pen)}${ladoLiga(p.away, clsA)}</div>
+     ${statsLink}`;
   return card;
 }
 
