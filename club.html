@@ -943,25 +943,18 @@ document.getElementById('stats-season-label').textContent = COMPETENCIA_SHORT + 
 // ---- Config dinámica de la fecha ----
 // Estos datos se actualiza cada fecha. El squad de "quien jugó" se toma de CLUB.squad cuando exista playedSquad.
 // Por defecto se usa el squad completo del club.
-const RIVAL = (
+// Liga: el rival y la fecha del PRÓXIMO partido salen de liga.json (misma fuente
+// que los tiles del home). Copa mantiene rivalActual + fixture por-club.
+// Valor inicial = fallback; se resuelve en resolveMatchContext() más abajo (debe
+// correr después de que clubLigaMatches/_ligaMine estén inicializados, no acá).
+let RIVAL = (
   COPA === 'libertadores' ? CLUB.rivalLibertadores :
   COPA === 'sudamericana' ? CLUB.rivalSudamericana :
   CLUB.rivalActual
 ) || 'Por definir';
 
-// Fecha del partido actual — se resuelve async desde el fixture JSON
-// para poder distinguir partidos contra el mismo rival (copa grupos, playoffs)
+// Fecha del partido actual (match_date canónico) — se resuelve async.
 let FECHA_ACTUAL = '';
-(async () => {
-  try {
-    const suffix = COPA ? `_${COPA}` : '';
-    const r = await fetch(`data/fixtures/${CLUB_SLUG}${suffix}.json`);
-    if (!r.ok) return;
-    const fixtures = await r.json();
-    const match = fixtures.find(f => f.rival === RIVAL && f.goles === null);
-    if (match) FECHA_ACTUAL = match.fecha;
-  } catch(e) {}
-})();
 
 // Estado de puntajes — controlado por data/estado.json (solo liga)
 let PUNTAJES_OPEN = false;
@@ -1398,7 +1391,9 @@ document.getElementById('confirm-btn').addEventListener('click', async () => {
       } catch(e) {}
       showToast(`¡Formación enviada! Vamos ${CLUB.nombreCorto} 🔥`);
       updateCounter();
-      document.getElementById('formation-success').style.display = 'flex';
+      // Vistazo único: sacamos de la cancha y mostramos los resultados globales.
+      document.getElementById('formation-success').style.display = 'none';
+      enterPostSubmitResults();
     } else {
       const body = await res.text().catch(() => '');
       console.error('formaciones insert failed', res.status, body);
@@ -1438,7 +1433,23 @@ document.getElementById('ver-resultados-btn').addEventListener('click', () => {
   if (clubLabelEl) clubLabelEl.textContent = CLUB.nombreCorto;
   showResults();
 });
-document.getElementById('back-results-btn').addEventListener('click', () => { resultsScreen.style.display = 'none'; });
+// Tras enviar la formación: vistazo único a la votación global.
+// Solo Descargar + Volver (Volver lleva al home del club, no de vuelta a la cancha).
+// Para volver a ver cómo va la votación hay que entrar por Est. TribunApp.
+function enterPostSubmitResults() {
+  _resultsFilter = 'todos';
+  document.querySelectorAll('.res-filter-btn').forEach((b, i) => { b.style.background = i === 0 ? '#1565c0' : 'transparent'; b.style.color = i === 0 ? '#fff' : 'rgba(255,255,255,0.4)'; });
+  const clubLabelEl = document.getElementById('results-club-label');
+  if (clubLabelEl) clubLabelEl.textContent = CLUB.nombreCorto;
+  const feedBtn = document.getElementById('ver-feed-btn');
+  if (feedBtn) feedBtn.style.display = 'none';   // en este flujo: solo Descargar + Volver
+  showResults();
+}
+
+document.getElementById('back-results-btn').addEventListener('click', () => {
+  resultsScreen.style.display = 'none';
+  closeSection('formation');   // volver al home del club (las 4 secciones)
+});
 
 async function showResults() {
   resultsScreen.style.display = 'flex';
@@ -2656,6 +2667,34 @@ async function fillTiles() {
   else if (pSub) pSub.textContent = 'Al terminar el partido';
 }
 fillTiles();
+
+// Resuelve RIVAL + FECHA_ACTUAL (match_date) del próximo partido real de liga.
+// Va acá y no arriba: clubLigaMatches lee _ligaMine, un `let` que recién queda
+// inicializado en este punto (más arriba estaría en TDZ).
+async function resolveMatchContext() {
+  try {
+    if (!COPA) {
+      const { proximo } = await clubLigaMatches();
+      if (proximo) {
+        RIVAL = _matchInfo(proximo).rival;
+        const utc = proximo.status && proximo.status.utcTime;   // match_date = día local AR (UTC-3)
+        if (utc) FECHA_ACTUAL = new Date(new Date(utc).getTime() - 3 * 3600 * 1000).toISOString().slice(0, 10);
+        const tag = RIVAL !== 'Por definir' ? `${CLUB.nombreCorto} vs ${RIVAL}` : '';
+        const ft = document.getElementById('formation-rival-tag'); if (ft) ft.textContent = tag;
+        const st = document.getElementById('scores-rival-tag'); if (st) st.textContent = tag;
+        return;
+      }
+    }
+    // Copa o fallback (liga sin próximo): fixture por-club como antes.
+    const suffix = COPA ? `_${COPA}` : '';
+    const r = await fetch(`data/fixtures/${CLUB_SLUG}${suffix}.json`);
+    if (!r.ok) return;
+    const fixtures = await r.json();
+    const match = fixtures.find(f => f.rival === RIVAL && f.goles === null);
+    if (match) FECHA_ACTUAL = match.fecha;
+  } catch(e) {}
+}
+resolveMatchContext();
 
 // ============================================================
 // SECCIÓN ESTADÍSTICAS (individual del club, por fecha) — data/partidos
