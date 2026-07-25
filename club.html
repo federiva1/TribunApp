@@ -1515,16 +1515,22 @@ function _pitchLinesHTML() {
     + `<div class="pl" style="left:33%;right:33%;bottom:0;height:9%;border:1.5px solid rgba(255,255,255,0.5);border-bottom:none;"></div>`;
 }
 
+// Misma estructura/proporción que "armá tu formación" (.player-bubble 44px + .player-numtag),
+// sin el drag ni el botón ✕.
 function renderMiniPitch(jugadores, container) {
   container.insertAdjacentHTML('beforeend', _pitchLinesHTML());
+  const kit = clubKit(CLUB_SLUG);
   jugadores.forEach(j => {
-    const el = document.createElement('div');
-    el.style.cssText = `position:absolute;left:${j.x}%;top:${j.y}%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:1px;z-index:2;`;
-    el.appendChild(kitChip(CLUB_SLUG, (j.num != null ? j.num : ''), 24));
-    const nm = document.createElement('div');
-    nm.style.cssText = 'font-family:"Barlow Condensed",sans-serif;font-size:7px;color:#fff;background:rgba(0,0,0,0.55);border-radius:3px;padding:0 3px;line-height:1.5;white-space:nowrap;text-align:center;max-width:52px;overflow:hidden;text-overflow:ellipsis;';
-    nm.textContent = j.name || j.num || '';
-    el.appendChild(nm);
+    const el = document.createElement('div'); el.className = 'player-on-pitch';
+    el.style.left = j.x + '%'; el.style.top = j.y + '%'; el.style.cursor = 'default';
+    const bubble = document.createElement('div'); bubble.className = 'player-bubble';
+    bubble.style.background = kitBackground(kit, 44);
+    const fb = document.createElement('div'); fb.className = 'fallback-num'; fb.textContent = (j.num != null ? j.num : '');
+    fb.style.cssText = `display:flex;color:#fff;font-size:22px;text-shadow:${NUM_OUTLINE};`;
+    bubble.appendChild(fb);
+    const nt = document.createElement('div'); nt.className = 'player-numtag'; nt.textContent = j.name || j.num || '';
+    nt.style.maxWidth = '72px'; nt.style.overflow = 'hidden'; nt.style.textOverflow = 'ellipsis';
+    el.appendChild(bubble); el.appendChild(nt);
     container.appendChild(el);
   });
 }
