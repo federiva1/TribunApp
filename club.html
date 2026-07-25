@@ -664,7 +664,6 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
       <div class="club-header-sub" id="club-sub-header">Liga Profesional Argentina 2026</div>
     </div>
     <div id="club-color-dots" style="display:flex;gap:5px;align-items:center;margin-left:4px;"></div>
-    <button id="auth-header-btn" style="margin-left:auto;flex-shrink:0;display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:6px 12px;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1px;color:rgba(255,255,255,0.65);white-space:nowrap;">Ingresar / Registrarse</button>
   </header>
 
   <!-- MENÚ PRINCIPAL — 4 SECCIONES -->
@@ -723,10 +722,6 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   <div id="results-screen">
     <h2>⚽ Resultados</h2>
     <div class="subtitle">¿A quién elegiría la gente?</div>
-    <div id="results-filter-bar" style="display:flex;gap:4px;background:rgba(255,255,255,0.05);border-radius:10px;padding:4px;margin-bottom:10px;">
-      <button class="res-filter-btn active" data-filter="todos" onclick="switchResultsFilter('todos',this)" style="flex:1;font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:1px;border:none;border-radius:7px;padding:7px 4px;cursor:pointer;background:#1565c0;color:#fff;">Todos</button>
-      <button class="res-filter-btn" data-filter="hinchas" onclick="switchResultsFilter('hinchas',this)" style="flex:1;font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:1px;border:none;border-radius:7px;padding:7px 4px;cursor:pointer;background:transparent;color:rgba(255,255,255,0.4);" id="results-hinchas-btn">Hinchas de <span id="results-club-label"></span></button>
-    </div>
     <div id="total-votes" style="font-size:11px;color:#555;text-align:center;margin-bottom:10px;"></div>
     <div id="results-list"><div style="text-align:center;color:#666;padding:20px;font-size:13px;">Cargando...</div></div>
     <button id="download-results-btn" style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;background:#2e7d32;color:#fff;border:2px solid #fff;border-radius:8px;padding:10px;cursor:pointer;width:100%;margin-top:8px;">⬇ Descargar resultados</button>
@@ -810,10 +805,6 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   <div id="scores-results-screen">
     <h2>⭐ Puntajes</h2>
     <div class="subtitle">Promedio de la gente</div>
-    <div id="scores-filter-bar" style="display:flex;gap:4px;background:rgba(255,255,255,0.05);border-radius:10px;padding:4px;margin-bottom:10px;">
-      <button class="scr-filter-btn active" data-filter="todos" onclick="switchScoresFilter('todos',this)" style="flex:1;font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:1px;border:none;border-radius:7px;padding:7px 4px;cursor:pointer;background:#1565c0;color:#fff;">Todos</button>
-      <button class="scr-filter-btn" data-filter="hinchas" onclick="switchScoresFilter('hinchas',this)" style="flex:1;font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:1px;border:none;border-radius:7px;padding:7px 4px;cursor:pointer;background:transparent;color:rgba(255,255,255,0.4);">Hinchas de <span id="scores-club-label"></span></button>
-    </div>
     <div id="scores-total-votes" style="font-size:11px;color:#555;text-align:center;margin-bottom:8px;"></div>
     <div id="scores-results-list"><div style="color:#555;text-align:center;padding:20px;">Cargando...</div></div>
     <button id="download-scores-results-btn" style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;background:#2e7d32;color:#fff;border:none;border-radius:8px;padding:10px;cursor:pointer;width:100%;margin-top:8px;">⬇ Descargar resultados</button>
@@ -1036,23 +1027,13 @@ function openSection(section) {
     const el = document.getElementById(s + '-screen');
     if (el) el.style.display = s === section ? 'block' : 'none';
   });
-  if (section === 'fechas') {
-    renderFechas();
-    if (typeof onAuthChange === 'function') {
-      onAuthChange(() => {
-        const screen = document.getElementById('fechas-screen');
-        if (screen && screen.style.display !== 'none') renderFechas();
-      });
-    }
-  }
+  if (section === 'fechas') renderFechas();
   if (section === 'fixture') renderFixture();
   if (section === 'stats') renderStats();
   if (section === 'estad') renderEstadClub();
   if (section === 'tribunapp') renderTribunApp();
   if (section === 'scores') {
-    const scoresLsKey = currentUser
-      ? LS_SCORES_KEY + '_user_' + currentUser.id
-      : LS_SCORES_KEY;
+    const scoresLsKey = LS_SCORES_KEY;
     if (!PUNTAJES_OPEN) {
       document.getElementById('scores-list').innerHTML = '<div style="text-align:center;padding:30px;font-size:13px;color:#555;">Esta sección se habilita cuando termina el partido.</div>';
     } else if (!localStorage.getItem(scoresLsKey)) {
@@ -1293,11 +1274,7 @@ function updateCounter() {
   const isReady = n === 11;
   const dlBtn = document.getElementById('download-pitch-btn');
   const cfBtn = document.getElementById('confirm-btn');
-  // Logueados: anti-duplicado por user_id (clave en LS con sufijo _user)
-  const lsKeyUser = LS_KEY + '_user_' + (currentUser?.id || '');
-  const alreadyVoted = currentUser
-    ? !!localStorage.getItem(lsKeyUser)
-    : !!localStorage.getItem(LS_KEY);
+  const alreadyVoted = !!localStorage.getItem(LS_KEY);
   dlBtn.disabled = !isReady;
   dlBtn.style.opacity = isReady ? '1' : '0.3';
   dlBtn.style.cursor = isReady ? 'pointer' : 'not-allowed';
@@ -1367,14 +1344,8 @@ document.getElementById('confirm-btn').addEventListener('click', async () => {
   let jugadores = onPitch.map(p => ({ num: p.num, name: p.name, fid: p.fid, x: Math.round(p.xPct), y: Math.round(p.yPct) }));
   if (gk && gk.yPct < 50) jugadores = jugadores.map(p => ({ ...p, x: Math.round(100 - p.x), y: Math.round(100 - p.y) }));
   try {
-    const payload = { jugadores, rival: RIVAL, club: CLUB_SLUG };
+    const payload = { jugadores, rival: RIVAL, club: CLUB_SLUG, device_id: getDeviceId() };
     if (FECHA_ACTUAL) payload.match_date = FECHA_ACTUAL;
-    if (currentUser) {
-      payload.user_id = currentUser.id;
-      payload.equipo_hincha = currentUser.equipoHincha || null;
-    } else {
-      payload.device_id = getDeviceId();
-    }
     const res = await fetch(`${SUPABASE_URL}/rest/v1/formaciones`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' },
@@ -1382,11 +1353,7 @@ document.getElementById('confirm-btn').addEventListener('click', async () => {
     });
     if (res.ok || res.status === 201) {
       try {
-        if (currentUser) {
-          localStorage.setItem(LS_KEY + '_user_' + currentUser.id, '1');
-        } else {
-          localStorage.setItem(LS_KEY, '1');
-        }
+        localStorage.setItem(LS_KEY, '1');
         localStorage.setItem(LS_FORMATION_KEY, JSON.stringify(jugadores));
       } catch(e) {}
       showToast(`¡Formación enviada! Vamos ${CLUB.nombreCorto} 🔥`);
@@ -1408,47 +1375,20 @@ document.getElementById('confirm-btn').addEventListener('click', async () => {
   finally { sending = false; }
 });
 
-// ---- Ver resultados ----
-let _resultsFilter = 'todos';
-let _scoresFilter  = 'todos';
+// ---- Ver resultados (votación global — sin filtros de login) ----
+document.getElementById('ver-resultados-btn').addEventListener('click', () => { showResults(); });
 
-function switchResultsFilter(filter, btn) {
-  _resultsFilter = filter;
-  document.querySelectorAll('.res-filter-btn').forEach(b => { b.style.background = 'transparent'; b.style.color = 'rgba(255,255,255,0.4)'; });
-  if (btn) { btn.style.background = '#1565c0'; btn.style.color = '#fff'; }
-  showResults();
-}
-
-function switchScoresFilter(filter, btn) {
-  _scoresFilter = filter;
-  document.querySelectorAll('.scr-filter-btn').forEach(b => { b.style.background = 'transparent'; b.style.color = 'rgba(255,255,255,0.4)'; });
-  if (btn) { btn.style.background = '#1565c0'; btn.style.color = '#fff'; }
-  showScoresResults();
-}
-
-document.getElementById('ver-resultados-btn').addEventListener('click', () => {
-  _resultsFilter = 'todos';
-  document.querySelectorAll('.res-filter-btn').forEach((b, i) => { b.style.background = i === 0 ? '#1565c0' : 'transparent'; b.style.color = i === 0 ? '#fff' : 'rgba(255,255,255,0.4)'; });
-  const clubLabelEl = document.getElementById('results-club-label');
-  if (clubLabelEl) clubLabelEl.textContent = CLUB.nombreCorto;
-  showResults();
-});
 // Tras enviar la formación: vistazo único a la votación global.
-// Solo Descargar + Volver (Volver lleva al home del club, no de vuelta a la cancha).
+// Solo Descargar + Volver (Volver vuelve a la cancha; el voto ya quedó bloqueado).
 // Para volver a ver cómo va la votación hay que entrar por Est. TribunApp.
 function enterPostSubmitResults() {
-  _resultsFilter = 'todos';
-  document.querySelectorAll('.res-filter-btn').forEach((b, i) => { b.style.background = i === 0 ? '#1565c0' : 'transparent'; b.style.color = i === 0 ? '#fff' : 'rgba(255,255,255,0.4)'; });
-  const clubLabelEl = document.getElementById('results-club-label');
-  if (clubLabelEl) clubLabelEl.textContent = CLUB.nombreCorto;
   const feedBtn = document.getElementById('ver-feed-btn');
   if (feedBtn) feedBtn.style.display = 'none';   // en este flujo: solo Descargar + Volver
   showResults();
 }
 
 document.getElementById('back-results-btn').addEventListener('click', () => {
-  resultsScreen.style.display = 'none';
-  closeSection('formation');   // volver al home del club (las 4 secciones)
+  resultsScreen.style.display = 'none';   // volver a la cancha (el voto ya quedó bloqueado)
 });
 
 async function showResults() {
@@ -1459,7 +1399,6 @@ async function showResults() {
   try {
     let url = `${SUPABASE_URL}/rest/v1/formaciones?select=jugadores&rival=eq.${encodeURIComponent(RIVAL)}&club=eq.${CLUB_SLUG}`;
     if (FECHA_ACTUAL) url += `&match_date=eq.${FECHA_ACTUAL}`;
-    if (_resultsFilter === 'hinchas') url += `&equipo_hincha=eq.${CLUB_SLUG}`;
     const res = await fetch(url, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
     const data = await res.json();
     const total = data.length;
@@ -1663,10 +1602,6 @@ document.getElementById('scores-confirm-btn').addEventListener('click', async ()
   try {
     const scoresPayload = { rival: RIVAL, club: CLUB_SLUG, puntajes: userScores };
     if (FECHA_ACTUAL) scoresPayload.match_date = FECHA_ACTUAL;
-    if (currentUser) {
-      scoresPayload.user_id = currentUser.id;
-      scoresPayload.equipo_hincha = currentUser.equipoHincha || null;
-    }
     const res = await fetch(`${SUPABASE_URL}/rest/v1/puntajes`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' }, body: JSON.stringify(scoresPayload) });
     if (!res.ok && res.status !== 201) {
       const body = await res.text().catch(() => '');
@@ -1674,13 +1609,7 @@ document.getElementById('scores-confirm-btn').addEventListener('click', async ()
       showToast(`Error ${res.status}: ${(body || 'no se pudo guardar').slice(0, 90)}`);
       return;
     }
-    try {
-      if (currentUser) {
-        localStorage.setItem(LS_SCORES_KEY + '_user_' + currentUser.id, '1');
-      } else {
-        localStorage.setItem(LS_SCORES_KEY, '1');
-      }
-    } catch(e) {}
+    try { localStorage.setItem(LS_SCORES_KEY, '1'); } catch(e) {}
     btn.textContent = '⬇ Descargar puntajes'; btn.style.background = '#2e7d32'; btn.style.opacity = '1'; btn.classList.remove('ready');
     showToast('¡Puntajes enviados! 🔥');
   } catch(e) {
@@ -1689,13 +1618,7 @@ document.getElementById('scores-confirm-btn').addEventListener('click', async ()
   }
 });
 
-document.getElementById('scores-ver-resultados-btn').addEventListener('click', () => {
-  _scoresFilter = 'todos';
-  document.querySelectorAll('.scr-filter-btn').forEach((b, i) => { b.style.background = i === 0 ? '#1565c0' : 'transparent'; b.style.color = i === 0 ? '#fff' : 'rgba(255,255,255,0.4)'; });
-  const clubLabelEl = document.getElementById('scores-club-label');
-  if (clubLabelEl) clubLabelEl.textContent = CLUB.nombreCorto;
-  showScoresResults();
-});
+document.getElementById('scores-ver-resultados-btn').addEventListener('click', () => { showScoresResults(); });
 document.getElementById('back-scores-results-btn').addEventListener('click', () => { document.getElementById('scores-results-screen').style.display = 'none'; });
 
 async function showScoresResults() {
@@ -1705,7 +1628,6 @@ async function showScoresResults() {
   try {
     let url = `${SUPABASE_URL}/rest/v1/puntajes?select=puntajes&rival=eq.${encodeURIComponent(RIVAL)}&club=eq.${CLUB_SLUG}`;
     if (FECHA_ACTUAL) url += `&match_date=eq.${FECHA_ACTUAL}`;
-    if (_scoresFilter === 'hinchas') url += `&equipo_hincha=eq.${CLUB_SLUG}`;
     const res = await fetch(url, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
     const data = await res.json();
     if (!data.length) { list.innerHTML = '<div style="color:#555;text-align:center;padding:20px;">Sin resultados aún.</div>'; document.getElementById('scores-total-votes').textContent = ''; return; }
@@ -1775,15 +1697,7 @@ document.getElementById('download-scores-results-btn').addEventListener('click',
 function renderSecondaryRow() {
   const row = document.getElementById('secondary-row');
   if (!row) return;
-  if (currentUser) {
-    row.innerHTML = `
-      <div class="sec-btn" onclick="openSection('fixture')">📋 FIXTURE</div>
-      <div class="sec-btn" onclick="openSection('fechas')">📅 VER FECHAS</div>
-      <div class="sec-btn" onclick="openSection('stats')">📊 ESTADÍSTICAS</div>
-    `;
-  } else {
-    row.innerHTML = `<div class="sec-btn" onclick="openSection('fechas')">📅 VER FECHAS</div>`;
-  }
+  row.innerHTML = `<div class="sec-btn" onclick="openSection('fechas')">📅 VER FECHAS</div>`;
   if (window.UIHelp) window.UIHelp.refresh();
 }
 
@@ -1792,11 +1706,11 @@ async function renderFechas() {
   const list = document.getElementById('fechas-list');
   list.innerHTML = '<div style="text-align:center;color:#555;padding:30px;font-size:13px;">Cargando...</div>';
 
-  if (!currentUser) {
-    renderCurrentFechaGuest();
-    return;
-  }
+  // Sin login: siempre mostramos la fecha actual con lo que votó la gente.
+  renderCurrentFechaGuest();
+  return;
 
+  // eslint-disable-next-line no-unreachable  (rama vieja solo-logueados, ya no se usa)
   let fixtures = [];
   try {
     const suffix = COPA ? `_${COPA}` : '';
@@ -1875,12 +1789,6 @@ async function renderCurrentFechaGuest() {
     <div id="guest-fechas-formations"><div style="text-align:center;color:#555;padding:16px;font-size:13px;">Cargando...</div></div>
     <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:2px;color:#555;text-transform:uppercase;margin:18px 0 8px;">⭐ Puntajes de la gente</div>
     <div id="guest-fechas-scores"><div style="text-align:center;color:#555;padding:16px;font-size:13px;">Cargando...</div></div>
-    <div style="margin-top:24px;padding:16px;background:rgba(21,101,192,0.08);border:1px solid rgba(21,101,192,0.2);border-radius:12px;text-align:center;">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;color:#fff;margin-bottom:4px;">Ver fechas anteriores</div>
-      <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:12px;">Accedé al historial completo con una cuenta gratuita</div>
-      <button onclick="openAuthModal('register')" style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;background:#1565c0;color:#fff;border:none;border-radius:8px;padding:9px 20px;cursor:pointer;margin-right:8px;">CREAR CUENTA</button>
-      <button onclick="openAuthModal('login')" style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1px;background:transparent;color:rgba(255,255,255,0.4);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 16px;cursor:pointer;">Ingresar</button>
-    </div>
   `;
   try {
     const [fRes, sRes] = await Promise.all([
@@ -2890,16 +2798,9 @@ async function renderTribunApp() {
   cont.querySelectorAll('.ta-av').forEach(el => { el.appendChild(kitChip(CLUB_SLUG, el.dataset.num || '', 30)); });
 }
 </script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/auth.js"></script>
-<script src="js/auth-ui.js"></script>
 <script>
-// Por ahora sin login: ocultamos el botón de auth del header.
-(function () { const b = document.getElementById('auth-header-btn'); if (b) b.style.display = 'none'; })();
-initAuthHeaderBtn();
+// Sin login: la app corre en modo invitado (device_id). Nav secundaria fija.
 renderSecondaryRow();
-onAuthChange(() => renderSecondaryRow());
-initAuth();
 </script>
 <script src="js/ui-help.js"></script>
 </body>
