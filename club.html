@@ -705,6 +705,14 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 <div class="overlay-inner" id="formation-app">
   <button class="back-btn" onclick="closeSection('formation')">← Volver</button>
 
+  <!-- Aviso: formación cerrada durante la ventana de puntajes -->
+  <div id="formation-closed" style="display:none;position:absolute;inset:0;background:var(--dark2);z-index:300;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;gap:10px;">
+    <div style="font-size:40px;">⭐</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#fff;letter-spacing:1px;">Formación cerrada</div>
+    <div style="font-size:13px;color:#888;line-height:1.5;max-width:290px;">Ahora están abiertos los <b style="color:var(--club-color);">puntajes</b> del último partido. La formación de la próxima fecha se abre cuando cierran los puntajes.</div>
+    <button onclick="closeSection('formation')" style="margin-top:6px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;background:var(--club-color);color:#fff;border:none;border-radius:8px;padding:10px 24px;cursor:pointer;">← Volver</button>
+  </div>
+
   <!-- FEED de equipos -->
   <div id="feed-screen">
     <div class="feed-top">
@@ -795,19 +803,26 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
     </div>
   </div>
   <div id="scores-list"></div>
+  <div id="scores-closed-msg" style="display:none;text-align:center;padding:30px;font-size:13px;color:#555;"></div>
   <button id="scores-confirm-btn">Confirmar puntajes</button>
-  <button id="scores-ver-resultados-btn" class="btn-secondary" style="margin-top:8px;display:none;">Ver resultados →</button>
 
-  <div id="scores-success">
-    <h2 id="scores-success-title">¡Gracias!</h2>
-    <p id="scores-success-body">Tus puntajes fueron registrados.</p>
-  </div>
+  <!-- Post-confirmación: 2 solapas (Tus puntajes | Resultados globales) -->
   <div id="scores-results-screen">
     <h2>⭐ Puntajes</h2>
-    <div class="subtitle">Promedio de la gente</div>
-    <div id="scores-total-votes" style="font-size:11px;color:#555;text-align:center;margin-bottom:8px;"></div>
-    <div id="scores-results-list"><div style="color:#555;text-align:center;padding:20px;">Cargando...</div></div>
-    <button id="download-scores-results-btn" style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;background:#2e7d32;color:#fff;border:none;border-radius:8px;padding:10px;cursor:pointer;width:100%;margin-top:8px;">⬇ Descargar resultados</button>
+    <div class="subtitle" id="scores-post-sub"></div>
+    <div style="display:flex;gap:4px;background:rgba(255,255,255,0.05);border-radius:10px;padding:4px;margin-bottom:12px;">
+      <button id="scores-tab-mine" onclick="switchScoresTab('mine')" style="flex:1;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1px;border:none;border-radius:7px;padding:8px 4px;cursor:pointer;background:var(--club-color);color:#fff;">Tus puntajes</button>
+      <button id="scores-tab-global" onclick="switchScoresTab('global')" style="flex:1;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1px;border:none;border-radius:7px;padding:8px 4px;cursor:pointer;background:transparent;color:rgba(255,255,255,0.4);">Resultados globales</button>
+    </div>
+    <div id="scores-mine-pane">
+      <div id="scores-mine-list"></div>
+      <button id="download-my-scores-btn" style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;background:#2e7d32;color:#fff;border:none;border-radius:8px;padding:10px;cursor:pointer;width:100%;margin-top:8px;">⬇ Descargar mis puntajes</button>
+    </div>
+    <div id="scores-global-pane" style="display:none;">
+      <div id="scores-total-votes" style="font-size:11px;color:#555;text-align:center;margin-bottom:8px;"></div>
+      <div id="scores-results-list"><div style="color:#555;text-align:center;padding:20px;">Cargando...</div></div>
+      <button id="download-scores-results-btn" style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;background:#2e7d32;color:#fff;border:none;border-radius:8px;padding:10px;cursor:pointer;width:100%;margin-top:8px;">⬇ Descargar resultados</button>
+    </div>
     <button id="back-scores-results-btn" class="btn-secondary" style="margin-top:8px;">← Volver</button>
   </div>
 </div>
@@ -947,18 +962,14 @@ let RIVAL = (
 // Fecha del partido actual (match_date canónico) — se resuelve async.
 let FECHA_ACTUAL = '';
 
-// Estado de puntajes — controlado por data/estado.json (solo liga)
-let PUNTAJES_OPEN = false;
-if (!COPA) {
-  (async () => {
-    try {
-      const r = await fetch('data/estado.json', { cache: 'no-store' });
-      if (!r.ok) return;
-      const estado = await r.json();
-      PUNTAJES_OPEN = estado[CLUB_SLUG]?.puntajesOpen === true;
-    } catch(e) {}
-  })();
-}
+// Contexto de PUNTAJES = último partido jugado (distinto del próximo que usa la formación).
+// SCORES_RIVAL/SCORES_MATCH_DATE se guardan/consultan en Supabase; scoresSquad = jugadores
+// que jugaron (titulares + suplentes que ingresaron + DT), traídos de data/partidos/{id}.json.
+let SCORES_RIVAL = '', SCORES_MATCH_DATE = '', SCORES_FT = null, scoresMatchId = null, scoresSquad = [], scoresSent = false;
+
+// Gate coordinado: 24 hs de puntajes desde el FT, después se cierran y se abre la formación
+// de la fecha siguiente. Se calcula client-side en applyGating() (no depende de estado.json).
+let PUNTAJES_OPEN = false, FORMACION_OPEN = true;
 
 const LS_KEY         = `${CLUB_SLUG}_formacion`;
 const LS_FORMATION_KEY = `${CLUB_SLUG}_formacion_data`;
@@ -991,9 +1002,7 @@ document.getElementById('scores-rival-tag').textContent = RIVAL !== 'Por definir
 const _rlbl = document.getElementById('results-club-label'); if (_rlbl) _rlbl.textContent = CLUB.nombreCorto;
 const _slbl = document.getElementById('scores-club-label');  if (_slbl) _slbl.textContent = CLUB.nombreCorto;
 document.getElementById('formation-success-body').textContent = `Tu formación fue registrada. ¡Vamos ${CLUB.nombreCorto}!`;
-document.getElementById('scores-success-body').textContent = `Tus puntajes fueron registrados. ¡Vamos ${CLUB.nombreCorto}!`;
 document.getElementById('formation-success-title').textContent = `¡Gracias, hincha!`;
-document.getElementById('scores-success-title').textContent = `¡Gracias, hincha!`;
 
 // ============================================================
 // ESTADO FORMACIÓN
@@ -1027,22 +1036,35 @@ function openSection(section) {
     const el = document.getElementById(s + '-screen');
     if (el) el.style.display = s === section ? 'block' : 'none';
   });
+  if (section === 'formation') { const fc = document.getElementById('formation-closed'); if (fc) fc.style.display = FORMACION_OPEN ? 'none' : 'flex'; }
   if (section === 'fechas') renderFechas();
   if (section === 'fixture') renderFixture();
   if (section === 'stats') renderStats();
   if (section === 'estad') renderEstadClub();
   if (section === 'tribunapp') renderTribunApp();
   if (section === 'scores') {
-    const scoresLsKey = LS_SCORES_KEY;
+    scoresSent = false;
+    const already = !!localStorage.getItem(LS_SCORES_KEY);
+    try { userScores = already ? JSON.parse(localStorage.getItem(LS_SCORES_KEY + '_data') || '{}') : {}; } catch(e) { userScores = {}; }
+    const list = document.getElementById('scores-list');
+    const closedMsg = document.getElementById('scores-closed-msg');
+    const btn = document.getElementById('scores-confirm-btn');
+    document.getElementById('scores-results-screen').style.display = 'none';
     if (!PUNTAJES_OPEN) {
-      document.getElementById('scores-list').innerHTML = '<div style="text-align:center;padding:30px;font-size:13px;color:#555;">Esta sección se habilita cuando termina el partido.</div>';
-    } else if (!localStorage.getItem(scoresLsKey)) {
-      renderScores();
-    } else {
-      const btn = document.getElementById('scores-confirm-btn');
-      btn.textContent = '⬇ Descargar puntajes';
-      btn.style.background = '#2e7d32'; btn.style.opacity = '1';
+      list.innerHTML = ''; btn.style.display = 'none'; closedMsg.style.display = 'block';
+      closedMsg.textContent = 'Los puntajes se abren cuando termina el partido (ventana de 24 hs).';
+      return;
     }
+    closedMsg.style.display = 'none';
+    if (!scoresSquad.length) {
+      list.innerHTML = '<div style="text-align:center;padding:30px;font-size:13px;color:#555;">Cargando jugadores del partido…</div>';
+      btn.style.display = 'none';
+      return;
+    }
+    btn.style.display = ''; btn.style.background = ''; btn.style.opacity = '';
+    renderScores();
+    if (already) { btn.textContent = 'Ya enviaste ✓'; btn.disabled = true; btn.style.opacity = '0.5'; btn.classList.remove('ready'); }
+    else { btn.textContent = 'Confirmar puntajes'; btn.disabled = false; btn.classList.remove('ready'); }
   }
 }
 
@@ -1545,32 +1567,42 @@ async function openFeed() {
 // ============================================================
 // PUNTAJES
 // ============================================================
+// Dorsal para mostrar: DT → 'DT'. Si el partido no trae num (FotMob no lo da para
+// suplentes que entran), lo resolvemos del plantel por nombre; si no, vacío.
+function _scoresDispNum(p) {
+  if (p.tipo === 'dt') return 'DT';
+  if (p.num) return p.num;
+  const norm = s => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+  const m = (typeof squad !== 'undefined' ? squad : []).find(s => norm(s.name) === norm(p.name));
+  return m ? m.num : '';
+}
+
 function renderScores() {
   const list = document.getElementById('scores-list');
   list.innerHTML = '';
-  if (!playedSquad.length) { list.innerHTML = '<p style="color:#555;font-size:13px;text-align:center;padding:20px;">El DT aún no cargó los jugadores que jugaron.</p>'; return; }
-  const titulares = playedSquad.filter(p => p.tipo === 'titular');
-  const suplentes = playedSquad.filter(p => p.tipo === 'suplente');
+  if (!scoresSquad.length) { list.innerHTML = '<p style="color:#555;font-size:13px;text-align:center;padding:20px;">Todavía no están cargados los jugadores del partido.</p>'; return; }
+  const already = !!localStorage.getItem(LS_SCORES_KEY);
+  const titulares = scoresSquad.filter(p => p.tipo === 'titular');
+  const suplentes = scoresSquad.filter(p => p.tipo === 'suplente');
+  const dts       = scoresSquad.filter(p => p.tipo === 'dt');
   function renderGroup(title, players) {
     if (!players.length) return;
     const t = document.createElement('div'); t.className = 'scores-section-title'; t.textContent = title; list.appendChild(t);
     players.forEach(p => {
-      const row = document.createElement('div'); row.className = 'score-player-row'; row.dataset.num = p.num;
-      const avWrap = document.createElement('div'); avWrap.className = 'score-avatar-wrap';
-      const img = document.createElement('img'); img.src = FOTO(p.fid);
-      const fb = document.createElement('span'); fb.className = 'av-fb'; fb.textContent = p.num;
-      img.onload = () => { img.style.display = 'block'; fb.style.display = 'none'; };
-      img.onerror = () => { img.style.display = 'none'; fb.style.display = 'block'; };
-      img.style.display = 'none';
-      avWrap.appendChild(img); avWrap.appendChild(fb); row.appendChild(avWrap);
+      const disp = _scoresDispNum(p);
+      const row = document.createElement('div'); row.className = 'score-player-row'; row.dataset.id = p.id;
+      row.appendChild(kitChip(CLUB_SLUG, disp, 36));
       const info = document.createElement('div'); info.className = 'score-player-info';
-      const numEl = document.createElement('div'); numEl.className = 'score-player-num'; numEl.textContent = `#${p.num}`;
+      const numEl = document.createElement('div'); numEl.className = 'score-player-num'; numEl.textContent = p.tipo === 'dt' ? 'DT' : (disp ? `#${disp}` : '');
       const nameEl = document.createElement('div'); nameEl.className = 'score-player-name'; nameEl.textContent = p.name;
       info.appendChild(numEl); info.appendChild(nameEl); row.appendChild(info);
       const btns = document.createElement('div'); btns.className = 'score-btns';
+      if (userScores[p.id] != null) row.classList.add('voted');
       for (let i = 1; i <= 10; i++) {
         const btn = document.createElement('button'); btn.className = 'score-btn'; btn.textContent = i;
-        btn.addEventListener('click', () => { userScores[p.num] = i; btns.querySelectorAll('.score-btn').forEach((b, idx) => b.classList.toggle('selected', idx + 1 === i)); row.classList.add('voted'); checkScoresReady(); });
+        if (userScores[p.id] === i) btn.classList.add('selected');
+        if (already) btn.disabled = true;
+        btn.addEventListener('click', () => { if (already) return; userScores[p.id] = i; btns.querySelectorAll('.score-btn').forEach((b, idx) => b.classList.toggle('selected', idx + 1 === i)); row.classList.add('voted'); checkScoresReady(); });
         btns.appendChild(btn);
       }
       row.appendChild(btns); list.appendChild(row);
@@ -1578,10 +1610,11 @@ function renderScores() {
   }
   renderGroup('TITULARES', titulares);
   renderGroup('SUPLENTES QUE INGRESARON', suplentes);
+  renderGroup('DIRECTOR TÉCNICO', dts);
 }
 
 function checkScoresReady() {
-  const isReady = Object.keys(userScores).length === playedSquad.length && playedSquad.length > 0;
+  const isReady = scoresSquad.length > 0 && scoresSquad.every(p => p.id in userScores);
   const btn = document.getElementById('scores-confirm-btn');
   if (isReady && !scoresWasReady) { btn.classList.remove('ready'); void btn.offsetWidth; btn.classList.add('ready'); }
   else if (!isReady) btn.classList.remove('ready');
@@ -1608,76 +1641,110 @@ function addGrid(container, players, cols, startRank, avatarSize, noMedal = fals
 
 document.getElementById('scores-confirm-btn').addEventListener('click', async () => {
   const btn = document.getElementById('scores-confirm-btn');
-  if (localStorage.getItem(LS_SCORES_KEY)) { downloadMyScores(); return; }
-  if (Object.keys(userScores).length !== playedSquad.length || !playedSquad.length) return;
+  if (localStorage.getItem(LS_SCORES_KEY) || scoresSent) return;
+  if (!scoresSquad.length || !scoresSquad.every(p => p.id in userScores)) return;
+  scoresSent = true;
+  btn.textContent = 'Enviando...'; btn.disabled = true;
   try {
-    const scoresPayload = { rival: RIVAL, club: CLUB_SLUG, puntajes: userScores };
-    if (FECHA_ACTUAL) scoresPayload.match_date = FECHA_ACTUAL;
+    const scoresPayload = { rival: SCORES_RIVAL, club: CLUB_SLUG, puntajes: userScores };
+    if (SCORES_MATCH_DATE) scoresPayload.match_date = SCORES_MATCH_DATE;
     const res = await fetch(`${SUPABASE_URL}/rest/v1/puntajes`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' }, body: JSON.stringify(scoresPayload) });
-    if (!res.ok && res.status !== 201) {
+    if (res.ok || res.status === 201 || res.status === 409) {
+      try { localStorage.setItem(LS_SCORES_KEY, '1'); localStorage.setItem(LS_SCORES_KEY + '_data', JSON.stringify(userScores)); } catch(e) {}
+      showToast(res.status === 409 ? 'Ya habías puntuado este partido.' : `¡Puntajes enviados! Vamos ${CLUB.nombreCorto} 🔥`);
+      enterPostScores();
+    } else {
       const body = await res.text().catch(() => '');
       console.error('puntajes insert failed', res.status, body);
       showToast(`Error ${res.status}: ${(body || 'no se pudo guardar').slice(0, 90)}`);
-      return;
+      btn.textContent = 'Confirmar puntajes'; btn.disabled = false; scoresSent = false;
     }
-    try { localStorage.setItem(LS_SCORES_KEY, '1'); } catch(e) {}
-    btn.textContent = '⬇ Descargar puntajes'; btn.style.background = '#2e7d32'; btn.style.opacity = '1'; btn.classList.remove('ready');
-    showToast('¡Puntajes enviados! 🔥');
   } catch(e) {
     console.error('puntajes insert exception', e);
     showToast('Error de conexión: ' + (e && e.message ? e.message : e));
+    btn.textContent = 'Confirmar puntajes'; btn.disabled = false; scoresSent = false;
   }
 });
 
-document.getElementById('scores-ver-resultados-btn').addEventListener('click', () => { showScoresResults(); });
-document.getElementById('back-scores-results-btn').addEventListener('click', () => { document.getElementById('scores-results-screen').style.display = 'none'; });
+// Fila de puntaje con kit chip — reusada por "Tus puntajes" y "Resultados globales".
+function _scoreRow(p, valueText) {
+  const disp = _scoresDispNum(p);
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:8px 10px;margin-bottom:6px;';
+  row.appendChild(kitChip(CLUB_SLUG, disp, 34));
+  const info = document.createElement('div'); info.style.flex = '1';
+  info.innerHTML = `<div style="font-size:11px;color:var(--club-color);">${p.tipo === 'dt' ? 'DT' : (disp ? '#' + disp : '')}</div><div style="font-size:13px;color:#fff;">${escapeHtml(p.name)}</div>`;
+  row.appendChild(info);
+  const val = document.createElement('div'); val.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:24px;color:var(--club-color);line-height:1;'; val.textContent = valueText;
+  row.appendChild(val);
+  return row;
+}
+
+// Tras confirmar: pantalla con 2 solapas (Tus puntajes | Resultados globales).
+function enterPostScores() {
+  document.getElementById('scores-results-screen').style.display = 'flex';
+  const sub = document.getElementById('scores-post-sub');
+  if (sub) sub.textContent = `${CLUB.nombreCorto} vs ${SCORES_RIVAL}`;
+  switchScoresTab('mine');
+}
+
+function switchScoresTab(tab) {
+  const mine = tab === 'mine';
+  document.getElementById('scores-mine-pane').style.display = mine ? 'block' : 'none';
+  document.getElementById('scores-global-pane').style.display = mine ? 'none' : 'block';
+  const tm = document.getElementById('scores-tab-mine'), tg = document.getElementById('scores-tab-global');
+  tm.style.background = mine ? 'var(--club-color)' : 'transparent'; tm.style.color = mine ? '#fff' : 'rgba(255,255,255,0.4)';
+  tg.style.background = !mine ? 'var(--club-color)' : 'transparent'; tg.style.color = !mine ? '#fff' : 'rgba(255,255,255,0.4)';
+  if (mine) renderMyScores(); else showScoresResults();
+}
+
+function renderMyScores() {
+  const cont = document.getElementById('scores-mine-list');
+  const sorted = scoresSquad.map(p => ({ ...p, val: userScores[p.id] })).filter(p => p.val != null).sort((a, b) => b.val - a.val);
+  cont.innerHTML = '';
+  if (!sorted.length) { cont.innerHTML = '<div style="color:#555;text-align:center;padding:20px;">Sin puntajes.</div>'; return; }
+  sorted.forEach(p => cont.appendChild(_scoreRow(p, p.val)));
+}
+
+document.getElementById('back-scores-results-btn').addEventListener('click', () => {
+  document.getElementById('scores-results-screen').style.display = 'none';
+  closeSection('scores');   // Volver → home del club
+});
+document.getElementById('download-my-scores-btn').addEventListener('click', downloadMyScores);
 
 async function showScoresResults() {
-  document.getElementById('scores-results-screen').style.display = 'flex';
   const list = document.getElementById('scores-results-list');
+  const totalEl = document.getElementById('scores-total-votes');
   list.innerHTML = '<div style="color:#555;text-align:center;padding:20px;">Cargando...</div>';
   try {
-    let url = `${SUPABASE_URL}/rest/v1/puntajes?select=puntajes&rival=eq.${encodeURIComponent(RIVAL)}&club=eq.${CLUB_SLUG}`;
-    if (FECHA_ACTUAL) url += `&match_date=eq.${FECHA_ACTUAL}`;
+    let url = `${SUPABASE_URL}/rest/v1/puntajes?select=puntajes&rival=eq.${encodeURIComponent(SCORES_RIVAL)}&club=eq.${CLUB_SLUG}`;
+    if (SCORES_MATCH_DATE) url += `&match_date=eq.${SCORES_MATCH_DATE}`;
     const res = await fetch(url, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
     const data = await res.json();
-    if (!data.length) { list.innerHTML = '<div style="color:#555;text-align:center;padding:20px;">Sin resultados aún.</div>'; document.getElementById('scores-total-votes').textContent = ''; return; }
-    const totalVoters = data.length;
-    document.getElementById('scores-total-votes').textContent = `${totalVoters} hincha${totalVoters !== 1 ? 's' : ''} votaron`;
-    const totals = {}, counts2 = {};
-    data.forEach(row => { Object.entries(row.puntajes || {}).forEach(([num, val]) => { totals[num] = (totals[num] || 0) + Number(val); counts2[num] = (counts2[num] || 0) + 1; }); });
-    const results = Object.keys(totals).map(num => { const p = playedSquad.find(s => s.num === Number(num)); return { num: Number(num), name: p?.name || `#${num}`, fid: p?.fid || 0, avg: totals[num] / counts2[num] }; }).sort((a, b) => b.avg - a.avg);
+    if (!data.length) { list.innerHTML = '<div style="color:#555;text-align:center;padding:20px;">Sin resultados aún. ¡Sé el primero!</div>'; totalEl.textContent = ''; return; }
+    totalEl.textContent = `${data.length} hincha${data.length !== 1 ? 's' : ''} puntu${data.length !== 1 ? 'aron' : 'ó'}`;
+    const sum = {}, cnt = {};
+    data.forEach(row => Object.entries(row.puntajes || {}).forEach(([num, val]) => { const n = Number(val); if (isNaN(n)) return; sum[num] = (sum[num] || 0) + n; cnt[num] = (cnt[num] || 0) + 1; }));
+    const byId = {}; scoresSquad.forEach(p => byId[String(p.id)] = p);
+    const ranked = Object.keys(sum).map(id => { const p = byId[id] || { id, name: '#' + id, tipo: '' }; return { ...p, avg: sum[id] / cnt[id] }; }).sort((a, b) => b.avg - a.avg);
     list.innerHTML = '';
-    const suplNums = new Set(playedSquad.filter(s => s.tipo === 'suplente').map(s => s.num));
-    const titResults = results.filter(p => !suplNums.has(p.num));
-    const suplResults = results.filter(p => suplNums.has(p.num));
-    if (titResults[0]) addGrid(list, [titResults[0]], 1, 0, 52);
-    if (titResults.slice(1, 3).length) addGrid(list, titResults.slice(1, 3), 2, 1, 44);
-    if (titResults.slice(3, 7).length) addGrid(list, titResults.slice(3, 7), 4, 3, 36);
-    if (titResults.slice(7).length) addGrid(list, titResults.slice(7), 4, 7, 36);
-    if (suplResults.length) { const sep = document.createElement('div'); sep.className = 'scores-section-title'; sep.style.marginTop = '10px'; sep.textContent = 'SUPLENTES'; list.appendChild(sep); addGrid(list, suplResults, 3, 0, 36, true); }
-  } catch(e) { list.innerHTML = '<div style="color:#555">Error al cargar.</div>'; }
+    ranked.forEach(p => list.appendChild(_scoreRow(p, p.avg.toFixed(1))));
+  } catch(e) { list.innerHTML = '<div style="color:#555;text-align:center;padding:20px;">Error al cargar.</div>'; }
 }
 
 async function downloadMyScores() {
   try {
     const tmp = document.createElement('div'); tmp.style.cssText = 'background:#1a1a2e;padding:16px;width:320px;position:fixed;left:-9999px;top:0;';
     const title = document.createElement('div'); title.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:20px;color:#fff;text-align:center;margin-bottom:4px;letter-spacing:2px;'; title.textContent = 'MIS PUNTAJES';
-    const sub = document.createElement('div'); sub.style.cssText = 'font-size:11px;color:#666;text-align:center;margin-bottom:12px;'; sub.textContent = `${CLUB.nombreCorto} vs ${RIVAL}`;
+    const sub = document.createElement('div'); sub.style.cssText = 'font-size:11px;color:#666;text-align:center;margin-bottom:12px;'; sub.textContent = `${CLUB.nombreCorto} vs ${SCORES_RIVAL}`;
     tmp.appendChild(title); tmp.appendChild(sub);
-    const suplNums = new Set(playedSquad.filter(s => s.tipo === 'suplente').map(s => s.num));
-    const sorted = Object.entries(userScores).map(([num, val]) => { const p = playedSquad.find(s => s.num === Number(num)); return { num: Number(num), name: p?.name || `#${num}`, fid: p?.fid || 0, val: Number(val) }; }).sort((a, b) => b.val - a.val);
-    const titSorted = sorted.filter(p => !suplNums.has(p.num)); const suplSorted = sorted.filter(p => suplNums.has(p.num));
-    if (titSorted[0]) addGrid(tmp, [titSorted[0]], 1, 0, 52);
-    if (titSorted.slice(1, 3).length) addGrid(tmp, titSorted.slice(1, 3), 2, 1, 44);
-    if (titSorted.slice(3, 7).length) addGrid(tmp, titSorted.slice(3, 7), 4, 3, 36);
-    if (titSorted.slice(7).length) addGrid(tmp, titSorted.slice(7), 4, 7, 36);
-    if (suplSorted.length) { const sep = document.createElement('div'); sep.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:13px;color:#555;letter-spacing:2px;text-align:center;margin:10px 0 6px;'; sep.textContent = 'SUPLENTES'; tmp.appendChild(sep); addGrid(tmp, suplSorted, 3, 0, 36, true); }
+    const sorted = scoresSquad.map(p => ({ ...p, val: userScores[p.id] })).filter(p => p.val != null).sort((a, b) => b.val - a.val);
+    sorted.forEach(p => tmp.appendChild(_scoreRow(p, p.val)));
     document.body.appendChild(tmp);
     await new Promise(r => setTimeout(r, 200));
     const canvas = await html2canvas(tmp, { backgroundColor: '#1a1a2e', scale: 2, logging: false }); document.body.removeChild(tmp);
     const link = document.createElement('a'); link.download = `mis-puntajes-${CLUB_SLUG}.png`; link.href = canvas.toDataURL('image/png'); link.click();
-    showToast('Descargada!');
+    showToast('¡Descargada!');
   } catch(e) { showToast('No se pudo generar.'); }
 }
 
@@ -1686,7 +1753,7 @@ document.getElementById('download-scores-results-btn').addEventListener('click',
   try {
     const tmp = document.createElement('div'); tmp.style.cssText = 'background:#1a1a2e;padding:16px;width:320px;position:fixed;left:-9999px;top:0;';
     const title = document.createElement('div'); title.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:20px;color:#fff;text-align:center;margin-bottom:4px;letter-spacing:2px;'; title.textContent = 'PUNTAJES DE LA GENTE';
-    const sub = document.createElement('div'); sub.style.cssText = 'font-size:11px;color:#666;text-align:center;margin-bottom:12px;'; sub.textContent = `${CLUB.nombreCorto} vs ${RIVAL}`;
+    const sub = document.createElement('div'); sub.style.cssText = 'font-size:11px;color:#666;text-align:center;margin-bottom:12px;'; sub.textContent = `${CLUB.nombreCorto} vs ${SCORES_RIVAL}`;
     tmp.appendChild(title); tmp.appendChild(sub);
     const listEl = document.getElementById('scores-results-list'); const clone = listEl.cloneNode(true);
     const origAvatars = listEl.querySelectorAll('img'); const cloneAvatars = clone.querySelectorAll('img');
@@ -2593,27 +2660,90 @@ fillTiles();
 async function resolveMatchContext() {
   try {
     if (!COPA) {
-      const { proximo } = await clubLigaMatches();
+      const { proximo, ultimo } = await clubLigaMatches();
+      // Formación → próximo partido
       if (proximo) {
         RIVAL = _matchInfo(proximo).rival;
         const utc = proximo.status && proximo.status.utcTime;   // match_date = día local AR (UTC-3)
         if (utc) FECHA_ACTUAL = new Date(new Date(utc).getTime() - 3 * 3600 * 1000).toISOString().slice(0, 10);
-        const tag = RIVAL !== 'Por definir' ? `${CLUB.nombreCorto} vs ${RIVAL}` : '';
-        const ft = document.getElementById('formation-rival-tag'); if (ft) ft.textContent = tag;
-        const st = document.getElementById('scores-rival-tag'); if (st) st.textContent = tag;
-        return;
       }
+      // Puntajes → último partido jugado (rival, fecha y plantel que jugó)
+      await resolveScoresContext(ultimo);
+      applyGating();
+      refreshMatchTags();
+      updateTilesGating();
+      return;
     }
-    // Copa o fallback (liga sin próximo): fixture por-club como antes.
-    const suffix = COPA ? `_${COPA}` : '';
+    // Copa: fixture por-club como antes (sin el gate coordinado de puntajes).
+    const suffix = `_${COPA}`;
     const r = await fetch(`data/fixtures/${CLUB_SLUG}${suffix}.json`);
-    if (!r.ok) return;
-    const fixtures = await r.json();
-    const match = fixtures.find(f => f.rival === RIVAL && f.goles === null);
-    if (match) FECHA_ACTUAL = match.fecha;
+    if (r.ok) {
+      const fixtures = await r.json();
+      const match = fixtures.find(f => f.rival === RIVAL && f.goles === null);
+      if (match) FECHA_ACTUAL = match.fecha;
+    }
+    refreshMatchTags();
   } catch(e) {}
 }
 resolveMatchContext();
+
+// Carga el plantel que jugó el último partido (titulares + suplentes que ingresaron + DT)
+// desde data/partidos/{id}.json y setea el contexto de puntajes.
+async function resolveScoresContext(ultimo) {
+  if (!ultimo) return;
+  SCORES_RIVAL = _matchInfo(ultimo).rival;
+  const utc = ultimo.status && ultimo.status.utcTime;
+  if (utc) SCORES_FT = new Date(utc);
+  try {
+    const idx = await fetch(`data/partidos/index.json?t=${Date.now()}`).then(r => r.ok ? r.json() : []);
+    const mine = idx.filter(e => e.local === CLUB_SLUG || e.visitante === CLUB_SLUG)
+                    .sort((a, b) => (a.fecha || '').localeCompare(b.fecha || ''));
+    const entry = mine[mine.length - 1];   // el partido con datos más reciente
+    if (!entry) return;
+    scoresMatchId = entry.id;
+    SCORES_MATCH_DATE = entry.fecha;        // fecha canónica del partido (YYYY-MM-DD)
+    const data = await fetch(`data/partidos/${entry.id}.json?t=${Date.now()}`).then(r => r.ok ? r.json() : null);
+    const jug = data && data.jugadores && data.jugadores[CLUB_SLUG];
+    if (jug) {
+      scoresSquad = jug
+        .filter(j => j.tipo === 'titular' || j.tipo === 'dt' || (j.tipo === 'suplente' && j.min != null && j.min > 0))
+        .map(j => ({ id: j.id, name: j.nombre, num: j.num || '', tipo: j.tipo, min: j.min }));
+    }
+  } catch(e) {}
+}
+
+// Gate: 24 hs de puntajes desde el FT (o ?testpuntajes=1 para probar); si no, formación abierta.
+function applyGating() {
+  const override = new URLSearchParams(location.search).get('testpuntajes') === '1';
+  const hasData = scoresSquad.length > 0;
+  const within24h = SCORES_FT ? (Date.now() - SCORES_FT.getTime()) < 24 * 3600 * 1000 : false;
+  PUNTAJES_OPEN = override || (hasData && within24h);
+  FORMACION_OPEN = !PUNTAJES_OPEN && !!(RIVAL && RIVAL !== 'Por definir');
+}
+
+// Tags de rival: formación = próximo; puntajes = último jugado.
+function refreshMatchTags() {
+  const ftag = (RIVAL && RIVAL !== 'Por definir') ? `${CLUB.nombreCorto} vs ${RIVAL}` : '';
+  const stag = SCORES_RIVAL ? `${CLUB.nombreCorto} vs ${SCORES_RIVAL}` : '';
+  const ft = document.getElementById('formation-rival-tag'); if (ft) ft.textContent = ftag;
+  const st = document.getElementById('scores-rival-tag'); if (st) st.textContent = stag;
+}
+
+// Badge Abierto/Cerrado en los tiles según el gate coordinado.
+async function updateTilesGating() {
+  const { proximo, ultimo } = await clubLigaMatches();
+  const fSub = document.getElementById('tile-formacion-sub');
+  const pSub = document.getElementById('tile-puntaje-sub');
+  const badge = open => open ? ' <span style="color:#66bb6a;font-weight:600;">· Abierto</span>' : ' <span style="color:#777;">· Cerrado</span>';
+  if (fSub) {
+    if (proximo) { const l = _matchInfo(proximo); fSub.innerHTML = `Fecha ${l.fecha} · vs ${escapeHtml(l.rival)}${badge(FORMACION_OPEN)}`; }
+    else fSub.textContent = 'Sin próximo partido';
+  }
+  if (pSub) {
+    if (ultimo) { const l = _matchInfo(ultimo); pSub.innerHTML = `Fecha ${l.fecha} · vs ${escapeHtml(l.rival)}${badge(PUNTAJES_OPEN)}`; }
+    else pSub.textContent = 'Al terminar el partido';
+  }
+}
 
 // ============================================================
 // SECCIÓN ESTADÍSTICAS (individual del club, por fecha) — data/partidos
@@ -2742,28 +2872,27 @@ async function renderTribunApp() {
   const cont = document.getElementById('tribunapp-content');
   const label = document.getElementById('tribunapp-label');
   cont.innerHTML = '<div style="text-align:center;color:#555;padding:30px;font-size:13px;">Cargando...</div>';
-  const { ultimo } = await clubLigaMatches();
-  let matchDate = ultimo ? (ultimo.status.utcTime || '').slice(0, 10) : '';
-  const info = ultimo ? _matchInfo(ultimo) : null;
-  if (label) label.innerHTML = info ? `Fecha ${info.fecha} · vs ${escapeHtml(info.rival)}` : 'Lo que vota la gente';
-  const dateFilter = matchDate ? `&match_date=eq.${matchDate}` : '';
+  if (label) label.innerHTML = 'Lo que vota la gente';
+  // Formaciones → contexto de formación (próximo); Puntajes → contexto de puntajes (último).
+  const fFilter = FECHA_ACTUAL ? `&match_date=eq.${FECHA_ACTUAL}` : '';
+  const pFilter = SCORES_MATCH_DATE ? `&match_date=eq.${SCORES_MATCH_DATE}` : '';
   let forms = [], punts = [];
   try {
     const [fr, pr] = await Promise.all([
-      fetch(`${SUPABASE_URL}/rest/v1/formaciones?select=jugadores${dateFilter ? ',match_date' : ''}&club=eq.${CLUB_SLUG}${dateFilter}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
-      fetch(`${SUPABASE_URL}/rest/v1/puntajes?select=puntajes${dateFilter ? ',match_date' : ''}&club=eq.${CLUB_SLUG}${dateFilter}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
+      fetch(`${SUPABASE_URL}/rest/v1/formaciones?select=jugadores&club=eq.${CLUB_SLUG}${fFilter}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
+      fetch(`${SUPABASE_URL}/rest/v1/puntajes?select=puntajes&club=eq.${CLUB_SLUG}${pFilter}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
     ]);
     forms = fr.ok ? await fr.json() : [];
     punts = pr.ok ? await pr.json() : [];
   } catch (e) { forms = []; punts = []; }
 
   if (!forms.length && !punts.length) {
-    cont.innerHTML = `<div class="stats-empty">👥<br><br>Todavía no hay votos de la gente para este partido.<br><span style="font-size:12px;color:#666;">Armá tu formación o poné tus puntajes para sumar el primero.</span></div>`;
+    cont.innerHTML = `<div class="stats-empty">👥<br><br>Todavía no hay votos de la gente.<br><span style="font-size:12px;color:#666;">Armá tu formación o poné tus puntajes para sumar el primero.</span></div>`;
     return;
   }
 
   const html = [];
-  // ── Jugadores más elegidos (formaciones) ──
+  // ── Formaciones (próximo partido) — clave por num ──
   if (forms.length) {
     const count = {}; const meta = {};
     forms.forEach(f => (f.jugadores || []).forEach(j => {
@@ -2773,7 +2902,8 @@ async function renderTribunApp() {
     }));
     const top = Object.keys(count).map(k => ({ ...meta[k], pct: Math.round(count[k] / forms.length * 100), n: count[k] }))
       .sort((a, b) => b.pct - a.pct).slice(0, 11);
-    html.push(`<div class="ta-sec-title">⚽ Jugadores más elegidos <span>${forms.length} formación${forms.length !== 1 ? 'es' : ''}</span></div>`);
+    const flabel = (RIVAL && RIVAL !== 'Por definir') ? ` · vs ${escapeHtml(RIVAL)}` : '';
+    html.push(`<div class="ta-sec-title">⚽ Jugadores más elegidos${flabel} <span>${forms.length} formación${forms.length !== 1 ? 'es' : ''}</span></div>`);
     html.push('<div class="ta-list">' + top.map(p => `
       <div class="ta-item">
         <div class="ta-av" data-num="${escapeHtml(p.num)}"></div>
@@ -2782,24 +2912,21 @@ async function renderTribunApp() {
         <div class="ta-pct">${p.pct}%</div>
       </div>`).join('') + '</div>');
   }
-  // ── Puntajes promedio ──
+  // ── Puntajes (último partido jugado) — clave por id (FotMob), nombre/dorsal desde scoresSquad ──
   if (punts.length) {
-    const sum = {}, cnt = {}, meta = {};
+    const sum = {}, cnt = {};
     punts.forEach(row => {
       const obj = row.puntajes || {};
-      Object.keys(obj).forEach(k => {
-        const v = Number(obj[k]); if (isNaN(v)) return;
-        sum[k] = (sum[k] || 0) + v; cnt[k] = (cnt[k] || 0) + 1;
-      });
+      Object.keys(obj).forEach(k => { const v = Number(obj[k]); if (isNaN(v)) return; sum[k] = (sum[k] || 0) + v; cnt[k] = (cnt[k] || 0) + 1; });
     });
-    const squadByNum = {};
-    (typeof squad !== 'undefined' ? squad : []).forEach(p => { if (!squadByNum[String(p.num)]) squadByNum[String(p.num)] = p; });
-    const rank = Object.keys(sum).map(k => ({ num: k, name: (squadByNum[k]?.name) || ('#' + k), avg: sum[k] / cnt[k], n: cnt[k] }))
+    const byId = {}; scoresSquad.forEach(p => byId[String(p.id)] = p);
+    const rank = Object.keys(sum).map(k => { const p = byId[k]; return { name: p ? p.name : ('#' + k), disp: p ? _scoresDispNum(p) : '', avg: sum[k] / cnt[k] }; })
       .sort((a, b) => b.avg - a.avg).slice(0, 11);
-    html.push(`<div class="ta-sec-title" style="margin-top:18px;">⭐ Puntajes de la gente <span>${punts.length} voto${punts.length !== 1 ? 's' : ''}</span></div>`);
-    html.push('<div class="ta-list">' + rank.map((p, i) => `
+    const plabel = SCORES_RIVAL ? ` · vs ${escapeHtml(SCORES_RIVAL)}` : '';
+    html.push(`<div class="ta-sec-title" style="margin-top:18px;">⭐ Puntajes de la gente${plabel} <span>${punts.length} voto${punts.length !== 1 ? 's' : ''}</span></div>`);
+    html.push('<div class="ta-list">' + rank.map(p => `
       <div class="ta-item">
-        <div class="ta-av" data-num="${escapeHtml(p.num)}"></div>
+        <div class="ta-av" data-num="${escapeHtml(p.disp)}"></div>
         <div class="ta-name">${escapeHtml(p.name)}</div>
         <div class="ta-score">${p.avg.toFixed(1)}</div>
       </div>`).join('') + '</div>');
