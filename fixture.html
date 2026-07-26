@@ -357,6 +357,7 @@ function render() {
   document.getElementById('copa-subtabs').style.display = (faseActiva === 'copas') ? 'flex' : 'none';
   if (faseActiva === 'copas') renderCopas();
   else renderClausura();
+  _restoreFichas();   // reabrir fichas que estaban desplegadas antes del re-render
 }
 
 // ── CLAUSURA ──────────────────────────────────────────────────────────────
@@ -509,7 +510,7 @@ function cardLiga(p, etiqueta) {
   card.innerHTML =
     `<div class="partido-meta">${etq}${metaHora(p)}</div>
      <div class="partido-fila">${ladoLiga(p.home, clsH)}${marcador(p.home_score, p.away_score, p.home_pen, p.away_pen)}${ladoLiga(p.away, clsA)}</div>
-     ${acciones ? `<div class="partido-acciones">${acciones}<div class="ficha-panel" hidden></div></div>` : ''}`;
+     ${acciones ? `<div class="partido-acciones">${acciones}<div class="ficha-panel" data-fid="${fid}" hidden></div></div>` : ''}`;
   if (started) {
     const btn = card.querySelector('.ficha-toggle'), panel = card.querySelector('.ficha-panel');
     btn.addEventListener('click', () => toggleFicha(btn, panel, fid));
@@ -519,17 +520,36 @@ function cardLiga(p, etiqueta) {
 
 // ── Ficha del partido inline (desplegable en la card del fixture) ────────────
 function _fEsc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
-async function toggleFicha(btn, panel, fid) {
-  const abierto = !panel.hasAttribute('hidden');
-  if (abierto) { panel.setAttribute('hidden', ''); btn.classList.remove('open'); return; }
-  btn.classList.add('open'); panel.removeAttribute('hidden');
+const _fichaCache = {};        // fid -> payload ya armado (evita re-fetch al reabrir)
+const _fichaOpen = new Set();  // fids con ficha abierta (para restaurar tras re-render en vivo)
+async function _fichaFill(panel, fid) {
   if (panel.dataset.loaded) return;
+  if (_fichaCache[fid]) { panel.innerHTML = renderFichaHTML(_fichaCache[fid]); panel.dataset.loaded = '1'; return; }
   panel.innerHTML = '<div class="ficha-loading">Cargando ficha…</div>';
   let built = null;
   try { built = await buildPayloadLive(fid); } catch (e) {}
   if (!built) { panel.innerHTML = '<div class="ficha-loading">No se pudo cargar la ficha.</div>'; return; }
+  _fichaCache[fid] = built.data;
   panel.innerHTML = renderFichaHTML(built.data);
   panel.dataset.loaded = '1';
+}
+async function toggleFicha(btn, panel, fid) {
+  const abierto = !panel.hasAttribute('hidden');
+  if (abierto) { panel.setAttribute('hidden', ''); btn.classList.remove('open'); _fichaOpen.delete(fid); return; }
+  btn.classList.add('open'); panel.removeAttribute('hidden'); _fichaOpen.add(fid);
+  await _fichaFill(panel, fid);
+}
+// Reabre las fichas que estaban abiertas antes de un re-render del fixture (poll en vivo).
+function _restoreFichas() {
+  if (!_fichaOpen.size) return;
+  document.querySelectorAll('.ficha-panel[data-fid]').forEach(panel => {
+    const fid = panel.dataset.fid;
+    if (!_fichaOpen.has(fid)) return;
+    const btn = panel.parentElement.querySelector('.ficha-toggle');
+    if (btn) btn.classList.add('open');
+    panel.removeAttribute('hidden');
+    _fichaFill(panel, fid);
+  });
 }
 function _fichaPlayerRow(j) {
   const marks = [];
