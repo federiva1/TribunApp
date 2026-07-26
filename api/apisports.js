@@ -45,7 +45,7 @@ export default async function handler(req) {
   // sirve una respuesta vieja (ej. live=all de hace rato, sin el partido de hoy).
   // El resto (standings, teams, players, listados de fixtures) sí puede cachear 60s.
   const isLive = seg === 'fixtures' &&
-    (url.searchParams.has('live') || url.searchParams.has('id'));
+    (url.searchParams.has('live') || url.searchParams.has('id') || url.searchParams.has('fixture'));
   const cacheControl = isLive ? 'no-store' : 'public, max-age=60';
 
   const qs = url.searchParams.toString();

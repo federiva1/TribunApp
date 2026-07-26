@@ -462,17 +462,24 @@ function cardLiga(p, etiqueta) {
   const etq = etiqueta ? `<span class="etq">${etiqueta}</span>` : '';
   const card = document.createElement('div');
   card.className = 'partido-card';
+  // La ficha se muestra para cualquier partido que arrancó (en vivo desde api-sports)
+  // o que ya tenga JSON pre-generado (post-partido, enriquecido con FotMob).
   const sid = statsIdFor(p);
-  // Durante el partido (o antes) → "Ver ficha" abre el desplegable de jugadores.
-  // Finalizado → "Ver estadísticas del partido" (grilla de stats avanzadas).
+  const shortSt = p.short || (p.status && p.status.short);
+  const enCurso = EN_CURSO.has(shortSt);
   const finLink = (p.status ? p.status.finished : ['FT','AET','PEN'].includes(p.short));
+  const fid = p.api_id || '';
+  const showLink = !!sid || ((enCurso || finLink) && fid);
+  // En juego → "Ver ficha" (desplegable de jugadores). Finalizado → "Ver estadísticas".
   const linkTxt = finLink ? 'Ver estadísticas del partido' : 'Ver ficha';
   const linkTab = finLink ? '' : '&tab=jugadores';
+  const linkP   = sid || `${p.home.slug}-${p.away.slug}`;
+  const linkFid = fid ? `&fid=${fid}` : '';
   const linkIco = finLink
     ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`
     : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
-  const statsLink = sid
-    ? `<a class="stats-link" href="estadisticas.html?p=${sid}${linkTab}">
+  const statsLink = showLink
+    ? `<a class="stats-link" href="estadisticas.html?p=${linkP}${linkFid}${linkTab}">
          ${linkIco}
          ${linkTxt}</a>`
     : '';
