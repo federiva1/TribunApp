@@ -444,6 +444,31 @@ function accentColor(slug){
 // mientras el partido está en curso; en local (sin proxy) cae en el catch y no hace nada.
 let _liveTimer = null;
 const EN_CURSO_ST = ['1H','HT','2H','ET','BT','P','SUSP'];
+// Reconstruye la lista de goles (goleador + minuto) desde los eventos en vivo de api-sports.
+function _renderLiveGoals(r){
+  const gl = document.getElementById('goals-local');
+  const gv = document.getElementById('goals-visitante');
+  if(!gl || !gv || !r.teams) return;
+  const homeId = r.teams.home.id;
+  const evs = (r.events||[]).filter(e =>
+    e.type === 'Goal' && e.detail !== 'Missed Penalty' && e.comments !== 'Penalty Shootout');
+  gl.innerHTML = ''; gv.innerHTML = '';
+  evs.forEach(e => {
+    const og = e.detail === 'Own Goal';
+    // gol en contra: se anota para el equipo rival
+    const paraLocal = og ? (e.team.id !== homeId) : (e.team.id === homeId);
+    const min = e.time.elapsed + (e.time.extra ? '+' + e.time.extra : '');
+    const name = (e.player && e.player.name) || '';
+    let txt = `⚽ ${min}' ${name}`;
+    if(og)                        txt += ' (e/c)';
+    else if(e.detail === 'Penalty') txt += ' (p)';
+    else if(e.assist && e.assist.name) txt += ` (E: ${e.assist.name})`;
+    const d = document.createElement('div');
+    d.className = 'goal-item' + (og ? ' og' : '');
+    d.textContent = txt;
+    (paraLocal ? gl : gv).appendChild(d);
+  });
+}
 async function refreshLiveStatus(apiId){
   try{
     const res = await fetch(`/api/apisports/fixtures?id=${apiId}`, { cache:'no-store' });
@@ -454,6 +479,9 @@ async function refreshLiveStatus(apiId){
     document.getElementById('score-local').textContent     = r.goals.home;
     document.getElementById('score-visitante').textContent = r.goals.away;
     const enCurso = EN_CURSO_ST.includes(st);
+    // Mientras juega, los goles salen de los eventos en vivo (goleador + minuto).
+    // Finalizado: se conserva goles_detalle de la ficha (más completo).
+    if(enCurso) _renderLiveGoals(r);
     let txt = 'Finalizado';
     if(st==='NS')        txt='Por comenzar';
     else if(st==='HT')   txt='Entretiempo';
@@ -766,6 +794,12 @@ async function init(){
       document.getElementById('tab-'+t.dataset.tab).classList.add('active');
     });
   });
+
+  // "Ver ficha" (partido en vivo) entra directo al desplegable de jugadores
+  if(params.get('tab')==='jugadores'){
+    const jt = document.querySelector('.tab[data-tab="jugadores"]');
+    if(jt) jt.click();
+  }
 }
 
 init();
