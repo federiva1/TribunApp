@@ -415,7 +415,7 @@ function ladoLiga(t, cls) {
   const inner = cls.includes('home')
     ? `<span class="nom">${nombreCorto(t.slug)}</span><img src="escudos/${t.slug}.png" alt="" onerror="this.style.opacity=0.2">`
     : `<img src="escudos/${t.slug}.png" alt="" onerror="this.style.opacity=0.2"><span class="nom">${nombreCorto(t.slug)}</span>`;
-  return `<a class="${cls} link" href="club.html?c=${t.slug}">${inner}</a>`;
+  return `<div class="${cls}">${inner}</div>`;
 }
 
 function marcador(hs, as, hp, ap) {
@@ -500,7 +500,7 @@ function ladoCopa(t, cls) {
   const imgTag = escudoTagCopa(t);
   const nomTag = `<span class="nom">${nom}</span>`;
   const inner = cls.includes('home') ? `${nomTag}${imgTag}` : `${imgTag}${nomTag}`;
-  return t.slug ? `<a class="${cls} link" href="club.html?c=${t.slug}">${inner}</a>` : `<div class="${cls}">${inner}</div>`;
+  return `<div class="${cls}">${inner}</div>`;
 }
 
 function cardCopa(p, copaCls, leg) {

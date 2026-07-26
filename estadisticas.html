@@ -683,18 +683,7 @@ async function init(){
     `${p.competicion.toUpperCase()} · ${formatFecha(p.fecha)} · ${p.estadio}`;
   document.getElementById('flag-local').src     = esc(p.local);
   document.getElementById('flag-visitante').src = esc(p.visitante);
-
-  // Hacer banderas clickeables → equipo.html
-  ['flag-local','flag-visitante','sw-flag-local','sw-flag-visit'].forEach(id => {
-    const img = document.getElementById(id);
-    if (!img) return;
-    const slug = id.includes('visit') ? p.visitante : p.local;
-    const a = document.createElement('a');
-    a.href = `club.html?c=${slug}`;
-    img.parentNode.insertBefore(a, img);
-    a.appendChild(img);
-    a.style.cssText = 'display:inline-flex;align-items:center;flex-shrink:0;';
-  });
+  // (Los escudos ya no linkean a club.html — se quitó para evitar toques accidentales.)
   document.getElementById('name-local').textContent     = nb(p.local).toUpperCase();
   document.getElementById('name-visitante').textContent = nb(p.visitante).toUpperCase();
   document.getElementById('score-local').textContent     = p.goles_local;
