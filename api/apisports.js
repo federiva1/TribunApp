@@ -41,6 +41,13 @@ export default async function handler(req) {
     });
   }
 
+  // Datos en vivo (marcador/estado de un partido en curso): nunca cachear, o el CDN
+  // sirve una respuesta vieja (ej. live=all de hace rato, sin el partido de hoy).
+  // El resto (standings, teams, players, listados de fixtures) sí puede cachear 60s.
+  const isLive = seg === 'fixtures' &&
+    (url.searchParams.has('live') || url.searchParams.has('id'));
+  const cacheControl = isLive ? 'no-store' : 'public, max-age=60';
+
   const qs = url.searchParams.toString();
   const upstream = 'https://v3.football.api-sports.io' + apiPath + (qs ? '?' + qs : '');
 
@@ -50,7 +57,7 @@ export default async function handler(req) {
     status: res.status,
     headers: {
       'Content-Type': res.headers.get('Content-Type') || 'application/json',
-      'Cache-Control': 'public, max-age=60',
+      'Cache-Control': cacheControl,
     },
   });
 }
