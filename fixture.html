@@ -234,9 +234,44 @@ async function cargar() {
     render();
     document.getElementById('loading-state').style.display = 'none';
     document.getElementById('contenido').style.display = '';
+    startLivePolling();
   } catch (e) {
     document.getElementById('loading-state').innerHTML = `<div class="loading-msg">Error: ${e.message}</div>`;
   }
+}
+
+// ── En vivo: trae el marcador de api-sports para los partidos en curso ────────
+// El proxy /api/apisports solo existe en producción (Vercel); en local no hace nada.
+async function actualizarEnVivo() {
+  try {
+    const res = await fetch('/api/apisports/fixtures?live=all', { cache: 'no-store' });
+    if (!res.ok) return false;
+    const data = await res.json();
+    const live = data.response || [];
+    const byId = {};
+    live.forEach(r => { byId[String(r.fixture.id)] = r; });
+    let cambio = false, hayEnVivo = false;
+    LIGA.forEach(p => {
+      const r = byId[String(p.api_id)];
+      if (!r) return;
+      const st = r.fixture.status;
+      p.home_score = r.goals.home;
+      p.away_score = r.goals.away;
+      p.status = { ...(p.status || {}), short: st.short, elapsed: st.elapsed,
+                   finished: ['FT','AET','PEN'].includes(st.short), started: true };
+      cambio = true; hayEnVivo = true;
+    });
+    if (cambio) render();
+    return hayEnVivo;
+  } catch (e) { return false; }
+}
+
+let _liveTimer = null;
+function startLivePolling() {
+  if (_liveTimer) return;
+  const tick = () => { if (!document.hidden) actualizarEnVivo(); };
+  tick();                                   // primer refresh inmediato
+  _liveTimer = setInterval(tick, 60000);    // cada 60s
 }
 
 // Slugs disponibles según el contexto activo:
@@ -400,10 +435,18 @@ function ganadorClases(p, homeIsA, awayIsA) {
 }
 
 function metaHora(p) {
-  const enCurso = EN_CURSO.has(p.short || p.status.short);
+  const short = p.short || (p.status && p.status.short);
+  const enCurso = EN_CURSO.has(short);
   const finished = (p.status ? p.status.finished : ['FT','AET','PEN'].includes(p.short));
   const utc = p.status ? p.status.utcTime : p.utcTime;
-  if (enCurso)      return `<span class="partido-hora en-curso">● EN VIVO</span>`;
+  if (enCurso) {
+    const el = p.status ? p.status.elapsed : null;
+    let txt = 'EN VIVO';
+    if (short === 'HT') txt = 'ENTRETIEMPO';
+    else if (short === 'SUSP') txt = 'SUSPENDIDO';
+    else if (el != null) txt = `${el}'`;
+    return `<span class="partido-hora en-curso">● ${txt}</span>`;
+  }
   if (finished)     return `<span class="partido-hora fin">FIN · ${fechaAR(utc)}</span>`;
   return `<span class="partido-hora">${fechaAR(utc)} · ${horaAR(utc)} hs</span>`;
 }
