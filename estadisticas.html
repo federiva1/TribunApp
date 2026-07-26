@@ -364,6 +364,7 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
 </div>
 
 <script src="js/clubes.js"></script>
+<script src="js/match-live.js"></script>
 <script>
 const params  = new URLSearchParams(location.search);
 const matchId = params.get('p') || '';
@@ -650,111 +651,7 @@ async function loadSquad(slug){
   }catch(e){ return []; }
 }
 
-// ── Modo vivo: arma el payload desde api-sports con el mismo schema que
-// data/partidos/{id}.json (para partidos en curso o sin archivo pre-generado).
-// Fuente única por momento: en vivo = api-sports; al terminar, FotMob pisa el JSON. ──
-const _liveToInt = v => { if(v==null||v==='') return null; const n=parseInt(String(v).replace('%',''),10); return isNaN(n)?null:n; };
-function _liveSlug(teamId, teamName){
-  if(typeof ESCUDO_MAP!=='undefined' && ESCUDO_MAP[teamId]) return ESCUDO_MAP[teamId];
-  return _normName(teamName||'').replace(/[^a-z0-9]/g,'') || String(teamId||'');
-}
-function _transformLive(fx, lineups, events, stats){
-  const home=fx.teams.home, away=fx.teams.away, homeId=home.id, awayId=away.id;
-  const localSlug=_liveSlug(homeId, home.name), visitSlug=_liveSlug(awayId, away.name);
-  const goals=fx.goals, fixture=fx.fixture;
-  const fecha=(fixture.date||'').slice(0,10);
-  let estadio=(fixture.venue&&fixture.venue.name)||'';
-  if(fixture.venue&&fixture.venue.city) estadio = estadio ? `${estadio}, ${fixture.venue.city}` : fixture.venue.city;
-  const competicion=(fx.league&&fx.league.name)||'Liga Profesional';
-  // ── eventos: goles + cambios + tarjetas ──
-  const evInfo={};
-  const getEv=pid=>(evInfo[pid]=evInfo[pid]||{goles:0,asist:0,amarilla:false,roja:false,minSale:null});
-  const subsIn={}, golesLocal=[], golesVisit=[];
-  (events||[]).forEach(ev=>{
-    const etype=ev.type||'', detail=ev.detail||'';
-    const minute=_liveToInt(ev.time&&ev.time.elapsed);
-    const teamId=ev.team&&ev.team.id, player=ev.player||{}, assist=ev.assist||{};
-    const pid=player.id, aid=assist.id;
-    if(etype==='Goal'){
-      if(detail==='Missed Penalty') return;
-      if(!pid) return;
-      const entry={min:minute, jugador:player.name||'', asist:assist.name||null};
-      if(detail==='Own Goal'){ entry.asist=null; entry.en_contra=true; }
-      else { if(pid) getEv(pid).goles++; if(aid) getEv(aid).asist++; }
-      if(teamId===homeId) golesLocal.push(entry); else golesVisit.push(entry);
-    } else if(etype==='Card'){
-      if(pid){ const e=getEv(pid); if(detail.indexOf('Red')>=0) e.roja=true; else e.amarilla=true; }
-    } else if(etype==='subst'){
-      if(pid) getEv(pid).minSale=minute;
-      if(aid&&teamId!=null){ (subsIn[teamId]=subsIn[teamId]||[]).push({id:aid, name:assist.name||'', minIn:minute}); }
-    }
-  });
-  // ── lineups ──
-  const luByTeam={};
-  (lineups||[]).forEach(lu=>{ luByTeam[lu.team.id]=lu; });
-  function buildPlayers(teamId, isLocal){
-    const lu=luByTeam[teamId]||{}, golesRecibidos=(isLocal?goals.away:goals.home)||0, fullNameById={};
-    (lu.startXI||[]).concat(lu.substitutes||[]).forEach(p=>{ const pl=p.player||{}; if(pl.id) fullNameById[pl.id]=pl.name||''; });
-    const outp=[];
-    (lu.startXI||[]).forEach(p=>{
-      const pl=p.player||{}, pid=pl.id, isGk=(pl.pos==='G'), ev=evInfo[pid]||{};
-      outp.push({ nombre:pl.name||'', id:pid, tipo:'titular', portero:isGk, mvp:false,
-        num:String(pl.number||''), min:ev.minSale||90, min_in:null, min_sale:ev.minSale||null,
-        goles:ev.goles||0, asist:ev.asist||0, amarilla:ev.amarilla||false, roja:ev.roja||false,
-        top:null, ataque:null, defensa:null, duelos:null,
-        portero_stats:isGk?{paradas:null, goles_contra:golesRecibidos, goles_evitados:null}:null });
-    });
-    (subsIn[teamId]||[]).forEach(s=>{
-      const ev=evInfo[s.id]||{};
-      outp.push({ nombre:fullNameById[s.id]||s.name, id:s.id, tipo:'suplente', portero:false, mvp:false,
-        num:'', min: s.minIn ? (90-s.minIn) : null, min_in:s.minIn||null, min_sale:ev.minSale||null,
-        goles:ev.goles||0, asist:ev.asist||0, amarilla:ev.amarilla||false, roja:ev.roja||false,
-        top:null, ataque:null, defensa:null, duelos:null, portero_stats:null });
-    });
-    const coach=lu.coach||{};
-    if(coach&&coach.name){ outp.push({ nombre:coach.name, id:coach.id, tipo:'dt', portero:false, mvp:false, num:'', min:null, min_in:null, min_sale:null, goles:0, asist:0, amarilla:false, roja:false, top:null, ataque:null, defensa:null, duelos:null, portero_stats:null }); }
-    const seen=new Set(), ded=[];
-    outp.forEach(e=>{ if(e.id&&seen.has(e.id)) return; if(e.id) seen.add(e.id); ded.push(e); });
-    return ded;
-  }
-  const localJugs=buildPlayers(homeId,true), visitJugs=buildPlayers(awayId,false);
-  // ── top stats globales ──
-  const statsByTeam={};
-  (stats||[]).forEach(ts=>{ statsByTeam[ts.team.id]=ts.statistics||[]; });
-  const statVal=(tid,key)=>{ const arr=statsByTeam[tid]||[]; const s=arr.find(x=>x.type===key); return s?s.value:null; };
-  const STAT_MAP=[['Ball Possession','Posesion','posesion'],['expected_goals','xG','numero'],['Total Shots','Tiros totales','numero'],['Shots on Goal','Tiros al arco','numero'],['Shots insidebox','Toques en area rival','numero'],['Corner Kicks','Corners','numero'],['Fouls','Faltas','numero'],['Yellow Cards','Tarjetas amarillas','numero'],['Red Cards','Tarjetas rojas','numero']];
-  const topStats=[];
-  STAT_MAP.forEach(row=>{
-    const key=row[0], label=row[1], tipo=row[2], hv=statVal(homeId,key), av=statVal(awayId,key);
-    if(hv==null&&av==null) return;
-    if(tipo==='posesion'){ const h=_liveToInt(hv)||0, a=_liveToInt(av)||0; topStats.push({label,local:h,visitante:a,tipo,local_val:h,visitante_val:a}); }
-    else if(key==='expected_goals'){ const sx=v=>{ if(v==null||v==='')return null; const n=parseFloat(String(v)); return isNaN(n)?null:Math.round(n*100)/100; }; const h=sx(hv),a=sx(av); topStats.push({label,local:h==null?'—':h,visitante:a==null?'—':a,tipo,local_val:h||0,visitante_val:a||0}); }
-    else { const h=hv!=null?_liveToInt(hv):0, a=av!=null?_liveToInt(av):0; topStats.push({label,local:h,visitante:a,tipo,local_val:h,visitante_val:a}); }
-  });
-  const hpAcc=_liveToInt(statVal(homeId,'Passes accurate')), hpTot=_liveToInt(statVal(homeId,'Total passes'));
-  const apAcc=_liveToInt(statVal(awayId,'Passes accurate')), apTot=_liveToInt(statVal(awayId,'Total passes'));
-  if(hpAcc!=null){
-    const hpPct=hpTot?Math.round(hpAcc/hpTot*100):0, apPct=(apTot&&apAcc!=null)?Math.round(apAcc/apTot*100):0;
-    topStats.push({label:'Pases precisos', local:`${hpAcc} (${hpPct}%)`, visitante:`${apAcc!=null?apAcc:0} (${apPct}%)`, tipo:'texto', local_val:hpPct, visitante_val:apPct});
-  }
-  return { partido:{ local:localSlug, visitante:visitSlug, goles_local:goals.home, goles_visitante:goals.away, fecha, estadio, competicion, api_id:String(fixture.id), goles_detalle:{local:golesLocal, visitante:golesVisit} }, top_stats:topStats, jugadores:{ [localSlug]:localJugs, [visitSlug]:visitJugs } };
-}
-async function buildPayloadLive(apiId){
-  const base='/api/apisports/', opt={cache:'no-store'};
-  const [rf,rl,rev,rs]=await Promise.all([
-    fetch(`${base}fixtures?id=${apiId}`,opt),
-    fetch(`${base}fixtures/lineups?fixture=${apiId}`,opt),
-    fetch(`${base}fixtures/events?fixture=${apiId}`,opt),
-    fetch(`${base}fixtures/statistics?fixture=${apiId}`,opt),
-  ]);
-  if(!rf.ok) return null;
-  const fx=((await rf.json()).response||[])[0];
-  if(!fx) return null;
-  const lineups=rl.ok?((await rl.json()).response||[]):[];
-  const events =rev.ok?((await rev.json()).response||[]):[];
-  const stats  =rs.ok?((await rs.json()).response||[]):[];
-  return { data:_transformLive(fx,lineups,events,stats), short:fx.fixture.status.short, elapsed:fx.fixture.status.elapsed };
-}
+// El motor de la ficha en vivo (buildPayloadLive) vive en js/match-live.js
 // Decide la fuente: JSON pre-generado (post-partido, FotMob) o api-sports en vivo.
 async function loadMatchData(){
   const apiFid=params.get('fid')||'';

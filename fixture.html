@@ -154,6 +154,33 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 #loading-state { text-align: center; padding: 60px 20px; }
 .loading-msg { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 3px; color: rgba(255,255,255,0.25); }
 .empty-msg { text-align: center; padding: 40px 20px; color: rgba(255,255,255,0.3); font-family: 'Barlow Condensed', sans-serif; letter-spacing: 1px; }
+
+/* Acciones bajo el resultado: ficha inline (desplegable) + link a estadísticas */
+.partido-acciones { margin-top: 3px; border-top: 1px solid rgba(255,255,255,0.06); }
+.ficha-toggle { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 7px 0 5px; background: none; border: none; cursor: pointer; font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 0.8px; text-transform: uppercase; color: var(--celeste, #4fc3f7); transition: color .15s; }
+.ficha-toggle:hover { color: #fff; }
+.ficha-toggle svg { width: 13px; height: 13px; }
+.ficha-caret { font-size: 9px; transition: transform .18s; }
+.ficha-toggle.open .ficha-caret { transform: rotate(180deg); }
+.partido-acciones .stats-link { border-top: 1px dashed rgba(255,255,255,0.06); padding-top: 6px; margin-top: 2px; }
+.ficha-panel { margin-top: 2px; animation: fichaIn .18s ease; }
+@keyframes fichaIn { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: none; } }
+.ficha-loading { text-align: center; padding: 12px; font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 1px; color: rgba(255,255,255,0.3); }
+.ficha-goles { display: flex; flex-wrap: wrap; gap: 3px 16px; justify-content: center; padding: 6px 4px 9px; border-bottom: 1px solid rgba(255,255,255,0.06); margin-bottom: 8px; }
+.ficha-gol { font-family: 'Barlow Condensed', sans-serif; font-size: 12.5px; color: rgba(255,255,255,0.82); }
+.ficha-teams { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; }
+@media (max-width: 560px) { .ficha-teams { grid-template-columns: 1fr; } }
+.ficha-team-hdr { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+.ficha-team-hdr img { width: 17px; height: 17px; object-fit: contain; }
+.ficha-team-hdr span { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: rgba(255,255,255,0.7); }
+.ficha-subhdr { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.32); margin: 6px 0 2px; }
+.ficha-prow { display: flex; align-items: center; gap: 6px; padding: 2px 0; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; }
+.ficha-pnum { width: 17px; text-align: center; color: rgba(255,255,255,0.38); font-size: 11px; flex-shrink: 0; }
+.ficha-pname { color: rgba(255,255,255,0.85); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0; }
+.ficha-ptag { font-size: 10.5px; flex-shrink: 0; }
+.ficha-in { color: #2ad572; }
+.ficha-out { color: rgba(255,130,130,0.8); }
+.ficha-pmarks { flex-shrink: 0; font-size: 11px; letter-spacing: 1px; }
 </style>
 </head>
 <body>
@@ -197,6 +224,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 </main>
 
 <script src="js/clubes.js"></script>
+<script src="js/match-live.js"></script>
 <script>
 const DIAS_ES  = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 const MESES_ES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
@@ -462,32 +490,77 @@ function cardLiga(p, etiqueta) {
   const etq = etiqueta ? `<span class="etq">${etiqueta}</span>` : '';
   const card = document.createElement('div');
   card.className = 'partido-card';
-  // La ficha se muestra para cualquier partido que arrancó (en vivo desde api-sports)
-  // o que ya tenga JSON pre-generado (post-partido, enriquecido con FotMob).
+  // Dos subsecciones cuando el partido arrancó (en vivo desde api-sports) o ya tiene JSON:
+  //  ① "Ficha del partido" → desplegable INLINE con los jugadores (acá mismo).
+  //  ② "Estadísticas del partido" → página completa (global + individual).
   const sid = statsIdFor(p);
   const shortSt = p.short || (p.status && p.status.short);
   const enCurso = EN_CURSO.has(shortSt);
   const finLink = (p.status ? p.status.finished : ['FT','AET','PEN'].includes(p.short));
   const fid = p.api_id || '';
-  const showLink = !!sid || ((enCurso || finLink) && fid);
-  // En juego → "Ver ficha" (desplegable de jugadores). Finalizado → "Ver estadísticas".
-  const linkTxt = finLink ? 'Ver estadísticas del partido' : 'Ver ficha';
-  const linkTab = finLink ? '' : '&tab=jugadores';
-  const linkP   = sid || `${p.home.slug}-${p.away.slug}`;
-  const linkFid = fid ? `&fid=${fid}` : '';
-  const linkIco = finLink
-    ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`
-    : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
-  const statsLink = showLink
-    ? `<a class="stats-link" href="estadisticas.html?p=${linkP}${linkFid}${linkTab}">
-         ${linkIco}
-         ${linkTxt}</a>`
-    : '';
+  const started = (enCurso || finLink) && fid;
+  const estP = sid || (fid ? `${p.home.slug}-${p.away.slug}` : '');
+  const estFid = fid ? `&fid=${fid}` : '';
+  const icoUsers = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
+  const icoStats = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`;
+  let acciones = '';
+  if (started) acciones += `<button class="ficha-toggle" type="button">${icoUsers}Ficha del partido <span class="ficha-caret">▾</span></button>`;
+  if (started || sid) acciones += `<a class="stats-link" href="estadisticas.html?p=${estP}${estFid}">${icoStats}Ver estadísticas del partido</a>`;
   card.innerHTML =
     `<div class="partido-meta">${etq}${metaHora(p)}</div>
      <div class="partido-fila">${ladoLiga(p.home, clsH)}${marcador(p.home_score, p.away_score, p.home_pen, p.away_pen)}${ladoLiga(p.away, clsA)}</div>
-     ${statsLink}`;
+     ${acciones ? `<div class="partido-acciones">${acciones}<div class="ficha-panel" hidden></div></div>` : ''}`;
+  if (started) {
+    const btn = card.querySelector('.ficha-toggle'), panel = card.querySelector('.ficha-panel');
+    btn.addEventListener('click', () => toggleFicha(btn, panel, fid));
+  }
   return card;
+}
+
+// ── Ficha del partido inline (desplegable en la card del fixture) ────────────
+function _fEsc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+async function toggleFicha(btn, panel, fid) {
+  const abierto = !panel.hasAttribute('hidden');
+  if (abierto) { panel.setAttribute('hidden', ''); btn.classList.remove('open'); return; }
+  btn.classList.add('open'); panel.removeAttribute('hidden');
+  if (panel.dataset.loaded) return;
+  panel.innerHTML = '<div class="ficha-loading">Cargando ficha…</div>';
+  let built = null;
+  try { built = await buildPayloadLive(fid); } catch (e) {}
+  if (!built) { panel.innerHTML = '<div class="ficha-loading">No se pudo cargar la ficha.</div>'; return; }
+  panel.innerHTML = renderFichaHTML(built.data);
+  panel.dataset.loaded = '1';
+}
+function _fichaPlayerRow(j) {
+  const marks = [];
+  for (let i = 0; i < (j.goles || 0); i++) marks.push('⚽');
+  if (j.asist > 0) marks.push('🅰');
+  if (j.roja) marks.push('🟥'); else if (j.amarilla) marks.push('🟨');
+  let tag = '';
+  if (j.tipo === 'suplente' && j.min_in) tag = `<span class="ficha-in">▲ ${j.min_in}'</span>`;
+  else if (j.min_sale) tag = `<span class="ficha-out">▼ ${j.min_sale}'</span>`;
+  return `<div class="ficha-prow"><span class="ficha-pnum">${_fEsc(j.num)}</span><span class="ficha-pname">${_fEsc(j.nombre)}</span><span class="ficha-ptag">${tag}</span><span class="ficha-pmarks">${marks.join('')}</span></div>`;
+}
+function _fichaGol(g) {
+  const txt = (g.min != null ? g.min + "' " : '') + _fEsc(g.jugador) + (g.en_contra ? ' (e/c)' : '');
+  return `<div class="ficha-gol">⚽ ${txt}</div>`;
+}
+function renderFichaHTML(data) {
+  const p = data.partido;
+  const gd = p.goles_detalle || {};
+  const goles = (gd.local || []).concat(gd.visitante || []).sort((a, b) => (a.min || 0) - (b.min || 0));
+  const golesHTML = goles.length ? `<div class="ficha-goles">${goles.map(_fichaGol).join('')}</div>` : '';
+  const teams = [[p.local, data.jugadores[p.local] || []], [p.visitante, data.jugadores[p.visitante] || []]];
+  const teamsHTML = teams.map(t => {
+    const slug = t[0], jugs = t[1];
+    const tit = jugs.filter(j => j.tipo === 'titular');
+    const sub = jugs.filter(j => j.tipo === 'suplente');
+    let rows = tit.map(_fichaPlayerRow).join('');
+    if (sub.length) rows += `<div class="ficha-subhdr">Ingresaron</div>` + sub.map(_fichaPlayerRow).join('');
+    if (!rows) rows = `<div class="ficha-subhdr">Formación aún no confirmada</div>`;
+    return `<div class="ficha-team"><div class="ficha-team-hdr"><img src="escudos/${slug}.png" onerror="this.style.opacity=0.2"><span>${_fEsc(nombreCorto(slug))}</span></div><div class="ficha-rows">${rows}</div></div>`;
+  }).join('');
+  return golesHTML + `<div class="ficha-teams">${teamsHTML}</div>`;
 }
 
 function _logoFallback(img) {
