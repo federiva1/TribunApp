@@ -316,13 +316,13 @@ async function actualizarEnVivo() {
     // que no quede "jugándose" para siempre.
     const cerrar = LIGA.filter(p => p.api_id && !byId[String(p.api_id)]
       && p.status && EN_CURSO.has(p.status.short) && !p.status.finished);
-    for (const p of cerrar) {
+    await Promise.all(cerrar.map(async p => {
       try {
         const rr = await fetch(`/api/apisports/fixtures?id=${p.api_id}`, { cache: 'no-store' });
         const fx = rr.ok ? (((await rr.json()).response) || [])[0] : null;
         if (fx) { _mergeStatus(p, fx); cambio = true; }
       } catch (e) {}
-    }
+    }));
     if (cambio) render();
     return hayEnVivo;
   } catch (e) { return false; }
