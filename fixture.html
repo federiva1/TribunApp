@@ -288,6 +288,13 @@ async function cargar() {
 
 // ── En vivo: trae el marcador de api-sports para los partidos en curso ────────
 // El proxy /api/apisports solo existe en producción (Vercel); en local no hace nada.
+function _mergeStatus(p, fx) {
+  const st = fx.fixture.status;
+  p.home_score = fx.goals.home;
+  p.away_score = fx.goals.away;
+  p.status = { ...(p.status || {}), short: st.short, elapsed: st.elapsed,
+               finished: ['FT', 'AET', 'PEN'].includes(st.short), started: true };
+}
 async function actualizarEnVivo() {
   try {
     const res = await fetch('/api/apisports/fixtures?live=all', { cache: 'no-store' });
@@ -300,13 +307,21 @@ async function actualizarEnVivo() {
     LIGA.forEach(p => {
       const r = byId[String(p.api_id)];
       if (!r) return;
-      const st = r.fixture.status;
-      p.home_score = r.goals.home;
-      p.away_score = r.goals.away;
-      p.status = { ...(p.status || {}), short: st.short, elapsed: st.elapsed,
-                   finished: ['FT','AET','PEN'].includes(st.short), started: true };
+      _mergeStatus(p, r);
       cambio = true; hayEnVivo = true;
     });
+    // Un partido que figura EN CURSO pero ya no está en live=all → terminó (o el
+    // snapshot de liga.json quedó viejo): traemos su estado final individual para
+    // que no quede "jugándose" para siempre.
+    const cerrar = LIGA.filter(p => p.api_id && !byId[String(p.api_id)]
+      && p.status && EN_CURSO.has(p.status.short) && !p.status.finished);
+    for (const p of cerrar) {
+      try {
+        const rr = await fetch(`/api/apisports/fixtures?id=${p.api_id}`, { cache: 'no-store' });
+        const fx = rr.ok ? (((await rr.json()).response) || [])[0] : null;
+        if (fx) { _mergeStatus(p, fx); cambio = true; }
+      } catch (e) {}
+    }
     if (cambio) render();
     return hayEnVivo;
   } catch (e) { return false; }
