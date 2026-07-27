@@ -57,8 +57,8 @@
     var luByTeam = {};
     (lineups || []).forEach(function (lu) { luByTeam[lu.team.id] = lu; });
     function buildPlayers(teamId, isLocal) {
-      var lu = luByTeam[teamId] || {}, golesRecibidos = (isLocal ? goals.away : goals.home) || 0, fullNameById = {};
-      (lu.startXI || []).concat(lu.substitutes || []).forEach(function (p) { var pl = p.player || {}; if (pl.id) fullNameById[pl.id] = pl.name || ''; });
+      var lu = luByTeam[teamId] || {}, golesRecibidos = (isLocal ? goals.away : goals.home) || 0, fullNameById = {}, numById = {};
+      (lu.startXI || []).concat(lu.substitutes || []).forEach(function (p) { var pl = p.player || {}; if (pl.id) { fullNameById[pl.id] = pl.name || ''; numById[pl.id] = pl.number; } });
       var outp = [];
       (lu.startXI || []).forEach(function (p) {
         var pl = p.player || {}, pid = pl.id, isGk = (pl.pos === 'G'), ev = evInfo[pid] || {};
@@ -74,7 +74,7 @@
         var ev = evInfo[s.id] || {};
         outp.push({
           nombre: fullNameById[s.id] || s.name, id: s.id, tipo: 'suplente', portero: false, mvp: false,
-          num: '', min: s.minIn ? (90 - s.minIn) : null, min_in: s.minIn || null, min_sale: ev.minSale || null,
+          num: String(numById[s.id] || ''), min: s.minIn ? (90 - s.minIn) : null, min_in: s.minIn || null, min_sale: ev.minSale || null,
           goles: ev.goles || 0, asist: ev.asist || 0, amarilla: ev.amarilla || false, roja: ev.roja || false,
           top: null, ataque: null, defensa: null, duelos: null, portero_stats: null
         });

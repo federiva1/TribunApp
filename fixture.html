@@ -166,7 +166,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .ficha-toggle .txt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ficha-caret { font-size: 9px; transition: transform .18s; flex-shrink: 0; }
 .ficha-toggle.open .ficha-caret { transform: rotate(180deg); }
-.ficha-panel { margin-top: 2px; animation: fichaIn .18s ease; }
+.ficha-panel { margin-top: 2px; padding-top: 12px; animation: fichaIn .18s ease; }
 @keyframes fichaIn { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: none; } }
 .ficha-loading { text-align: center; padding: 12px; font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 1px; color: rgba(255,255,255,0.3); }
 .ficha-goles { display: flex; flex-wrap: wrap; gap: 3px 16px; justify-content: center; padding: 6px 4px 9px; border-bottom: 1px solid rgba(255,255,255,0.06); margin-bottom: 8px; }
@@ -186,9 +186,8 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .ficha-pmarks { flex-shrink: 0; font-size: 11px; letter-spacing: 1px; }
 /* Desplegable de estadísticas globales (mismo estilo que la ficha) */
 .fstat-wrap { max-width: 360px; margin: 0 auto; }
-.fstat-hdr { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 9px; }
-.fstat-hdr img { width: 22px; height: 22px; object-fit: contain; }
-.fstat-hdr span { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 1px; color: rgba(255,255,255,0.3); }
+.fstat-hdr { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+.fstat-hdr .fstat-vs { color: rgba(255,255,255,0.3); font-weight: 400; font-size: 11px; letter-spacing: 1px; }
 .fstat-poss { margin-bottom: 9px; }
 .fstat-poss-bar { display: flex; height: 22px; border-radius: 4px; overflow: hidden; }
 .fstat-poss-bar > div { display: flex; align-items: center; font-family: 'Bebas Neue', sans-serif; font-size: 13px; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.6); padding: 0 7px; box-sizing: border-box; }
@@ -586,7 +585,7 @@ function renderStatsHTML(data) {
   // CLUBES_CONFIG.color no distingue (casi todos #003087), así que usamos dos colores
   // fijos local/visitante bien diferenciables (azul cielo vs naranja).
   const cl = '#38bdf8', cv = '#fb923c', al = cl, av = cv;
-  const hdr = `<div class="fstat-hdr"><img src="escudos/${p.local}.png" onerror="this.style.opacity=0.2"><span>vs</span><img src="escudos/${p.visitante}.png" onerror="this.style.opacity=0.2"></div>`;
+  const hdr = `<div class="fstat-hdr"><span style="color:${al}">${_fEsc(nombreCorto(p.local))}</span><span class="fstat-vs">vs</span><span style="color:${av}">${_fEsc(nombreCorto(p.visitante))}</span></div>`;
   const rows = (data.top_stats || []).map(s => {
     if (s.tipo === 'posesion') {
       return `<div class="fstat-poss"><div class="fstat-poss-bar">`
@@ -627,7 +626,7 @@ function renderFichaHTML(data) {
     let rows = tit.map(_fichaPlayerRow).join('');
     if (sub.length) rows += `<div class="ficha-subhdr">Ingresaron</div>` + sub.map(_fichaPlayerRow).join('');
     if (!rows) rows = `<div class="ficha-subhdr">Formación aún no confirmada</div>`;
-    return `<div class="ficha-team"><div class="ficha-team-hdr"><img src="escudos/${slug}.png" onerror="this.style.opacity=0.2"><span>${_fEsc(nombreCorto(slug))}</span></div><div class="ficha-rows">${rows}</div></div>`;
+    return `<div class="ficha-team"><div class="ficha-team-hdr"><span>${_fEsc(nombreCorto(slug))}</span></div><div class="ficha-rows">${rows}</div></div>`;
   }).join('');
   return golesHTML + `<div class="ficha-teams">${teamsHTML}</div>`;
 }
