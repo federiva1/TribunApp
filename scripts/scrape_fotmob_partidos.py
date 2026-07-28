@@ -22,12 +22,19 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 import time
 import urllib.request
 from pathlib import Path
 
-from playwright.sync_api import sync_playwright
+# Playwright es opcional: el camino principal baja el __NEXT_DATA__ por HTTP
+# (urllib), que funciona donde el browser está bloqueado (proxy del entorno /
+# IP de GitHub Actions). Playwright queda solo como fallback para la compu local.
+try:
+    from playwright.sync_api import sync_playwright
+except ImportError:
+    sync_playwright = None
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / 'scripts'))
@@ -87,6 +94,9 @@ def _player_entry(p: dict) -> dict:
     def f(key):
         return flat.get(key, (None, None))[0]
 
+    def ft(key):
+        return flat.get(key, (None, None))[1]
+
     pases_v, pases_t = flat.get('Accurate passes', (None, None))
 
     return {
@@ -103,6 +113,21 @@ def _player_entry(p: dict) -> dict:
         'toques':           to_int(f('Touches')),
         'pasesAcertados':   to_int(pases_v),
         'pasesIntentados':  to_int(pases_t),
+        # --- Set FotMob ampliado (columnas opcionales; la UI muestra las presentes) ---
+        'tiros':            to_int(f('Total shots')),
+        'grandesOcasiones': to_int(f('Big chances created')),
+        'toquesArea':       to_int(f('Touches in opposition box')),
+        'regates':          to_int(f('Successful dribbles')),
+        'regatesTotal':     to_int(ft('Successful dribbles')),
+        'pasesUltimoTercio': to_int(f('Passes into final third')),
+        'entradas':         to_int(f('Tackles')),
+        'intercepciones':   to_int(f('Interceptions')),
+        'recuperaciones':   to_int(f('Recoveries')),
+        'despejes':         to_int(f('Clearances')),
+        'duelosGanados':    to_int(f('Duels won')),
+        'duelosPerdidos':   to_int(f('Duels lost')),
+        'faltas':           to_int(f('Fouls committed')),
+        'faltasRecibidas':  to_int(f('Was fouled')),
     }
 
 
@@ -130,6 +155,33 @@ def extract_players(nd: dict, team_id: int) -> tuple[list[dict], list[dict], int
 def sum_xg(jugadores: list[dict]) -> float | None:
     vals = [j.get('xG') for j in jugadores if j.get('jugo') and j.get('xG') is not None]
     return round(sum(vals), 2) if vals else None
+
+
+def _next_data_http(url: str) -> dict | None:
+    """Baja el HTML y extrae el JSON de <script id="__NEXT_DATA__">. FotMob hace
+    SSR, así que playerStats viene embebido — no hace falta browser. Funciona
+    donde Playwright está bloqueado (proxy del entorno / IP de GitHub Actions).
+    Devuelve None si falla (para caer al fallback de Playwright)."""
+    try:
+        req = urllib.request.Request(url, headers={
+            'User-Agent': UA,
+            'Accept': 'text/html,application/xhtml+xml',
+            'Accept-Language': 'es-AR,es;q=0.9,en;q=0.8',
+        })
+        with urllib.request.urlopen(req, timeout=30) as r:
+            html = r.read().decode('utf-8', 'replace')
+        m = re.search(r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>',
+                      html, re.DOTALL)
+        return json.loads(m.group(1)) if m else None
+    except Exception:
+        return None
+
+
+def _next_data_browser(url: str, page) -> dict | None:
+    """Fallback con Playwright (compu local donde el browser sí llega)."""
+    page.goto(url, wait_until='domcontentloaded', timeout=60000)
+    time.sleep(6)
+    return page.evaluate('() => window.__NEXT_DATA__')
 
 
 def discover_match_urls(fotmob_id: int, copa: str, date_filter: str | None) -> list[dict]:
@@ -213,25 +265,44 @@ def main() -> int:
     partidos = payload.get('partidos', [])
     by_date = {p.get('date'): p for p in partidos}
 
-    headless = not args.headed
-    print(f'Browser headless={headless}')
+    # Browser lazy: solo se abre si el camino HTTP falla para algún partido.
+    _pw = {'pw': None, 'browser': None, 'page': None}
 
-    with sync_playwright() as pw:
-        browser = pw.chromium.launch(headless=headless, slow_mo=100)
-        context = browser.new_context(user_agent=UA, locale='es-AR',
-                                      viewport={'width': 1280, 'height': 900})
-        page = context.new_page()
+    def get_page():
+        if _pw['page'] is not None:
+            return _pw['page']
+        if sync_playwright is None:
+            return None
+        _pw['pw'] = sync_playwright().start()
+        _pw['browser'] = _pw['pw'].chromium.launch(headless=not args.headed, slow_mo=100)
+        ctx = _pw['browser'].new_context(user_agent=UA, locale='es-AR',
+                                         viewport={'width': 1280, 'height': 900})
+        _pw['page'] = ctx.new_page()
+        return _pw['page']
+
+    def close_page():
+        try:
+            if _pw['browser'] is not None:
+                _pw['browser'].close()
+            if _pw['pw'] is not None:
+                _pw['pw'].stop()
+        except Exception:
+            pass
+
+    try:
         for i, par in enumerate(targets, 1):
             date = par['date']
             url = par['url']
             print(f'\n[{i}/{len(targets)}] {date}')
             print(f'  {url}')
             try:
-                page.goto(url, wait_until='domcontentloaded', timeout=60000)
-                time.sleep(6)
-                nd = page.evaluate('() => window.__NEXT_DATA__')
+                nd = _next_data_http(url)          # camino principal (HTTP)
                 if not nd:
-                    print('  ERROR: sin __NEXT_DATA__')
+                    print('  HTTP sin __NEXT_DATA__ — probando Playwright...')
+                    page = get_page()
+                    nd = _next_data_browser(url, page) if page is not None else None
+                if not nd:
+                    print('  ERROR: sin __NEXT_DATA__ (HTTP y Playwright fallaron)')
                     continue
                 raw_path = RAW_DIR / f'{args.slug}_{date}.json'
                 raw_path.write_text(
@@ -266,8 +337,9 @@ def main() -> int:
                 print('  -> partido actualizado en JSON')
             except Exception as e:
                 print(f'  ERROR: {e}')
-            time.sleep(2)
-        browser.close()
+            time.sleep(1)
+    finally:
+        close_page()
 
     partidos.sort(key=lambda p: (p.get('date') or '', p.get('fecha') or 0))
     payload['partidos'] = partidos

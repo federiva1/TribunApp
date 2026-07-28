@@ -594,6 +594,61 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   font-size: 13px; font-family: 'Barlow Condensed', sans-serif; letter-spacing: 0.5px;
 }
 
+/* ---- Tab Equipo: filtros multi-fecha + tabla ancha tipo FotMob ---- */
+.stats-eq-block { margin-bottom: 12px; }
+.stats-eq-label {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 9px; letter-spacing: 2px;
+  color: rgba(255,255,255,0.32); text-transform: uppercase; margin: 0 0 6px 2px;
+}
+.stats-chiprow {
+  display: flex; gap: 6px; overflow-x: auto; padding-bottom: 5px;
+  scrollbar-width: none; align-items: center;
+}
+.stats-chiprow::-webkit-scrollbar { display: none; }
+/* fecha multi-toggle */
+.stats-fecha-tog {
+  flex: 0 0 auto; padding: 7px 12px; border-radius: 16px; cursor: pointer;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+  font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 1px;
+  color: rgba(255,255,255,0.55); white-space: nowrap; transition: all 0.15s; user-select: none;
+}
+.stats-fecha-tog.active { background: var(--club-color); border-color: var(--club-color); color: #fff; }
+.stats-fecha-tog.todas { border-style: dashed; }
+/* chips de columnas (stats) */
+.stats-col-chip {
+  flex: 0 0 auto; padding: 5px 10px; border-radius: 14px; cursor: pointer;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+  font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 1px;
+  color: #fff; white-space: nowrap; transition: all 0.15s; user-select: none; text-transform: uppercase;
+}
+.stats-col-chip.off { background: transparent; color: rgba(255,255,255,0.28); border-color: rgba(255,255,255,0.06); }
+/* chips de jugadores */
+.stats-pchip {
+  flex: 0 0 auto; display: flex; align-items: center; gap: 6px; padding: 3px 11px 3px 3px;
+  border-radius: 18px; cursor: pointer; background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1); transition: all 0.15s; user-select: none;
+}
+.stats-pchip .pchip-name {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 12px; color: #fff; white-space: nowrap;
+}
+.stats-pchip.off { background: transparent; border-color: rgba(255,255,255,0.06); opacity: 0.42; }
+.stats-mini-btn {
+  flex: 0 0 auto; padding: 4px 9px; border-radius: 12px; cursor: pointer; background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.14); font-family: 'Barlow Condensed', sans-serif;
+  font-size: 10px; letter-spacing: 1px; color: rgba(255,255,255,0.6); text-transform: uppercase; user-select: none;
+}
+/* tabla ancha: primera columna sticky */
+.stats-wide th.name-col, .stats-wide td.name-col {
+  position: sticky; left: 0; z-index: 1; background: var(--dark);
+  box-shadow: 1px 0 0 rgba(255,255,255,0.07);
+}
+.stats-wide td.name-col { min-width: 138px; max-width: 168px; }
+.stats-wide th { text-align: right; }
+.stats-wide th.name-col { text-align: left; }
+.stats-wide td { min-width: 40px; }
+.stats-name-cell { display: flex; align-items: center; gap: 8px; }
+.stats-name-cell .snc-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
 /* ===== SECCIÓN ESTADÍSTICAS DEL CLUB ===== */
 .estad-fecha-btn {
   flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 1px;
@@ -2013,10 +2068,55 @@ const _stats = {
   formaciones: null, // filas de Supabase (todas las formaciones del club)
   puntajes: null,    // filas de Supabase (todos los puntajes del club)
   tab: 'equipo',     // 'equipo' (real del partido) | 'web' (votos)
-  fechaSel: null,    // se setea al cargar a la última fecha jugada
+  fechaSel: null,    // tab Página: fecha single-select ('acum' | número)
   sortKey: 'minutos',
   sortAsc: false,
+  // Sub-estado del tab Equipo (tabla ancha con filtros tipo FotMob)
+  eq: {
+    fechas: null,          // Set<number> de fechas activas; null = init → última jugada
+    hiddenPlayers: null,   // Set<string> de nombres normalizados ocultos
+    hiddenCols: null,      // Set<string> de keys de columna ocultas
+    sortKey: 'minutos',
+    sortAsc: false,
+  },
 };
+
+// Catálogo maestro de columnas de la tabla de jugadores. La UI es data-driven:
+// solo se renderiza una columna si algún jugador del scope tiene valor no-nulo.
+// `sum:true` → se agrega sumando al combinar varias fechas. Las keys del set
+// ampliado (tiros, regates, duelos, etc.) las completa el scraper de a poco;
+// los JSON viejos (set ~10) siguen andando porque las columnas ausentes no se muestran.
+const STATS_COLS = [
+  { key: 'partidos',        label: 'PJ',    multiOnly: true, sum: true },
+  { key: 'minutos',         label: 'Min',   sum: true },
+  { key: 'goles',           label: 'G',     sum: true },
+  { key: 'asistencias',     label: 'A',     sum: true },
+  { key: 'xG',              label: 'xG',    sum: true, dec: true },
+  { key: 'xA',              label: 'xA',    sum: true, dec: true },
+  { key: 'disparos',        label: 'Disp',  sum: true },   // a puerta
+  { key: 'tiros',           label: 'Tiros', sum: true },   // totales (set ampliado)
+  { key: 'grandesOcasiones',label: 'GOcas', sum: true },
+  { key: 'toques',          label: 'Toq',   sum: true },
+  { key: 'toquesArea',      label: 'ToqÁr', sum: true },
+  { key: 'regates',         label: 'Reg',   sum: true, frac: 'regatesTotal' },
+  { key: 'pasesAcertados',  label: 'Pases', sum: true, frac: 'pasesIntentados' },
+  { key: 'pasesUltimoTercio', label: 'PUlt', sum: true },
+  { key: 'accDefensivas',   label: 'Def',   sum: true },
+  { key: 'entradas',        label: 'Entr',  sum: true },
+  { key: 'intercepciones',  label: 'Int',   sum: true },
+  { key: 'recuperaciones',  label: 'Recup', sum: true },
+  { key: 'despejes',        label: 'Desp',  sum: true },
+  { key: 'duelosGanados',   label: 'DuelG', sum: true },
+  { key: 'duelosPerdidos',  label: 'DuelP', sum: true },
+  { key: 'faltas',          label: 'Falt',  sum: true },
+  { key: 'faltasRecibidas', label: 'FRec',  sum: true },
+];
+// Keys que se suman al agregar varias fechas (incluye los frac-total).
+const STATS_SUM_KEYS = (() => {
+  const ks = new Set();
+  STATS_COLS.forEach(c => { if (c.sum && c.key !== 'partidos') ks.add(c.key); if (c.frac) ks.add(c.frac); });
+  return [...ks];
+})();
 
 function _statsNorm(s) {
   return (s || '').toString().normalize('NFKD').replace(/\p{Diacritic}/gu, '')
@@ -2124,9 +2224,17 @@ function _renderStatsLayout() {
   });
   cont.appendChild(tabsEl);
 
-  // Selector de fecha — pills filtrados según el tab
-  // Tab Equipo: solo fechas con stats_partido (datos reales cargados)
-  // Tab Página: todas las fechas del JSON
+  // Body — cada tab renderiza su propio selector de fecha:
+  //  · Página (web): pills single-select (Acumulado + F1…FN)
+  //  · Equipo: toggles multi-select que suman + filtros de jugador/columna
+  const body = document.createElement('div');
+  if (_stats.tab === 'web') { _statsRenderWebFechaBar(body); _renderStatsTabWeb(body); }
+  else _renderStatsTabEquipo(body);
+  cont.appendChild(body);
+}
+
+// Barra de fechas single-select del tab Página (Acumulado + fechas con stats_partido).
+function _statsRenderWebFechaBar(cont) {
   const bar = document.createElement('div'); bar.className = 'stats-fecha-bar';
   const mkPill = (id, label) => {
     const p = document.createElement('div');
@@ -2136,17 +2244,9 @@ function _renderStatsLayout() {
     return p;
   };
   bar.appendChild(mkPill('acum', 'Acumulado'));
-  // Ambos tabs muestran solo las fechas con stats_partido (datos reales del partido)
-  // — son las únicas que tienen también votos completos en Supabase.
   const partidosVisibles = _stats.data.partidos.filter(p => p.stats_partido);
   partidosVisibles.forEach(p => bar.appendChild(mkPill(p.fecha, `F${p.fecha} · ${p.rival.split(' ')[0]}`)));
   cont.appendChild(bar);
-
-  // Body
-  const body = document.createElement('div');
-  if (_stats.tab === 'web') _renderStatsTabWeb(body);
-  else _renderStatsTabEquipo(body);
-  cont.appendChild(body);
 }
 
 // ---- TAB 1: estadísticas de la web (votos de Supabase) ----
@@ -2328,57 +2428,244 @@ function _statsRenderPodio(cont, punts, partidosScope, minFechas) {
   if (results.slice(11).length)    addGrid(cont, results.slice(11),     4, 11, 32, true);
 }
 
-// ---- TAB 2: estadísticas del equipo (JSON + stats globales del partido) ----
+// ---- TAB 2: estadísticas del equipo — tabla ancha con filtros (tipo FotMob) ----
+// Multi-fecha (suma), filtro por jugador (chips) y por columna (chips).
 function _renderStatsTabEquipo(cont) {
   const data = _stats.data;
-  const COLS = [
-    { key: 'nombre',         label: 'Jugador',  className: 'name-col' },
-    { key: 'partidos',       label: 'PJ',       acumOnly: true },
-    { key: 'minutos',        label: 'Min' },
-    { key: 'goles',          label: 'G' },
-    { key: 'asistencias',    label: 'A' },
-    { key: 'xG',             label: 'xG' },
-    { key: 'xA',             label: 'xA' },
-    { key: 'disparos',       label: 'Disp' },
-    { key: 'toques',         label: 'Toq' },
-    { key: 'pasesAcertados', label: 'Pases', custom: r => (r.pasesAcertados !== null && r.pasesAcertados !== undefined) ? `${r.pasesAcertados}${r.pasesIntentados !== null ? '/'+r.pasesIntentados : ''}` : '—' },
-    { key: 'accDefensivas',  label: 'Def' },
-  ];
+  const eq = _stats.eq;
+  const partidosConDatos = data.partidos.filter(p => p.stats_partido && (p.jugadores || []).some(j => j.jugo));
 
-  if (_stats.fechaSel === 'acum') {
-    const sectTitle = document.createElement('div');
-    sectTitle.className = 'stats-section-title';
-    sectTitle.textContent = 'Acumulado del torneo';
-    cont.appendChild(sectTitle);
-    cont.appendChild(_statsBuildTable(data.acumulado, COLS, true));
-    return;
-  }
-
-  const partido = data.partidos.find(p => p.fecha == _stats.fechaSel);
-  if (!partido) { cont.innerHTML = '<div class="stats-empty">Fecha no encontrada.</div>'; return; }
-
-  // Header scoreboard con escudos + resultado
-  cont.appendChild(_statsScoreboard(partido));
-
-  // Top estadísticas del partido (datos globales)
-  if (partido.stats_partido) {
-    cont.appendChild(_statsTopBlock(partido));
-  }
-
-  // Jugadores del partido — empty state si todavía no se cargaron
-  const playersTitle = document.createElement('div');
-  playersTitle.className = 'stats-section-title';
-  playersTitle.textContent = 'Jugadores';
-  cont.appendChild(playersTitle);
-
-  const onlyPlayed = (partido.jugadores || []).filter(j => j.jugo);
-  if (!onlyPlayed.length) {
+  if (!partidosConDatos.length) {
     const e = document.createElement('div'); e.className = 'stats-empty';
     e.textContent = 'Stats individuales en proceso.';
     cont.appendChild(e);
-  } else {
-    cont.appendChild(_statsBuildTable(onlyPlayed, COLS, false));
+    return;
   }
+
+  // Init / saneo del estado de fechas
+  const fechasDisp = partidosConDatos.map(p => p.fecha).sort((a, b) => a - b);
+  const ultima = Math.max(...fechasDisp);
+  if (eq.fechas === null) eq.fechas = new Set([ultima]);
+  eq.fechas = new Set([...eq.fechas].filter(f => fechasDisp.includes(f)));
+  if (!eq.fechas.size) eq.fechas = new Set([ultima]);
+  if (eq.hiddenPlayers === null) eq.hiddenPlayers = new Set();
+  if (eq.hiddenCols === null) eq.hiddenCols = new Set();
+
+  // ---- Selector de fecha multi-toggle ----
+  const fBlock = document.createElement('div'); fBlock.className = 'stats-eq-block';
+  const fLbl = document.createElement('div'); fLbl.className = 'stats-eq-label';
+  fLbl.textContent = 'Fechas · se suman las activas';
+  fBlock.appendChild(fLbl);
+  const fBar = document.createElement('div'); fBar.className = 'stats-chiprow';
+  const todas = document.createElement('div');
+  const allSel = eq.fechas.size === fechasDisp.length;
+  todas.className = 'stats-fecha-tog todas' + (allSel ? ' active' : '');
+  todas.textContent = 'Todas';
+  todas.onclick = () => {
+    eq.fechas = allSel ? new Set([ultima]) : new Set(fechasDisp);
+    _renderStatsLayout();
+  };
+  fBar.appendChild(todas);
+  partidosConDatos.forEach(p => {
+    const t = document.createElement('div');
+    t.className = 'stats-fecha-tog' + (eq.fechas.has(p.fecha) ? ' active' : '');
+    t.textContent = `F${p.fecha} · ${p.rival.split(' ')[0]}`;
+    t.onclick = () => {
+      const s = new Set(eq.fechas);
+      if (s.has(p.fecha)) { if (s.size > 1) s.delete(p.fecha); }
+      else s.add(p.fecha);
+      eq.fechas = s; _renderStatsLayout();
+    };
+    fBar.appendChild(t);
+  });
+  fBlock.appendChild(fBar); cont.appendChild(fBlock);
+
+  const fechasArr = [...eq.fechas].sort((a, b) => a - b);
+  const single = fechasArr.length === 1;
+
+  // Con una sola fecha activa mostramos scoreboard + stats globales del equipo.
+  // Con varias no tiene sentido sumar posesión/xG de equipo → solo la tabla.
+  if (single) {
+    const partido = partidosConDatos.find(p => p.fecha === fechasArr[0]);
+    cont.appendChild(_statsScoreboard(partido));
+    if (partido.stats_partido) cont.appendChild(_statsTopBlock(partido));
+  } else {
+    const h = document.createElement('div'); h.className = 'stats-section-title';
+    h.textContent = `Sumatoria · ${fechasArr.length} fechas`;
+    cont.appendChild(h);
+  }
+
+  // Datos agregados de los jugadores del scope
+  const rows = _statsAggregate(fechasArr);
+
+  // ---- Chips de jugadores y de columnas ----
+  _statsRenderPlayerChips(cont, rows);
+  _statsRenderColChips(cont, rows, fechasArr.length);
+
+  // ---- Tabla ancha ----
+  const visibles = rows.filter(r => !eq.hiddenPlayers.has(r.norm));
+  if (!visibles.length) {
+    const e = document.createElement('div'); e.className = 'stats-empty';
+    e.textContent = 'Ningún jugador seleccionado.';
+    cont.appendChild(e);
+    return;
+  }
+  cont.appendChild(_statsWideTable(visibles, fechasArr.length));
+}
+
+// Agrega los jugadores (jugo:true) de las fechas dadas, sumando campos numéricos.
+// Agrupa por nombre normalizado; resuelve nombre/fid/num canónicos vía squad (FotMob).
+function _statsAggregate(fechasArr) {
+  const data = _stats.data;
+  const partidos = data.partidos.filter(p => p.stats_partido && fechasArr.includes(p.fecha));
+  const acc = {};
+  partidos.forEach(p => {
+    (p.jugadores || []).filter(j => j.jugo).forEach(j => {
+      const norm = _statsNorm(j.nombre);
+      if (!acc[norm]) {
+        const sq = _statsMatchSquad(j.nombre, squad);
+        acc[norm] = { nombre: sq?.name || j.nombre, fid: sq?.fid || 0, num: (sq && sq.num != null) ? sq.num : '', norm, partidos: 0 };
+      }
+      const a = acc[norm];
+      a.partidos += 1;
+      STATS_SUM_KEYS.forEach(k => {
+        const v = j[k];
+        if (typeof v === 'number') a[k] = (a[k] || 0) + v;
+      });
+    });
+  });
+  // Redondear decimales acumulados (xG/xA) a 2
+  Object.values(acc).forEach(a => {
+    ['xG', 'xA'].forEach(k => { if (typeof a[k] === 'number') a[k] = Math.round(a[k] * 100) / 100; });
+  });
+  return Object.values(acc);
+}
+
+// Chips de jugadores — tap para tildar/destildar quién aparece en la tabla.
+function _statsRenderPlayerChips(cont, rows) {
+  const eq = _stats.eq;
+  const nVis = rows.filter(r => !eq.hiddenPlayers.has(r.norm)).length;
+  const block = document.createElement('div'); block.className = 'stats-eq-block';
+  const lbl = document.createElement('div'); lbl.className = 'stats-eq-label';
+  lbl.textContent = `Jugadores · ${nVis} de ${rows.length}`;
+  block.appendChild(lbl);
+  const bar = document.createElement('div'); bar.className = 'stats-chiprow';
+  const bAll = document.createElement('div'); bAll.className = 'stats-mini-btn'; bAll.textContent = 'Todos';
+  bAll.onclick = () => { eq.hiddenPlayers = new Set(); _renderStatsLayout(); };
+  const bNone = document.createElement('div'); bNone.className = 'stats-mini-btn'; bNone.textContent = 'Ninguno';
+  bNone.onclick = () => { eq.hiddenPlayers = new Set(rows.map(r => r.norm)); _renderStatsLayout(); };
+  bar.appendChild(bAll); bar.appendChild(bNone);
+  rows.slice().sort((a, b) => (b.minutos || 0) - (a.minutos || 0)).forEach(r => {
+    const on = !eq.hiddenPlayers.has(r.norm);
+    const chip = document.createElement('div'); chip.className = 'stats-pchip' + (on ? '' : ' off');
+    chip.appendChild(makeAvatar(FOTO(r.fid || 0), r.num || '', 22));
+    const nm = document.createElement('span'); nm.className = 'pchip-name';
+    nm.textContent = r.nombre.split(' ').filter(Boolean).slice(-1)[0] || r.nombre;
+    chip.appendChild(nm);
+    chip.onclick = () => {
+      const s = new Set(eq.hiddenPlayers);
+      if (s.has(r.norm)) s.delete(r.norm); else s.add(r.norm);
+      eq.hiddenPlayers = s; _renderStatsLayout();
+    };
+    bar.appendChild(chip);
+  });
+  block.appendChild(bar); cont.appendChild(block);
+}
+
+// Chips de columnas — tap para prender/apagar cada estadística de la tabla.
+function _statsRenderColChips(cont, rows, nFechas) {
+  const eq = _stats.eq;
+  const present = STATS_COLS.filter(c => (nFechas > 1 || !c.multiOnly) && rows.some(r => r[c.key] != null));
+  if (!present.length) return;
+  const block = document.createElement('div'); block.className = 'stats-eq-block';
+  const lbl = document.createElement('div'); lbl.className = 'stats-eq-label';
+  lbl.textContent = 'Estadísticas · tocá para mostrar/ocultar';
+  block.appendChild(lbl);
+  const bar = document.createElement('div'); bar.className = 'stats-chiprow';
+  present.forEach(c => {
+    const on = !eq.hiddenCols.has(c.key);
+    const chip = document.createElement('div'); chip.className = 'stats-col-chip' + (on ? '' : ' off');
+    chip.textContent = c.label;
+    chip.onclick = () => {
+      const s = new Set(eq.hiddenCols);
+      if (s.has(c.key)) s.delete(c.key); else s.add(c.key);
+      eq.hiddenCols = s; _renderStatsLayout();
+    };
+    bar.appendChild(chip);
+  });
+  block.appendChild(bar); cont.appendChild(block);
+}
+
+// Texto de una celda según el tipo de columna.
+function _statsEqCellText(r, c) {
+  const v = r[c.key];
+  if (v === null || v === undefined) return '—';
+  if (c.frac) { const t = r[c.frac]; return (t != null) ? `${v}/${t}` : String(v); }
+  if (c.dec) return (typeof v === 'number') ? v.toFixed(2) : String(v);
+  return (typeof v === 'number' && !Number.isInteger(v)) ? v.toFixed(2) : String(v);
+}
+
+function _statsEqSort(key) {
+  const eq = _stats.eq;
+  if (eq.sortKey === key) eq.sortAsc = !eq.sortAsc;
+  else { eq.sortKey = key; eq.sortAsc = (key === 'nombre'); }
+  _renderStatsLayout();
+}
+
+// Tabla ancha con scroll horizontal. Columna Jugador sticky a la izquierda.
+function _statsWideTable(rows, nFechas) {
+  const eq = _stats.eq;
+  const cols = STATS_COLS.filter(c =>
+    (nFechas > 1 || !c.multiOnly) &&
+    !eq.hiddenCols.has(c.key) &&
+    rows.some(r => r[c.key] != null)
+  );
+  let sortKey = eq.sortKey;
+  if (sortKey !== 'nombre' && !cols.some(c => c.key === sortKey)) sortKey = 'minutos';
+
+  const sorted = rows.slice().sort((a, b) => {
+    if (sortKey === 'nombre') {
+      const r = _statsNorm(a.nombre).localeCompare(_statsNorm(b.nombre));
+      return eq.sortAsc ? r : -r;
+    }
+    const va = (a[sortKey] == null) ? -Infinity : a[sortKey];
+    const vb = (b[sortKey] == null) ? -Infinity : b[sortKey];
+    return eq.sortAsc ? va - vb : vb - va;
+  });
+
+  const wrap = document.createElement('div'); wrap.className = 'stats-table-wrap';
+  const table = document.createElement('table'); table.className = 'stats-table stats-wide';
+
+  const thead = document.createElement('thead'); const trh = document.createElement('tr');
+  const thName = document.createElement('th'); thName.className = 'name-col'; thName.textContent = 'Jugador';
+  if (sortKey === 'nombre') { thName.classList.add('sorted'); if (eq.sortAsc) thName.classList.add('asc'); }
+  thName.onclick = () => _statsEqSort('nombre');
+  trh.appendChild(thName);
+  cols.forEach(c => {
+    const th = document.createElement('th'); th.textContent = c.label;
+    if (sortKey === c.key) { th.classList.add('sorted'); if (eq.sortAsc) th.classList.add('asc'); }
+    th.onclick = () => _statsEqSort(c.key);
+    trh.appendChild(th);
+  });
+  thead.appendChild(trh); table.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  sorted.forEach(r => {
+    const tr = document.createElement('tr');
+    const tdN = document.createElement('td'); tdN.className = 'name-col';
+    const cell = document.createElement('div'); cell.className = 'stats-name-cell';
+    cell.appendChild(makeAvatar(FOTO(r.fid || 0), r.num || '', 26));
+    const nm = document.createElement('span'); nm.className = 'snc-name'; nm.textContent = r.nombre;
+    cell.appendChild(nm); tdN.appendChild(cell); tr.appendChild(tdN);
+    cols.forEach(c => {
+      const td = document.createElement('td');
+      td.textContent = _statsEqCellText(r, c);
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody); wrap.appendChild(table);
+  return wrap;
 }
 
 function _statsScoreboard(partido) {
@@ -2499,58 +2786,6 @@ function _statsMatchHeader(partido) {
     <div class="stats-match-result">${escapeHtml(partido.resultado)}</div>
   `;
   return h;
-}
-
-function _statsBuildTable(rows, cols, isAcum) {
-  const wrap = document.createElement('div'); wrap.className = 'stats-table-wrap';
-  const table = document.createElement('table'); table.className = 'stats-table';
-  const visibleCols = cols.filter(c => isAcum || !c.acumOnly);
-
-  // Default sort: by sortKey desc; if not present, fallback to minutos
-  const sortable = rows.slice().sort((a, b) => {
-    const k = _stats.sortKey;
-    let va = a[k], vb = b[k];
-    if (k === 'nombre') {
-      va = _statsNorm(va); vb = _statsNorm(vb);
-      return _stats.sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
-    }
-    va = (va === null || va === undefined) ? -Infinity : va;
-    vb = (vb === null || vb === undefined) ? -Infinity : vb;
-    return _stats.sortAsc ? va - vb : vb - va;
-  });
-
-  const thead = document.createElement('thead'); const trh = document.createElement('tr');
-  visibleCols.forEach(c => {
-    const th = document.createElement('th');
-    if (c.className) th.className = c.className;
-    th.textContent = c.label;
-    if (_stats.sortKey === c.key) {
-      th.classList.add('sorted');
-      if (_stats.sortAsc) th.classList.add('asc');
-    }
-    th.onclick = () => {
-      if (_stats.sortKey === c.key) _stats.sortAsc = !_stats.sortAsc;
-      else { _stats.sortKey = c.key; _stats.sortAsc = (c.key === 'nombre'); }
-      _renderStatsLayout();
-    };
-    trh.appendChild(th);
-  });
-  thead.appendChild(trh); table.appendChild(thead);
-
-  const tbody = document.createElement('tbody');
-  sortable.forEach(r => {
-    const tr = document.createElement('tr');
-    if (!isAcum && r.jugo === false) tr.classList.add('didnt-play');
-    visibleCols.forEach(c => {
-      const td = document.createElement('td');
-      if (c.className) td.className = c.className;
-      td.textContent = c.custom ? c.custom(r) : _statsFmt(r[c.key]);
-      tr.appendChild(td);
-    });
-    tbody.appendChild(tr);
-  });
-  table.appendChild(tbody); wrap.appendChild(table);
-  return wrap;
 }
 
 async function openPrevFecha(f) {

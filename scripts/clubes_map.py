@@ -19,7 +19,7 @@ CLUBES = {
     'union':                    {'apisports': 441,  'fotmob': None,  'nombre': 'Unión de Santa Fe'},
     'lanus':                    {'apisports': 446,  'fotmob': None,  'nombre': 'Lanús'},
     'talleres':                 {'apisports': 456,  'fotmob': None,  'nombre': 'Talleres de Córdoba'},
-    'independiente':            {'apisports': 453,  'fotmob': None,  'nombre': 'Independiente'},
+    'independiente':            {'apisports': 453,  'fotmob': 10078, 'nombre': 'Independiente'},
     'sanlorenzo':               {'apisports': 460,  'fotmob': None,  'nombre': 'San Lorenzo'},
     'clubatleticoplatense':     {'apisports': 1064, 'fotmob': 10089, 'nombre': 'Platense'},
     'gimnasiamendoza':          {'apisports': 1066, 'fotmob': None,  'nombre': 'Gimnasia Mendoza'},

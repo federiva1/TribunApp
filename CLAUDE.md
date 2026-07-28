@@ -143,7 +143,7 @@ Para los scripts Python hay un equivalente: `scripts/clubes_map.py` (slug → `{
                     "faltas": 9, "corners": 9, "amarillas": 1, "rojas": null },
         "rival":  { ... }
       },
-      "jugadores":      [ /* AAAJ — schema TribunApp (nombre, jugo, minutos, goles, ...) */ ],
+      "jugadores":      [ /* schema TribunApp: nombre, jugo, minutos, goles, asistencias, xG, xA, accDefensivas, disparos, toques, pasesAcertados/Intentados + set ampliado opcional: tiros, grandesOcasiones, toquesArea, regates(+regatesTotal), pasesUltimoTercio, entradas, intercepciones, recuperaciones, despejes, duelosGanados/Perdidos, faltas, faltasRecibidas */ ],
       "jugadoresRival": [ /* mismo schema, para el rival */ ]
     }],
     "acumulado": [ /* totales por jugador AAAJ del torneo */ ]
@@ -193,10 +193,14 @@ Para liga, una sola llamada a api-sports trae todos los partidos del año. El to
 
 #### ESTADÍSTICAS (`renderStats()` en club.html)
 Sin gate por club — intenta cargar el JSON correspondiente; si no existe, muestra "próximamente" (no es un error). Dos tabs:
-- **Equipo** (default — datos reales del partido) — scoreboard con escudos AAAJ + rival + resultado, bloque "Top estadísticas" estilo planilla (posesión / xG / tiros / disparos / pases con % / faltas / córners / tarjetas, con pill destacando al equipo con mayor valor), tabla de jugadores ordenable. Selector de fecha = solo fechas con `stats_partido` cargado + Acumulado. Default = última fecha jugada.
-- **Página** (votos de Supabase) — vista por fecha: tier list de formaciones (5 tiers por % de votos: 81-100, 61-80, 41-60, 21-40, 0-20) + podio de puntajes 1/2/4/4 con medallas. Vista acumulada: suma global de votos sobre todas las fechas con datos.
+- **Equipo** (default — datos reales del partido) — scoreboard con escudos + rival + resultado, bloque "Top estadísticas" estilo planilla (posesión / xG / tiros / disparos / pases con % / faltas / córners / tarjetas, con pill destacando al equipo con mayor valor), y **tabla ancha scrolleable tipo FotMob con 3 filtros**:
+  - **Fechas (multi-select que suma)** — toggles `stats-fecha-tog` + botón "Todas". Se activan varias fechas y los jugadores que jugaron en más de una muestran stats **sumadas** (`_statsAggregate` agrupa por nombre normalizado, suma `STATS_SUM_KEYS`, agrega columna `PJ`). Con **una sola** fecha activa se muestran también scoreboard + Top estadísticas; con varias, solo la tabla.
+  - **Jugadores** — chips `stats-pchip` (Todos/Ninguno) que ocultan filas (`eq.hiddenPlayers`).
+  - **Columnas** — chips `stats-col-chip` que prenden/apagan cada stat (`eq.hiddenCols`).
+  - La tabla es **data-driven**: `STATS_COLS` es el catálogo maestro (set actual + set ampliado FotMob); solo se renderiza una columna si algún jugador del scope tiene valor no-nulo. Así AAAJ (~10 stats) e Independiente (~22 stats) usan el mismo render sin ramas. Columna Jugador sticky a la izquierda (`.stats-wide td.name-col`), ordenable por header.
+- **Página** (votos de Supabase) — vista por fecha: tier list de formaciones (5 tiers por % de votos: 81-100, 61-80, 41-60, 21-40, 0-20) + podio de puntajes 1/2/4/4 con medallas. Vista acumulada: suma global de votos sobre todas las fechas con datos. Mantiene su propio selector de fecha single-select (`_statsRenderWebFechaBar`).
 
-Estado del módulo: global `_stats = { data, formaciones, puntajes, tab, fechaSel, sortKey, sortAsc }`. Las tres fuentes (JSON, formaciones, puntajes) se cargan secuencialmente (JSON primero — si no existe, fallback a "próximamente") y quedan cacheadas en memoria.
+Estado del módulo: global `_stats = { data, formaciones, puntajes, tab, fechaSel, sortKey, sortAsc, eq: { fechas:Set, hiddenPlayers:Set, hiddenCols:Set, sortKey, sortAsc } }`. `fechaSel` es solo del tab Página; `eq` es el sub-estado del tab Equipo. Las tres fuentes (JSON, formaciones, puntajes) se cargan secuencialmente (JSON primero — si no existe, fallback a "próximamente") y quedan cacheadas en memoria.
 
 **Filtros importantes del podio de puntajes** (`_statsRenderPodio`):
 1. **Solo jugadores que jugaron** — usa `partido.jugadores[].jugo === true` para excluir votos a no-convocados. Si alguien le puso puntaje a un jugador que no jugó, ese voto se descarta.
@@ -224,7 +228,7 @@ All three use `stefanzweifel/git-auto-commit-action@v5` with `[skip ci]` in the 
 
 In `club.html`, `PUNTAJES_OPEN` is loaded async from `estado.json` (only for liga, not copa context). It gates the puntajes section in `openSection('scores')`.
 
-**Por automatizar** (ver `FLUJO.md`): un workflow `post-match-stats.yml` que dispare los scrapers (`fetch_match_stats.py` + `scrape_fotmob_partidos.py`) cuando `match-monitor` detecta FT, esperando ~30–60 min para que FotMob procese. Requiere agregar Playwright al runner (`pip install playwright && playwright install chromium`).
+**Por automatizar** (ver `FLUJO.md`): un workflow `post-match-stats.yml` que dispare los scrapers (`fetch_match_stats.py` + `scrape_fotmob_partidos.py`) cuando `match-monitor` detecta FT, esperando ~30–60 min para que FotMob procese. `scrape_fotmob_partidos.py` ahora baja el `__NEXT_DATA__` **por HTTP (urllib)** igual que el del Mundial (Playwright quedó como fallback opcional), así que **no** hace falta Playwright en el runner para el camino normal.
 
 ### copas.html
 Hardcoded arrays `LIBERTADORES_SLUGS` and `SUDAMERICANA_SLUGS` define Argentine participants. Groups fetched live from api-sports (Libertadores: `league=13`, Sudamericana: `league=11`).
