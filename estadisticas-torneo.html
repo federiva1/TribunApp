@@ -247,7 +247,7 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
 
   <!-- TORNEO STATS -->
   <div class="sec-title">Estadísticas</div>
-  <div class="sec-sub">Mundial 2026 · Highlights</div>
+  <div class="sec-sub">Liga Profesional · Destacados</div>
 
   <div class="torneo-card" id="torneo-card">
     <div class="torneo-label">⚽ Destacados del torneo</div>
@@ -267,7 +267,7 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
   <div class="equipos-header">
     <div>
       <div class="sec-title">Equipos</div>
-      <div class="sec-sub">Estadísticas individuales por selección</div>
+      <div class="sec-sub">Estadísticas individuales por club</div>
     </div>
     <div class="equipos-count" id="equipos-count"></div>
   </div>
@@ -326,8 +326,10 @@ function nbSlug(s){
     capeverde:'Cabo Verde',newzealand:'Nueva Zelanda',uzbekistan:'Uzbekistán',
     drcongo:'RD Congo',bosniaandherzegovina:'Bosnia y Herz.',paraguay:'Paraguay'};
   if (!s) return '';
-  return map[s] || (s.charAt(0).toUpperCase()+s.slice(1));
+  return map[s] || nomBySlug[s] || (s.charAt(0).toUpperCase()+s.slice(1));
 }
+// slug -> nombre de club, poblado en init() desde equipos.json (para líderes/etc)
+let nomBySlug = {};
 
 // Cuáles equipos tienen al menos 1 partido en el índice
 function equiposConStats(index){
@@ -391,11 +393,14 @@ function buildLiderBloque(titulo, mapa, info, top=5){
   </div>`;
 }
 
+// Nombre a mostrar: prioriza el `nombre` de equipos.json (clubes), fallback a nbSlug.
+function nomEquipo(eq){ return (eq && eq.nombre) || nbSlug(eq && eq.slug); }
+
 function renderEquipos(equipos, conStats, filtro=''){
   const grid = document.getElementById('equipos-grid');
   const q = filtro.toLowerCase().trim();
   const filtrados = q
-    ? equipos.filter(e=>nbSlug(e.slug).toLowerCase().includes(q)||(e.nombre||'').toLowerCase().includes(q))
+    ? equipos.filter(e=>nomEquipo(e).toLowerCase().includes(q)||e.slug.toLowerCase().includes(q))
     : equipos;
 
   grid.innerHTML='';
@@ -406,7 +411,7 @@ function renderEquipos(equipos, conStats, filtro=''){
     const as = conStats.has(a.slug)?0:1;
     const bs = conStats.has(b.slug)?0:1;
     if(as!==bs) return as-bs;
-    return nbSlug(a.slug).localeCompare(nbSlug(b.slug));
+    return nomEquipo(a).localeCompare(nomEquipo(b));
   });
 
   filtrados.forEach(eq=>{
@@ -422,8 +427,8 @@ function renderEquipos(equipos, conStats, filtro=''){
     row.innerHTML=`
       <img class="er-flag" src="${esc(eq.slug)}" alt="" onerror="this.style.opacity='.1'">
       <div class="er-info">
-        <div class="er-nombre">${nbSlug(eq.slug)}</div>
-        <div class="er-sub">Grupo ${eq.grupo} · Mundial 2026</div>
+        <div class="er-nombre">${escapeHtml(nomEquipo(eq))}</div>
+        <div class="er-sub">${escapeHtml(eq.sub || 'Liga Profesional')}</div>
       </div>
       <span class="er-badge ${tieneStats?'con-stats':'sin-stats-badge'}">${tieneStats?'Ver stats':'Sin datos'}</span>
       ${tieneStats?'<span class="er-arrow">›</span>':''}`;
@@ -441,6 +446,7 @@ async function init(){
     ]);
     todosEquipos = await resEq.json();
     partidosIndex = await resIdx.json();
+    (Array.isArray(todosEquipos)?todosEquipos:[]).forEach(e=>{ if(e.slug&&e.nombre) nomBySlug[e.slug]=e.nombre; });
   }catch(e){
     document.getElementById('equipos-grid').innerHTML='<div class="loading-msg">Error cargando datos</div>';
     return;
@@ -448,12 +454,12 @@ async function init(){
 
   const conStats = equiposConStats(partidosIndex);
 
-  // Render equipos (solo mundialistas — los que tienen slug mundialista)
-  const mundialistas = (Array.isArray(todosEquipos) ? todosEquipos : []).filter(e=>e.grupo && e.slug);
+  // Render equipos — todos los clubes con slug (equipos.json ya lista los 30)
+  const clubes = (Array.isArray(todosEquipos) ? todosEquipos : []).filter(e=>e.slug);
   try {
-    renderEquipos(mundialistas, conStats);
+    renderEquipos(clubes, conStats);
     document.getElementById('search-input').addEventListener('input', e=>{
-      renderEquipos(mundialistas, conStats, e.target.value);
+      renderEquipos(clubes, conStats, e.target.value);
     });
   } catch(e) {
     document.getElementById('equipos-grid').innerHTML='<div class="loading-msg">Error mostrando equipos</div>';

@@ -244,8 +244,8 @@ Módulo separado del flujo de clubes argentinos. Todas las páginas del Mundial 
 
 - **`index.html`** — Home del Mundial. Header + partido en vivo + toggle **ELIMINATORIA (default) / FASE DE GRUPOS**. Ver "index.html (bracket de eliminatorias)" abajo.
 - **`fixture.html`** — Fixture del Mundial. Muestra amistosos + todas las fases (Fase de Grupos, **Dieciseisavos** (round `1/32`), Octavos, Cuartos, Semis, Final). Los tabs de fase se muestran solos cuando esa ronda tiene partidos en `mundial.json`, y abre en la más avanzada disponible (`FASES` con `visible` recalculado al cargar). Partidos definidos por penales muestran "Pen X-Y" bajo el marcador y marcan al ganador vía `p.winner`. Datos en `data/fixtures/mundial.json`. La pill "Estadísticas" del header apunta a `estadisticas-torneo.html`.
-- **`estadisticas-torneo.html`** — Landing de estadísticas del torneo. Sección superior: goleadores y asistidores globales (computados dinámicamente leyendo todos los JSONs de `data/partidos/`). Sección inferior: grilla de 48 selecciones. Selecciones con datos (`data/partidos/index.json` tiene entradas para ese slug) muestran "VER STATS" y linkan a `equipo.html?c={slug}`.
-- **`equipo.html`** — Perfil de selección. Tiene una sección "estadísticas" que llama a `loadPartidosStats()`: busca en `data/partidos/index.json` los partidos de ese slug, muestra una card Acumulado + cards por partido. Cada card es un `<a href="estadisticas.html?p={id}&c={slug}">`.
+- **`estadisticas-torneo.html`** — Landing de estadísticas. **Repurposada a clubes de Liga** (ya no selecciones): la grilla inferior lista los 30 clubes leídos de **`data/equipos.json`** (`[{slug, nombre}]`); los que tienen partido en `data/partidos/index.json` muestran "Ver stats" y linkan a `equipo.html?c={slug}&s=estadisticas`. El nombre a mostrar sale de `equipos.json` (helper `nomEquipo`/`nomBySlug`, no del map de selecciones `nbSlug`). Sección superior: goleadores/asistidores globales computados leyendo todos los `data/partidos/*.json`.
+- **`equipo.html`** — Perfil de equipo. **Ahora club-aware**: incluye `js/clubes.js` y `init()` soporta tanto el plantel de club (array `[{num,name,fid,position}]`) como el del Mundial (`{equipo,grupo,jugadores:[{numero,nombre,...}]}`); color/nombre salen de `CLUBES_CONFIG` (fallback a `COLORES_EQUIPO`/`NAMES_ES`). La sección "estadísticas" (`loadPartidosStats` → `renderEqStats`) es una **tabla FotMob ancha agregada con filtros**: selector de partidos multi-toggle que **suma** (`aggregateEq`, agrupa por jugador vía `matchPlantel` para unificar grafías entre partidos como "Rodrigo Rey"/"R. Rey", columna PJ), chips de jugador (`hiddenPlayers`) y de columna (`hiddenCols`), catálogo `EQ_COLS` del schema rico (`top/ataque/defensa/duelos` aplanados), columna Jugador sticky, ordenable. Data-driven: solo se muestran columnas con algún valor. Deep-link `?s=estadisticas` abre la sección directo. (El viejo card-list + overlay Acumulado quedaron sin uso.)
 - **`estadisticas.html`** — Vista de un partido específico. URL: `?p={partido-id}` + `?c={slug-equipo}` (opcional, para auto-seleccionar el tab del equipo visitante si se entra desde su perfil). Tiene dos tabs: **Estadísticas** (stats globales del partido) y **Jugadores** (switcher Local/Visitante con cards expandibles por jugador).
 
 ### index.html (bracket de eliminatorias)
@@ -368,6 +368,15 @@ Fetched by `equipo.html` on load (with `?v=${Date.now()}` cache bust). Controls 
 | `scrape_fotmob_mundial.py --auto` | FotMob vía HTTP (urllib, fallback Playwright) | enriquece jugadores en el mismo JSON |
 | `fetch_mundial_standings.py` | api-sports standings | `data/partidos/standings.json` |
 | `fetch_mundial_estado.py --force` | lee mundial.json | `data/estado_mundial.json` |
+
+**Partidos de Liga en `data/partidos/`**: estos dos scripts sirven también para clubes de Liga (no solo Mundial). `fetch_mundial_match.py` resuelve el slug por **ID de api-sports** vía `js/clubes.js` (`team_slug`/`ID_SLUG`), así que:
+```bash
+# 1. Base (lineup/eventos/top_stats) — league se infiere del fixture; pasar slugs locales + competición
+python scripts/fetch_mundial_match.py --fixture-id <id> --id estudiantes-independiente --local estudiantes --visitante independiente --competicion "Clausura 2026"
+# 2. Enriquecer jugadores (top/ataque/defensa/duelos) — URL FotMob del partido
+python scripts/scrape_fotmob_mundial.py --url "https://www.fotmob.com/matches/.../<matchId>" --id estudiantes-independiente
+```
+La URL de FotMob se puede resolver bajando `fotmob.com/teams/{fotmob_id}/fixtures` (HTTP) y buscando el partido por fecha (el `fotmob_id` del club está en `scripts/clubes_map.py`; `resolve_fotmob_url()` sirve para Mundial pero lee `fotmob_id` del plantel, que los clubes no tienen). Partidos viejos de FotMob pueden no traer `playerStats` (el enrich queda con `top/ataque/... = null`, pero el lineup api-sports con min/goles/asist igual sirve para la tabla agregada).
 
 **Ventana de puntajes**: 24h desde el FT (no 48h como en liga). Configurado en `fetch_mundial_estado.py`.
 

@@ -149,6 +149,34 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 }
 .screen-sub { font-size: 11px; color: rgba(255,255,255,0.35); text-align: center; margin-bottom: 18px; }
 
+/* ---- Tabla FotMob agregada (sección estadísticas) ---- */
+.eqt-block { margin-bottom: 12px; }
+.eqt-label { font-family:'Barlow Condensed',sans-serif; font-size:9px; letter-spacing:2px; color:rgba(255,255,255,0.32); text-transform:uppercase; margin:0 0 6px 2px; }
+.eqt-chiprow { display:flex; gap:6px; overflow-x:auto; padding-bottom:5px; scrollbar-width:none; align-items:center; }
+.eqt-chiprow::-webkit-scrollbar { display:none; }
+.eqt-fecha-tog { flex:0 0 auto; padding:7px 12px; border-radius:16px; cursor:pointer; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); font-family:'Barlow Condensed',sans-serif; font-size:11px; letter-spacing:.5px; color:rgba(255,255,255,0.55); white-space:nowrap; transition:all .15s; user-select:none; }
+.eqt-fecha-tog.active { background:var(--acento); border-color:var(--acento); color:#fff; }
+.eqt-fecha-tog.todas { border-style:dashed; }
+.eqt-col-chip { flex:0 0 auto; padding:5px 10px; border-radius:14px; cursor:pointer; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); font-family:'Barlow Condensed',sans-serif; font-size:10px; letter-spacing:1px; color:#fff; white-space:nowrap; transition:all .15s; user-select:none; text-transform:uppercase; }
+.eqt-col-chip.off { background:transparent; color:rgba(255,255,255,0.28); border-color:rgba(255,255,255,0.06); }
+.eqt-pchip { flex:0 0 auto; display:flex; align-items:center; gap:6px; padding:3px 11px 3px 3px; border-radius:18px; cursor:pointer; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); transition:all .15s; user-select:none; }
+.eqt-pchip .pch-av { width:22px; height:22px; border-radius:50%; object-fit:cover; background:var(--acento); flex:0 0 auto; }
+.eqt-pchip .pch-name { font-family:'Barlow Condensed',sans-serif; font-size:12px; color:#fff; white-space:nowrap; }
+.eqt-pchip.off { background:transparent; border-color:rgba(255,255,255,0.06); opacity:.42; }
+.eqt-mini-btn { flex:0 0 auto; padding:4px 9px; border-radius:12px; cursor:pointer; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.14); font-family:'Barlow Condensed',sans-serif; font-size:10px; letter-spacing:1px; color:rgba(255,255,255,0.6); text-transform:uppercase; user-select:none; }
+.eqt-table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; margin-top:4px; }
+.eqt-table { width:100%; border-collapse:collapse; font-family:'Barlow Condensed',sans-serif; font-size:12px; }
+.eqt-table th { font-size:9px; letter-spacing:1px; color:rgba(255,255,255,0.4); text-transform:uppercase; text-align:right; padding:7px 5px; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.1); white-space:nowrap; user-select:none; min-width:40px; }
+.eqt-table th.sorted { color:var(--acento); }
+.eqt-table th.sorted::after { content:' ▾'; }
+.eqt-table th.sorted.asc::after { content:' ▴'; }
+.eqt-table td { padding:7px 5px; text-align:right; color:#ddd; border-bottom:1px solid rgba(255,255,255,0.04); white-space:nowrap; min-width:40px; }
+.eqt-table th.name-col, .eqt-table td.name-col { position:sticky; left:0; z-index:1; background:var(--dark2); box-shadow:1px 0 0 rgba(255,255,255,0.07); text-align:left; }
+.eqt-table td.name-col { min-width:150px; max-width:180px; color:#fff; }
+.eqt-name-cell { display:flex; align-items:center; gap:8px; }
+.eqt-name-cell img { width:26px; height:26px; border-radius:50%; object-fit:cover; background:rgba(255,255,255,0.06); flex:0 0 auto; }
+.eqt-name-cell .nm { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
 /* ===== PLANTEL ===== */
 .pos-seccion { margin-bottom: 24px; }
 .pos-titulo {
@@ -1187,6 +1215,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   window._showTeamPicker = _showTeamPicker;
 })();
 </script>
+<script src="js/clubes.js"></script>
 <script>
 (function() {
 'use strict';
@@ -2425,25 +2454,32 @@ async function init() {
     if (!res.ok) throw new Error('Equipo no encontrado');
     plantelData = await res.json();
 
-    nombreEquipo = NAMES_ES[slug] || plantelData.equipo;
-    document.title = `${nombreEquipo} — Mundial 2026`;
+    // Planteles de club son un array [{num,name,fid,position}]; los del Mundial
+    // un objeto {equipo, grupo, jugadores:[{numero,nombre,...}]}. Soportar ambos.
+    const _jugs = Array.isArray(plantelData) ? plantelData : (plantelData.jugadores || []);
+    const _cfg  = (typeof CLUBES_CONFIG !== 'undefined' ? CLUBES_CONFIG[slug] : null) || {};
+
+    nombreEquipo = NAMES_ES[slug] || (Array.isArray(plantelData) ? '' : plantelData.equipo)
+                   || _cfg.nombre || (slug.charAt(0).toUpperCase() + slug.slice(1));
+    document.title = `${nombreEquipo} — TribunApp`;
     document.getElementById('club-escudo').src = `escudos/${slug}.png`;
     document.getElementById('club-nombre').textContent = nombreEquipo.toUpperCase();
-    document.getElementById('club-sub').textContent = plantelData.grupo ? `GRUPO ${plantelData.grupo}` : '';
+    document.getElementById('club-sub').textContent = (!Array.isArray(plantelData) && plantelData.grupo) ? `GRUPO ${plantelData.grupo}` : '';
     document.getElementById('btn-tribunapp').href = `tribunapp-equipo.html?c=${slug}`;
 
-    // Aplicar color del equipo al CSS
-    colorEquipo = COLORES_EQUIPO[slug] || '#1565c0';
+    // Aplicar color del equipo al CSS (config de clubes / fallback)
+    colorEquipo = COLORES_EQUIPO[slug] || _cfg.color || '#1565c0';
     document.documentElement.style.setProperty('--acento', colorEquipo);
     // Calcular versión más clara para textos
     document.documentElement.style.setProperty('--acento-light', colorEquipo);
-    document.getElementById('plantel-sub').textContent = `${plantelData.jugadores.length} jugadores convocados`;
+    document.getElementById('plantel-sub').textContent = `${_jugs.length} jugadores convocados`;
     document.getElementById('stats-sub').textContent = nombreEquipo;
 
-    // Normalizar squad al formato interno {num, name, fid, posicion}
-    squad = plantelData.jugadores
-      .map(j => ({ num: j.numero, name: j.nombre, fid: j.fid, posicion: j.posicion || 'DEL' }))
-      .sort((a, b) => (a.num ?? 99) - (b.num ?? 99));
+    // Normalizar squad al formato interno {num, name, fid, posicion} — tolera
+    // ambos esquemas de campos (club: num/name/position; Mundial: numero/nombre/posicion)
+    squad = _jugs
+      .map(j => ({ num: (j.numero ?? j.num), name: (j.nombre ?? j.name), fid: j.fid, posicion: (j.posicion || j.position || 'DEL') }))
+      .sort((a, b) => ((Number(a.num) || 99) - (Number(b.num) || 99)));
 
     // Cargar estado_mundial.json para saber si puntajes está abierto y para qué partido
     try {
@@ -2523,94 +2559,266 @@ const NOMBRES_RIVAL = {
   capeverde:'Cabo Verde',newzealand:'Nueva Zelanda',uzbekistan:'Uzbekistán',
   drcongo:'RD Congo',bosniaandherzegovina:'Bosnia y Herz.',paraguay:'Paraguay',
 };
-const nbR = s => NOMBRES_RIVAL[s] || (s.charAt(0).toUpperCase()+s.slice(1));
+const nbR = s => NOMBRES_RIVAL[s]
+  || (typeof CLUBES_CONFIG !== 'undefined' && CLUBES_CONFIG[s] && (CLUBES_CONFIG[s].nombreCorto || CLUBES_CONFIG[s].nombre))
+  || (s.charAt(0).toUpperCase()+s.slice(1));
 
-let partidos_cargados = false;
+// ── Estadísticas: tabla FotMob agregada con filtros (fecha multi-suma / jugador / columna) ──
+// Catálogo maestro de columnas (schema rico de data/partidos: top/ataque/defensa/duelos
+// aplanados). Data-driven: solo se renderiza la columna si algún jugador tiene valor.
+const EQ_COLS = [
+  { key:'pj',                  label:'PJ' },
+  { key:'min',                 label:'Min' },
+  { key:'goles',               label:'G' },
+  { key:'asist',               label:'A' },
+  { key:'tiros_totales',       label:'Tiros' },
+  { key:'disparos_puerta',     label:'A puerta' },
+  { key:'oport_creadas',       label:'OcasC' },
+  { key:'grandes_oport',       label:'Gr.Oc' },
+  { key:'pases_precisos',      label:'Pases' },
+  { key:'acc_defensivas',      label:'Acc.Def' },
+  { key:'toques',              label:'Toq' },
+  { key:'toques_area',         label:'Toq.Ár' },
+  { key:'regates',             label:'Reg' },
+  { key:'pases_ultimo_tercio', label:'P.Últ⅓' },
+  { key:'tiros_largos',        label:'T.Larg' },
+  { key:'perdida_balon',       label:'Pérd' },
+  { key:'entradas',            label:'Entr' },
+  { key:'interceptaciones',    label:'Interc' },
+  { key:'recuperaciones',      label:'Recup' },
+  { key:'despejes',            label:'Desp' },
+  { key:'bloqueos',            label:'Bloq' },
+  { key:'regateado',           label:'Regd' },
+  { key:'ganados',             label:'DuelG' },
+  { key:'perdidos',            label:'DuelP' },
+  { key:'aereos',              label:'Aéreos' },
+  { key:'terrestres',          label:'Terr' },
+  { key:'faltas',              label:'Faltas' },
+  { key:'faltas_recibidas',    label:'F.Rec' },
+];
+
+let _eqData = null;   // [{p, data}] partidos del club (index + json), cacheado
+const _eqSt = { fechas:null, hiddenPlayers:null, hiddenCols:null, sortKey:'min', sortAsc:false };
+
+function _eqEl(tag, cls, txt){ const e=document.createElement(tag); if(cls)e.className=cls; if(txt!=null)e.textContent=txt; return e; }
+function _eqFoto(fid){ return fid ? `fotos/${slug}/${fid}.png` : 'fotos/sin-foto.png'; }
+function _eqNum(v){ // parsea número o fracción "a/b" (usa el numerador) para ordenar
+  if (v == null) return null;
+  if (typeof v === 'number') return v;
+  const s = String(v); if (s.includes('/')) return Number(s.split('/')[0]) || 0;
+  const n = Number(s); return isNaN(n) ? null : n;
+}
+
 async function loadPartidosStats() {
-  if (partidos_cargados) return;
   const wrap = document.getElementById('stats-partidos-lista');
   if (!wrap) return;
-
-  try {
-    const res = await fetch(`data/partidos/index.json?v=${Date.now()}`);
-    if (!res.ok) throw new Error();
-    const todos = await res.json();
-
-    // Filtrar partidos donde jugó este equipo
-    const misPartidos = todos.filter(p => p.local === slug || p.visitante === slug)
-      .sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
-
-    wrap.innerHTML = '';
-
-    if (!misPartidos.length) {
-      wrap.innerHTML = '<div class="pronto-msg">📊<br>PRÓXIMAMENTE<br><span style="font-size:11px;opacity:.6;">Disponible cuando comiencen los partidos</span></div>';
+  if (!_eqData) {
+    wrap.innerHTML = '<div class="loading-spinner"></div>';
+    try {
+      const res = await fetch(`data/partidos/index.json?v=${Date.now()}`);
+      if (!res.ok) throw new Error();
+      const todos = await res.json();
+      const mis = todos.filter(p => p.local === slug || p.visitante === slug)
+        .sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
+      if (!mis.length) {
+        wrap.innerHTML = '<div class="pronto-msg">📊<br>PRÓXIMAMENTE<br><span style="font-size:11px;opacity:.6;">Disponible cuando comiencen los partidos</span></div>';
+        return;
+      }
+      const datas = await Promise.all(mis.map(p =>
+        fetch(`data/partidos/${p.id}.json?v=${Date.now()}`).then(r=>r.ok?r.json():null).catch(()=>null)));
+      _eqData = mis.map((p,i) => ({ p, data: datas[i] })).filter(x => x.data);
+      if (!_eqData.length) { wrap.innerHTML = '<div class="pronto-msg">Error cargando partidos</div>'; return; }
+    } catch(e) {
+      wrap.innerHTML = '<div class="pronto-msg">Error cargando partidos</div>';
       return;
     }
-
-    // Card acumulado — entrada al overlay de stats acumuladas
-    {
-      const accTit = document.createElement('div');
-      accTit.innerHTML = `<div class="stats-section-title">Acumulado</div>`;
-      wrap.appendChild(accTit);
-
-      const accCard = document.createElement('div');
-      accCard.className = 'partido-card acumulado';
-      accCard.style.cursor = 'pointer';
-      accCard.innerHTML = `
-        <div class="pc-icon">📊</div>
-        <div class="pc-info">
-          <div class="pc-resultado">Torneo completo</div>
-          <div class="pc-comp">${misPartidos.length} partido${misPartidos.length!==1?'s':''} jugado${misPartidos.length!==1?'s':''}</div>
-        </div>
-        <div class="pc-arrow">›</div>`;
-      accCard.addEventListener('click', () => {
-        window._acumuladoPartidos = misPartidos;
-        openSection('acumulado');
-      });
-      wrap.appendChild(accCard);
-    }
-
-    // Cards de partidos individuales
-    const tituloP = document.createElement('div');
-    tituloP.innerHTML = `<div class="stats-section-title">Partidos</div>`;
-    wrap.appendChild(tituloP);
-
-    misPartidos.forEach(p => {
-      const esLocal   = p.local === slug;
-      const rival     = esLocal ? p.visitante : p.local;
-      const misGoles  = esLocal ? p.goles_local : p.goles_visitante;
-      const suyoGoles = esLocal ? p.goles_visitante : p.goles_local;
-      const resultado = misGoles > suyoGoles ? 'V' : misGoles < suyoGoles ? 'D' : 'E';
-      const resColor  = resultado==='V'?'#66bb6a':resultado==='D'?'#ef9a9a':'#f5c518';
-
-      const fecha = new Date(p.fecha+'T12:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'short'});
-
-      const card = document.createElement('a');
-      card.className = 'partido-card';
-      card.href = `estadisticas.html?p=${p.id}&c=${slug}`;
-      card.innerHTML = `
-        <div class="pc-escudos">
-          <img class="pc-escudo" src="escudos/${p.local}.png" alt="">
-          <span class="pc-sep">-</span>
-          <img class="pc-escudo" src="escudos/${p.visitante}.png" alt="">
-        </div>
-        <div class="pc-info">
-          <div class="pc-resultado">
-            ${escapeHtml(nbR(p.local).toUpperCase())}
-            <span class="pc-score">${p.goles_local} - ${p.goles_visitante}</span>
-            ${escapeHtml(nbR(p.visitante).toUpperCase())}
-          </div>
-          <div class="pc-comp">${escapeHtml(p.competicion)} · ${fecha}</div>
-        </div>
-        <div class="pc-arrow">›</div>`;
-      wrap.appendChild(card);
-    });
-
-    partidos_cargados = true;
-  } catch(e) {
-    const wrap2 = document.getElementById('stats-partidos-lista');
-    if(wrap2) wrap2.innerHTML = '<div class="pronto-msg">Error cargando partidos</div>';
+    _eqSt.fechas = new Set(_eqData.map(x => x.p.id));   // default: todos (acumulado)
+    _eqSt.hiddenPlayers = new Set();
+    _eqSt.hiddenCols = new Set();
   }
+  renderEqStats();
+}
+
+function renderEqStats() {
+  const wrap = document.getElementById('stats-partidos-lista');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+
+  const ids = _eqData.map(x => x.p.id);
+  _eqSt.fechas = new Set([..._eqSt.fechas].filter(id => ids.includes(id)));
+  if (!_eqSt.fechas.size) _eqSt.fechas = new Set(ids);
+
+  // ── Selector de partidos (multi-toggle que suma) ──
+  const fBlock = _eqEl('div','eqt-block');
+  fBlock.appendChild(_eqEl('div','eqt-label','Partidos · se suman los activos'));
+  const fBar = _eqEl('div','eqt-chiprow');
+  const allSel = _eqSt.fechas.size === ids.length;
+  const todas = _eqEl('div','eqt-fecha-tog todas'+(allSel?' active':''),'Todos');
+  todas.onclick = () => { _eqSt.fechas = allSel ? new Set([ids[0]]) : new Set(ids); renderEqStats(); };
+  fBar.appendChild(todas);
+  _eqData.forEach(({p}) => {
+    const esL = p.local === slug, rival = esL ? p.visitante : p.local;
+    const mg = esL ? p.goles_local : p.goles_visitante, sg = esL ? p.goles_visitante : p.goles_local;
+    const t = _eqEl('div','eqt-fecha-tog'+(_eqSt.fechas.has(p.id)?' active':''), `vs ${nbR(rival)} ${mg}-${sg}`);
+    t.onclick = () => {
+      const s = new Set(_eqSt.fechas);
+      if (s.has(p.id)) { if (s.size>1) s.delete(p.id); } else s.add(p.id);
+      _eqSt.fechas = s; renderEqStats();
+    };
+    fBar.appendChild(t);
+  });
+  fBlock.appendChild(fBar); wrap.appendChild(fBlock);
+
+  // ── Agregación de los partidos seleccionados ──
+  const rows = aggregateEq(_eqData.filter(x => _eqSt.fechas.has(x.p.id)));
+
+  // ── Chips de jugador y columna ──
+  renderEqPlayerChips(wrap, rows);
+  renderEqColChips(wrap, rows);
+
+  // ── Tabla ──
+  const vis = rows.filter(r => !_eqSt.hiddenPlayers.has(r.nombre));
+  if (!vis.length) { wrap.appendChild(_eqEl('div','pronto-msg','Ningún jugador seleccionado.')); return; }
+  wrap.appendChild(buildEqTable(vis));
+}
+
+// Agrega los jugadores (jugaron, sin DT) de los partidos dados, sumando campos.
+// Reusa accMergeSection/accSum y matchPlantel (fid/num del plantel).
+function aggregateEq(selected) {
+  const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').trim();
+  const mapa = {};
+  selected.forEach(({data}) => {
+    const esLocal = data.partido.local === slug;
+    const jugs = esLocal ? data.jugadores[data.partido.local] : data.jugadores[data.partido.visitante];
+    if (!jugs) return;
+    jugs.forEach(j => {
+      if (j.tipo === 'dt') return;
+      if ((j.min || 0) <= 0) return;
+      // Agrupar por el jugador del plantel (unifica grafías entre partidos:
+      // "Rodrigo Rey" vs "R. Rey"). Fallback: nombre normalizado.
+      const enP = matchPlantel(j.nombre, j.id);
+      const key = enP ? ('p' + (enP.fid ?? enP.name)) : ('n' + norm(j.nombre));
+      if (!mapa[key]) {
+        mapa[key] = { nombre: enP?.name || j.nombre, portero:j.portero, fid: enP?.fid ?? j.fid ?? null,
+                      num: enP?.num ?? j.num ?? '', pj:0, min:0, goles:0, asist:0,
+                      top:{}, ataque:{}, defensa:{}, duelos:{} };
+      }
+      const m = mapa[key];
+      if (!enP && (j.nombre||'').length > (m.nombre||'').length) m.nombre = j.nombre; // preferir nombre más completo
+      m.pj++; m.min += j.min||0; m.goles += j.goles||0; m.asist += j.asist||0;
+      accMergeSection(m.top, j.top); accMergeSection(m.ataque, j.ataque);
+      accMergeSection(m.defensa, j.defensa); accMergeSection(m.duelos, j.duelos);
+    });
+  });
+  // Aplanar secciones a un solo objeto por jugador
+  return Object.values(mapa).map(m => {
+    const flat = { nombre:m.nombre, fid:m.fid, num:m.num, portero:m.portero,
+                   pj:m.pj, min:m.min, goles:m.goles, asist:m.asist };
+    ['top','ataque','defensa','duelos'].forEach(sec => Object.assign(flat, m[sec]));
+    return flat;
+  });
+}
+
+function renderEqPlayerChips(wrap, rows) {
+  const nVis = rows.filter(r => !_eqSt.hiddenPlayers.has(r.nombre)).length;
+  const block = _eqEl('div','eqt-block');
+  block.appendChild(_eqEl('div','eqt-label',`Jugadores · ${nVis} de ${rows.length}`));
+  const bar = _eqEl('div','eqt-chiprow');
+  const bAll = _eqEl('div','eqt-mini-btn','Todos');
+  bAll.onclick = () => { _eqSt.hiddenPlayers = new Set(); renderEqStats(); };
+  const bNone = _eqEl('div','eqt-mini-btn','Ninguno');
+  bNone.onclick = () => { _eqSt.hiddenPlayers = new Set(rows.map(r=>r.nombre)); renderEqStats(); };
+  bar.appendChild(bAll); bar.appendChild(bNone);
+  rows.slice().sort((a,b)=>(b.min||0)-(a.min||0)).forEach(r => {
+    const on = !_eqSt.hiddenPlayers.has(r.nombre);
+    const chip = _eqEl('div','eqt-pchip'+(on?'':' off'));
+    const img = document.createElement('img'); img.className='pch-av'; img.src=_eqFoto(r.fid);
+    img.onerror = () => { img.style.visibility='hidden'; };
+    chip.appendChild(img);
+    chip.appendChild(_eqEl('span','pch-name', (r.nombre.split(/\s+/).filter(Boolean).slice(-1)[0]) || r.nombre));
+    chip.onclick = () => {
+      const s = new Set(_eqSt.hiddenPlayers);
+      if (s.has(r.nombre)) s.delete(r.nombre); else s.add(r.nombre);
+      _eqSt.hiddenPlayers = s; renderEqStats();
+    };
+    bar.appendChild(chip);
+  });
+  block.appendChild(bar); wrap.appendChild(block);
+}
+
+function renderEqColChips(wrap, rows) {
+  const present = EQ_COLS.filter(c => c.key==='pj' || rows.some(r => r[c.key] != null));
+  const block = _eqEl('div','eqt-block');
+  block.appendChild(_eqEl('div','eqt-label','Estadísticas · tocá para mostrar/ocultar'));
+  const bar = _eqEl('div','eqt-chiprow');
+  present.forEach(c => {
+    const on = !_eqSt.hiddenCols.has(c.key);
+    const chip = _eqEl('div','eqt-col-chip'+(on?'':' off'), c.label);
+    chip.onclick = () => {
+      const s = new Set(_eqSt.hiddenCols);
+      if (s.has(c.key)) s.delete(c.key); else s.add(c.key);
+      _eqSt.hiddenCols = s; renderEqStats();
+    };
+    bar.appendChild(chip);
+  });
+  block.appendChild(bar); wrap.appendChild(block);
+}
+
+function _eqSort(key) {
+  if (_eqSt.sortKey === key) _eqSt.sortAsc = !_eqSt.sortAsc;
+  else { _eqSt.sortKey = key; _eqSt.sortAsc = (key === 'nombre'); }
+  renderEqStats();
+}
+
+function buildEqTable(rows) {
+  const cols = EQ_COLS.filter(c =>
+    !_eqSt.hiddenCols.has(c.key) && (c.key==='pj' || rows.some(r => r[c.key] != null)));
+  let sortKey = _eqSt.sortKey;
+  if (sortKey !== 'nombre' && !cols.some(c => c.key === sortKey)) sortKey = 'min';
+
+  const sorted = rows.slice().sort((a,b) => {
+    if (sortKey === 'nombre') {
+      const r = (a.nombre||'').localeCompare(b.nombre||'');
+      return _eqSt.sortAsc ? r : -r;
+    }
+    const va = _eqNum(a[sortKey]), vb = _eqNum(b[sortKey]);
+    const na = va==null?-Infinity:va, nb = vb==null?-Infinity:vb;
+    return _eqSt.sortAsc ? na - nb : nb - na;
+  });
+
+  const wrap = _eqEl('div','eqt-table-wrap');
+  const table = _eqEl('table','eqt-table');
+  const thead = document.createElement('thead'); const trh = document.createElement('tr');
+  const thName = _eqEl('th','name-col','Jugador');
+  if (sortKey==='nombre') { thName.classList.add('sorted'); if(_eqSt.sortAsc) thName.classList.add('asc'); }
+  thName.onclick = () => _eqSort('nombre');
+  trh.appendChild(thName);
+  cols.forEach(c => {
+    const th = _eqEl('th', null, c.label);
+    if (sortKey===c.key) { th.classList.add('sorted'); if(_eqSt.sortAsc) th.classList.add('asc'); }
+    th.onclick = () => _eqSort(c.key);
+    trh.appendChild(th);
+  });
+  thead.appendChild(trh); table.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  sorted.forEach(r => {
+    const tr = document.createElement('tr');
+    const tdN = _eqEl('td','name-col');
+    const cell = _eqEl('div','eqt-name-cell');
+    const img = document.createElement('img'); img.src=_eqFoto(r.fid);
+    img.onerror = () => { img.style.visibility='hidden'; };
+    cell.appendChild(img);
+    cell.appendChild(_eqEl('span','nm', r.nombre));
+    tdN.appendChild(cell); tr.appendChild(tdN);
+    cols.forEach(c => {
+      const v = r[c.key];
+      tr.appendChild(_eqEl('td', null, (v==null || v==='') ? '—' : String(v)));
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody); wrap.appendChild(table);
+  return wrap;
 }
 
 // ── Acumulado de todos los partidos ──────────────────────────────────────────
