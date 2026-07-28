@@ -912,6 +912,8 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="js/config.js"></script>
 <script src="js/clubes.js"></script>
+<script src="js/club-colors.js"></script>
+<script src="js/kits.js"></script>
 <script>
 // ============================================================
 // CONFIG GLOBAL
@@ -1085,43 +1087,9 @@ function saveFeedLikes(obj) { try { localStorage.setItem(CLUB_SLUG + '_feed_like
 // ============================================================
 // KIT CHIPS — círculo con la identidad (camiseta) del club + número.
 // Reemplaza las fotos de los jugadores. Cada club puede declarar su
-// patrón en KITS; los que no lo tengan usan un sólido con su color.
+// KITS, clubKit, kitBackground y NUM_OUTLINE viven en js/kits.js (compartido con
+// estadisticas.html). Los clubes sin patrón definido usan un sólido con su color de escudo.
 // ============================================================
-const KITS = {
-  // Sarmiento de Junín — verde pleno
-  sarmiento:         { type: 'solid', colors: ['#1b8a3e'],            num: '#ffffff' },
-  // Argentinos Juniors — rojo con franja blanca diagonal (arriba-izq → abajo-der)
-  argentinosjuniors: { type: 'sash',  colors: ['#e12026', '#ffffff'], num: '#a20d12' },
-  // Atlético Tucumán — bastones verticales celestes y blancos (celeste del escudo)
-  atleticotucuman:   { type: 'stripesV', colors: ['#53b7e8', '#ffffff'], num: '#ffffff' },
-  // Independiente Rivadavia — azul oscuro / uva pleno (color del escudo)
-  independienterivadavia: { type: 'solid', colors: ['#291670'],       num: '#ffffff' },
-};
-
-function clubKit(slug) {
-  if (KITS[slug]) return KITS[slug];
-  const c = (typeof CLUBES_CONFIG !== 'undefined' && CLUBES_CONFIG[slug]) || {};
-  return { type: 'solid', colors: [c.color || '#444'], num: '#fff' };
-}
-
-// Devuelve el `background` CSS del kit, con anchos de bastón proporcionales al tamaño.
-function kitBackground(kit, size) {
-  const a = kit.colors[0], b = kit.colors[1] || '#ffffff';
-  const w = Math.max(4, Math.round(size / 6));
-  switch (kit.type) {
-    case 'stripesV': return `repeating-linear-gradient(90deg, ${a} 0 ${w}px, ${b} ${w}px ${2 * w}px)`;
-    case 'stripesH': return `repeating-linear-gradient(0deg, ${a} 0 ${w}px, ${b} ${w}px ${2 * w}px)`;
-    case 'halves':   return `linear-gradient(90deg, ${a} 0 50%, ${b} 50% 100%)`;
-    case 'band':     return `linear-gradient(0deg, ${a} 0 36%, ${b} 36% 64%, ${a} 64% 100%)`;
-    case 'sash':     return `linear-gradient(45deg, ${a} 0 42%, ${b} 42% 58%, ${a} 58% 100%)`;
-    default:         return a;
-  }
-}
-
-// Números siempre en blanco, con contorno oscuro para que se lean sobre cualquier
-// fondo (incluida la franja blanca de Argentinos).
-const NUM_OUTLINE = '-1px -1px 0 rgba(0,0,0,0.55),1px -1px 0 rgba(0,0,0,0.55),'
-  + '-1px 1px 0 rgba(0,0,0,0.55),1px 1px 0 rgba(0,0,0,0.55),0 2px 3px rgba(0,0,0,0.5)';
 
 // Chip circular: fondo = kit del club, número centrado (blanco con contorno).
 function kitChip(slug, num, size) {

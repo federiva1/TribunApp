@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kits — preview</title>
+  <style>
+    :root { color-scheme: dark; }
+    body { background: #0e1116; color: #e8eaed; font-family: 'Barlow Condensed', system-ui, sans-serif; margin: 0; padding: 24px; }
+    h1 { font-size: 20px; letter-spacing: 1px; text-transform: uppercase; margin: 0 0 4px; }
+    p.sub { color: #8b93a1; margin: 0 0 22px; font-size: 13px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(116px, 1fr)); gap: 20px 12px; }
+    .cell { text-align: center; }
+    .chip { width: 66px; height: 66px; border-radius: 50%; margin: 0 auto; border: 2px solid rgba(255,255,255,.9);
+            box-shadow: 0 2px 6px rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; box-sizing: border-box; }
+    .chip span { font-family: 'Bebas Neue', system-ui, sans-serif; font-weight: 800; font-size: 26px; color: #fff; }
+    .name { margin-top: 7px; font-size: 12.5px; letter-spacing: .3px; color: #cfd4dc; }
+    .auto { color: #6b7280; }
+    .auto::after { content: ' · auto'; color: #4b5563; font-size: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Kits de los clubes</h1>
+  <p class="sub">Preview en vivo desde <code>js/kits.js</code>. Los marcados "auto" usan el color del escudo (sin patrón definido aún).</p>
+  <div class="grid" id="grid"></div>
+
+  <script src="js/clubes.js"></script>
+  <script src="js/club-colors.js"></script>
+  <script src="js/kits.js"></script>
+  <script>
+    var slugs = Object.keys(CLUBES_CONFIG).sort(function (a, b) {
+      return (CLUBES_CONFIG[a].nombreCorto || a).localeCompare(CLUBES_CONFIG[b].nombreCorto || b, 'es');
+    });
+    var grid = document.getElementById('grid');
+    slugs.forEach(function (slug) {
+      var kit = clubKit(slug), defined = !!(KITS && KITS[slug]);
+      var cell = document.createElement('div'); cell.className = 'cell';
+      var chip = document.createElement('div'); chip.className = 'chip';
+      chip.style.background = kitBackground(kit, 66);
+      var n = document.createElement('span'); n.textContent = '10';
+      n.style.textShadow = NUM_OUTLINE;
+      chip.appendChild(n); cell.appendChild(chip);
+      var name = document.createElement('div');
+      name.className = 'name' + (defined ? '' : ' auto');
+      name.textContent = CLUBES_CONFIG[slug].nombreCorto || slug;
+      cell.appendChild(name); grid.appendChild(cell);
+    });
+  </script>
+</body>
+</html>

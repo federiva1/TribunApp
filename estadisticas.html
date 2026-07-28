@@ -364,6 +364,8 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
 </div>
 
 <script src="js/clubes.js"></script>
+<script src="js/club-colors.js"></script>
+<script src="js/kits.js"></script>
 <script src="js/match-live.js"></script>
 <script>
 const params  = new URLSearchParams(location.search);
@@ -405,31 +407,7 @@ function escapeHtml(s) {
   ));
 }
 
-// ── Kits de las fichas — MANTENER EN SYNC con KITS de club.html ────────────────
-const KITS = {
-  sarmiento:              { type: 'solid',    colors: ['#1b8a3e'] },
-  argentinosjuniors:      { type: 'sash',     colors: ['#e12026', '#ffffff'] },
-  atleticotucuman:        { type: 'stripesV', colors: ['#53b7e8', '#ffffff'] },
-  independienterivadavia: { type: 'solid',    colors: ['#291670'] },
-};
-const NUM_OUTLINE = '-1px -1px 0 rgba(0,0,0,0.55),1px -1px 0 rgba(0,0,0,0.55),-1px 1px 0 rgba(0,0,0,0.55),1px 1px 0 rgba(0,0,0,0.55),0 2px 3px rgba(0,0,0,0.5)';
-function clubKit(slug) {
-  if (KITS[slug]) return KITS[slug];
-  const c = _cfg(slug) || {};
-  return { type: 'solid', colors: [c.color || col(slug)] };
-}
-function kitBackground(kit, size) {
-  const a = kit.colors[0], b = kit.colors[1] || '#ffffff';
-  const w = Math.max(4, Math.round(size / 6));
-  switch (kit.type) {
-    case 'stripesV': return `repeating-linear-gradient(90deg, ${a} 0 ${w}px, ${b} ${w}px ${2 * w}px)`;
-    case 'stripesH': return `repeating-linear-gradient(0deg, ${a} 0 ${w}px, ${b} ${w}px ${2 * w}px)`;
-    case 'halves':   return `linear-gradient(90deg, ${a} 0 50%, ${b} 50% 100%)`;
-    case 'band':     return `linear-gradient(0deg, ${a} 0 36%, ${b} 36% 64%, ${a} 64% 100%)`;
-    case 'sash':     return `linear-gradient(45deg, ${a} 0 42%, ${b} 42% 58%, ${a} 58% 100%)`;
-    default:         return a;
-  }
-}
+// KITS, clubKit, kitBackground y NUM_OUTLINE viven en js/kits.js (compartido).
 // Color del kit legible como texto sobre fondo oscuro (aclara los colores muy oscuros).
 function accentColor(slug){
   const hex = clubKit(slug).colors[0];
