@@ -189,6 +189,46 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 <script>
 const LEAGUE = 128;
 
+// ── Promedios (descenso): totales CONGELADOS de 2024 + 2025 por equipo ──────────
+// El promedio del descenso 2026 es el coeficiente pts/PJ de las temporadas
+// 2024, 2025 y 2026. Las dos primeras ya terminaron: sus totales (puntos y PJ
+// jugados) son fijos y se guardan acá (fuente: promiedos.com.ar). El aporte del
+// 2026 se suma EN VIVO desde api-sports (tabla anual), así el promedio se
+// actualiza solo con cada fecha. Los ascendidos de 2026 no tienen historia (0/0).
+// ⚠️ Válido para la temporada 2026. En 2027 hay que recalcular (pasa a 25+26+27).
+const PROMEDIO_HIST = {
+  bocajuniors:              { pts: 129, pj: 73 },
+  riverplate:               { pts: 123, pj: 73 },
+  velezsarsfield:           { pts: 116, pj: 73 },
+  racingclub:               { pts: 123, pj: 73 },
+  argentinosjuniors:        { pts: 113, pj: 73 },
+  rosariocentral:           { pts: 113, pj: 73 },
+  independiente:            { pts: 110, pj: 73 },
+  estudiantes:              { pts: 105, pj: 73 },
+  lanus:                    { pts: 109, pj: 73 },
+  huracan:                  { pts: 109, pj: 73 },
+  talleres:                 { pts: 106, pj: 73 },
+  independienterivadavia:   { pts: 89,  pj: 73 },
+  barracascentral:          { pts: 98,  pj: 73 },
+  union:                    { pts: 99,  pj: 73 },
+  sanlorenzo:               { pts: 96,  pj: 73 },
+  gimnasiamendoza:          { pts: 0,   pj: 0  },
+  defensayjusticia:         { pts: 96,  pj: 73 },
+  belgrano:                 { pts: 86,  pj: 73 },
+  deportivoriestra:         { pts: 100, pj: 73 },
+  gimnasialp:               { pts: 86,  pj: 73 },
+  clubatleticoplatense:     { pts: 92,  pj: 73 },
+  instituto:                { pts: 87,  pj: 73 },
+  tigre:                    { pts: 88,  pj: 73 },
+  newellsoldboys:           { pts: 82,  pj: 73 },
+  centralcordobadesantiago: { pts: 84,  pj: 73 },
+  atleticotucuman:          { pts: 84,  pj: 73 },
+  banfield:                 { pts: 76,  pj: 73 },
+  sarmiento:                { pts: 70,  pj: 73 },
+  aldosivi:                 { pts: 33,  pj: 32 },
+  estudiantesderiocuarto:   { pts: 0,   pj: 0  }
+};
+
 // Estado del módulo
 let DATA = null;          // { zonaA, zonaB, anual, promedios, torneoLabel }
 let tab = 'actual';       // 'actual' | 'anual' | 'promedios'
@@ -257,11 +297,7 @@ function toRow(e) {
 //   - Anual          = suma de todas las competencias del año (Apertura + Clausura).
 //   - Promedios      = coeficiente pts/PJ sobre las últimas 3 temporadas (descenso).
 async function loadAll() {
-  const [s2026, s2025, s2024] = await Promise.all([
-    fetchSeason(2026),
-    fetchSeason(2025).catch(() => []),
-    fetchSeason(2024).catch(() => [])
-  ]);
+  const s2026 = await fetchSeason(2026);
   if (!s2026.length) throw new Error('sin datos 2026');
 
   // ── Torneo en curso ──
@@ -278,14 +314,15 @@ async function loadAll() {
   const anual = Object.values(accStats({}, s2026)).map(toRow)
     .sort((a, b) => b.points - a.points || b.goalsDiff - a.goalsDiff || b.all.goals.for - a.all.goals.for);
 
-  // ── Promedios (descenso): 3 temporadas ──
-  const acc3 = {};
-  accStats(acc3, s2026); accStats(acc3, s2025); accStats(acc3, s2024);
-  const en2026 = new Set();
-  s2026.forEach(g => g.forEach(t => en2026.add(t.team.id)));
-  const promedios = [...en2026].map(id => {
-    const e = acc3[id];
-    return { team: e.team, points: e.points, all: { played: e.played } };
+  // ── Promedios (descenso): histórico congelado (2024+2025) + 2026 en vivo ──
+  const promedios = anual.map(r => {
+    const slug = (typeof ESCUDO_MAP !== 'undefined' && ESCUDO_MAP[r.team.id]) || null;
+    const h = (slug && PROMEDIO_HIST[slug]) || { pts: 0, pj: 0 };
+    return {
+      team: r.team,
+      points: h.pts + r.points,
+      all: { played: h.pj + (r.all.played || 0) }
+    };
   }).sort((a, b) => (b.points / (b.all.played || 1)) - (a.points / (a.all.played || 1)));
 
   return { zonaA, zonaB, anual, promedios, torneoLabel };
