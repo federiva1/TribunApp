@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-0DN9D9L127"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-0DN9D9L127');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TribunApp — Tablas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --dark:  #0d0d1a;
+  --dark2: #13131f;
+  --celeste: #4fc3f7;
+  --celeste-dark: #1e88e5;
+  --verde: #2ad572;
+  --gold: #f5c518;
+  --rojo: #e53935;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: var(--dark); color: #fff; overflow-x: hidden; }
+
+/* ===== HEADER ===== */
+#site-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 18px 10px; gap: 12px;
+  background: linear-gradient(180deg, rgba(79,195,247,0.12) 0%, transparent 100%);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  position: sticky; top: 0; z-index: 50; backdrop-filter: blur(10px);
+}
+.logo-wrap { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.logo-wrap img { height: 52px; object-fit: contain; }
+.header-actions { display: flex; gap: 8px; align-items: center; }
+.header-pill {
+  display: flex; align-items: center; gap: 7px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px; padding: 7px 13px;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 0.5px;
+  color: rgba(255,255,255,0.85); cursor: pointer; text-decoration: none;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+.header-pill svg { width: 15px; height: 15px; flex-shrink: 0; }
+.header-pill:hover { background: rgba(79,195,247,0.16); border-color: rgba(79,195,247,0.45); color: #fff; }
+.header-pill.active { background: rgba(79,195,247,0.2); border-color: rgba(79,195,247,0.5); color: #fff; }
+.header-pill-label { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 0.5px; }
+@media (max-width: 620px) {
+  .header-pill-label { display: none; }
+  .header-pill { width: 36px; height: 36px; padding: 0; gap: 0; justify-content: center; }
+  .header-actions { gap: 6px; }
+}
+
+/* ===== MAIN ===== */
+#main { padding: 18px 14px 60px; max-width: 720px; margin: 0 auto; }
+.page-title { text-align: center; margin-bottom: 16px; }
+.page-title h1 { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 3px; color: #fff; }
+.page-title .sub { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 1px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+
+/* ===== TABS ===== */
+.tabs { display: flex; gap: 8px; justify-content: center; margin-bottom: 14px; flex-wrap: wrap; }
+.tab {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 600;
+  letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.6);
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px; padding: 9px 18px; cursor: pointer; transition: all 0.2s;
+}
+.tab:hover { color: #fff; border-color: rgba(255,255,255,0.25); }
+.tab.active { color: #fff; background: rgba(79,195,247,0.18); border-color: rgba(79,195,247,0.5); }
+
+/* ===== SUB-TABS (Zona A / Zona B) ===== */
+.subtabs { display: flex; gap: 8px; justify-content: center; margin-bottom: 14px; }
+.subtab {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 600;
+  letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.6);
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px; padding: 6px 18px; cursor: pointer; transition: all 0.2s;
+}
+.subtab:hover { color: #fff; border-color: rgba(255,255,255,0.25); }
+.subtab.active { color: #fff; background: rgba(30,136,229,0.22); border-color: rgba(79,195,247,0.55); }
+
+/* ===== TABLA ===== */
+.tabla-wrap { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; overflow: hidden; }
+.tabla-row {
+  display: grid; align-items: center; gap: 4px;
+  padding: 7px 10px; border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.tabla-row:last-child { border-bottom: none; }
+.tabla-head {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 1px;
+  color: rgba(255,255,255,0.4); text-transform: uppercase;
+  background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.tabla-body-row.top3 .col-rank { color: var(--gold); }
+.tabla-body-row.releg .col-rank { color: var(--rojo); }
+.tabla-body-row.link { cursor: pointer; text-decoration: none; color: inherit; transition: background 0.15s; }
+.tabla-body-row.link:hover { background: rgba(79,195,247,0.08); }
+/* divisor de clasificación (corte playoff / descenso) */
+.cut-divider { height: 0; border-top: 1px dashed rgba(79,195,247,0.4); margin: 0 10px; }
+.cut-divider.releg { border-top-color: rgba(229,57,53,0.45); }
+
+.col-rank  { font-family: 'Bebas Neue', sans-serif; font-size: 13px; color: rgba(255,255,255,0.35); text-align: center; }
+.col-esc   { display: flex; align-items: center; justify-content: center; }
+.col-esc img { width: 22px; height: 22px; object-fit: contain; }
+.col-name  { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; color: #ddd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.col-num   { font-family: 'Bebas Neue', sans-serif; font-size: 13px; text-align: center; color: #aaa; }
+.col-dg    { font-family: 'Bebas Neue', sans-serif; font-size: 13px; text-align: center; }
+.col-form  { display: flex; gap: 2px; justify-content: center; }
+.col-pts   { font-family: 'Bebas Neue', sans-serif; font-size: 16px; text-align: right; color: #fff; padding-right: 2px; }
+.form-chip { width: 15px; height: 15px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 9px; color: #fff; flex-shrink: 0; }
+.dg-pos { color: var(--verde); }
+.dg-neg { color: var(--rojo); }
+.dg-zero { color: #888; }
+
+/* Leyenda */
+.leyenda { display: flex; flex-wrap: wrap; gap: 10px 16px; justify-content: center; margin-top: 14px; font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 0.5px; color: rgba(255,255,255,0.45); }
+.leyenda .item { display: flex; align-items: center; gap: 6px; }
+.leyenda .dot { width: 10px; height: 10px; border-radius: 3px; }
+
+#loading-state { text-align: center; padding: 60px 20px; }
+.loading-msg { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 3px; color: rgba(255,255,255,0.25); }
+.empty-msg { text-align: center; padding: 40px 20px; color: rgba(255,255,255,0.35); font-family: 'Barlow Condensed', sans-serif; letter-spacing: 1px; }
+
+/* ---- Responsivo: en pantallas chicas ocultamos columnas secundarias ---- */
+@media (max-width: 480px) {
+  .col-hide-sm { display: none !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header id="site-header">
+  <a class="logo-wrap" href="index.html">
+    <img src="Logo.png" alt="TribunApp">
+  </a>
+  <div class="header-actions">
+    <a class="header-pill" href="fixture.html" data-help="Fixture: todos los partidos por fecha, con resultados y la ficha de cada partido.">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span class="header-pill-label">Fixture</span>
+    </a>
+    <a class="header-pill active" href="tablas.html" data-help="Tablas: posiciones del torneo en curso, tabla anual y promedios, en tiempo real.">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      <span class="header-pill-label">Tablas</span>
+    </a>
+    <a class="header-pill" href="estadisticas-torneo.html" data-help="Estadísticas del torneo: goleadores, asistidores y los datos de cada equipo y partido.">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span class="header-pill-label">Estadísticas</span>
+    </a>
+    <a class="header-pill" href="estadisticas-tribunapp.html" data-help="Estadísticas de la comunidad: las formaciones más votadas y los puntajes que los hinchas le pusieron a cada jugador.">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span class="header-pill-label">TribunApp</span>
+    </a>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main id="main">
+  <div class="page-title">
+    <h1>📊 Tabla de posiciones</h1>
+    <div class="sub" id="page-sub">Liga Profesional Argentina 2026 · en tiempo real</div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="actual" onclick="switchTab('actual', this)">Torneo actual</div>
+    <div class="tab" data-tab="anual" onclick="switchTab('anual', this)">Anual</div>
+    <div class="tab" data-tab="promedios" onclick="switchTab('promedios', this)">Promedios</div>
+  </div>
+
+  <!-- Zona A / Zona B (solo en tab actual) -->
+  <div class="subtabs" id="zona-subtabs">
+    <div class="subtab active" id="zona-btn-A" onclick="switchZona('A')">Zona A</div>
+    <div class="subtab" id="zona-btn-B" onclick="switchZona('B')">Zona B</div>
+  </div>
+
+  <div id="loading-state"><div class="loading-msg">CARGANDO TABLA...</div></div>
+  <div id="tabla-container" style="display:none;"></div>
+  <div id="leyenda" class="leyenda" style="display:none;"></div>
+</main>
+
+<script src="js/clubes.js"></script>
+<script src="js/ui-help.js"></script>
+<script>
+const LEAGUE = 128;
+const SEASON = 2026;
+
+// Estado del módulo
+let DATA = null;          // { zonaA, zonaB, anual, promedios, torneoLabel }
+let tab = 'actual';       // 'actual' | 'anual' | 'promedios'
+let zona = 'A';           // 'A' | 'B' — solo aplica al tab actual
+
+// ---- Helpers ----
+function slugFromId(id) { return (typeof ESCUDO_MAP !== 'undefined' && ESCUDO_MAP[id]) || null; }
+function nombreCorto(id, fallback) { return (typeof NOMBRE_CORTO_T !== 'undefined' && NOMBRE_CORTO_T[id]) || fallback || ('#' + id); }
+
+function formChip(c) {
+  const chip = document.createElement('div');
+  chip.className = 'form-chip';
+  const map = { W: ['#2e7d32', 'G'], D: ['#5c5c5c', 'E'], L: ['#b71c1c', 'P'] };
+  const [bg, label] = map[c] || ['#333', '·'];
+  chip.style.background = bg; chip.textContent = label;
+  return chip;
+}
+
+// ---- Fetch standings (proxy solo en prod; en local no existe y cae al catch) ----
+async function loadStandings() {
+  const res = await fetch(`/api/apisports/standings?league=${LEAGUE}&season=${SEASON}`, { cache: 'no-store' });
+  if (!res.ok) throw new Error('API ' + res.status);
+  const json = await res.json();
+  const standings = json.response && json.response[0] && json.response[0].league && json.response[0].league.standings;
+  if (!standings || standings.length < 2) throw new Error('Datos incompletos');
+
+  // La API de league=128 devuelve 4 grupos:
+  //   [0]=Zona A, [1]=Zona B (del torneo en curso), [2]=Anual, [3]=Promedios
+  let zonaA = standings[0], zonaB = standings[1];
+  const g0 = (standings[0][0] && standings[0][0].group || '').toLowerCase();
+  // Si el primer grupo es la Zona/Grupo B, invertimos para que A quede primero.
+  if (/\b(zona|grupo|group)\s*b\b/.test(g0)) {
+    [zonaA, zonaB] = [zonaB, zonaA];
+  }
+  // Etiqueta del torneo en curso (ej. "Clausura") a partir del nombre del grupo
+  const rawGroup = (standings[0][0] && standings[0][0].group) || '';
+  let torneoLabel = rawGroup.replace(/[-:]/g, ' ').replace(/zona\s*[ab]/ig, '').replace(/\s+/g, ' ').trim();
+  if (!torneoLabel) torneoLabel = (new Date().getMonth() + 1) <= 6 ? 'Apertura' : 'Clausura';
+
+  return {
+    zonaA, zonaB,
+    anual: standings[2] || [],
+    promedios: standings[3] || [],
+    torneoLabel
+  };
+}
+
+// ---- Definición de columnas por tipo de tabla ----
+// grid: rank | escudo | nombre | ...cols... | pts
+const LAYOUTS = {
+  actual:    { cols: '26px 26px 1fr 26px 24px 24px 24px 34px 78px 34px', cut: 8, cutType: 'playoff' },
+  anual:     { cols: '26px 26px 1fr 26px 24px 24px 24px 34px 34px',       cut: 0, cutType: null },
+  promedios: { cols: '26px 26px 1fr 34px 34px 60px',                       cut: 0, cutType: null }
+};
+
+function renderTable() {
+  const cont = document.getElementById('tabla-container');
+  const leyenda = document.getElementById('leyenda');
+  cont.innerHTML = '';
+
+  let teams, kind;
+  if (tab === 'actual') { teams = zona === 'A' ? DATA.zonaA : DATA.zonaB; kind = 'actual'; }
+  else if (tab === 'anual') { teams = DATA.anual; kind = 'anual'; }
+  else { teams = DATA.promedios; kind = 'promedios'; }
+
+  if (!teams || !teams.length) {
+    cont.innerHTML = '<div class="empty-msg">Todavía no hay datos para esta tabla.</div>';
+    leyenda.style.display = 'none';
+    return;
+  }
+
+  const layout = LAYOUTS[kind];
+  const wrap = document.createElement('div');
+  wrap.className = 'tabla-wrap';
+
+  // Encabezado
+  const head = document.createElement('div');
+  head.className = 'tabla-row tabla-head';
+  head.style.gridTemplateColumns = layout.cols;
+  if (kind === 'promedios') {
+    head.innerHTML =
+      '<div class="col-rank">#</div><div></div><div>Equipo</div>' +
+      '<div class="col-num">PJ</div><div class="col-num">Pts</div>' +
+      '<div style="text-align:right">Prom.</div>';
+  } else {
+    head.innerHTML =
+      '<div class="col-rank">#</div><div></div><div>Equipo</div>' +
+      '<div class="col-num">PJ</div><div class="col-num">G</div><div class="col-num">E</div><div class="col-num">P</div>' +
+      '<div class="col-num">DG</div>' +
+      (kind === 'actual' ? '<div class="col-num col-hide-sm">Forma</div>' : '') +
+      '<div style="text-align:right">Pts</div>';
+  }
+  wrap.appendChild(head);
+
+  teams.forEach((t, i) => {
+    // Divisor de corte (ej. top 8 clasifican a playoffs en el torneo actual)
+    if (layout.cut && i === layout.cut) {
+      const div = document.createElement('div');
+      div.className = 'cut-divider';
+      wrap.appendChild(div);
+    }
+
+    const slug = slugFromId(t.team.id);
+    const rank = t.rank || (i + 1);
+    const relegPos = kind === 'promedios' && i >= teams.length - 2; // últimos 2 = descenso
+
+    const row = document.createElement(slug ? 'a' : 'div');
+    row.className = 'tabla-row tabla-body-row' + (rank <= 3 ? ' top3' : '') + (relegPos ? ' releg' : '') + (slug ? ' link' : '');
+    row.style.gridTemplateColumns = layout.cols;
+    if (slug) row.href = `club.html?c=${slug}`;
+
+    const rankEl = document.createElement('div'); rankEl.className = 'col-rank'; rankEl.textContent = rank;
+
+    const escEl = document.createElement('div'); escEl.className = 'col-esc';
+    if (slug) {
+      const img = document.createElement('img');
+      img.src = `escudos/${slug}.png`; img.alt = t.team.name;
+      img.onerror = () => { img.style.opacity = '0.25'; };
+      escEl.appendChild(img);
+    }
+
+    const nameEl = document.createElement('div'); nameEl.className = 'col-name';
+    nameEl.textContent = nombreCorto(t.team.id, t.team.name);
+
+    row.appendChild(rankEl); row.appendChild(escEl); row.appendChild(nameEl);
+
+    if (kind === 'promedios') {
+      const pj = t.all && t.all.played || 0;
+      const avg = pj > 0 ? (t.points / pj).toFixed(3) : '—';
+      const pjEl = document.createElement('div'); pjEl.className = 'col-num'; pjEl.textContent = pj;
+      const ptsEl = document.createElement('div'); ptsEl.className = 'col-num'; ptsEl.textContent = t.points;
+      const avgEl = document.createElement('div'); avgEl.className = 'col-pts'; avgEl.textContent = avg;
+      row.appendChild(pjEl); row.appendChild(ptsEl); row.appendChild(avgEl);
+    } else {
+      const a = t.all || {};
+      const mk = v => { const d = document.createElement('div'); d.className = 'col-num'; d.textContent = (v == null ? 0 : v); return d; };
+      row.appendChild(mk(a.played));
+      row.appendChild(mk(a.win));
+      row.appendChild(mk(a.draw));
+      row.appendChild(mk(a.lose));
+
+      const dg = t.goalsDiff != null ? t.goalsDiff : 0;
+      const dgEl = document.createElement('div');
+      dgEl.className = 'col-dg ' + (dg > 0 ? 'dg-pos' : dg < 0 ? 'dg-neg' : 'dg-zero');
+      dgEl.textContent = dg > 0 ? '+' + dg : dg;
+      row.appendChild(dgEl);
+
+      if (kind === 'actual') {
+        const formEl = document.createElement('div'); formEl.className = 'col-form col-hide-sm';
+        (t.form || '').slice(-5).split('').forEach(c => formEl.appendChild(formChip(c)));
+        row.appendChild(formEl);
+      }
+
+      const ptsEl = document.createElement('div'); ptsEl.className = 'col-pts'; ptsEl.textContent = t.points;
+      row.appendChild(ptsEl);
+    }
+
+    wrap.appendChild(row);
+  });
+
+  cont.appendChild(wrap);
+
+  // Leyenda contextual
+  const items = [];
+  items.push({ color: 'var(--gold)', txt: 'Líderes' });
+  if (kind === 'actual') items.push({ color: 'rgba(79,195,247,0.7)', txt: 'Clasifican a playoffs (línea)' });
+  if (kind === 'promedios') items.push({ color: 'var(--rojo)', txt: 'Zona de descenso' });
+  leyenda.innerHTML = items.map(it =>
+    `<div class="item"><span class="dot" style="background:${it.color}"></span>${it.txt}</div>`
+  ).join('');
+  leyenda.style.display = 'flex';
+
+  if (window.UIHelp) window.UIHelp.refresh();
+}
+
+// ---- Navegación entre tabs ----
+function switchTab(t, btn) {
+  tab = t;
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  document.getElementById('zona-subtabs').style.display = (t === 'actual') ? 'flex' : 'none';
+  if (DATA) renderTable();
+}
+function switchZona(z) {
+  zona = z;
+  document.getElementById('zona-btn-A').classList.toggle('active', z === 'A');
+  document.getElementById('zona-btn-B').classList.toggle('active', z === 'B');
+  if (DATA) renderTable();
+}
+
+// ---- Init ----
+(async () => {
+  try {
+    DATA = await loadStandings();
+    document.getElementById('page-sub').textContent =
+      `Liga Profesional Argentina 2026 · ${DATA.torneoLabel || ''} · en tiempo real`.replace(' ·  ·', ' ·');
+    document.getElementById('loading-state').style.display = 'none';
+    document.getElementById('tabla-container').style.display = '';
+    renderTable();
+  } catch (e) {
+    console.error(e);
+    document.getElementById('loading-state').innerHTML =
+      '<div class="loading-msg">No se pudo cargar la tabla en vivo.</div>' +
+      '<div style="font-family:Barlow Condensed,sans-serif;font-size:12px;color:rgba(255,255,255,0.3);margin-top:8px;letter-spacing:1px;">Probá de nuevo en unos segundos.</div>';
+  }
+})();
+</script>
+</body>
+</html>
