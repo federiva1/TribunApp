@@ -175,10 +175,19 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .eqt-table th.sorted.asc::after { content:' ▴'; }
 .eqt-table td { padding:7px 5px; text-align:right; color:#ddd; border-bottom:1px solid rgba(255,255,255,0.04); white-space:nowrap; min-width:40px; }
 .eqt-table th.name-col, .eqt-table td.name-col { position:sticky; left:0; z-index:1; background:var(--dark2); box-shadow:1px 0 0 rgba(255,255,255,0.07); text-align:left; }
-.eqt-table td.name-col { min-width:150px; max-width:180px; color:#fff; }
+.eqt-table td.name-col { min-width:168px; max-width:210px; color:#fff; }
 .eqt-name-cell { display:flex; align-items:center; gap:8px; }
 .eqt-name-cell img { width:26px; height:26px; border-radius:50%; object-fit:cover; background:rgba(255,255,255,0.06); flex:0 0 auto; }
 .eqt-name-cell .nm { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+/* Tilde por jugador: tildado = activo (arriba), destildado = atenuado (abajo). */
+.eqt-tick { width:18px; height:18px; border-radius:50%; border:2px solid var(--acento); background:transparent; cursor:pointer; flex:0 0 auto; display:flex; align-items:center; justify-content:center; box-sizing:border-box; transition:all .12s; }
+.eqt-tick::after { content:'✓'; font-size:11px; line-height:1; color:transparent; }
+.eqt-tick.on { background:var(--acento); }
+.eqt-tick.on::after { color:#fff; }
+.eqt-tick.off { border-color:rgba(255,255,255,0.28); }
+.eqt-table tbody tr.eqt-dimmed td { color:rgba(255,255,255,0.3); }
+.eqt-table tbody tr.eqt-dimmed .kit-chip { opacity:.5; }
+.eqt-table tbody tr.eqt-dimmed .nm { color:rgba(255,255,255,0.4); }
 
 /* ===== PLANTEL ===== */
 .pos-seccion { margin-bottom: 24px; }
@@ -1217,7 +1226,9 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   window._showTeamPicker = _showTeamPicker;
 })();
 </script>
+<script src="js/club-colors.js"></script>
 <script src="js/clubes.js"></script>
+<script src="js/kits.js"></script>
 <script>
 (function() {
 'use strict';
@@ -2529,7 +2540,7 @@ async function init() {
 
   } catch(e) {
     document.getElementById('club-nombre').textContent = 'Error';
-    console.error('Error de inicialización');
+    console.error('Error de inicialización', e);
   }
 }
 
@@ -2603,7 +2614,22 @@ let _eqData = null;   // [{p, data}] partidos del club (index + json), cacheado
 const _eqSt = { fechas:null, hiddenPlayers:null, hiddenCols:null, sortKey:'min', sortAsc:false };
 
 function _eqEl(tag, cls, txt){ const e=document.createElement(tag); if(cls)e.className=cls; if(txt!=null)e.textContent=txt; return e; }
-function _eqFoto(fid){ return fid ? `fotos/${slug}/${fid}.png` : 'fotos/sin-foto.png'; }
+// Chip circular con el KIT del club (mismo diseño que formación/puntajes en club.html);
+// número centrado. clubKit/kitBackground/NUM_OUTLINE vienen de js/kits.js.
+function kitChip(clubSlug, num, size){
+  const kit = (typeof clubKit === 'function') ? clubKit(clubSlug) : { type:'solid', colors:['#444'] };
+  const wrap = document.createElement('div');
+  wrap.className = 'kit-chip';
+  wrap.style.cssText = `width:${size}px;height:${size}px;border-radius:50%;background:${kitBackground(kit,size)};`
+    + `display:flex;align-items:center;justify-content:center;flex-shrink:0;box-sizing:border-box;`
+    + `border:2px solid rgba(255,255,255,0.9);box-shadow:0 1px 3px rgba(0,0,0,0.45);`;
+  const n = document.createElement('span');
+  n.textContent = num || '';
+  n.style.cssText = `font-family:'Bebas Neue',sans-serif;font-size:${Math.round(size*0.54)}px;line-height:1;`
+    + `color:#fff;text-shadow:${typeof NUM_OUTLINE!=='undefined'?NUM_OUTLINE:'0 1px 2px #000'};`;
+  wrap.appendChild(n);
+  return wrap;
+}
 function _eqNum(v){ // parsea número o fracción "a/b" (usa el numerador) para ordenar
   if (v == null) return null;
   if (typeof v === 'number') return v;
@@ -2674,14 +2700,13 @@ function renderEqStats() {
   // ── Agregación de los partidos seleccionados ──
   const rows = aggregateEq(_eqData.filter(x => _eqSt.fechas.has(x.p.id)));
 
-  // ── Chips de jugador y columna ──
-  renderEqPlayerChips(wrap, rows);
+  // ── Controles (contador + todos/ninguno) y chips de columna ──
+  renderEqPlayerControls(wrap, rows);
   renderEqColChips(wrap, rows);
 
-  // ── Tabla ──
-  const vis = rows.filter(r => !_eqSt.hiddenPlayers.has(r.nombre));
-  if (!vis.length) { wrap.appendChild(_eqEl('div','pronto-msg','Ningún jugador seleccionado.')); return; }
-  wrap.appendChild(buildEqTable(vis));
+  // ── Tabla (todos los jugadores; los destildados van abajo, atenuados) ──
+  if (!rows.length) { wrap.appendChild(_eqEl('div','pronto-msg','Sin datos de jugadores.')); return; }
+  wrap.appendChild(buildEqTable(rows));
 }
 
 // Agrega los jugadores (jugaron, sin DT) de los partidos dados, sumando campos.
@@ -2721,30 +2746,19 @@ function aggregateEq(selected) {
   });
 }
 
-function renderEqPlayerChips(wrap, rows) {
-  const nVis = rows.filter(r => !_eqSt.hiddenPlayers.has(r.nombre)).length;
+// Solo contador + atajos Todos/Ninguno. El tildado por jugador vive en la tabla.
+function renderEqPlayerControls(wrap, rows) {
+  const nOn = rows.filter(r => !_eqSt.hiddenPlayers.has(r.nombre)).length;
   const block = _eqEl('div','eqt-block');
-  block.appendChild(_eqEl('div','eqt-label',`Jugadores · ${nVis} de ${rows.length}`));
   const bar = _eqEl('div','eqt-chiprow');
+  const lbl = _eqEl('div','eqt-label',`Jugadores · ${nOn} de ${rows.length}`);
+  lbl.style.margin = '0 6px 0 2px';
+  bar.appendChild(lbl);
   const bAll = _eqEl('div','eqt-mini-btn','Todos');
   bAll.onclick = () => { _eqSt.hiddenPlayers = new Set(); renderEqStats(); };
   const bNone = _eqEl('div','eqt-mini-btn','Ninguno');
   bNone.onclick = () => { _eqSt.hiddenPlayers = new Set(rows.map(r=>r.nombre)); renderEqStats(); };
   bar.appendChild(bAll); bar.appendChild(bNone);
-  rows.slice().sort((a,b)=>(b.min||0)-(a.min||0)).forEach(r => {
-    const on = !_eqSt.hiddenPlayers.has(r.nombre);
-    const chip = _eqEl('div','eqt-pchip'+(on?'':' off'));
-    const img = document.createElement('img'); img.className='pch-av'; img.src=_eqFoto(r.fid);
-    img.onerror = () => { img.style.visibility='hidden'; };
-    chip.appendChild(img);
-    chip.appendChild(_eqEl('span','pch-name', (r.nombre.split(/\s+/).filter(Boolean).slice(-1)[0]) || r.nombre));
-    chip.onclick = () => {
-      const s = new Set(_eqSt.hiddenPlayers);
-      if (s.has(r.nombre)) s.delete(r.nombre); else s.add(r.nombre);
-      _eqSt.hiddenPlayers = s; renderEqStats();
-    };
-    bar.appendChild(chip);
-  });
   block.appendChild(bar); wrap.appendChild(block);
 }
 
@@ -2778,7 +2792,7 @@ function buildEqTable(rows) {
   let sortKey = _eqSt.sortKey;
   if (sortKey !== 'nombre' && !cols.some(c => c.key === sortKey)) sortKey = 'min';
 
-  const sorted = rows.slice().sort((a,b) => {
+  const cmp = (a,b) => {
     if (sortKey === 'nombre') {
       const r = (a.nombre||'').localeCompare(b.nombre||'');
       return _eqSt.sortAsc ? r : -r;
@@ -2786,6 +2800,12 @@ function buildEqTable(rows) {
     const va = _eqNum(a[sortKey]), vb = _eqNum(b[sortKey]);
     const na = va==null?-Infinity:va, nb = vb==null?-Infinity:vb;
     return _eqSt.sortAsc ? na - nb : nb - na;
+  };
+  // Tildados arriba, destildados abajo (atenuados); dentro de cada grupo, por sortKey.
+  const sorted = rows.slice().sort((a,b) => {
+    const ao = _eqSt.hiddenPlayers.has(a.nombre) ? 1 : 0;
+    const bo = _eqSt.hiddenPlayers.has(b.nombre) ? 1 : 0;
+    return (ao !== bo) ? (ao - bo) : cmp(a,b);
   });
 
   const wrap = _eqEl('div','eqt-table-wrap');
@@ -2805,12 +2825,20 @@ function buildEqTable(rows) {
 
   const tbody = document.createElement('tbody');
   sorted.forEach(r => {
+    const off = _eqSt.hiddenPlayers.has(r.nombre);
     const tr = document.createElement('tr');
+    if (off) tr.className = 'eqt-dimmed';
     const tdN = _eqEl('td','name-col');
     const cell = _eqEl('div','eqt-name-cell');
-    const img = document.createElement('img'); img.src=_eqFoto(r.fid);
-    img.onerror = () => { img.style.visibility='hidden'; };
-    cell.appendChild(img);
+    const tick = _eqEl('div','eqt-tick'+(off?' off':' on'));
+    tick.title = off ? 'Mostrar jugador' : 'Ocultar jugador';
+    tick.onclick = () => {
+      const s = new Set(_eqSt.hiddenPlayers);
+      if (s.has(r.nombre)) s.delete(r.nombre); else s.add(r.nombre);
+      _eqSt.hiddenPlayers = s; renderEqStats();
+    };
+    cell.appendChild(tick);
+    cell.appendChild(kitChip(slug, r.num || '', 26));
     cell.appendChild(_eqEl('span','nm', r.nombre));
     tdN.appendChild(cell); tr.appendChild(tdN);
     cols.forEach(c => {
