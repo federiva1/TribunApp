@@ -163,8 +163,8 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 <!-- MAIN -->
 <main id="main">
   <div class="page-title">
-    <h1>📊 Tabla de posiciones</h1>
-    <div class="sub" id="page-sub">Liga Profesional Argentina 2026 · en tiempo real</div>
+    <h1>Tabla de posiciones</h1>
+    <div class="sub" id="page-sub">Liga Profesional Argentina 2026</div>
   </div>
 
   <div class="tabs">
@@ -188,7 +188,6 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 <script src="js/ui-help.js"></script>
 <script>
 const LEAGUE = 128;
-const SEASON = 2026;
 
 // Estado del módulo
 let DATA = null;          // { zonaA, zonaB, anual, promedios, torneoLabel }
@@ -208,33 +207,88 @@ function formChip(c) {
   return chip;
 }
 
-// ---- Fetch standings (proxy solo en prod; en local no existe y cae al catch) ----
-async function loadStandings() {
-  const res = await fetch(`/api/apisports/standings?league=${LEAGUE}&season=${SEASON}`, { cache: 'no-store' });
+// ---- Fetch standings de una temporada (proxy solo en prod) ----
+async function fetchSeason(season) {
+  const res = await fetch(`/api/apisports/standings?league=${LEAGUE}&season=${season}`, { cache: 'no-store' });
   if (!res.ok) throw new Error('API ' + res.status);
   const json = await res.json();
-  const standings = json.response && json.response[0] && json.response[0].league && json.response[0].league.standings;
-  if (!standings || standings.length < 2) throw new Error('Datos incompletos');
+  const resp = json.response && json.response[0];
+  return (resp && resp.league && resp.league.standings) || [];
+}
 
-  // La API de league=128 devuelve 4 grupos:
-  //   [0]=Zona A, [1]=Zona B (del torneo en curso), [2]=Anual, [3]=Promedios
-  let zonaA = standings[0], zonaB = standings[1];
-  const g0 = (standings[0][0] && standings[0][0].group || '').toLowerCase();
-  // Si el primer grupo es la Zona/Grupo B, invertimos para que A quede primero.
-  if (/\b(zona|grupo|group)\s*b\b/.test(g0)) {
-    [zonaA, zonaB] = [zonaB, zonaA];
-  }
-  // Etiqueta del torneo en curso (ej. "Clausura") a partir del nombre del grupo
-  const rawGroup = (standings[0][0] && standings[0][0].group) || '';
-  let torneoLabel = rawGroup.replace(/[-:]/g, ' ').replace(/zona\s*[ab]/ig, '').replace(/\s+/g, ' ').trim();
-  if (!torneoLabel) torneoLabel = (new Date().getMonth() + 1) <= 6 ? 'Apertura' : 'Clausura';
+// Nombre de grupo → { tour: 'apertura'|'clausura'|'', zona: 'A'|'B'|null }
+function parseGroup(name) {
+  const low = (name || '').toLowerCase();
+  const tm = low.match(/apertura|clausura/);
+  let zona = null;
+  if (/(group|zona|grupo)\s*b\b/.test(low)) zona = 'B';
+  else if (/(group|zona|grupo)\s*a\b/.test(low)) zona = 'A';
+  return { tour: tm ? tm[0] : '', zona };
+}
+function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
 
+// Suma las estadísticas de cada equipo a lo largo de varios grupos/temporadas.
+function accStats(map, groups) {
+  (groups || []).forEach(g => g.forEach(t => {
+    const a = t.all || {};
+    const e = map[t.team.id] || (map[t.team.id] = {
+      team: t.team, points: 0, played: 0, win: 0, draw: 0, lose: 0, gf: 0, ga: 0
+    });
+    e.points += t.points || 0;
+    e.played += a.played || 0;
+    e.win  += a.win  || 0;
+    e.draw += a.draw || 0;
+    e.lose += a.lose || 0;
+    e.gf += (a.goals && a.goals.for) || 0;
+    e.ga += (a.goals && a.goals.against) || 0;
+  }));
+  return map;
+}
+function toRow(e) {
   return {
-    zonaA, zonaB,
-    anual: standings[2] || [],
-    promedios: standings[3] || [],
-    torneoLabel
+    team: e.team, points: e.points, goalsDiff: e.gf - e.ga,
+    all: { played: e.played, win: e.win, draw: e.draw, lose: e.lose, goals: { for: e.gf, against: e.ga } }
   };
+}
+
+// La API de league=128 devuelve, en 2026, 4 grupos: Apertura A/B (terminado) y
+// Clausura A/B (en curso). Ya NO trae Anual ni Promedios como grupos: los armamos.
+//   - Torneo actual  = la última competencia con grupos (Clausura).
+//   - Anual          = suma de todas las competencias del año (Apertura + Clausura).
+//   - Promedios      = coeficiente pts/PJ sobre las últimas 3 temporadas (descenso).
+async function loadAll() {
+  const [s2026, s2025, s2024] = await Promise.all([
+    fetchSeason(2026),
+    fetchSeason(2025).catch(() => []),
+    fetchSeason(2024).catch(() => [])
+  ]);
+  if (!s2026.length) throw new Error('sin datos 2026');
+
+  // ── Torneo en curso ──
+  const parsed = s2026.map(g => ({ meta: parseGroup(g[0] && g[0].group), teams: g }));
+  const tours = [];
+  parsed.forEach(x => { if (x.meta.tour && !tours.includes(x.meta.tour)) tours.push(x.meta.tour); });
+  const current = tours[tours.length - 1] || '';
+  const curGroups = current ? parsed.filter(x => x.meta.tour === current) : parsed;
+  const zonaA = (curGroups.find(x => x.meta.zona === 'A') || curGroups[0] || {}).teams || [];
+  const zonaB = (curGroups.find(x => x.meta.zona === 'B') || curGroups[1] || {}).teams || [];
+  const torneoLabel = cap(current);
+
+  // ── Anual del año en curso ──
+  const anual = Object.values(accStats({}, s2026)).map(toRow)
+    .sort((a, b) => b.points - a.points || b.goalsDiff - a.goalsDiff || b.all.goals.for - a.all.goals.for);
+
+  // ── Promedios (descenso): 3 temporadas ──
+  const acc3 = {};
+  accStats(acc3, s2026); accStats(acc3, s2025); accStats(acc3, s2024);
+  const en2026 = new Set();
+  s2026.forEach(g => g.forEach(t => en2026.add(t.team.id)));
+  const promedios = [...en2026].map(id => {
+    const e = acc3[id];
+    return { team: e.team, points: e.points, all: { played: e.played } };
+  }).sort((a, b) => (b.points / (b.all.played || 1)) - (a.points / (a.all.played || 1)));
+
+  return { zonaA, zonaB, anual, promedios, torneoLabel };
 }
 
 // ---- Definición de columnas por tipo de tabla ----
@@ -383,9 +437,9 @@ function switchZona(z) {
 // ---- Init ----
 (async () => {
   try {
-    DATA = await loadStandings();
+    DATA = await loadAll();
     document.getElementById('page-sub').textContent =
-      `Liga Profesional Argentina 2026 · ${DATA.torneoLabel || ''} · en tiempo real`.replace(' ·  ·', ' ·');
+      'Liga Profesional Argentina 2026' + (DATA.torneoLabel ? ' · ' + DATA.torneoLabel : '');
     document.getElementById('loading-state').style.display = 'none';
     document.getElementById('tabla-container').style.display = '';
     renderTable();
