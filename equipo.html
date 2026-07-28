@@ -11,7 +11,7 @@
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Equipo — Mundial 2026</title>
+<title>Equipo — TribunApp</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
@@ -798,7 +798,6 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 <header id="site-header">
   <a class="logo-wrap" href="index.html">
     <img src="Logo.png" alt="TribunApp" style="height:56px;object-fit:contain;">
-    <span class="header-chip">Mundial 2026</span>
   </a>
   <div class="header-actions">
     <a class="header-pill" href="fixture.html">
@@ -812,10 +811,6 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
     <a class="header-pill" href="estadisticas-tribunapp.html">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       <span class="header-pill-label">TribunApp</span>
-    </a>
-    <a class="header-pill header-pill-jugar" href="index.html">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-      <span class="header-pill-label">Jugar</span>
     </a>
     <button id="auth-header-btn" onclick="window._authOpenModal()"></button>
   </div>
@@ -1672,7 +1667,7 @@ document.getElementById('download-pitch-btn').addEventListener('click', async ()
     ctx.fillStyle = 'rgba(255,255,255,0.4)';
     ctx.font = `bold ${Math.round(canvas.width * 0.04)}px sans-serif`;
     ctx.textAlign = 'right';
-    ctx.fillText(`Mi formación · ${nombreEquipo} · Mundial 2026`, canvas.width - 12, canvas.height - 12);
+    ctx.fillText(`Mi formación · ${nombreEquipo}`, canvas.width - 12, canvas.height - 12);
     const link = document.createElement('a');
     link.download = `mi-formacion-${slug}.png`;
     link.href = canvas.toDataURL('image/png'); link.click();
@@ -1728,7 +1723,7 @@ document.getElementById('formation-download-btn').addEventListener('click', asyn
     ctx.fillStyle = 'rgba(255,255,255,0.4)';
     ctx.font = `bold ${Math.round(canvas.width * 0.04)}px sans-serif`;
     ctx.textAlign = 'right';
-    ctx.fillText(`Mi formación · ${nombreEquipo} · Mundial 2026`, canvas.width - 12, canvas.height - 12);
+    ctx.fillText(`Mi formación · ${nombreEquipo}`, canvas.width - 12, canvas.height - 12);
     const link = document.createElement('a'); link.download = `mi-formacion-${slug}.png`; link.href = canvas.toDataURL('image/png'); link.click();
     showToast('Descargada!');
   } catch(e) { showToast('No se pudo generar.'); }
@@ -1831,7 +1826,7 @@ async function downloadFormacionResultados(el) {
     ctx.fillStyle = 'rgba(255,255,255,0.3)';
     ctx.font = `bold ${Math.round(canvas.width * 0.025)}px sans-serif`;
     ctx.textAlign = 'right';
-    ctx.fillText(`Formación más votada · ${nombreEquipo} · Mundial 2026`, canvas.width - 12, canvas.height - 10);
+    ctx.fillText(`Formación más votada · ${nombreEquipo}`, canvas.width - 12, canvas.height - 10);
     const link = document.createElement('a'); link.download = `formacion-votada-${slug}.png`; link.href = canvas.toDataURL('image/png'); link.click();
     showToast('Descargado!');
   } catch(e) { showToast('No se pudo generar.'); }
@@ -2337,7 +2332,7 @@ document.getElementById('scores-download-btn').addEventListener('click', async (
     ctx.fillStyle = 'rgba(255,255,255,0.3)';
     ctx.font = `bold ${Math.round(canvas.width * 0.025)}px sans-serif`;
     ctx.textAlign = 'right';
-    ctx.fillText(`Mis puntajes · ${nombreEquipo} · Mundial 2026`, canvas.width - 12, canvas.height - 10);
+    ctx.fillText(`Mis puntajes · ${nombreEquipo}`, canvas.width - 12, canvas.height - 10);
     const link = document.createElement('a'); link.download = `mis-puntajes-${slug}.png`; link.href = canvas.toDataURL('image/png'); link.click();
     showToast('Descargado!');
   } catch(e) { showToast('No se pudo generar.'); }
