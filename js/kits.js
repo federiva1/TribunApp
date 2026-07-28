@@ -41,7 +41,7 @@ var KITS = {
   sanlorenzo:               { type: 'stripesV', colors: ['#1f3d6b', '#d4232a'] },   // azulgrana
   talleres:                 { type: 'stripesV', colors: ['#2a3566', '#ffffff'] },
   tigre:                    { type: 'bandV',    colors: ['#182a8a', '#d4232a'] },   // azul | rojo | azul
-  velezsarsfield:           { type: 'svg', colors: ['#ffffff'], svg: "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M17 22 L50 76 L83 22 L67 22 L50 50 L33 22 Z' fill='%230c4f9e'/></svg>" },
+  velezsarsfield:           { type: 'svg', colors: ['#ffffff'], svg: "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M4 3 L50 78 L96 3 L70 3 L50 52 L30 3 Z' fill='%230c4f9e'/></svg>" },
 };
 
 // Kit del club; si no tiene uno definido, sólido con su color de escudo (club-colors.js).
@@ -64,7 +64,7 @@ function kitBackground(kit, size) {
     case 'bandV':    return 'linear-gradient(90deg, ' + a + ' 0 33%, ' + b + ' 33% 67%, ' + a + ' 67% 100%)';
     case 'sash':     return 'linear-gradient(45deg, ' + a + ' 0 42%, ' + b + ' 42% 58%, ' + a + ' 58% 100%)';
     case 'sashR':    return 'linear-gradient(-45deg, ' + a + ' 0 42%, ' + b + ' 42% 58%, ' + a + ' 58% 100%)';
-    case 'svg':      return (a || '#ffffff') + ' url("data:image/svg+xml,' + (kit.svg || '') + '") center/76% no-repeat';
+    case 'svg':      return (a || '#ffffff') + ' url("data:image/svg+xml,' + (kit.svg || '') + '") center/100% no-repeat';
     default:         return a;
   }
 }
