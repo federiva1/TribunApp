@@ -17,8 +17,17 @@ There is no build step, bundler, linter, or test suite. Development is direct fi
 Run from the project root:
 
 ```bash
-# Scrape player squads + photos for all 30 clubs from FotMob
+# Actualizar los planteles de los 30 clubes de la liga desde FotMob (num/name/fid/posición;
+# deja afuera a los sin número). Es la fuente recomendada — empaquetado como skill /actualizar-planteles.
+python scripts/fetch_planteles_liga.py                 # todos los clubes
+python scripts/fetch_planteles_liga.py --dry-run       # previsualiza sin escribir
+python scripts/fetch_planteles_liga.py velezsarsfield  # slugs puntuales (del app, sin guión)
+
+# (Legacy) Scrapear planteles + fotos (escribe slugs con guión; usar fetch_planteles_liga en su lugar)
 python scripts/scraper_planteles.py
+
+# Generar js/club-colors.js — color primario + alternativo de cada club (del escudo, con PIL)
+python scripts/extract_club_colors.py                  # todos (edita OVERRIDES para casos b/n)
 
 # Update rivalActual for each club in js/clubes.js (reads next fixtures from API)
 python scripts/fetch_proximos_partidos.py
@@ -141,10 +150,21 @@ Para los scripts Python hay un equivalente: `scripts/clubes_map.py` (slug → `{
   }
   ```
   El `fecha` viene del `league.round` de api-football (parseado del string "Apertura - 14"). Cuando el partido todavía no se jugó, `stats_partido` y `resultado` no están presentes (header básico solamente). `xG` se rellena sumando el xG individual cuando api-sports no lo provee (común en LPF).
-- **Player squads**: static JSON at `data/planteles/{slug}.json`. Fields: `num`, `name`, `fid`, `nationality`, `position`. **Pueden tener `num` duplicados** (ej AAAJ #10 = Lescano y Florentín, #17 = Paredes y Ferreira, #33 = Riquelme y Pérez) porque más de un jugador comparte número entre titular/suplente o por movimientos de plantel. La sección ESTADÍSTICAS desambigua cruzando con `partido.jugadores[].nombre` de FotMob.
-- **Player photos**: `fotos/{slug}/{fid}.png` — sourced via FotMob scraper.
+- **Player squads**: static JSON at `data/planteles/{slug}.json`. Fields: `num`, `name`, `fid`, `nationality`, `position`. **Pueden tener `num` duplicados** (ej AAAJ #10 = Lescano y Florentín) porque más de un jugador comparte número; la sección ESTADÍSTICAS desambigua cruzando con `partido.jugadores[].nombre` de FotMob. Se actualizan con `python scripts/fetch_planteles_liga.py` (fuente = FotMob, deja afuera a los sin número; skill `/actualizar-planteles`). Ojo: FotMob trae la plantilla completa (algunos clubes 40-52, incluye reserva/juveniles).
+- **Player photos**: `fotos/{slug}/{fid}.png` — legacy. La UI actual usa **kit chips** (círculo con el patrón/color del club, ver `js/kits.js`), no fotos, así que `fetch_planteles_liga.py` no las descarga.
 - **Community data**: read/written to Supabase. The `club` column (slug) differentiates the 30 teams.
 - **Puntajes gate**: `data/estado.json` — one entry per club with `{ puntajesOpen, rival, matchDate }`. Fetched by `club.html` with `cache: 'no-store'` on every load. Updated by GitHub Actions (see below).
+
+### Módulos JS compartidos (frontend liga)
+- **`js/kits.js`** — fuente ÚNICA de los kits (kit chips): `KITS` (patrón por club), `clubKit(slug)` (fallback = sólido con color de escudo), `kitBackground(kit, size)`, `NUM_OUTLINE`. La usan `club.html` (formación/puntajes) y `estadisticas.html` (avatares). `type`: solid | stripesV | stripesH | halves | band (franja horizontal) | bandV (franja vertical) | sash (diagonal ↘) | sashR (diagonal ↙) | svg (patrón vectorial embebido, ej. la 'V' de Vélez, con `center/100%`). `div` opcional = grosor de bastón (más alto = más finos). El número siempre blanco con contorno. **`kits-preview.html`** renderiza los 30 kits para revisarlos.
+- **`js/club-colors.js`** — `window.CLUB_COLORS = {slug:{primary,alt}}` (color de identidad de cada club, del escudo). Generado por `scripts/extract_club_colors.py`. Lo usa la barra de posesión del desplegable de stats en `fixture.html` con resolución de colisión (si los dos `primary` se parecen, usa el `alt` del visitante). **NO** es `CLUBES_CONFIG.color` (que es placeholder `#003087` en casi todos).
+- **`js/match-live.js`** — motor de la **ficha en vivo**: `window.buildPayloadLive(apiId)` fetchea api-sports (`fixtures?id` + `fixtures/lineups|events|statistics?fixture=`) y arma el MISMO schema que `data/partidos/{id}.json`. Slugs vía `ESCUDO_MAP[teamId]`. Regla de oro: **una sola fuente por momento** (en vivo = api-sports, al terminar = FotMob) para que los números coincidan.
+
+### fixture.html — ficha + stats inline por partido
+Cada card de partido que arrancó tiene **dos pestañas en la misma línea** que despliegan INLINE (comparten un `.ficha-panel`): **① "Ficha del partido"** (jugadores: titulares + "Ingresaron" con `▲min`, salidas `▼min`, goles arriba) y **② "Ver estadísticas del partido"** (stats globales: posesión con barra por color de club + xG/tiros/córners/pases). Estado en `_secOpen[fid]`, payload cacheado en `_fichaCache[fid]`, y `render()` reabre la sección activa con `_restoreSections()` (el poll en vivo de 60s no la cierra). `estadisticas.html` es la página completa (global + individual); `loadMatchData()` decide fuente (en curso/sin JSON → api-sports; terminado con JSON → FotMob). **Bug fix**: `actualizarEnVivo` cierra los partidos que figuran EN_CURSO pero ya salieron de `live=all` (traen su estado final por `fixtures?id=`), así no quedan "jugándose" para siempre.
+
+### Proxy api-sports — cache (`api/apisports.js`)
+El proxy pone `Cache-Control: no-store` a las queries de **fixtures en vivo** (`live`, `id` o `fixture` en la query) para que el CDN de Vercel no sirva datos viejos; el resto (standings/teams/players/listados) cachea 60s. Verificar con `curl -D -`: live = `no-store` + `X-Vercel-Cache: MISS`. **Lag de api-sports**: al terminar un partido el endpoint por-`id` marca FT al toque, pero los agregados (`league=`/`team=`) tardan → `liga.json` puede quedar viejo (parchear a mano por `api_id` si hace falta).
 
 ### Supabase tables
 - `formaciones(id, club, rival, match_date, jugadores, likes, dislikes, device_id, user_id, equipo_hincha)` — `jugadores` is a JSON array of player objects placed on pitch. Logged-in users populate `user_id` + `equipo_hincha`; guests use `device_id` (localStorage UUID).
