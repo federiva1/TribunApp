@@ -28,8 +28,20 @@ var KITS = {
   instituto:                { type: 'stripesV', colors: ['#e2181f', '#ffffff'] },
   banfield:                 { type: 'stripesV', colors: ['#2e8b40', '#ffffff'] },
   huracan:                  { type: 'bandV',    colors: ['#ffffff', '#e2231a'] },
-  clubatleticoplatense:     { type: 'sashR',    colors: ['#ffffff', '#6a4423'] },
+  clubatleticoplatense:     { type: 'solid',    colors: ['#6a4423'] },
   union:                    { type: 'stripesV', colors: ['#e11b22', '#ffffff'], div: 11 },
+
+  // Fecha 2 / correcciones
+  barracascentral:          { type: 'stripesV', colors: ['#d4232a', '#ffffff'] },
+  bocajuniors:              { type: 'band',     colors: ['#03448b', '#f4c300'] },
+  estudiantes:              { type: 'stripesV', colors: ['#e2181f', '#ffffff'] },
+  newellsoldboys:           { type: 'halves',   colors: ['#e2181f', '#141414'] },   // izq rojo, der negro
+  deportivoriestra:         { type: 'band',     colors: ['#ffffff', '#171717'] },   // franja horizontal negra
+  riverplate:               { type: 'sashR',    colors: ['#ffffff', '#e0142b'] },   // banda roja diagonal ↙
+  sanlorenzo:               { type: 'stripesV', colors: ['#1f3d6b', '#d4232a'] },   // azulgrana
+  talleres:                 { type: 'stripesV', colors: ['#2a3566', '#ffffff'] },
+  tigre:                    { type: 'bandV',    colors: ['#182a8a', '#d4232a'] },   // azul | rojo | azul
+  velezsarsfield:           { type: 'svg', colors: ['#ffffff'], svg: "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M17 22 L50 76 L83 22 L67 22 L50 50 L33 22 Z' fill='%230c4f9e'/></svg>" },
 };
 
 // Kit del club; si no tiene uno definido, sólido con su color de escudo (club-colors.js).
@@ -52,6 +64,7 @@ function kitBackground(kit, size) {
     case 'bandV':    return 'linear-gradient(90deg, ' + a + ' 0 33%, ' + b + ' 33% 67%, ' + a + ' 67% 100%)';
     case 'sash':     return 'linear-gradient(45deg, ' + a + ' 0 42%, ' + b + ' 42% 58%, ' + a + ' 58% 100%)';
     case 'sashR':    return 'linear-gradient(-45deg, ' + a + ' 0 42%, ' + b + ' 42% 58%, ' + a + ' 58% 100%)';
+    case 'svg':      return (a || '#ffffff') + ' url("data:image/svg+xml,' + (kit.svg || '') + '") center/76% no-repeat';
     default:         return a;
   }
 }
