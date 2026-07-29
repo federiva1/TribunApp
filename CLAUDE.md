@@ -23,6 +23,13 @@ python scripts/fetch_planteles_liga.py                 # todos los clubes
 python scripts/fetch_planteles_liga.py --dry-run       # previsualiza sin escribir
 python scripts/fetch_planteles_liga.py velezsarsfield  # slugs puntuales (del app, sin guión)
 
+# Rellenar los dorsales en blanco de los planteles cruzando con api-sports (players/squads).
+# FotMob a veces no lista el número de un jugador (queda ''); api-sports sí lo tiene para el
+# plantel actual. Solo completa vacíos, nunca pisa números existentes (matching por nombre).
+python scripts/backfill_plantel_nums.py --dry-run      # previsualiza
+python scripts/backfill_plantel_nums.py                # aplica a todos
+python scripts/backfill_plantel_nums.py independiente  # slugs puntuales
+
 # (Legacy) Scrapear planteles + fotos (escribe slugs con guión; usar fetch_planteles_liga en su lugar)
 python scripts/scraper_planteles.py
 
@@ -150,7 +157,7 @@ Para los scripts Python hay un equivalente: `scripts/clubes_map.py` (slug → `{
   }
   ```
   El `fecha` viene del `league.round` de api-football (parseado del string "Apertura - 14"). Cuando el partido todavía no se jugó, `stats_partido` y `resultado` no están presentes (header básico solamente). `xG` se rellena sumando el xG individual cuando api-sports no lo provee (común en LPF).
-- **Player squads**: static JSON at `data/planteles/{slug}.json`. Fields: `num`, `name`, `fid`, `nationality`, `position`. **Pueden tener `num` duplicados** (ej AAAJ #10 = Lescano y Florentín) porque más de un jugador comparte número; la sección ESTADÍSTICAS desambigua cruzando con `partido.jugadores[].nombre` de FotMob. Se actualizan con `python scripts/fetch_planteles_liga.py` (fuente = FotMob, deja afuera a los sin número; skill `/actualizar-planteles`). Ojo: FotMob trae la plantilla completa (algunos clubes 40-52, incluye reserva/juveniles).
+- **Player squads**: static JSON at `data/planteles/{slug}.json`. Fields: `num`, `name`, `fid`, `nationality`, `position`. **Pueden tener `num` duplicados** (ej AAAJ #10 = Lescano y Florentín) porque más de un jugador comparte número; la sección ESTADÍSTICAS desambigua cruzando con `partido.jugadores[].nombre` de FotMob. Se actualizan con `python scripts/fetch_planteles_liga.py` (fuente = FotMob, deja afuera a los sin número; skill `/actualizar-planteles`). Ojo: FotMob trae la plantilla completa (algunos clubes 40-52, incluye reserva/juveniles). **Dorsal faltante**: FotMob a veces no da el número → queda `num: ''` (antes había un bug que escribía el string `'None'`, ya corregido en `scraper_planteles.py` con `str(... or '')`). `scripts/backfill_plantel_nums.py` completa esos vacíos cruzando con api-sports `players/squads`. El frontend de stats descarta `''`/`'None'` y cae al número del partido.
 - **Player photos**: `fotos/{slug}/{fid}.png` — legacy. La UI actual usa **kit chips** (círculo con el patrón/color del club, ver `js/kits.js`), no fotos, así que `fetch_planteles_liga.py` no las descarga.
 - **Community data**: read/written to Supabase. The `club` column (slug) differentiates the 30 teams.
 - **Puntajes gate**: `data/estado.json` — one entry per club with `{ puntajesOpen, rival, matchDate }`. Fetched by `club.html` with `cache: 'no-store'` on every load. Updated by GitHub Actions (see below).
