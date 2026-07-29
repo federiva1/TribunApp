@@ -151,6 +151,10 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   color: #fff; text-align: center; margin-bottom: 4px;
 }
 .screen-sub { font-size: 11px; color: rgba(255,255,255,0.35); text-align: center; margin-bottom: 18px; }
+/* Escudo del club al lado del título ESTADÍSTICAS */
+.screen-title-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 4px; }
+.screen-title-row .screen-title { margin-bottom: 0; }
+.stats-escudo { width: 30px; height: 30px; object-fit: contain; flex: 0 0 auto; }
 
 /* ---- Tabla FotMob agregada (sección estadísticas) ---- */
 .eqt-block { margin-bottom: 12px; }
@@ -169,13 +173,13 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .eqt-mini-btn { flex:0 0 auto; padding:4px 9px; border-radius:12px; cursor:pointer; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.14); font-family:'Barlow Condensed',sans-serif; font-size:10px; letter-spacing:1px; color:rgba(255,255,255,0.6); text-transform:uppercase; user-select:none; }
 .eqt-table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; margin-top:4px; }
 .eqt-table { width:100%; border-collapse:collapse; font-family:'Barlow Condensed',sans-serif; font-size:12px; }
-.eqt-table th { font-size:9px; letter-spacing:1px; color:rgba(255,255,255,0.4); text-transform:uppercase; text-align:right; padding:8px 18px; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.1); white-space:nowrap; user-select:none; min-width:76px; }
+.eqt-table th { font-size:9px; letter-spacing:1px; color:rgba(255,255,255,0.4); text-transform:uppercase; text-align:right; padding:8px 12px; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.1); white-space:nowrap; user-select:none; min-width:58px; }
 .eqt-table th.sorted { color:var(--acento); }
 .eqt-table th.sorted::after { content:' ▾'; }
 .eqt-table th.sorted.asc::after { content:' ▴'; }
-.eqt-table td { padding:9px 18px; text-align:right; color:#fff; font-weight:600; border-bottom:1px solid rgba(255,255,255,0.04); white-space:nowrap; min-width:76px; }
-/* divisor sutil entre columnas de stats (no en la de Jugador) para separarlas */
-.eqt-table th:not(.name-col), .eqt-table td:not(.name-col) { border-left:1px solid rgba(255,255,255,0.05); }
+.eqt-table td { padding:8px 12px; text-align:right; color:#fff; font-weight:600; border-bottom:1px solid rgba(255,255,255,0.04); white-space:nowrap; min-width:58px; }
+/* líneas divisorias entre columnas de stats (no en la de Jugador), bien marcadas */
+.eqt-table th:not(.name-col), .eqt-table td:not(.name-col) { border-left:2px solid rgba(255,255,255,0.14); }
 .eqt-table th.name-col, .eqt-table td.name-col { position:sticky; left:0; z-index:1; background:var(--dark2); box-shadow:1px 0 0 rgba(255,255,255,0.07); text-align:left; }
 .eqt-table td.name-col { min-width:168px; max-width:210px; color:#fff; }
 .eqt-name-cell { display:flex; align-items:center; gap:8px; }
@@ -996,7 +1000,10 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 <div class="overlay-screen" id="estadisticas-screen">
 <div class="overlay-inner">
   <button class="back-btn" onclick="new URLSearchParams(location.search).get('s')==='estadisticas' ? (location.href='estadisticas-torneo.html') : closeSection('estadisticas')">← Volver</button>
-  <div class="screen-title">ESTADÍSTICAS</div>
+  <div class="screen-title-row">
+    <img id="stats-escudo" class="stats-escudo" alt="" onerror="this.style.display='none'">
+    <div class="screen-title">ESTADÍSTICAS</div>
+  </div>
   <div class="screen-sub" id="stats-sub">Rendimiento del equipo</div>
   <div id="stats-partidos-lista">
     <div class="loading-spinner"></div>
@@ -2489,6 +2496,8 @@ async function init() {
     document.documentElement.style.setProperty('--acento-light', colorEquipo);
     document.getElementById('plantel-sub').textContent = `${_jugs.length} jugadores convocados`;
     document.getElementById('stats-sub').textContent = nombreEquipo;
+    const _statsEsc = document.getElementById('stats-escudo');
+    if (_statsEsc) { _statsEsc.src = `escudos/${slug}.png`; _statsEsc.style.display = ''; }
 
     // Normalizar squad al formato interno {num, name, fid, posicion} — tolera
     // ambos esquemas de campos (club: num/name/position; Mundial: numero/nombre/posicion)
