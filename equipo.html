@@ -173,7 +173,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .eqt-table th.sorted { color:var(--acento); }
 .eqt-table th.sorted::after { content:' ▾'; }
 .eqt-table th.sorted.asc::after { content:' ▴'; }
-.eqt-table td { padding:7px 5px; text-align:right; color:#ddd; border-bottom:1px solid rgba(255,255,255,0.04); white-space:nowrap; min-width:40px; }
+.eqt-table td { padding:8px 10px; text-align:right; color:#fff; font-weight:600; border-bottom:1px solid rgba(255,255,255,0.04); white-space:nowrap; min-width:54px; }
 /* divisor sutil entre columnas de stats (no en la de Jugador) para separarlas */
 .eqt-table th:not(.name-col), .eqt-table td:not(.name-col) { border-left:1px solid rgba(255,255,255,0.05); }
 .eqt-table th.name-col, .eqt-table td.name-col { position:sticky; left:0; z-index:1; background:var(--dark2); box-shadow:1px 0 0 rgba(255,255,255,0.07); text-align:left; }
@@ -187,15 +187,9 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .eqt-tick.on { background:var(--acento); }
 .eqt-tick.on::after { color:#fff; }
 .eqt-tick.off { border-color:rgba(255,255,255,0.28); }
-/* Fila ACTIVA (tildada): fondo tinte del club + nombre en negrita + barra de acento. */
-.eqt-table tbody tr.eqt-on td { background:color-mix(in srgb, var(--acento) 14%, var(--dark2)); color:#fff; }
-.eqt-table tbody tr.eqt-on td.name-col { box-shadow:inset 3px 0 0 var(--acento), 1px 0 0 rgba(255,255,255,0.08); }
-.eqt-table tbody tr.eqt-on .nm { color:#fff; font-weight:700; }
-.eqt-table tbody tr.eqt-on:hover td { background:color-mix(in srgb, var(--acento) 20%, var(--dark2)); }
-/* Fila DESTILDADA: bien atenuada, al fondo. */
-.eqt-table tbody tr.eqt-dimmed td { color:rgba(255,255,255,0.24); }
-.eqt-table tbody tr.eqt-dimmed .kit-chip { opacity:.35; }
-.eqt-table tbody tr.eqt-dimmed .nm { color:rgba(255,255,255,0.3); font-weight:400; }
+/* Sin resaltado de fila activa. Destildada: sin números (se ocultan en JS), nombre atenuado. */
+.eqt-table tbody tr.eqt-dimmed .kit-chip { opacity:.4; }
+.eqt-table tbody tr.eqt-dimmed .nm { color:rgba(255,255,255,0.4); font-weight:400; }
 
 /* ===== PLANTEL ===== */
 .pos-seccion { margin-bottom: 24px; }
