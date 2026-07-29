@@ -88,6 +88,23 @@ def match_num(plantel_name: str, by_full: dict, by_last: dict):
     return None
 
 
+def fill_blanks(apisports_id: int, players: list[dict]) -> list[str]:
+    """Rellena IN-PLACE los `num` vacíos de `players` con el dorsal de api-sports
+    (players/squads). No pisa números existentes. Devuelve ['Nombre=num', ...] de
+    los rellenados. Reutilizable desde fetch_planteles_liga.py."""
+    blancos = [p for p in players if not str(p.get('num') or '').strip()]
+    if not blancos:
+        return []
+    by_full, by_last = build_index(api_squad(apisports_id))
+    filled = []
+    for p in blancos:
+        m = match_num(p.get('name', ''), by_full, by_last)
+        if m:
+            p['num'] = m[0]
+            filled.append(f"{p.get('name')}={m[0]}")
+    return filled
+
+
 def main() -> int:
     dry = '--dry-run' in sys.argv
     only = {a for a in sys.argv[1:] if not a.startswith('--')}
@@ -108,19 +125,11 @@ def main() -> int:
             continue
 
         try:
-            squad = api_squad(cfg['apisports'])
+            # fill_blanks muta el plantel en memoria; en dry-run no se persiste.
+            filled = fill_blanks(cfg['apisports'], plantel)
         except Exception as e:
             print(f'  ✗ {slug:26s} api-sports ERROR: {e}')
             continue
-        by_full, by_last = build_index(squad)
-
-        filled = []
-        for p in blancos:
-            m = match_num(p.get('name', ''), by_full, by_last)
-            if m:
-                if not dry:
-                    p['num'] = m[0]
-                filled.append(f"{p.get('name')}={m[0]}")
         left = len(blancos) - len(filled)
         total_fill += len(filled)
         total_blank_left += left
