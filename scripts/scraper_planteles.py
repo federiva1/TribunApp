@@ -106,7 +106,9 @@ def fetch_squad(team_id: int) -> list:
                 continue
             seen_ids.add(pid)
             players.append({
-                "num":         str(member.get("shirtNumber", "")),
+                # `.get(k, "")` NO cubre el caso clave-presente-con-valor-None:
+                # devolvería None y str(None) == 'None' (bug). El `or ""` lo evita.
+                "num":         str(member.get("shirtNumber") or ""),
                 "name":        member.get("name", ""),
                 "fid":         int(pid),
                 "nationality": member.get("ccode", ""),

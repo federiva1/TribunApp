@@ -2630,6 +2630,9 @@ function kitChip(clubSlug, num, size){
   wrap.appendChild(n);
   return wrap;
 }
+// Número de camiseta válido: descarta '', null y el string 'None' (bug viejo del
+// scraper de planteles). Devuelve '' si no es válido, para caer al del partido.
+function _eqNumOk(v){ const s=(v==null?'':String(v)).trim(); return (s && s.toLowerCase()!=='none') ? s : ''; }
 function _eqNum(v){ // parsea número o fracción "a/b" (usa el numerador) para ordenar
   if (v == null) return null;
   if (typeof v === 'number') return v;
@@ -2727,7 +2730,7 @@ function aggregateEq(selected) {
       const key = enP ? ('p' + (enP.fid ?? enP.name)) : ('n' + norm(j.nombre));
       if (!mapa[key]) {
         mapa[key] = { nombre: enP?.name || j.nombre, portero:j.portero, fid: enP?.fid ?? j.fid ?? null,
-                      num: enP?.num ?? j.num ?? '', pj:0, min:0, goles:0, asist:0,
+                      num: _eqNumOk(enP?.num) || _eqNumOk(j.num), pj:0, min:0, goles:0, asist:0,
                       top:{}, ataque:{}, defensa:{}, duelos:{} };
       }
       const m = mapa[key];
