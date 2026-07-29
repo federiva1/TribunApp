@@ -2853,6 +2853,8 @@ function buildEqTable(rows) {
     cell.appendChild(_eqEl('span','nm', r.nombre));
     tdN.appendChild(cell); tr.appendChild(tdN);
     cols.forEach(c => {
+      // Jugador destildado: se muestra solo el nombre; sin números de stats.
+      if (off) { tr.appendChild(_eqEl('td', null, '')); return; }
       const v = r[c.key];
       tr.appendChild(_eqEl('td', null, (v==null || v==='') ? '—' : String(v)));
     });
