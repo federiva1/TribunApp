@@ -1,0 +1,33 @@
+name: Liga Match Stats
+
+# Procesa los partidos FT de la Liga que aún no tienen stats individuales:
+# base (api-sports) + jugadores (FotMob) → data/partidos/{id}.json + index.json.
+# Idempotente: saltea los ya procesados (0 llamadas api para esos). Se auto-repara
+# si FotMob todavía no tenía los datos (reintenta en la próxima corrida).
+
+on:
+  schedule:
+    - cron: '0 */3 * * *'   # cada 3 h: capta partidos a medida que terminan (+ delay FotMob)
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Scrapear partidos FT de la Liga
+        env:
+          API_SPORTS_KEY: ${{ secrets.API_SPORTS_KEY }}
+        run: python scripts/fetch_liga_partidos.py --torneo clausura
+
+      - name: Commit stats de partidos
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'chore: stats de partidos de Liga [skip ci]'
+          file_pattern: 'data/partidos/*.json'

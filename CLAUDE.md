@@ -378,14 +378,16 @@ Fetched by `equipo.html` on load (with `?v=${Date.now()}` cache bust). Controls 
 | `fetch_mundial_standings.py` | api-sports standings | `data/partidos/standings.json` |
 | `fetch_mundial_estado.py --force` | lee mundial.json | `data/estado_mundial.json` |
 
-**Partidos de Liga en `data/partidos/`**: estos dos scripts sirven también para clubes de Liga (no solo Mundial). `fetch_mundial_match.py` resuelve el slug por **ID de api-sports** vía `js/clubes.js` (`team_slug`/`ID_SLUG`), así que:
+**Partidos de Liga en `data/partidos/` — batch recomendado**: `scripts/fetch_liga_partidos.py` procesa **todos los partidos FT de la Liga** de una (base api-sports + jugadores FotMob), idempotente:
 ```bash
-# 1. Base (lineup/eventos/top_stats) — league se infiere del fixture; pasar slugs locales + competición
-python scripts/fetch_mundial_match.py --fixture-id <id> --id estudiantes-independiente --local estudiantes --visitante independiente --competicion "Clausura 2026"
-# 2. Enriquecer jugadores (top/ataque/defensa/duelos) — URL FotMob del partido
-python scripts/scrape_fotmob_mundial.py --url "https://www.fotmob.com/matches/.../<matchId>" --id estudiantes-independiente
+python scripts/fetch_liga_partidos.py                 # FT de Clausura no procesados
+python scripts/fetch_liga_partidos.py --force         # reprocesa también los hechos
+python scripts/fetch_liga_partidos.py --date 2026-07-26
+python scripts/fetch_liga_partidos.py --limit 3       # probar
 ```
-La URL de FotMob se puede resolver bajando `fotmob.com/teams/{fotmob_id}/fixtures` (HTTP) y buscando el partido por fecha (el `fotmob_id` del club está en `scripts/clubes_map.py`; `resolve_fotmob_url()` sirve para Mundial pero lee `fotmob_id` del plantel, que los clubes no tienen). Partidos viejos de FotMob pueden no traer `playerStats` (el enrich queda con `top/ataque/... = null`, pero el lineup api-sports con min/goles/asist igual sirve para la tabla agregada).
+Resuelve la URL de FotMob por `fotmob_id` del club (los 30 están en `scripts/clubes_map.py`, sacados de la tabla FotMob de la liga). El id de salida es `{local_slug}-{visitante_slug}` con los slugs de `js/clubes.js` (ojo: Argentinos = `argentinosjuniors`, no `argentinos`). Automatizado por el workflow **`.github/workflows/liga-match-stats.yml`** (cada 3h; se auto-repara si FotMob todavía no tenía `playerStats`). El enrich mapea local/visitante por **fotmob_id** (robusto para clubes; evita bugs de grafía como "Newell's").
+
+Para casos puntuales/manuales siguen sirviendo `fetch_mundial_match.py --fixture-id ... --local ... --visitante ...` + `scrape_fotmob_mundial.py --url ... --id ...`. Partidos viejos de FotMob pueden no traer `playerStats` (el enrich queda con `top/ataque/... = null`, pero el lineup api-sports con min/goles/asist igual sirve para la tabla agregada).
 
 **Ventana de puntajes**: 24h desde el FT (no 48h como en liga). Configurado en `fetch_mundial_estado.py`.
 
