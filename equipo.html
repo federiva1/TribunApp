@@ -2629,8 +2629,10 @@ const EQ_COLS = [
   { key:'interceptaciones',    label:'Intercepciones',         group:'Defensivas' },
   { key:'recuperaciones',      label:'Recuperaciones',         group:'Defensivas' },
   { key:'despejes',            label:'Despejes',               group:'Defensivas' },
-  { key:'ganados',             label:'Duelos ganados',         group:'Defensivas' },
-  { key:'perdidos',            label:'Duelos perdidos',        group:'Defensivas' },
+  { key:'ganados',             label:'Duelos (gan-perd)',      group:'Defensivas',
+    custom: r => { const g=r.ganados, p=r.perdidos;
+      if ((g==null||g==='') && (p==null||p==='')) return '—';
+      return `${g ?? 0}-${p ?? 0}`; } },
   { key:'regateado',           label:'Veces regateado',        group:'Defensivas' },
   { key:'aereos',              label:'Duelos aéreos',          group:'Defensivas' },
   { key:'terrestres',          label:'Duelos terrestres',      group:'Defensivas' },
@@ -2809,11 +2811,14 @@ function renderEqColChips(wrap, rows) {
   EQ_GROUP_ORDER.forEach(g => {
     const gcols = present.filter(c => c.group === g);
     if (!gcols.length) return;
-    const anyOff = gcols.some(c => _eqSt.hiddenCols.has(c.key));
-    const chip = _eqEl('div','eqt-grp-chip'+(anyOff?' off':''), g);
+    // El chip solo se ve "apagado" cuando TODA la sección está oculta.
+    const allOff = gcols.every(c => _eqSt.hiddenCols.has(c.key));
+    const allOn  = gcols.every(c => !_eqSt.hiddenCols.has(c.key));
+    const chip = _eqEl('div','eqt-grp-chip'+(allOff?' off':''), g);
     chip.onclick = () => {
       const s = new Set(_eqSt.hiddenCols);
-      if (anyOff) gcols.forEach(c => s.delete(c.key)); else gcols.forEach(c => s.add(c.key));
+      if (allOn) gcols.forEach(c => s.add(c.key));      // todo visible → ocultar todo
+      else gcols.forEach(c => s.delete(c.key));          // parcial u oculto → mostrar todo
       _eqSt.hiddenCols = s; renderEqStats();
     };
     gbar.appendChild(chip);
