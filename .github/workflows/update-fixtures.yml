@@ -1,9 +1,8 @@
 name: Update Fixtures
 
 on:
-  # schedule desactivado — modo "compu prendida" únicamente
-  # schedule:
-  #   - cron: '0 9,21 * * *'
+  schedule:
+    - cron: '0 */2 * * *'   # cada 2 h: mantiene resultados/fixtures al día 24/7
   workflow_dispatch:
 
 jobs:
@@ -17,10 +16,13 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Fetch fixtures
+      - name: Fetch fixtures (por club + liga.json + copas.json)
         env:
           API_SPORTS_KEY: ${{ secrets.API_SPORTS_KEY }}
-        run: python scripts/fetch_fixtures.py
+        run: |
+          python scripts/fetch_fixtures.py
+          python scripts/fetch_liga_fixtures.py
+          python scripts/fetch_copas_fixtures.py
 
       - name: Commit updated fixtures
         uses: stefanzweifel/git-auto-commit-action@v5
