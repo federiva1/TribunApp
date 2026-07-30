@@ -166,6 +166,12 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .eqt-fecha-tog.todas { border-style:dashed; }
 .eqt-col-chip { flex:0 0 auto; padding:5px 10px; border-radius:14px; cursor:pointer; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); font-family:'Barlow Condensed',sans-serif; font-size:10px; letter-spacing:1px; color:#fff; white-space:nowrap; transition:all .15s; user-select:none; text-transform:uppercase; }
 .eqt-col-chip.off { background:transparent; color:rgba(255,255,255,0.28); border-color:rgba(255,255,255,0.06); }
+/* Chips de BLOQUE (grupo entero): prenden/apagan toda la sección. */
+.eqt-grp-chip { flex:0 0 auto; padding:6px 13px; border-radius:14px; cursor:pointer; background:var(--acento); border:1px solid var(--acento); font-family:'Barlow Condensed',sans-serif; font-size:11px; letter-spacing:1px; color:#fff; white-space:nowrap; transition:all .15s; user-select:none; text-transform:uppercase; font-weight:700; }
+.eqt-grp-chip.off { background:transparent; color:rgba(255,255,255,0.45); border-color:rgba(255,255,255,0.18); }
+/* Encabezados de bloque en la tabla (fila superior del thead). */
+.eqt-table tr.eqt-grp-row th.eqt-grp-hdr { text-align:center; font-size:9px; letter-spacing:1.5px; color:var(--acento); text-transform:uppercase; font-weight:700; cursor:default; padding:5px 8px; border-bottom:1px solid rgba(255,255,255,0.14); }
+.eqt-table tr.eqt-grp-row th.eqt-grp-none { color:transparent; }
 .eqt-pchip { flex:0 0 auto; display:flex; align-items:center; gap:6px; padding:3px 11px 3px 3px; border-radius:18px; cursor:pointer; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); transition:all .15s; user-select:none; }
 .eqt-pchip .pch-av { width:22px; height:22px; border-radius:50%; object-fit:cover; background:var(--acento); flex:0 0 auto; }
 .eqt-pchip .pch-name { font-family:'Barlow Condensed',sans-serif; font-size:12px; color:#fff; white-space:nowrap; }
@@ -2590,35 +2596,39 @@ const nbR = s => NOMBRES_RIVAL[s]
 // ── Estadísticas: tabla FotMob agregada con filtros (fecha multi-suma / jugador / columna) ──
 // Catálogo maestro de columnas (schema rico de data/partidos: top/ataque/defensa/duelos
 // aplanados). Data-driven: solo se renderiza la columna si algún jugador tiene valor.
+// Orden de los bloques (secciones tipo FotMob) para chips y encabezados.
+const EQ_GROUP_ORDER = ['Principales', 'Ofensivas', 'Defensivas', 'Pases'];
+// `group:null` = columna fija (PJ/Min): siempre visible, fuera de los bloques/chips.
 const EQ_COLS = [
-  { key:'pj',                  label:'Partidos jugados' },
-  { key:'min',                 label:'Minutos' },
-  { key:'goles',               label:'Goles' },
-  { key:'asist',               label:'Asistencias' },
-  { key:'tiros_totales',       label:'Tiros totales' },
-  { key:'disparos_puerta',     label:'Tiros al arco' },
-  { key:'oport_creadas',       label:'Ocasiones creadas' },
-  { key:'grandes_oport',       label:'Grandes ocasiones' },
-  { key:'pases_precisos',      label:'Pases precisos' },
-  { key:'acc_defensivas',      label:'Acciones defensivas' },
-  { key:'toques',              label:'Toques' },
-  { key:'toques_area',         label:'Toques en el área' },
-  { key:'regates',             label:'Regates' },
-  { key:'pases_ultimo_tercio', label:'Pases al último tercio' },
-  { key:'tiros_largos',        label:'Tiros largos' },
-  { key:'perdida_balon',       label:'Pérdidas de balón' },
-  { key:'entradas',            label:'Entradas' },
-  { key:'interceptaciones',    label:'Intercepciones' },
-  { key:'recuperaciones',      label:'Recuperaciones' },
-  { key:'despejes',            label:'Despejes' },
-  { key:'bloqueos',            label:'Bloqueos' },
-  { key:'regateado',           label:'Veces regateado' },
-  { key:'ganados',             label:'Duelos ganados' },
-  { key:'perdidos',            label:'Duelos perdidos' },
-  { key:'aereos',              label:'Duelos aéreos' },
-  { key:'terrestres',          label:'Duelos terrestres' },
-  { key:'faltas',              label:'Faltas cometidas' },
-  { key:'faltas_recibidas',    label:'Faltas recibidas' },
+  { key:'pj',                  label:'Partidos jugados',       group:null },
+  { key:'min',                 label:'Minutos',                group:null },
+  // Principales
+  { key:'goles',               label:'Goles',                  group:'Principales' },
+  { key:'asist',               label:'Asistencias',            group:'Principales' },
+  { key:'oport_creadas',       label:'Ocasiones creadas',      group:'Principales' },
+  // Ofensivas
+  { key:'tiros_totales',       label:'Tiros totales',          group:'Ofensivas' },
+  { key:'disparos_puerta',     label:'Tiros al arco',          group:'Ofensivas' },
+  { key:'regates',             label:'Regates',                group:'Ofensivas' },
+  { key:'toques_area',         label:'Toques en el área',      group:'Ofensivas' },
+  { key:'perdida_balon',       label:'Pérdidas de balón',      group:'Ofensivas' },
+  { key:'faltas_recibidas',    label:'Faltas recibidas',       group:'Ofensivas' },
+  // Defensivas
+  { key:'acc_defensivas',      label:'Acciones defensivas',    group:'Defensivas' },
+  { key:'interceptaciones',    label:'Intercepciones',         group:'Defensivas' },
+  { key:'recuperaciones',      label:'Recuperaciones',         group:'Defensivas' },
+  { key:'despejes',            label:'Despejes',               group:'Defensivas' },
+  { key:'ganados',             label:'Duelos ganados',         group:'Defensivas' },
+  { key:'perdidos',            label:'Duelos perdidos',        group:'Defensivas' },
+  { key:'regateado',           label:'Veces regateado',        group:'Defensivas' },
+  { key:'aereos',              label:'Duelos aéreos',          group:'Defensivas' },
+  { key:'terrestres',          label:'Duelos terrestres',      group:'Defensivas' },
+  { key:'faltas',              label:'Faltas cometidas',       group:'Defensivas' },
+  // Pases
+  { key:'toques',              label:'Toques',                 group:'Pases' },
+  { key:'pases_precisos',      label:'Pases precisos',         group:'Pases' },
+  { key:'pases_ultimo_tercio', label:'Pases al último tercio', group:'Pases' },
+  { key:'tiros_largos',        label:'Balones largos',         group:'Pases' },
 ];
 
 let _eqData = null;   // [{p, data}] partidos del club (index + json), cacheado
@@ -2777,10 +2787,30 @@ function renderEqPlayerControls(wrap, rows) {
 }
 
 function renderEqColChips(wrap, rows) {
-  const present = EQ_COLS.filter(c => c.key==='pj' || rows.some(r => r[c.key] != null));
+  // Solo columnas agrupadas (PJ/Min quedan siempre visibles, fuera de los bloques).
+  const present = EQ_COLS.filter(c => c.group && rows.some(r => r[c.key] != null));
+  if (!present.length) return;
   const block = _eqEl('div','eqt-block');
-  block.appendChild(_eqEl('div','eqt-label','Estadísticas · tocá para mostrar/ocultar'));
-  const bar = _eqEl('div','eqt-chiprow');
+  block.appendChild(_eqEl('div','eqt-label','Estadísticas · bloque completo o individual'));
+
+  // Fila 1: chips de BLOQUE — prenden/apagan todo el grupo de una.
+  const gbar = _eqEl('div','eqt-chiprow');
+  EQ_GROUP_ORDER.forEach(g => {
+    const gcols = present.filter(c => c.group === g);
+    if (!gcols.length) return;
+    const anyOff = gcols.some(c => _eqSt.hiddenCols.has(c.key));
+    const chip = _eqEl('div','eqt-grp-chip'+(anyOff?' off':''), g);
+    chip.onclick = () => {
+      const s = new Set(_eqSt.hiddenCols);
+      if (anyOff) gcols.forEach(c => s.delete(c.key)); else gcols.forEach(c => s.add(c.key));
+      _eqSt.hiddenCols = s; renderEqStats();
+    };
+    gbar.appendChild(chip);
+  });
+  block.appendChild(gbar);
+
+  // Fila 2: chips INDIVIDUALES.
+  const ibar = _eqEl('div','eqt-chiprow');
   present.forEach(c => {
     const on = !_eqSt.hiddenCols.has(c.key);
     const chip = _eqEl('div','eqt-col-chip'+(on?'':' off'), c.label);
@@ -2789,9 +2819,9 @@ function renderEqColChips(wrap, rows) {
       if (s.has(c.key)) s.delete(c.key); else s.add(c.key);
       _eqSt.hiddenCols = s; renderEqStats();
     };
-    bar.appendChild(chip);
+    ibar.appendChild(chip);
   });
-  block.appendChild(bar); wrap.appendChild(block);
+  block.appendChild(ibar); wrap.appendChild(block);
 }
 
 function _eqSort(key) {
@@ -2824,11 +2854,31 @@ function buildEqTable(rows) {
 
   const wrap = _eqEl('div','eqt-table-wrap');
   const table = _eqEl('table','eqt-table');
-  const thead = document.createElement('thead'); const trh = document.createElement('tr');
-  const thName = _eqEl('th','name-col','Jugador');
-  if (sortKey==='nombre') { thName.classList.add('sorted'); if(_eqSt.sortAsc) thName.classList.add('asc'); }
-  thName.onclick = () => _eqSort('nombre');
-  trh.appendChild(thName);
+  const thead = document.createElement('thead');
+
+  // Fila 1: encabezados de BLOQUE (colspan por grupo). Jugador ocupa las 2 filas.
+  const tr1 = document.createElement('tr'); tr1.className = 'eqt-grp-row';
+  const thJug = _eqEl('th','name-col','Jugador'); thJug.rowSpan = 2;
+  if (sortKey==='nombre') { thJug.classList.add('sorted'); if(_eqSt.sortAsc) thJug.classList.add('asc'); }
+  thJug.onclick = () => _eqSort('nombre');
+  tr1.appendChild(thJug);
+  const segs = [];
+  cols.forEach(c => {
+    const g = c.group || '';
+    const last = segs[segs.length-1];
+    if (last && last.g === g) last.n++; else segs.push({ g, n:1 });
+  });
+  segs.forEach(seg => {
+    const th = document.createElement('th');
+    th.className = 'eqt-grp-hdr' + (seg.g ? '' : ' eqt-grp-none');
+    th.colSpan = seg.n;
+    th.textContent = seg.g;
+    tr1.appendChild(th);
+  });
+  thead.appendChild(tr1);
+
+  // Fila 2: encabezados de columna (ordenables). Jugador ya lo cubre el rowspan.
+  const trh = document.createElement('tr');
   cols.forEach(c => {
     const th = _eqEl('th', null, c.label);
     if (sortKey===c.key) { th.classList.add('sorted'); if(_eqSt.sortAsc) th.classList.add('asc'); }

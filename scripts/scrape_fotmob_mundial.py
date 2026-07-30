@@ -66,6 +66,7 @@ ATAQUE_MAP = {
     'Successful dribbles':            'regates',
     'Passes into final third':        'pases_ultimo_tercio',
     'Key passes':                     'pases_ultimo_tercio',
+    'Accurate long balls':            'tiros_largos',
     'Dispossessed':                   'perdida_balon',
 }
 DEFENSA_MAP = {
