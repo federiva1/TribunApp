@@ -208,6 +208,10 @@ def build_partidos_json(raw: dict, local_slug: str, visitante_slug: str,
     visit_api_id   = away_id if home_is_local else home_id
 
     fecha   = fixture.get('date', '')[:10]
+    import re as _re
+    _round = fix.get('league', {}).get('round', '') or ''
+    _rm = _re.search(r'(\d+)\s*$', _round)
+    fecha_num = int(_rm.group(1)) if _rm else None   # nº de fecha (ej. "Clausura - 3" -> 3)
     estadio = fixture.get('venue', {}).get('name') or ''
     ciudad  = fixture.get('venue', {}).get('city') or ''
     if ciudad:
@@ -460,6 +464,7 @@ def build_partidos_json(raw: dict, local_slug: str, visitante_slug: str,
             'goles_local':     local_goals,
             'goles_visitante': visitante_goals,
             'fecha':           fecha,
+            'fecha_num':       fecha_num,
             'estadio':         estadio,
             'competicion':     competicion,
             'api_id':          str(fixture.get('id') or ''),
@@ -513,6 +518,7 @@ def save(payload: dict, output_id: str):
         'local':           p['local'],
         'visitante':       p['visitante'],
         'fecha':           p['fecha'],
+        'fecha_num':       p.get('fecha_num'),
         'goles_local':     p['goles_local'],
         'goles_visitante': p['goles_visitante'],
         'competicion':     p['competicion'],
