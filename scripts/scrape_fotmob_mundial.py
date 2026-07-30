@@ -414,12 +414,27 @@ def _enrich_payload_from_nd(nd: dict, payload: dict) -> dict:
     _sys = sys
     _sys.path.insert(0, str(ROOT / 'scripts'))
     from fetch_mundial_match import name_to_slug
-    fotmob_home_slug = name_to_slug(gen.get('homeTeam', {}).get('name') or '')
 
-    if fotmob_home_slug == local_slug:
-        local_team_id, visitante_team_id = home_id, away_id
+    # Mapeo local/visitante: para clubes de Liga usamos el fotmob_id (robusto, no
+    # depende de la grafía del nombre — ej. "Newell's"); para el Mundial, por nombre.
+    local_fotmob = None
+    try:
+        from clubes_map import CLUBES
+        local_fotmob = (CLUBES.get(local_slug) or {}).get('fotmob')
+    except Exception:
+        local_fotmob = None
+
+    if local_fotmob and local_fotmob in (home_id, away_id):
+        if local_fotmob == home_id:
+            local_team_id, visitante_team_id = home_id, away_id
+        else:
+            local_team_id, visitante_team_id = away_id, home_id
     else:
-        local_team_id, visitante_team_id = away_id, home_id
+        fotmob_home_slug = name_to_slug(gen.get('homeTeam', {}).get('name') or '')
+        if fotmob_home_slug == local_slug:
+            local_team_id, visitante_team_id = home_id, away_id
+        else:
+            local_team_id, visitante_team_id = away_id, home_id
 
     ps_local     = ps_by_team.get(local_team_id, {})
     ps_visitante = ps_by_team.get(visitante_team_id, {})
