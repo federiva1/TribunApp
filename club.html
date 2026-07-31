@@ -737,14 +737,14 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
         <div class="club-tile-sub" id="tile-puntaje-sub"></div>
       </div>
     </div>
-    <div class="club-tile" onclick="openSection('estad')">
+    <div class="club-tile" onclick="location.href='equipo.html?c='+encodeURIComponent(new URLSearchParams(location.search).get('c')||'')+'&s=estadisticas&from=club'">
       <div class="club-tile-icon">📊</div>
       <div class="club-tile-body">
         <div class="club-tile-title">ESTADÍSTICAS</div>
         <div class="club-tile-sub">Rendimiento por fecha</div>
       </div>
     </div>
-    <div class="club-tile" onclick="openSection('tribunapp')">
+    <div class="club-tile" onclick="location.href='tribunapp-equipo.html?c='+encodeURIComponent(new URLSearchParams(location.search).get('c')||'')+'&from=club'">
       <div class="club-tile-icon">👥</div>
       <div class="club-tile-body">
         <div class="club-tile-title">EST. TRIBUNAPP</div>

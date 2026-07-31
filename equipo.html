@@ -1014,7 +1014,7 @@ html.deep-stats #estadisticas-screen { display: block; }
 <!-- ===== OVERLAY: ESTADÍSTICAS ===== -->
 <div class="overlay-screen" id="estadisticas-screen">
 <div class="overlay-inner">
-  <button class="back-btn" onclick="new URLSearchParams(location.search).get('s')==='estadisticas' ? (location.href='estadisticas-torneo.html') : closeSection('estadisticas')">← Volver</button>
+  <button class="back-btn" onclick="(function(){var p=new URLSearchParams(location.search); if(p.get('from')==='club'){location.href='club.html?c='+encodeURIComponent(p.get('c')||'');} else if(p.get('s')==='estadisticas'){location.href='estadisticas-torneo.html';} else {closeSection('estadisticas');}})()">← Volver</button>
   <div class="screen-title-row">
     <img id="stats-escudo" class="stats-escudo" alt="" onerror="this.style.display='none'">
     <div class="screen-title">ESTADÍSTICAS</div>

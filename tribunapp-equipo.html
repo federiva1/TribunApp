@@ -164,7 +164,7 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
 </header>
 <div style="max-width:480px;margin:0 auto;background:var(--dark2,#0d111f);">
   <div style="padding:8px 16px 0;">
-    <a href="estadisticas-tribunapp.html" style="font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:1px;color:rgba(255,255,255,.5);text-decoration:none;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,.5)'">← Volver</a>
+    <a href="estadisticas-tribunapp.html" style="font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:1px;color:rgba(255,255,255,.5);text-decoration:none;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,.5)'" onclick="var p=new URLSearchParams(location.search); if(p.get('from')==='club'){location.href='club.html?c='+encodeURIComponent(p.get('c')||''); return false;}">← Volver</a>
   </div>
   <div style="display:flex;align-items:center;gap:10px;padding:6px 16px 8px;border-bottom:1px solid rgba(255,255,255,0.06);">
     <img id="h-escudo" src="" alt="" style="width:28px;height:28px;object-fit:contain;">
