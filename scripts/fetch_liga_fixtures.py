@@ -18,11 +18,8 @@ ROOT = Path(__file__).parent.parent
 OUT  = ROOT / 'data' / 'fixtures' / 'liga.json'
 LEAGUE, SEASON = 128, 2026
 
-try:
-    from apikey import get_api_key
-    API_KEY = get_api_key()
-except (Exception, SystemExit):
-    API_KEY = 'b8bbfc856fd5cf12cd7d697b2b01887d'  # fallback local
+from apikey import get_api_key
+API_KEY = get_api_key()   # env API_SPORTS_KEY o scripts/.apikey (gitignored); nunca hardcodeada
 
 # id api-sports -> slug, parseado de js/clubes.js (única fuente de verdad de los 30 clubes)
 def _slug_map():

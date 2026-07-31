@@ -24,11 +24,8 @@ OUT  = ROOT / 'data' / 'fixtures' / 'copas.json'
 SEASON = 2026
 COPAS = [('libertadores', 13), ('sudamericana', 11)]
 
-try:
-    from apikey import get_api_key
-    API_KEY = get_api_key()
-except (Exception, SystemExit):
-    API_KEY = 'b8bbfc856fd5cf12cd7d697b2b01887d'
+from apikey import get_api_key
+API_KEY = get_api_key()   # env API_SPORTS_KEY o scripts/.apikey (gitignored); nunca hardcodeada
 
 # Rondas de eliminación en orden + etiqueta en español
 KO_ORDER = ['Round of 32', 'Round of 16', 'Quarter-finals', 'Semi-finals', 'Final']
