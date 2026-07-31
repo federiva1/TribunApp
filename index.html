@@ -260,7 +260,7 @@ function renderGrid(slugs, containerId, opts) {
     a.href = `club.html?c=${slug}${opts.hrefExtra || ''}`;
     const rank = pos && pos[slug];
     a.innerHTML =
-      (rank ? `<span class="pos-badge">${rank}</span>` : '') +
+      (rank ? `<span class="pos-badge">${rank}°</span>` : '') +
       `<img class="escudo-img" src="escudos/${slug}.png" alt="${nombre}" onerror="this.style.opacity=0.3">` +
       `<div class="equipo-nombre">${nombre}</div>`;
     grid.appendChild(a);
