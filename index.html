@@ -109,9 +109,17 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .equipo-card {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 13px; padding: 13px 6px 11px; gap: 8px;
+  border-radius: 13px; padding: 13px 6px 11px; gap: 8px; position: relative;
   cursor: pointer; text-decoration: none;
   transition: background 0.16s, transform 0.14s, border-color 0.16s, box-shadow 0.16s;
+}
+/* nº de posición en la tabla, esquina del cuadro */
+.pos-badge {
+  position: absolute; top: 5px; left: 6px; min-width: 18px; height: 18px;
+  padding: 0 4px; box-sizing: border-box; border-radius: 5px;
+  background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.2); color: #fff;
+  font-family: 'Bebas Neue', sans-serif; font-size: 13px; line-height: 16px;
+  text-align: center; letter-spacing: 0.5px;
 }
 .equipo-card:hover { background: rgba(79,195,247,0.14); border-color: rgba(79,195,247,0.45); transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.35); }
 .equipo-card.lib:hover { background: rgba(27,94,32,0.2); border-color: rgba(102,187,106,0.5); }
@@ -252,7 +260,9 @@ function renderGrid(slugs, containerId, opts) {
     const a = document.createElement('a');
     a.className = 'equipo-card' + (opts.cls ? ' ' + opts.cls : '');
     a.href = `club.html?c=${slug}${opts.hrefExtra || ''}`;
+    const rank = pos && pos[slug];
     a.innerHTML =
+      (rank ? `<span class="pos-badge">${rank}</span>` : '') +
       `<img class="escudo-img" src="escudos/${slug}.png" alt="${nombre}" onerror="this.style.opacity=0.3">` +
       `<div class="equipo-nombre">${nombre}</div>`;
     grid.appendChild(a);
