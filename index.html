@@ -236,12 +236,17 @@ function nombreCorto(slug) {
   return (c && c.nombreCorto) || slug;
 }
 
-// Renderiza una grilla de equipos (ordenados alfabéticamente para encontrarlos rápido)
+// Renderiza una grilla de equipos. Por defecto alfabético; si se pasa opts.posMap
+// (slug -> posición en la tabla), ordena por posición (en tiempo real).
 function renderGrid(slugs, containerId, opts) {
   opts = opts || {};
   const grid = document.getElementById(containerId);
   grid.innerHTML = '';
-  const ordenados = slugs.slice().sort((a, b) => nombreCorto(a).localeCompare(nombreCorto(b), 'es'));
+  const pos = opts.posMap;
+  const ordenados = slugs.slice().sort((a, b) => {
+    if (pos && pos[a] != null && pos[b] != null) return pos[a] - pos[b];
+    return nombreCorto(a).localeCompare(nombreCorto(b), 'es');
+  });
   ordenados.forEach(slug => {
     const nombre = nombreCorto(slug);
     const a = document.createElement('a');
@@ -303,7 +308,7 @@ function renderCopaGrid(copaObj, cls, gridId, rondaId) {
   });
 }
 
-// Render inicial
+// Render inicial (alfabético hasta que lleguen las posiciones)
 renderGrid(ZONA_A, 'zonaA-grid');
 renderGrid(ZONA_B, 'zonaB-grid');
 (async () => {
@@ -312,6 +317,50 @@ renderGrid(ZONA_B, 'zonaB-grid');
   renderCopaGrid(copas.libertadores, 'lib', 'lib-grid', 'lib-ronda');
   renderCopaGrid(copas.sudamericana, 'sud', 'sud-grid', 'sud-ronda');
 })();
+
+// ── Ordenar cada zona por su posición en la tabla, en tiempo real ──
+// Standings del torneo en curso vía el proxy api-sports (solo prod). Si falla
+// (ej. local sin proxy) se mantiene el orden alfabético.
+const _LEAGUE = 128;
+function _slugDeId(id) { return (typeof ESCUDO_MAP !== 'undefined' && ESCUDO_MAP[id]) || null; }
+function _parseGrupo(name) {
+  const low = (name || '').toLowerCase();
+  const tm = low.match(/apertura|clausura/);
+  let z = null;
+  if (/(group|zona|grupo)\s*b\b/.test(low)) z = 'B';
+  else if (/(group|zona|grupo)\s*a\b/.test(low)) z = 'A';
+  return { tour: tm ? tm[0] : '', zona: z };
+}
+async function fetchPosiciones() {
+  try {
+    const res = await fetch(`/api/apisports/standings?league=${_LEAGUE}&season=2026`, { cache: 'no-store' });
+    if (!res.ok) return null;
+    const json = await res.json();
+    const resp = json.response && json.response[0];
+    const groups = (resp && resp.league && resp.league.standings) || [];
+    if (!groups.length) return null;
+    const parsed = groups.map(g => ({ meta: _parseGrupo(g[0] && g[0].group), teams: g }));
+    const tours = [];
+    parsed.forEach(x => { if (x.meta.tour && !tours.includes(x.meta.tour)) tours.push(x.meta.tour); });
+    const current = tours[tours.length - 1] || '';
+    const cur = current ? parsed.filter(x => x.meta.tour === current) : parsed;
+    const zA = (cur.find(x => x.meta.zona === 'A') || cur[0] || {}).teams || [];
+    const zB = (cur.find(x => x.meta.zona === 'B') || cur[1] || {}).teams || [];
+    const map = {};
+    const add = teams => teams.forEach((t, i) => { const s = _slugDeId(t.team.id); if (s) map[s] = t.rank || (i + 1); });
+    add(zA); add(zB);
+    return Object.keys(map).length ? map : null;
+  } catch (e) { return null; }
+}
+async function actualizarPosiciones() {
+  const pos = await fetchPosiciones();
+  if (pos) {
+    renderGrid(ZONA_A, 'zonaA-grid', { posMap: pos });
+    renderGrid(ZONA_B, 'zonaB-grid', { posMap: pos });
+  }
+}
+actualizarPosiciones();
+setInterval(actualizarPosiciones, 60000);   // refresco en vivo cada 60s
 document.getElementById('loading-state').style.display = 'none';
 document.getElementById('contenido').style.display = '';
 </script>
