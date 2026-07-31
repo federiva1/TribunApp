@@ -200,21 +200,28 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
 </div>
 
 <script src="js/config.js"></script>
+<script src="js/club-colors.js"></script>
+<script src="js/clubes.js"></script>
+<script src="js/kits.js"></script>
 <script>
-var NAMES_ES = {
-  czechia:'Chequia',mexico:'México',southafrica:'Sudáfrica',southkorea:'Corea del Sur',
-  bosniaandherzegovina:'Bosnia y Herz.',canada:'Canadá',qatar:'Qatar',switzerland:'Suiza',
-  brazil:'Brasil',haiti:'Haití',morocco:'Marruecos',scotland:'Escocia',
-  australia:'Australia',paraguay:'Paraguay',turkiye:'Turquía',usa:'Estados Unidos',
-  curacao:'Curazao',ecuador:'Ecuador',germany:'Alemania',ivorycoast:'Costa de Marfil',
-  japan:'Japón',netherlands:'Países Bajos',sweden:'Suecia',tunisia:'Túnez',
-  belgium:'Bélgica',egypt:'Egipto',iran:'Irán',newzealand:'Nueva Zelanda',
-  capeverde:'Cabo Verde',saudiarabia:'Arabia Saudita',spain:'España',uruguay:'Uruguay',
-  france:'Francia',iraq:'Irak',norway:'Noruega',senegal:'Senegal',
-  algeria:'Argelia',argentina:'Argentina',austria:'Austria',jordan:'Jordania',
-  colombia:'Colombia',drcongo:'Rep. D. del Congo',portugal:'Portugal',uzbekistan:'Uzbekistán',
-  croatia:'Croacia',england:'Inglaterra',ghana:'Ghana',panama:'Panamá'
-};
+// Nombres de los clubes (de CLUBES_CONFIG). Sin rastro de selecciones del Mundial.
+var NAMES_ES = {};
+var NAME_TO_SLUG = {};
+function _norm(s) { return String(s == null ? '' : s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, ''); }
+if (typeof CLUBES_CONFIG !== 'undefined') Object.keys(CLUBES_CONFIG).forEach(function(s){
+  var c = CLUBES_CONFIG[s];
+  NAMES_ES[s] = c.nombreCorto || c.nombre;
+  [c.nombre, c.nombreCorto, s].forEach(function(n){ if (n) NAME_TO_SLUG[_norm(n)] = s; });
+});
+// El rival en estado.json / Supabase es un NOMBRE api-sports; resolverlo a slug para el escudo.
+function rivalSlug(name) {
+  if (!name) return '';
+  var n = _norm(name);
+  if (NAME_TO_SLUG[n]) return NAME_TO_SLUG[n];
+  var hit = '';
+  Object.keys(NAME_TO_SLUG).forEach(function(k){ if (!hit && k.length >= 4 && (n.indexOf(k) === 0 || k.indexOf(n) === 0)) hit = NAME_TO_SLUG[k]; });
+  return hit;
+}
 
 var params = new URLSearchParams(location.search);
 var slug = params.get('c');
@@ -231,12 +238,45 @@ document.getElementById('h-nombre').textContent = (NAMES_ES[slug] || slug).toUpp
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 function fidNum(f) { var n = String(f == null ? '' : f).replace(/[^0-9]/g, ''); return n; }
 
+// Avatar = KIT del club (como el resto de la app), con el dorsal centrado.
+var _KIT = (typeof clubKit === 'function') ? clubKit(slug) : { type:'solid', colors:['#444'] };
+function kitAv(num, cls, size) {
+  var bg = (typeof kitBackground === 'function') ? kitBackground(_KIT, size) : (_KIT.colors[0] || '#444');
+  var out = (typeof NUM_OUTLINE !== 'undefined') ? NUM_OUTLINE : '0 1px 2px #000';
+  var txt = (num != null && num !== '') ? esc(num) : '';
+  return '<div class="' + cls + '" style="background:' + bg + ';display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.85);box-sizing:border-box;">' +
+    '<span style="font-family:\'Bebas Neue\',sans-serif;font-size:' + Math.round(size * 0.5) + 'px;line-height:1;color:#fff;text-shadow:' + out + ';">' + txt + '</span></div>';
+}
+
+// Los puntajes de Supabase se keyean por el ID de jugador del partido FotMob
+// (data/partidos/{id}.json → jugadores[slug][].id), NO por dorsal. Este mapa
+// resuelve ese id → { name, num, tipo } leyendo los partidos del club.
+var PUNT_LOOKUP = {};
+async function buildPuntLookup(slug) {
+  try {
+    var idx = await fetch('data/partidos/index.json?v=' + Date.now()).then(function(r){ return r.ok ? r.json() : []; });
+    var mine = (idx || []).filter(function(e){ return e.local === slug || e.visitante === slug; });
+    await Promise.all(mine.map(async function(e) {
+      try {
+        var d = await fetch('data/partidos/' + e.id + '.json?v=' + Date.now()).then(function(r){ return r.ok ? r.json() : null; });
+        var jug = d && d.jugadores && d.jugadores[slug];
+        if (!Array.isArray(jug)) return;
+        jug.forEach(function(j) {
+          if (j.id == null) return;
+          var k = String(j.id);
+          if (!PUNT_LOOKUP[k]) PUNT_LOOKUP[k] = { name: j.nombre, num: j.num || '', tipo: j.tipo || '' };
+        });
+      } catch(e2) {}
+    }));
+  } catch(e) {}
+}
+
 function calcFormaciones(rows) {
   var counts = {}, total = rows.length;
   rows.forEach(function(r) {
     (r.jugadores || []).forEach(function(j) {
       var k = j.name || ('#' + j.num);
-      if (!counts[k]) counts[k] = { name: k, fid: j.fid || 0, count: 0 };
+      if (!counts[k]) counts[k] = { name: k, fid: j.fid || 0, num: j.num, count: 0 };
       counts[k].count++;
     });
   });
@@ -285,7 +325,7 @@ function renderFormList(players, container) {
   wrap.appendChild(hdr);
   players.forEach(function(p) {
     var row = document.createElement('div'); row.className = 'form-row';
-    var foto = fidNum(p.fid) ? '<img class="form-row-foto" src="fotos/' + fidNum(p.fid) + '.png" alt="" onerror="this.style.opacity=\'.2\'">' : '<div class="form-row-foto"></div>';
+    var foto = kitAv(p.num, 'form-row-foto', 30);
     row.innerHTML = foto +
       '<div class="form-row-name">' + esc(p.name) + '</div>' +
       '<div class="form-row-votes">' + p.count + ' voto' + (p.count !== 1 ? 's' : '') + '</div>' +
@@ -296,17 +336,27 @@ function renderFormList(players, container) {
   container.appendChild(wrap);
 }
 
-function esDT(num) { return num === '' || num == null || String(num) === '0'; }
+// `num` acá es la KEY del puntaje (id de jugador FotMob del partido). Se resuelve
+// primero vía PUNT_LOOKUP (data/partidos); fallback a dorsal en el plantel.
+function esDT(num) {
+  var e = PUNT_LOOKUP[String(num)];
+  if (e && e.tipo === 'dt') return true;
+  return num === '' || num == null || String(num) === '0';
+}
 function dtEntry(squad) { return squad && squad.find(function(s) { return s.tipo === 'dt'; }); }
 function puntName(num, squad) {
+  var e = PUNT_LOOKUP[String(num)];
+  if (e && e.tipo === 'dt') return e.name || 'D.T.';
   if (esDT(num)) { var dt = dtEntry(squad); return dt && dt.name ? dt.name : 'D.T.'; }
+  if (e && e.name) return e.name;
   var sq = squad && squad.find(function(s) { return String(s.num) === String(num); });
   return sq ? sq.name : '#' + num;
 }
-function puntFid(num, squad) {
-  if (esDT(num)) { var dt = dtEntry(squad); return dt ? dt.fid : null; }
-  var sq = squad && squad.find(function(s) { return String(s.num) === String(num); });
-  return sq ? sq.fid : null;
+// Dorsal para el kit-avatar (la key es un id, no un dorsal).
+function puntNum(num) {
+  var e = PUNT_LOOKUP[String(num)];
+  if (e && e.num != null && e.num !== '') return e.num;
+  return '';
 }
 
 function renderPodio(players, container, squad) {
@@ -322,9 +372,8 @@ function renderPodio(players, container, squad) {
   var medals = ['🥇','🥈','🥉'];
   var podioEl = document.createElement('div'); podioEl.className = 'podio';
   top3.forEach(function(p, i) {
-    var fid = puntFid(p.num, squad);
     var item = document.createElement('div'); item.className = 'podio-item';
-    var foto = fid ? '<img class="podio-foto" src="fotos/' + fid + '.png" alt="" onerror="this.style.opacity=\'.1\'">' : '<div class="podio-foto"></div>';
+    var foto = kitAv(puntNum(p.num), 'podio-foto', 44);
     item.innerHTML = foto +
       '<div class="podio-medal">' + medals[i] + '</div>' +
       '<div class="podio-name">' + esc(puntName(p.num, squad)) + '</div>' +
@@ -342,9 +391,8 @@ function renderPodio(players, container, squad) {
     list.appendChild(lhdr);
     resto.forEach(function(p) {
       var isDT = esDT(p.num);
-      var fid = puntFid(p.num, squad);
       var row = document.createElement('div'); row.className = 'form-row' + (isDT ? ' dt' : '');
-      var foto = fid ? '<img class="form-row-foto" src="fotos/' + fid + '.png" alt="" onerror="this.style.opacity=\'.1\'">' : '<div class="form-row-foto"></div>';
+      var foto = kitAv(isDT ? '' : puntNum(p.num), 'form-row-foto', 30);
       row.innerHTML = foto +
         '<div class="form-row-name">' + esc(puntName(p.num, squad)) + '</div>' +
         '<div class="form-row-pct" style="color:var(--gold)">' + (p.avg == null ? '—' : p.avg) + '</div>';
@@ -394,8 +442,10 @@ function eqMiniPitch(jugadores) {
   (jugadores || []).forEach(function(j) {
     var el = document.createElement('div'); el.className = 'eq-pp'; el.style.left = (j.x != null ? j.x : 50) + '%'; el.style.top = (j.y != null ? j.y : 50) + '%';
     var b = document.createElement('div'); b.className = 'eq-bubble';
-    if (j.fid) { var img = document.createElement('img'); img.src = 'fotos/' + j.fid + '.png'; img.onerror = function(){ this.style.display = 'none'; }; b.appendChild(img); }
-    else { var sp = document.createElement('span'); sp.textContent = j.num || ''; b.appendChild(sp); }
+    b.style.background = (typeof kitBackground === 'function') ? kitBackground(_KIT, 30) : (_KIT.colors[0] || '#444');
+    var sp = document.createElement('span'); sp.textContent = j.num || '';
+    sp.style.cssText = 'color:#fff;text-shadow:' + ((typeof NUM_OUTLINE !== 'undefined') ? NUM_OUTLINE : '0 1px 2px #000') + ';';
+    b.appendChild(sp);
     var nm = document.createElement('div'); nm.className = 'eq-pp-name'; nm.textContent = (j.name || j.num || '').split(' ').slice(-1)[0];
     el.appendChild(b); el.appendChild(nm); pitch.appendChild(el);
   });
@@ -487,7 +537,7 @@ async function init() {
 
   var estado = null;
   try {
-    var r0 = await fetch('data/estado_mundial.json?v=' + Date.now());
+    var r0 = await fetch('data/estado.json?v=' + Date.now());
     var json0 = await r0.json();
     estado = json0[slug] || null;
   } catch(e) {}
@@ -510,30 +560,29 @@ async function init() {
     }
   } catch(e) {}
 
-  var rival     = estado ? (estado.rival      || '') : '';
-  var matchDate = estado ? (estado.match_date || '') : '';
+  await buildPuntLookup(slug);
+
+  var rival     = estado ? (estado.rival || '') : '';
+  var matchDate = estado ? (estado.match_date || estado.matchDate || '') : '';
 
   if (rival && matchDate) {
     var fechaFmt = new Date(matchDate + 'T12:00:00').toLocaleDateString('es-AR', { day:'numeric', month:'short', year:'numeric' });
 
     var roundLabel = '';
     try {
-      var rm = await fetch('data/fixtures/mundial.json');
+      var rm = await fetch('data/fixtures/liga.json?v=' + Date.now());
       var partidos = await rm.json();
-      var found = partidos.find(function(p) {
-        return p.date === matchDate && p.home && p.away && (
-          (p.home.slug === slug && p.away.slug === rival) ||
-          (p.away.slug === slug && p.home.slug === rival)
-        );
+      var found = (partidos || []).find(function(p) {
+        var pd = (p.status && p.status.utcTime) ? p.status.utcTime.slice(0, 10) : (p.date || '');
+        return pd === matchDate && p.home && p.away && (p.home.slug === slug || p.away.slug === slug);
       });
-      if (found && found.roundName) roundLabel = found.roundName;
-      else if (found && found.round) roundLabel = 'Fecha ' + found.round;
+      if (found && found.fecha) roundLabel = 'Fecha ' + found.fecha;
     } catch(e) {}
 
     document.getElementById('match-banner').style.display = 'flex';
     document.getElementById('mb-esc-local').src  = 'escudos/' + slug  + '.png';
     document.getElementById('mb-nom-local').textContent  = (NAMES_ES[slug]  || slug).toUpperCase();
-    document.getElementById('mb-esc-rival').src  = 'escudos/' + rival + '.png';
+    document.getElementById('mb-esc-rival').src  = 'escudos/' + (rivalSlug(rival) || rival) + '.png';
     document.getElementById('mb-nom-rival').textContent  = (NAMES_ES[rival] || rival).toUpperCase();
     document.getElementById('mb-fecha').textContent = (roundLabel ? roundLabel + ' · ' : '') + fechaFmt;
   }
@@ -575,16 +624,23 @@ async function init() {
   var sel = document.createElement('div'); sel.className = 'fecha-sel'; mainEl.appendChild(sel);
   var contentEl = document.createElement('div'); mainEl.appendChild(contentEl);
 
-  // Mapa partido -> número de fecha (round) desde mundial.json
+  // Mapa partido -> número de fecha (round) desde liga.json
   var fixturesJson = [];
-  try { fixturesJson = await fetch('data/fixtures/mundial.json?v=' + Date.now()).then(function(r){ return r.json(); }); } catch(e) {}
+  try { fixturesJson = await fetch('data/fixtures/liga.json?v=' + Date.now()).then(function(r){ return r.json(); }); } catch(e) {}
+  // El club juega un partido por fecha → date + su slug identifican el partido.
+  // Tolerante a ±1 día: el match_date de Supabase es la fecha local del voto y el
+  // utcTime de liga.json es UTC (partidos nocturnos caen al día siguiente en UTC).
+  function _dayDiff(a, b) {
+    if (!a || !b) return 99;
+    return Math.abs((new Date(a + 'T00:00:00') - new Date(b + 'T00:00:00')) / 86400000);
+  }
   function roundFor(date, riv) {
     var f = (fixturesJson || []).find(function(p) {
-      var pDate = p.date || (p.status && p.status.utcTime ? p.status.utcTime.slice(0, 10) : '');
-      return pDate === date && p.home && p.away &&
-        ((p.home.slug === slug && p.away.slug === riv) || (p.away.slug === slug && p.home.slug === riv));
+      if (!(p.home && p.away && (p.home.slug === slug || p.away.slug === slug))) return false;
+      var pDate = (p.status && p.status.utcTime) ? p.status.utcTime.slice(0, 10) : (p.date || '');
+      return _dayDiff(pDate, date) <= 1;
     });
-    return f ? f.round : null;
+    return f ? f.fecha : null;
   }
 
   var scopes = [{ id: 'acumulado', label: 'Acumulado' }].concat(matches.map(function(m) {
