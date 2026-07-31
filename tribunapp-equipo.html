@@ -95,6 +95,10 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
 .fecha-sel::-webkit-scrollbar-thumb{background:#444;border-radius:4px;}
 .fecha-btn{flex:0 0 auto;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.6);font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:1px;text-transform:uppercase;padding:6px 13px;border-radius:8px;cursor:pointer;white-space:nowrap;}
 .fecha-btn.active{background:var(--gold);border-color:var(--gold);color:#1a1a1a;font-weight:600;}
+.comp-sel{display:flex;gap:8px;overflow-x:auto;padding:0 0 12px;-webkit-overflow-scrolling:touch;}
+.comp-sel::-webkit-scrollbar{display:none;}
+.comp-btn{flex:0 0 auto;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.14);color:rgba(255,255,255,.65);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:8px 20px;border-radius:20px;cursor:pointer;white-space:nowrap;}
+.comp-btn.active{background:var(--gold);border-color:var(--gold);color:#1a1a1a;}
 .sub-tabs{display:flex;gap:6px;margin:0 0 12px;flex-wrap:wrap;}
 .sub-tab{flex:0 0 auto;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.55);font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:1px;text-transform:uppercase;padding:6px 12px;border-radius:8px;cursor:pointer;white-space:nowrap;}
 .sub-tab.active{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3);color:#fff;}
@@ -237,10 +241,12 @@ function kitAv(num, cls, size) {
 // (data/partidos/{id}.json → jugadores[slug][].id), NO por dorsal. Este mapa
 // resuelve ese id → { name, num, tipo } leyendo los partidos del club.
 var PUNT_LOOKUP = {};
+var PART_INDEX = [];   // entradas de data/partidos/index.json de este club (para competición/ronda)
 async function buildPuntLookup(slug) {
   try {
     var idx = await fetch('data/partidos/index.json?v=' + Date.now()).then(function(r){ return r.ok ? r.json() : []; });
     var mine = (idx || []).filter(function(e){ return e.local === slug || e.visitante === slug; });
+    PART_INDEX = mine;
     await Promise.all(mine.map(async function(e) {
       try {
         var d = await fetch('data/partidos/' + e.id + '.json?v=' + Date.now()).then(function(r){ return r.ok ? r.json() : null; });
@@ -254,6 +260,27 @@ async function buildPuntLookup(slug) {
       } catch(e2) {}
     }));
   } catch(e) {}
+}
+
+// Competición de un partido a partir de la fecha del voto, cruzando con data/partidos
+// (misma fuente que estadísticas). Auto-aplica el whitelist: solo los clubes vivos en
+// copa tienen data/partidos de copa, así que solo ellos muestran el selector.
+var COMP_ORDER = ['Liga', 'Libertadores', 'Sudamericana'];
+function compGroup(competicion) {
+  var c = (competicion || '').toLowerCase();
+  if (c.indexOf('libertadores') >= 0) return 'Libertadores';
+  if (c.indexOf('sudamericana') >= 0) return 'Sudamericana';
+  return 'Liga';
+}
+function _dDiff(a, b) {
+  if (!a || !b) return 99;
+  return Math.abs((new Date(a + 'T00:00:00') - new Date(b + 'T00:00:00')) / 86400000);
+}
+// Devuelve { group, ronda } del partido de esa fecha (±1 día). Default Liga.
+function compByDate(date) {
+  var e = PART_INDEX.find(function(p){ return _dDiff(p.fecha, date) <= 1; });
+  if (e) return { group: compGroup(e.competicion), ronda: e.ronda || null };
+  return { group: 'Liga', ronda: null };
 }
 
 function calcFormaciones(rows) {
@@ -597,54 +624,79 @@ async function init() {
     return;
   }
 
-  // Selector de fecha + Acumulado y contenedor de contenido
-  mainEl.innerHTML = '';
-  var sel = document.createElement('div'); sel.className = 'fecha-sel'; mainEl.appendChild(sel);
-  var contentEl = document.createElement('div'); mainEl.appendChild(contentEl);
-
   // Mapa partido -> número de fecha (round) desde liga.json
   var fixturesJson = [];
   try { fixturesJson = await fetch('data/fixtures/liga.json?v=' + Date.now()).then(function(r){ return r.json(); }); } catch(e) {}
   // El club juega un partido por fecha → date + su slug identifican el partido.
   // Tolerante a ±1 día: el match_date de Supabase es la fecha local del voto y el
   // utcTime de liga.json es UTC (partidos nocturnos caen al día siguiente en UTC).
-  function _dayDiff(a, b) {
-    if (!a || !b) return 99;
-    return Math.abs((new Date(a + 'T00:00:00') - new Date(b + 'T00:00:00')) / 86400000);
-  }
   function roundFor(date, riv) {
     var f = (fixturesJson || []).find(function(p) {
       if (!(p.home && p.away && (p.home.slug === slug || p.away.slug === slug))) return false;
       var pDate = (p.status && p.status.utcTime) ? p.status.utcTime.slice(0, 10) : (p.date || '');
-      return _dayDiff(pDate, date) <= 1;
+      return _dDiff(pDate, date) <= 1;
     });
     return f ? f.fecha : null;
   }
 
-  var scopes = [{ id: 'acumulado', label: 'Acumulado' }].concat(matches.map(function(m) {
-    var rivalName = NAMES_ES[m.rival] || m.rival || '—';
-    var rd = roundFor(m.date, m.rival);
-    return { id: m.key, label: (rd ? 'F' + rd + ' - ' : '') + rivalName };
-  }));
+  // Competición de cada partido (Liga / Libertadores / Sudamericana) desde data/partidos.
+  matches.forEach(function(m) { var cb = compByDate(m.date); m.compGroup = cb.group; m.ronda = cb.ronda; });
+  var groups = COMP_ORDER.filter(function(g){ return matches.some(function(m){ return m.compGroup === g; }); });
+  var compSel = (groups.indexOf('Liga') >= 0) ? 'Liga' : (groups[0] || 'Liga');
 
-  function renderScope(id) {
+  // Etiqueta de cada partido: copa usa la ronda ("Octavos"); liga usa "F{n}".
+  function matchLabel(m) {
+    var rivalName = NAMES_ES[m.rival] || m.rival || '—';
+    if (m.compGroup !== 'Liga') return (m.ronda ? m.ronda + ' - ' : '') + rivalName;
+    var rd = roundFor(m.date, m.rival);
+    return (rd ? 'F' + rd + ' - ' : '') + rivalName;
+  }
+
+  mainEl.innerHTML = '';
+  var compBar = document.createElement('div'); compBar.className = 'comp-sel'; mainEl.appendChild(compBar);
+  var sel = document.createElement('div'); sel.className = 'fecha-sel'; mainEl.appendChild(sel);
+  var contentEl = document.createElement('div'); mainEl.appendChild(contentEl);
+
+  function renderScope(id, groupMatches, gForms, gPunts) {
     Array.prototype.forEach.call(sel.children, function(b) { b.classList.toggle('active', b.dataset.id === id); });
     if (id === 'acumulado') {
-      renderContent(allForms, allPunts, squad, contentEl, null);
+      renderContent(gForms, gPunts, squad, contentEl, null);
     } else {
       var m = matchesMap[id];
       renderContent(m.forms, m.punts, squad, contentEl, NAMES_ES[m.rival] || m.rival);
     }
   }
 
-  scopes.forEach(function(s) {
-    var b = document.createElement('button'); b.className = 'fecha-btn'; b.dataset.id = s.id;
-    b.textContent = s.label;
-    b.addEventListener('click', function() { renderScope(s.id); });
-    sel.appendChild(b);
-  });
+  function renderComp(group) {
+    Array.prototype.forEach.call(compBar.children, function(b) { b.classList.toggle('active', b.dataset.g === group); });
+    var gm = matches.filter(function(m){ return m.compGroup === group; });
+    var gForms = [], gPunts = [];
+    gm.forEach(function(m){ gForms = gForms.concat(m.forms); gPunts = gPunts.concat(m.punts); });
+    // Reconstruir la barra de fechas para esta competición
+    sel.innerHTML = '';
+    var scopes = [{ id: 'acumulado', label: 'Acumulado' }].concat(gm.map(function(m){ return { id: m.key, label: matchLabel(m) }; }));
+    scopes.forEach(function(s) {
+      var b = document.createElement('button'); b.className = 'fecha-btn'; b.dataset.id = s.id;
+      b.textContent = s.label;
+      b.addEventListener('click', function() { renderScope(s.id, gm, gForms, gPunts); });
+      sel.appendChild(b);
+    });
+    renderScope('acumulado', gm, gForms, gPunts);
+  }
 
-  renderScope('acumulado'); // default: visión global (puntos + formación)
+  // Selector de competición: solo si el club jugó más de una (Liga + copa).
+  if (groups.length > 1) {
+    groups.forEach(function(g) {
+      var b = document.createElement('button'); b.className = 'comp-btn'; b.dataset.g = g;
+      b.textContent = g;
+      b.addEventListener('click', function() { renderComp(g); });
+      compBar.appendChild(b);
+    });
+  } else {
+    compBar.style.display = 'none';
+  }
+
+  renderComp(compSel);
 }
 
 init();

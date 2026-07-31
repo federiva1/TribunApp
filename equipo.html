@@ -173,6 +173,8 @@ html.deep-stats #estadisticas-screen { display: block; }
 .eqt-fecha-tog { flex:0 0 auto; padding:7px 12px; border-radius:16px; cursor:pointer; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); font-family:'Barlow Condensed',sans-serif; font-size:11px; letter-spacing:.5px; color:rgba(255,255,255,0.55); white-space:nowrap; transition:all .15s; user-select:none; }
 .eqt-fecha-tog.active { background:var(--acento); border-color:var(--acento); color:#fff; }
 .eqt-fecha-tog.todas { border-style:dashed; }
+.eqt-comp-tog { flex:0 0 auto; padding:8px 18px; border-radius:18px; cursor:pointer; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.12); font-family:'Barlow Condensed',sans-serif; font-size:13px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,0.6); white-space:nowrap; transition:all .15s; user-select:none; }
+.eqt-comp-tog.active { background:var(--acento); border-color:var(--acento); color:#fff; }
 .eqt-col-chip { flex:0 0 auto; padding:5px 10px; border-radius:14px; cursor:pointer; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); font-family:'Barlow Condensed',sans-serif; font-size:10px; letter-spacing:1px; color:#fff; white-space:nowrap; transition:all .15s; user-select:none; text-transform:uppercase; }
 .eqt-col-chip.off { background:transparent; color:rgba(255,255,255,0.28); border-color:rgba(255,255,255,0.06); }
 /* Chips de BLOQUE (grupo entero): prenden/apagan toda la sección. */
@@ -2645,7 +2647,16 @@ const EQ_COLS = [
 ];
 
 let _eqData = null;   // [{p, data}] partidos del club (index + json), cacheado
-const _eqSt = { fechas:null, hiddenPlayers:null, hiddenCols:null, sortKey:'min', sortAsc:false };
+const _eqSt = { fechas:null, hiddenPlayers:null, hiddenCols:null, sortKey:'min', sortAsc:false, comp:null };
+
+// Grupo de competición para el selector (Liga engloba Apertura/Clausura).
+const EQ_COMP_ORDER = ['Liga', 'Libertadores', 'Sudamericana'];
+function _eqCompGroup(competicion){
+  const c = (competicion || '').toLowerCase();
+  if (c.includes('libertadores')) return 'Libertadores';
+  if (c.includes('sudamericana')) return 'Sudamericana';
+  return 'Liga';
+}
 
 function _eqEl(tag, cls, txt){ const e=document.createElement(tag); if(cls)e.className=cls; if(txt!=null)e.textContent=txt; return e; }
 // Chip circular con el KIT del club (mismo diseño que formación/puntajes en club.html);
@@ -2697,7 +2708,10 @@ async function loadPartidosStats() {
       wrap.innerHTML = '<div class="pronto-msg">Error cargando partidos</div>';
       return;
     }
-    _eqSt.fechas = new Set(_eqData.map(x => x.p.id));   // default: todos (acumulado)
+    // Competición por defecto: Liga si hay; si no, el primer grupo disponible.
+    const groups = EQ_COMP_ORDER.filter(g => _eqData.some(x => _eqCompGroup(x.p.competicion) === g));
+    _eqSt.comp = groups.includes('Liga') ? 'Liga' : (groups[0] || 'Liga');
+    _eqSt.fechas = new Set(_eqData.filter(x => _eqCompGroup(x.p.competicion) === _eqSt.comp).map(x => x.p.id));
     _eqSt.hiddenPlayers = new Set();
     _eqSt.hiddenCols = new Set();
   }
@@ -2709,7 +2723,30 @@ function renderEqStats() {
   if (!wrap) return;
   wrap.innerHTML = '';
 
-  const ids = _eqData.map(x => x.p.id);
+  // ── Selector de competición (Liga | Libertadores | Sudamericana) ──
+  // Solo aparece si el club jugó más de una competición (ej. Liga + copa).
+  const groups = EQ_COMP_ORDER.filter(g => _eqData.some(x => _eqCompGroup(x.p.competicion) === g));
+  if (!groups.includes(_eqSt.comp)) _eqSt.comp = groups[0] || 'Liga';
+  if (groups.length > 1) {
+    const cBlock = _eqEl('div','eqt-block');
+    const cBar = _eqEl('div','eqt-chiprow');
+    groups.forEach(g => {
+      const b = _eqEl('div','eqt-comp-tog'+(_eqSt.comp===g?' active':''), g);
+      b.onclick = () => {
+        if (_eqSt.comp === g) return;
+        _eqSt.comp = g;
+        _eqSt.fechas = new Set(_eqData.filter(x => _eqCompGroup(x.p.competicion) === g).map(x => x.p.id));
+        _eqSt.hiddenPlayers = new Set(); _eqSt.hiddenCols = new Set();
+        renderEqStats();
+      };
+      cBar.appendChild(b);
+    });
+    cBlock.appendChild(cBar); wrap.appendChild(cBlock);
+  }
+
+  // Partidos de la competición activa (cada competición tiene su propio acumulado).
+  const compData = _eqData.filter(x => _eqCompGroup(x.p.competicion) === _eqSt.comp);
+  const ids = compData.map(x => x.p.id);
   _eqSt.fechas = new Set([..._eqSt.fechas].filter(id => ids.includes(id)));
   if (!_eqSt.fechas.size) _eqSt.fechas = new Set(ids);
 
@@ -2721,10 +2758,11 @@ function renderEqStats() {
   const todas = _eqEl('div','eqt-fecha-tog todas'+(allSel?' active':''),'Todos');
   todas.onclick = () => { _eqSt.fechas = allSel ? new Set([ids[0]]) : new Set(ids); renderEqStats(); };
   fBar.appendChild(todas);
-  _eqData.forEach(({p}) => {
+  compData.forEach(({p}) => {
     const esL = p.local === slug, rival = esL ? p.visitante : p.local;
     const mg = esL ? p.goles_local : p.goles_visitante, sg = esL ? p.goles_visitante : p.goles_local;
-    const fn = (p.fecha_num != null) ? `F${p.fecha_num} ` : '';
+    // Copa: usa la ronda ("Octavos"); Liga: "F{n}".
+    const fn = p.ronda ? `${p.ronda} · ` : (p.fecha_num != null ? `F${p.fecha_num} ` : '');
     const t = _eqEl('div','eqt-fecha-tog'+(_eqSt.fechas.has(p.id)?' active':''), `${fn}vs ${nbR(rival)} ${mg}-${sg}`);
     t.onclick = () => {
       const s = new Set(_eqSt.fechas);
@@ -2736,7 +2774,7 @@ function renderEqStats() {
   fBlock.appendChild(fBar); wrap.appendChild(fBlock);
 
   // ── Agregación de los partidos seleccionados ──
-  const rows = aggregateEq(_eqData.filter(x => _eqSt.fechas.has(x.p.id)));
+  const rows = aggregateEq(compData.filter(x => _eqSt.fechas.has(x.p.id)));
 
   // ── Controles (contador + todos/ninguno) y chips de columna ──
   renderEqPlayerControls(wrap, rows);
