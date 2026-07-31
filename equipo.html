@@ -2484,7 +2484,9 @@ async function showScoresResults() {
 // ============================================================
 async function init() {
   const params = new URLSearchParams(location.search);
-  slug = params.get('c');
+  // Sanitizar: slugs válidos son alfanuméricos en minúscula. Neutraliza inyección
+  // en las URLs de Supabase/PostgREST y path traversal en los fetch estáticos.
+  slug = (params.get('c') || '').replace(/[^a-z0-9]/gi, '').toLowerCase();
   if (!slug) { location.href = 'index.html'; return; }
 
   try {

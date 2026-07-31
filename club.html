@@ -976,8 +976,10 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 
 // ---- Leer club desde URL ----
 const params = new URLSearchParams(window.location.search);
-const CLUB_SLUG = params.get('c') || '';
-const COPA      = params.get('copa') || '';  // 'libertadores' | 'sudamericana' | ''
+// Sanitizar params de usuario: el slug se usa en URLs de Supabase y paths de fetch.
+const CLUB_SLUG = (params.get('c') || '').replace(/[^a-z0-9]/gi, '').toLowerCase();
+const _copaRaw  = (params.get('copa') || '').toLowerCase();
+const COPA      = (_copaRaw === 'libertadores' || _copaRaw === 'sudamericana') ? _copaRaw : '';
 const CLUB = CLUBES_CONFIG[CLUB_SLUG];
 
 function escapeHtml(s) {

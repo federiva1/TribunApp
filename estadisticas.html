@@ -373,9 +373,11 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
 <script src="js/match-live.js"></script>
 <script>
 const params  = new URLSearchParams(location.search);
-const matchId = params.get('p') || '';
+// Sanitizar params de usuario: matchId es slug-slug ([a-z0-9-]), c es slug alfanumérico.
+// Evita path traversal en el fetch de data/partidos y basura en el href de "volver".
+const matchId = (params.get('p') || '').replace(/[^a-z0-9-]/gi, '').toLowerCase();
 // también soporta entrada por equipo: ?c=brazil (busca su primer partido)
-const fromSlug = params.get('c') || null;
+const fromSlug = (params.get('c') || '').replace(/[^a-z0-9]/gi, '').toLowerCase() || null;
 
 const NOMBRES = {
   argentina:'Argentina',france:'Francia',brazil:'Brasil',germany:'Alemania',
@@ -667,9 +669,8 @@ async function init(){
   const barLocal = clubKit(p.local).colors[0],      barVisit = clubKit(p.visitante).colors[0];
   const cLocal   = accentColor(p.local),            cVisit   = accentColor(p.visitante);
 
-  const backSlug = new URLSearchParams(location.search).get('c');
-  document.getElementById('back-btn').href = backSlug
-    ? `club.html?c=${backSlug}`
+  document.getElementById('back-btn').href = fromSlug
+    ? `club.html?c=${fromSlug}`
     : `fixture.html`;
 
   // Header mini
