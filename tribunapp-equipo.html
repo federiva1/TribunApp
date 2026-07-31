@@ -352,10 +352,35 @@ function puntName(num, squad) {
   var sq = squad && squad.find(function(s) { return String(s.num) === String(num); });
   return sq ? sq.name : '#' + num;
 }
-// Dorsal para el kit-avatar (la key es un id, no un dorsal).
-function puntNum(num) {
+// Match nombre abreviado del partido ("D. Porcel") contra el plantel ("Diego Porcel").
+function matchSquadName(name, squad) {
+  if (!name || !squad) return null;
+  var nn = _norm(name);
+  var exact = squad.find(function(s) { return _norm(s.name) === nn; });
+  if (exact) return exact;
+  var toks = String(name).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').split(/[^a-z]+/).filter(Boolean);
+  if (!toks.length) return null;
+  var last = toks[toks.length - 1];
+  var initial = (toks[0].length === 1) ? toks[0] : null;
+  var cands = squad.filter(function(s) { return s.tipo !== 'dt' && _norm(s.name).indexOf(last) >= 0; });
+  if (cands.length === 1) return cands[0];
+  if (initial && cands.length > 1) {
+    var byInit = cands.filter(function(s) {
+      var parts = String(s.name).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').split(/[^a-z]+/).filter(Boolean);
+      return parts[0] && parts[0].charAt(0) === initial;
+    });
+    if (byInit.length) return byInit[0];
+  }
+  return cands[0] || null;
+}
+// Dorsal para el kit-avatar (la key es un id, no un dorsal). Fallback: plantel por nombre.
+function puntNum(num, squad) {
   var e = PUNT_LOOKUP[String(num)];
   if (e && e.num != null && e.num !== '') return e.num;
+  if (e && e.name) {
+    var sq = matchSquadName(e.name, squad);
+    if (sq && sq.num != null && sq.num !== '' && String(sq.num) !== 'None') return sq.num;
+  }
   return '';
 }
 
@@ -373,7 +398,7 @@ function renderPodio(players, container, squad) {
   var podioEl = document.createElement('div'); podioEl.className = 'podio';
   top3.forEach(function(p, i) {
     var item = document.createElement('div'); item.className = 'podio-item';
-    var foto = kitAv(puntNum(p.num), 'podio-foto', 44);
+    var foto = kitAv(puntNum(p.num, squad), 'podio-foto', 44);
     item.innerHTML = foto +
       '<div class="podio-medal">' + medals[i] + '</div>' +
       '<div class="podio-name">' + esc(puntName(p.num, squad)) + '</div>' +
@@ -392,7 +417,7 @@ function renderPodio(players, container, squad) {
     resto.forEach(function(p) {
       var isDT = esDT(p.num);
       var row = document.createElement('div'); row.className = 'form-row' + (isDT ? ' dt' : '');
-      var foto = kitAv(isDT ? '' : puntNum(p.num), 'form-row-foto', 30);
+      var foto = kitAv(isDT ? 'DT' : puntNum(p.num, squad), 'form-row-foto', 30);
       row.innerHTML = foto +
         '<div class="form-row-name">' + esc(puntName(p.num, squad)) + '</div>' +
         '<div class="form-row-pct" style="color:var(--gold)">' + (p.avg == null ? '—' : p.avg) + '</div>';
@@ -535,13 +560,6 @@ function renderContent(formaciones, puntajes, squad, contentEl, rivalName) {
 async function init() {
   var mainEl = document.getElementById('main-content');
 
-  var estado = null;
-  try {
-    var r0 = await fetch('data/estado.json?v=' + Date.now());
-    var json0 = await r0.json();
-    estado = json0[slug] || null;
-  } catch(e) {}
-
   var squad = [];
   try {
     var rp = await fetch('data/planteles/' + slug + '.json');
@@ -561,31 +579,6 @@ async function init() {
   } catch(e) {}
 
   await buildPuntLookup(slug);
-
-  var rival     = estado ? (estado.rival || '') : '';
-  var matchDate = estado ? (estado.match_date || estado.matchDate || '') : '';
-
-  if (rival && matchDate) {
-    var fechaFmt = new Date(matchDate + 'T12:00:00').toLocaleDateString('es-AR', { day:'numeric', month:'short', year:'numeric' });
-
-    var roundLabel = '';
-    try {
-      var rm = await fetch('data/fixtures/liga.json?v=' + Date.now());
-      var partidos = await rm.json();
-      var found = (partidos || []).find(function(p) {
-        var pd = (p.status && p.status.utcTime) ? p.status.utcTime.slice(0, 10) : (p.date || '');
-        return pd === matchDate && p.home && p.away && (p.home.slug === slug || p.away.slug === slug);
-      });
-      if (found && found.fecha) roundLabel = 'Fecha ' + found.fecha;
-    } catch(e) {}
-
-    document.getElementById('match-banner').style.display = 'flex';
-    document.getElementById('mb-esc-local').src  = 'escudos/' + slug  + '.png';
-    document.getElementById('mb-nom-local').textContent  = (NAMES_ES[slug]  || slug).toUpperCase();
-    document.getElementById('mb-esc-rival').src  = 'escudos/' + (rivalSlug(rival) || rival) + '.png';
-    document.getElementById('mb-nom-rival').textContent  = (NAMES_ES[rival] || rival).toUpperCase();
-    document.getElementById('mb-fecha').textContent = (roundLabel ? roundLabel + ' · ' : '') + fechaFmt;
-  }
 
   if (!SB_URL) { mainEl.innerHTML = '<div class="msg-center">Sin datos aún.</div>'; return; }
 
@@ -641,6 +634,20 @@ async function init() {
       return _dayDiff(pDate, date) <= 1;
     });
     return f ? f.fecha : null;
+  }
+
+  // Banner = partido MÁS RECIENTE con votos (matches ya viene ordenado por fecha desc).
+  var mb = matches[0];
+  if (mb && mb.rival) {
+    var mbSlug = rivalSlug(mb.rival) || mb.rival;
+    var mbRd   = roundFor(mb.date, mb.rival);
+    var mbFmt  = mb.date ? new Date(mb.date + 'T12:00:00').toLocaleDateString('es-AR', { day:'numeric', month:'short', year:'numeric' }) : '';
+    document.getElementById('match-banner').style.display = 'flex';
+    document.getElementById('mb-esc-local').src = 'escudos/' + slug + '.png';
+    document.getElementById('mb-nom-local').textContent = (NAMES_ES[slug] || slug).toUpperCase();
+    document.getElementById('mb-esc-rival').src = 'escudos/' + mbSlug + '.png';
+    document.getElementById('mb-nom-rival').textContent = (NAMES_ES[mb.rival] || mb.rival).toUpperCase();
+    document.getElementById('mb-fecha').textContent = (mbRd ? 'Fecha ' + mbRd + ' · ' : '') + mbFmt;
   }
 
   var scopes = [{ id: 'acumulado', label: 'Acumulado' }].concat(matches.map(function(m) {
