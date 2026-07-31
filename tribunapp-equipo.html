@@ -337,26 +337,31 @@ function puntName(num, squad) {
   var sq = squad && squad.find(function(s) { return String(s.num) === String(num); });
   return sq ? sq.name : '#' + num;
 }
-// Match nombre abreviado del partido ("D. Porcel") contra el plantel ("Diego Porcel").
+// Tokens en minúscula sin tildes ("Hernán López" → ["hernan","lopez"]).
+function _tok(name) { return String(name == null ? '' : name).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').split(/[^a-z]+/).filter(Boolean); }
+// Match nombre del partido contra el plantel. El partido puede abreviar ("H. Lopez")
+// o traer nombre completo distinto ("Hernán López Muñoz") vs plantel ("Hernán López").
+// Se puntúa por tokens compartidos + coincidencia de apellido/inicial, y se elige el mejor.
 function matchSquadName(name, squad) {
   if (!name || !squad) return null;
   var nn = _norm(name);
   var exact = squad.find(function(s) { return _norm(s.name) === nn; });
   if (exact) return exact;
-  var toks = String(name).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').split(/[^a-z]+/).filter(Boolean);
+  var toks = _tok(name);
   if (!toks.length) return null;
   var last = toks[toks.length - 1];
-  var initial = (toks[0].length === 1) ? toks[0] : null;
-  var cands = squad.filter(function(s) { return s.tipo !== 'dt' && _norm(s.name).indexOf(last) >= 0; });
-  if (cands.length === 1) return cands[0];
-  if (initial && cands.length > 1) {
-    var byInit = cands.filter(function(s) {
-      var parts = String(s.name).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').split(/[^a-z]+/).filter(Boolean);
-      return parts[0] && parts[0].charAt(0) === initial;
-    });
-    if (byInit.length) return byInit[0];
-  }
-  return cands[0] || null;
+  var best = null, bestScore = 0;
+  squad.forEach(function(s) {
+    if (s.tipo === 'dt') return;
+    var st = _tok(s.name);
+    if (!st.length) return;
+    var shared = toks.filter(function(t) { return t.length >= 3 && st.indexOf(t) >= 0; }).length;
+    var surnameHit = (last.length >= 3 && st.indexOf(last) >= 0) ? 1 : 0;
+    var initHit = (toks[0].length === 1 && st[0].charAt(0) === toks[0]) ? 1 : 0;
+    var score = shared * 2 + surnameHit + initHit;
+    if (score > bestScore) { bestScore = score; best = s; }
+  });
+  return bestScore >= 1 ? best : null;
 }
 // Dorsal para el kit-avatar (la key es un id, no un dorsal). Fallback: plantel por nombre.
 function puntNum(num, squad) {
