@@ -110,10 +110,10 @@ def name_to_slug(name: str) -> str:
     key = _strip_accents(name).lower()
     if key in _NORM_SLUG:
         return _NORM_SLUG[key]
-    # Fallback: minusculas sin tildes ni espacios. Sacar las tildes es clave:
-    # si no, "Curaçao" -> "curaçao" != "curacao" y home_is_local da False,
-    # invirtiendo local/visitante (marcador, goles y jugadores) del partido.
-    return key.replace(' ', '').replace('-', '')
+    # Fallback: minusculas sin tildes ni nada que no sea alfanumérico ascii. Sacar
+    # las tildes es clave (si no "Curaçao" != "curacao" e invierte local/visitante);
+    # y sacar apóstrofes/puntos evita filenames/URLs raros (ej. "O'Higgins").
+    return ''.join(c for c in key if c.isascii() and c.isalnum())
 
 
 # Mapeo api-sports ID -> slug de los clubes argentinos (fuente: js/clubes.js).
@@ -185,6 +185,32 @@ def fetch_match_data(fixture_id: int) -> dict:
     }
 
 
+def ronda_label(round_str: str):
+    """Etiqueta legible de la ronda (para copas). Liga devuelve None (usa fecha_num)."""
+    import re as _re
+    r = (round_str or '').strip()
+    rl = r.lower()
+    if 'clausura' in rl or 'apertura' in rl or 'regular season' in rl:
+        return None
+    m = _re.search(r'(\d+)\s*$', r)
+    table = [
+        ('group', 'Fase de grupos'),
+        ('knockout round play', 'Playoffs'), ('play-off', 'Playoffs'), ('playoff', 'Playoffs'),
+        ('round of 32', 'Dieciseisavos'), ('1/16', 'Dieciseisavos'),
+        ('round of 16', 'Octavos'), ('1/8', 'Octavos'),
+        ('quarter', 'Cuartos'), ('1/4', 'Cuartos'),
+        ('semi', 'Semifinal'),
+        ('third place', '3er puesto'), ('3rd place', '3er puesto'),
+        ('final', 'Final'),
+    ]
+    for k, v in table:
+        if k in rl:
+            if v == 'Fase de grupos' and m:
+                return f'Fase de grupos · F{m.group(1)}'
+            return v
+    return r or None
+
+
 def build_partidos_json(raw: dict, local_slug: str, visitante_slug: str,
                         output_id: str, competicion: str) -> dict:
     fix      = raw['fixture']
@@ -212,6 +238,7 @@ def build_partidos_json(raw: dict, local_slug: str, visitante_slug: str,
     _round = fix.get('league', {}).get('round', '') or ''
     _rm = _re.search(r'(\d+)\s*$', _round)
     fecha_num = int(_rm.group(1)) if _rm else None   # nº de fecha (ej. "Clausura - 3" -> 3)
+    ronda = ronda_label(_round)                       # label de ronda (copas); None en liga
     estadio = fixture.get('venue', {}).get('name') or ''
     ciudad  = fixture.get('venue', {}).get('city') or ''
     if ciudad:
@@ -465,6 +492,7 @@ def build_partidos_json(raw: dict, local_slug: str, visitante_slug: str,
             'goles_visitante': visitante_goals,
             'fecha':           fecha,
             'fecha_num':       fecha_num,
+            'ronda':           ronda,
             'estadio':         estadio,
             'competicion':     competicion,
             'api_id':          str(fixture.get('id') or ''),
@@ -519,6 +547,7 @@ def save(payload: dict, output_id: str):
         'visitante':       p['visitante'],
         'fecha':           p['fecha'],
         'fecha_num':       p.get('fecha_num'),
+        'ronda':           p.get('ronda'),
         'goles_local':     p['goles_local'],
         'goles_visitante': p['goles_visitante'],
         'competicion':     p['competicion'],

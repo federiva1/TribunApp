@@ -30,9 +30,22 @@ import fetch_mundial_match as fmm       # noqa: E402
 import scrape_fotmob_mundial as sfm     # noqa: E402
 from clubes_map import CLUBES           # noqa: E402
 
-LEAGUE = 128
 SEASON = 2026
 FINISHED = ('FT', 'AET', 'PEN')
+
+# Copa: NO backfillear la fase de grupos (ya jugada). Solo se cargan partidos de
+# copa de esta fecha en adelante (octavos y siguientes). Overridable con --desde.
+COPA_DESDE = '2026-08-01'
+
+# Competiciones soportadas → league id de api-sports + label + si es copa.
+# En copa solo se procesan los partidos que involucran a un club argentino
+# (el rival extranjero se resuelve por nombre y la URL de FotMob por el fotmob_id
+# del club argentino).
+COMPS = {
+    'liga':         {'league': 128, 'label': None,                       'copa': False},
+    'libertadores': {'league': 13,  'label': 'Copa Libertadores 2026',   'copa': True},
+    'sudamericana': {'league': 11,  'label': 'Copa Sudamericana 2026',    'copa': True},
+}
 
 
 def resolve_fotmob_url(fotmob_id: int, date_str: str):
@@ -80,36 +93,56 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument('--force', action='store_true', help='Reprocesar aunque ya tenga stats FotMob')
     ap.add_argument('--date', default=None, help='Solo el/los partido(s) de esta fecha YYYY-MM-DD')
-    ap.add_argument('--torneo', default='clausura', help='clausura | apertura | all')
+    ap.add_argument('--torneo', default='clausura', help='(liga) clausura | apertura | all')
+    ap.add_argument('--competicion', default='liga',
+                    help='liga | libertadores | sudamericana | copas | all')
+    ap.add_argument('--desde', default=COPA_DESDE,
+                    help=f'(copa) fecha mínima YYYY-MM-DD; no carga partidos anteriores (default {COPA_DESDE})')
     ap.add_argument('--limit', type=int, default=0, help='Procesar solo los primeros N (probar)')
     args = ap.parse_args()
 
-    print(f'GET fixtures league={LEAGUE} season={SEASON}...')
-    data = fmm.api_get(f'fixtures?league={LEAGUE}&season={SEASON}')
-    fixtures = data.get('response', [])
+    if args.competicion == 'all':
+        comps = list(COMPS.keys())
+    elif args.competicion == 'copas':
+        comps = ['libertadores', 'sudamericana']
+    else:
+        comps = [args.competicion]
 
     todo = []
-    for f in fixtures:
-        if f['fixture']['status']['short'] not in FINISHED:
-            continue
-        rnd = f['league'].get('round', '') or ''
-        if args.torneo != 'all' and args.torneo not in rnd.lower():
-            continue
-        date = f['fixture']['date'][:10]
-        if args.date and date != args.date:
-            continue
-        home, away = f['teams']['home'], f['teams']['away']
-        ls = fmm.team_slug(home['id'], home['name'])
-        vs = fmm.team_slug(away['id'], away['name'])
-        todo.append({
-            'fid': f['fixture']['id'], 'oid': f'{ls}-{vs}', 'ls': ls, 'vs': vs,
-            'comp': competicion_de(rnd), 'date': date,
-        })
+    for cname in comps:
+        cfg = COMPS[cname]
+        print(f'GET fixtures {cname} (league={cfg["league"]}) season={SEASON}...')
+        data = fmm.api_get(f'fixtures?league={cfg["league"]}&season={SEASON}')
+        fixtures = data.get('response', [])
+        for f in fixtures:
+            if f['fixture']['status']['short'] not in FINISHED:
+                continue
+            rnd = f['league'].get('round', '') or ''
+            # En liga se filtra por torneo (clausura/apertura); en copa no aplica.
+            if not cfg['copa'] and args.torneo != 'all' and args.torneo not in rnd.lower():
+                continue
+            date = f['fixture']['date'][:10]
+            if args.date and date != args.date:
+                continue
+            # Copa: solo de --desde en adelante (no backfillear fase de grupos vieja).
+            if cfg['copa'] and args.desde and date < args.desde:
+                continue
+            home, away = f['teams']['home'], f['teams']['away']
+            ls = fmm.team_slug(home['id'], home['name'])
+            vs = fmm.team_slug(away['id'], away['name'])
+            # En copa: solo partidos con un club argentino (tiene fotmob_id en clubes_map).
+            if cfg['copa'] and not (CLUBES.get(ls, {}).get('fotmob') or CLUBES.get(vs, {}).get('fotmob')):
+                continue
+            comp_label = cfg['label'] if cfg['copa'] else competicion_de(rnd)
+            todo.append({
+                'fid': f['fixture']['id'], 'oid': f'{ls}-{vs}', 'ls': ls, 'vs': vs,
+                'comp': comp_label, 'date': date,
+            })
 
     todo.sort(key=lambda m: m['date'])
     if args.limit:
         todo = todo[:args.limit]
-    print(f'{len(todo)} partidos FT objetivo ({args.torneo})\n')
+    print(f'{len(todo)} partidos FT objetivo ({args.competicion})\n')
 
     ok = skip = err = nourl = 0
     for i, m in enumerate(todo, 1):
