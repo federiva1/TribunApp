@@ -232,6 +232,9 @@ def build_partidos_json(raw: dict, local_slug: str, visitante_slug: str,
     visitante_goals = goals['away'] if home_is_local else goals['home']
     local_api_id   = home_id if home_is_local else away_id
     visit_api_id   = away_id if home_is_local else home_id
+    # Nombre display de api-sports (para rivales extranjeros de copa que no están en NAMES_ES)
+    local_nombre     = home_name if home_is_local else away_name
+    visitante_nombre = away_name if home_is_local else home_name
 
     fecha   = fixture.get('date', '')[:10]
     import re as _re
@@ -488,6 +491,8 @@ def build_partidos_json(raw: dict, local_slug: str, visitante_slug: str,
         'partido': {
             'local':           local_slug,
             'visitante':       visitante_slug,
+            'local_nombre':    local_nombre,
+            'visitante_nombre': visitante_nombre,
             'goles_local':     local_goals,
             'goles_visitante': visitante_goals,
             'fecha':           fecha,
@@ -545,6 +550,8 @@ def save(payload: dict, output_id: str):
         'id':              output_id,
         'local':           p['local'],
         'visitante':       p['visitante'],
+        'local_nombre':    p.get('local_nombre'),
+        'visitante_nombre': p.get('visitante_nombre'),
         'fecha':           p['fecha'],
         'fecha_num':       p.get('fecha_num'),
         'ronda':           p.get('ronda'),

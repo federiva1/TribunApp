@@ -2761,9 +2761,11 @@ function renderEqStats() {
   compData.forEach(({p}) => {
     const esL = p.local === slug, rival = esL ? p.visitante : p.local;
     const mg = esL ? p.goles_local : p.goles_visitante, sg = esL ? p.goles_visitante : p.goles_local;
+    // Nombre del rival: el guardado de api-sports (copa, equipos extranjeros) o el mapa local.
+    const rivalNom = (esL ? p.visitante_nombre : p.local_nombre) || nbR(rival);
     // Copa: usa la ronda ("Octavos"); Liga: "F{n}".
     const fn = p.ronda ? `${p.ronda} · ` : (p.fecha_num != null ? `F${p.fecha_num} ` : '');
-    const t = _eqEl('div','eqt-fecha-tog'+(_eqSt.fechas.has(p.id)?' active':''), `${fn}vs ${nbR(rival)} ${mg}-${sg}`);
+    const t = _eqEl('div','eqt-fecha-tog'+(_eqSt.fechas.has(p.id)?' active':''), `${fn}vs ${rivalNom} ${mg}-${sg}`);
     t.onclick = () => {
       const s = new Set(_eqSt.fechas);
       if (s.has(p.id)) { if (s.size>1) s.delete(p.id); } else s.add(p.id);

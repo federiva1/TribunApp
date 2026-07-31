@@ -276,11 +276,14 @@ function _dDiff(a, b) {
   if (!a || !b) return 99;
   return Math.abs((new Date(a + 'T00:00:00') - new Date(b + 'T00:00:00')) / 86400000);
 }
-// Devuelve { group, ronda } del partido de esa fecha (±1 día). Default Liga.
+// Devuelve { group, ronda, rivalNom } del partido de esa fecha (±1 día). Default Liga.
 function compByDate(date) {
   var e = PART_INDEX.find(function(p){ return _dDiff(p.fecha, date) <= 1; });
-  if (e) return { group: compGroup(e.competicion), ronda: e.ronda || null };
-  return { group: 'Liga', ronda: null };
+  if (e) {
+    var rivalNom = (e.local === slug) ? e.visitante_nombre : e.local_nombre;
+    return { group: compGroup(e.competicion), ronda: e.ronda || null, rivalNom: rivalNom || null };
+  }
+  return { group: 'Liga', ronda: null, rivalNom: null };
 }
 
 function calcFormaciones(rows) {
@@ -640,14 +643,17 @@ async function init() {
   }
 
   // Competición de cada partido (Liga / Libertadores / Sudamericana) desde data/partidos.
-  matches.forEach(function(m) { var cb = compByDate(m.date); m.compGroup = cb.group; m.ronda = cb.ronda; });
+  matches.forEach(function(m) { var cb = compByDate(m.date); m.compGroup = cb.group; m.ronda = cb.ronda; m.rivalNom = cb.rivalNom; });
   var groups = COMP_ORDER.filter(function(g){ return matches.some(function(m){ return m.compGroup === g; }); });
   var compSel = (groups.indexOf('Liga') >= 0) ? 'Liga' : (groups[0] || 'Liga');
 
   // Etiqueta de cada partido: copa usa la ronda ("Octavos"); liga usa "F{n}".
   function matchLabel(m) {
+    if (m.compGroup !== 'Liga') {
+      var rn = m.rivalNom || NAMES_ES[m.rival] || m.rival || '—';
+      return (m.ronda ? m.ronda + ' - ' : '') + rn;
+    }
     var rivalName = NAMES_ES[m.rival] || m.rival || '—';
-    if (m.compGroup !== 'Liga') return (m.ronda ? m.ronda + ' - ' : '') + rivalName;
     var rd = roundFor(m.date, m.rival);
     return (rd ? 'F' + rd + ' - ' : '') + rivalName;
   }

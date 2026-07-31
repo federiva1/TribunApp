@@ -33,9 +33,20 @@ from clubes_map import CLUBES           # noqa: E402
 SEASON = 2026
 FINISHED = ('FT', 'AET', 'PEN')
 
-# Copa: NO backfillear la fase de grupos (ya jugada). Solo se cargan partidos de
-# copa de esta fecha en adelante (octavos y siguientes). Overridable con --desde.
+# Copa: NADA de recorrido histórico. Solo se cargan partidos de esta fecha en
+# adelante (octavos y siguientes); la fase de grupos ya jugada NO se backfillea.
+# Overridable con --desde.
 COPA_DESDE = '2026-08-01'
+
+# Clubes argentinos vivos en la copa (octavos). Doble filtro con COPA_DESDE:
+# solo estos clubes y solo de la fecha de corte en adelante. Los eliminados no
+# aparecen con sección de copa. Actualizar si cambia el set de clasificados.
+COPA_CLUBS = {
+    # Libertadores — octavos
+    'rosariocentral', 'independienterivadavia', 'clubatleticoplatense', 'estudiantes',
+    # Sudamericana — octavos
+    'bocajuniors', 'tigre', 'riverplate',
+}
 
 # Competiciones soportadas → league id de api-sports + label + si es copa.
 # En copa solo se procesan los partidos que involucran a un club argentino
@@ -130,8 +141,8 @@ def main() -> int:
             home, away = f['teams']['home'], f['teams']['away']
             ls = fmm.team_slug(home['id'], home['name'])
             vs = fmm.team_slug(away['id'], away['name'])
-            # En copa: solo partidos con un club argentino (tiene fotmob_id en clubes_map).
-            if cfg['copa'] and not (CLUBES.get(ls, {}).get('fotmob') or CLUBES.get(vs, {}).get('fotmob')):
+            # En copa: solo partidos de los clubes vivos en la copa (whitelist).
+            if cfg['copa'] and not (ls in COPA_CLUBS or vs in COPA_CLUBS):
                 continue
             comp_label = cfg['label'] if cfg['copa'] else competicion_de(rnd)
             todo.append({
