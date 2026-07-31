@@ -177,21 +177,6 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
 
 <div id="app">
 
-  <div class="match-banner" id="match-banner" style="display:none">
-    <div class="mb-team">
-      <img class="mb-escudo" id="mb-esc-local" src="" alt="" onerror="this.style.opacity='.2'">
-      <div class="mb-name" id="mb-nom-local"></div>
-    </div>
-    <div class="mb-sep">
-      <div class="mb-vs">VS</div>
-      <div class="mb-fecha" id="mb-fecha"></div>
-    </div>
-    <div class="mb-team">
-      <img class="mb-escudo" id="mb-esc-rival" src="" alt="" onerror="this.style.opacity='.2'">
-      <div class="mb-name" id="mb-nom-rival"></div>
-    </div>
-  </div>
-
   <div class="content">
     <div id="main-content">
       <div class="msg-center">Cargando&hellip;</div>
@@ -634,20 +619,6 @@ async function init() {
       return _dayDiff(pDate, date) <= 1;
     });
     return f ? f.fecha : null;
-  }
-
-  // Banner = partido MÁS RECIENTE con votos (matches ya viene ordenado por fecha desc).
-  var mb = matches[0];
-  if (mb && mb.rival) {
-    var mbSlug = rivalSlug(mb.rival) || mb.rival;
-    var mbRd   = roundFor(mb.date, mb.rival);
-    var mbFmt  = mb.date ? new Date(mb.date + 'T12:00:00').toLocaleDateString('es-AR', { day:'numeric', month:'short', year:'numeric' }) : '';
-    document.getElementById('match-banner').style.display = 'flex';
-    document.getElementById('mb-esc-local').src = 'escudos/' + slug + '.png';
-    document.getElementById('mb-nom-local').textContent = (NAMES_ES[slug] || slug).toUpperCase();
-    document.getElementById('mb-esc-rival').src = 'escudos/' + mbSlug + '.png';
-    document.getElementById('mb-nom-rival').textContent = (NAMES_ES[mb.rival] || mb.rival).toUpperCase();
-    document.getElementById('mb-fecha').textContent = (mbRd ? 'Fecha ' + mbRd + ' · ' : '') + mbFmt;
   }
 
   var scopes = [{ id: 'acumulado', label: 'Acumulado' }].concat(matches.map(function(m) {
