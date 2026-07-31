@@ -143,35 +143,18 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
 
 <script src="js/config.js"></script>
 <script>
-const NAMES_ES = {
-  czechia:'Chequia',mexico:'México',southafrica:'Sudáfrica',southkorea:'Corea del Sur',
-  bosniaandherzegovina:'Bosnia y Herz.',canada:'Canadá',qatar:'Qatar',switzerland:'Suiza',
-  brazil:'Brasil',haiti:'Haití',morocco:'Marruecos',scotland:'Escocia',
-  australia:'Australia',paraguay:'Paraguay',turkiye:'Turquía',usa:'Estados Unidos',
-  curacao:'Curazao',ecuador:'Ecuador',germany:'Alemania',ivorycoast:'Costa de Marfil',
-  japan:'Japón',netherlands:'Países Bajos',sweden:'Suecia',tunisia:'Túnez',
-  belgium:'Bélgica',egypt:'Egipto',iran:'Irán',newzealand:'Nueva Zelanda',
-  capeverde:'Cabo Verde',saudiarabia:'Arabia Saudita',spain:'España',uruguay:'Uruguay',
-  france:'Francia',iraq:'Irak',norway:'Noruega',senegal:'Senegal',
-  algeria:'Argelia',argentina:'Argentina',austria:'Austria',jordan:'Jordania',
-  colombia:'Colombia',drcongo:'Rep. D. del Congo',portugal:'Portugal',uzbekistan:'Uzbekistán',
-  croatia:'Croacia',england:'Inglaterra',ghana:'Ghana',panama:'Panamá',
-};
-
-// Todos los slugs de los 48 equipos del mundial
-const SLUGS_48 = [
-  'argentina','australia','austria','belgium','bosniaandherzegovina','brazil',
-  'canada','capeverde','colombia','croatia','czechia','drcongo',
-  'ecuador','egypt','england','france','germany','ghana',
-  'haiti','iran','iraq','ivorycoast','japan','jordan',
-  'mexico','morocco','netherlands','newzealand','norway','panama',
-  'paraguay','portugal','qatar','saudiarabia','scotland','senegal',
-  'southafrica','southkorea','spain','sweden','switzerland','tunisia',
-  'turkiye','uruguay','usa','uzbekistan','curacao','southkorea'
-];
-const SLUGS_UNIQ = [...new Set(SLUGS_48)];
+// Nombres (slug -> nombre) y lista de los 30 clubes de Liga. Se cargan de
+// data/equipos.json en init() — sin rastro de selecciones del Mundial.
+let NAMES_ES = {};
+let SLUGS_UNIQ = [];
 
 async function init() {
+  // Cargar los 30 clubes de la Liga
+  try {
+    const eq = await (await fetch(`data/equipos.json?v=${Date.now()}`)).json();
+    (Array.isArray(eq) ? eq : []).forEach(c => { if (c.slug) { SLUGS_UNIQ.push(c.slug); if (c.nombre) NAMES_ES[c.slug] = c.nombre; } });
+  } catch(e) {}
+
   // Cargar índice de partidos para saber qué equipos tienen datos
   let partidosIdx = [];
   try {
