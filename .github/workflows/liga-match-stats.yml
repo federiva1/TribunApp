@@ -1,9 +1,10 @@
-name: Liga Match Stats
+name: Liga + Copa Match Stats
 
-# Procesa los partidos FT de la Liga que aún no tienen stats individuales:
-# base (api-sports) + jugadores (FotMob) → data/partidos/{id}.json + index.json.
-# Idempotente: saltea los ya procesados (0 llamadas api para esos). Se auto-repara
-# si FotMob todavía no tenía los datos (reintenta en la próxima corrida).
+# Procesa los partidos FT de Liga + copas (Libertadores/Sudamericana) que aún no tienen
+# stats individuales: base (api-sports) + jugadores (FotMob) → data/partidos/{id}.json +
+# index.json. Copa: solo clubes vivos (whitelist en fetch_liga_partidos.COPA_CLUBS) y de
+# octavos en adelante (cutoff COPA_DESDE). Idempotente: saltea los ya procesados (0 llamadas
+# api). Se auto-repara si FotMob todavía no tenía los datos (reintenta en la próxima corrida).
 
 on:
   schedule:
@@ -25,6 +26,11 @@ jobs:
         env:
           API_SPORTS_KEY: ${{ secrets.API_SPORTS_KEY }}
         run: python scripts/fetch_liga_partidos.py --torneo clausura
+
+      - name: Scrapear partidos FT de copa (clubes vivos, octavos en adelante)
+        env:
+          API_SPORTS_KEY: ${{ secrets.API_SPORTS_KEY }}
+        run: python scripts/fetch_liga_partidos.py --competicion copas
 
       - name: Commit stats de partidos
         uses: stefanzweifel/git-auto-commit-action@v5
