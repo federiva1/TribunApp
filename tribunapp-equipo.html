@@ -283,17 +283,12 @@ function calcPuntajes(rows) {
       agg[num].realSum += n; agg[num].realCount++;
     });
   });
-  // Regla S/P: como el formulario obliga a puntuar a todos, el total de votos incluye los S/P.
-  // Si >50% son S/P → cada S/P pesa 0; si ≤50% → cada S/P pesa 2 (no le baja tanto).
+  // Promedio simple de los puntajes reales (los S/P no cuentan), igual que club.html.
+  // Se muestra siempre con 1 decimal en el render → sin inconsistencias entre fecha y acumulado.
   return Object.keys(agg).map(function(num) {
     var a = agg[num];
-    var total = a.realCount + a.spCount;
-    var avg = null;
-    if (total > 0) {
-      var spVal = (a.spCount / total) > 0.5 ? 0 : 2;
-      avg = +((a.realSum + spVal * a.spCount) / total).toFixed(1);
-    }
-    return { num: num, avg: avg, votes: total };
+    var avg = a.realCount > 0 ? a.realSum / a.realCount : null;
+    return { num: num, avg: avg, votes: a.realCount };
   }).sort(function(a, b) {
     return (b.avg == null ? -1 : b.avg) - (a.avg == null ? -1 : a.avg);
   });
@@ -392,7 +387,7 @@ function renderPodio(players, container, squad) {
     item.innerHTML = foto +
       '<div class="podio-medal">' + medals[i] + '</div>' +
       '<div class="podio-name">' + esc(puntName(p.num, squad)) + '</div>' +
-      '<div class="podio-val">' + (p.avg == null ? '—' : p.avg) + '</div>' +
+      '<div class="podio-val">' + (p.avg == null ? '—' : p.avg.toFixed(1)) + '</div>' +
       '<div class="podio-label">' + p.votes + ' voto' + (p.votes !== 1 ? 's' : '') + '</div>';
     podioEl.appendChild(item);
   });
@@ -410,7 +405,7 @@ function renderPodio(players, container, squad) {
       var foto = kitAv(isDT ? 'DT' : puntNum(p.num, squad), 'form-row-foto', 30);
       row.innerHTML = foto +
         '<div class="form-row-name">' + esc(puntName(p.num, squad)) + '</div>' +
-        '<div class="form-row-pct" style="color:var(--gold)">' + (p.avg == null ? '—' : p.avg) + '</div>';
+        '<div class="form-row-pct" style="color:var(--gold)">' + (p.avg == null ? '—' : p.avg.toFixed(1)) + '</div>';
       list.appendChild(row);
     });
     container.appendChild(list);
