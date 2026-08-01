@@ -417,7 +417,9 @@ function renderClausura() {
   if (teamFilter) {
     const lista = document.createElement('div');
     lista.className = 'lista-plana';
-    partidos.slice().sort((a, b) => (a.fecha||0) - (b.fecha||0))
+    // Orden CRONOLÓGICO (por fecha real), no por número de fecha: un partido
+    // pospuesto (ej. F2) puede quedar entre otras fechas (F3/F4) y no debe salir antes.
+    partidos.slice().sort((a, b) => (a.status.utcTime||'').localeCompare(b.status.utcTime||''))
       .forEach(p => lista.appendChild(cardLiga(p, `Fecha ${p.fecha}`)));
     wrap.appendChild(lista);
     return;
@@ -427,7 +429,11 @@ function renderClausura() {
   const porFecha = {};
   partidos.forEach(p => { (porFecha[p.fecha] = porFecha[p.fecha] || []).push(p); });
   const fechas = Object.keys(porFecha).map(Number).sort((a, b) => a - b);
-  const fechaActual = fechas.find(n => porFecha[n].some(p => !p.status.finished)) ?? fechas[fechas.length - 1];
+  // Fecha "actual" = la del próximo partido por fecha REAL (no el menor número de fecha):
+  // con una postergación, la F2 puede ser posterior a la F3, así que se elige por utcTime.
+  const proxNoFin = partidos.filter(p => !p.status.finished)
+    .sort((a, b) => (a.status.utcTime||'').localeCompare(b.status.utcTime||''))[0];
+  const fechaActual = proxNoFin ? proxNoFin.fecha : fechas[fechas.length - 1];
   fechas.forEach(n => {
     const ms = porFecha[n];
     const fin = ms.filter(m => m.status.finished).length;

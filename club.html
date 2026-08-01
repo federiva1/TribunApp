@@ -2867,8 +2867,10 @@ async function clubLigaMatches() {
   try {
     const r = await fetch(`data/fixtures/liga.json?t=${Date.now()}`);
     const liga = await r.json();
+    // Orden CRONOLÓGICO (por fecha real), no por número de fecha: un partido pospuesto
+    // (ej. F2) puede quedar entre otras fechas, y el "próximo" debe ser el más cercano en el tiempo.
     const mine = liga.filter(p => p.home.slug === CLUB_SLUG || p.away.slug === CLUB_SLUG)
-                     .sort((a, b) => (a.fecha || 0) - (b.fecha || 0));
+                     .sort((a, b) => (a.status.utcTime || '').localeCompare(b.status.utcTime || ''));
     const proximo = mine.find(p => !p.status.finished);
     const finished = mine.filter(p => p.status.finished);
     _ligaMine = { mine, proximo, ultimo: finished[finished.length - 1] || null };
