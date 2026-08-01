@@ -2190,7 +2190,9 @@ function _statsResolveDefaultFecha() {
   if (_stats.fechaSel !== null) return;
   const partidos = _stats.data.partidos.filter(p => p.stats_partido);
   if (partidos.length) {
-    _stats.fechaSel = String(Math.max(...partidos.map(p => p.fecha)));
+    // Default = último partido por fecha REAL (no el nº de fecha más alto, que se desfasa con postergaciones).
+    const ultimo = partidos.reduce((a, b) => ((a.date || '') > (b.date || '') ? a : b));
+    _stats.fechaSel = String(ultimo.fecha);
   } else {
     _stats.fechaSel = 'acum';
   }
@@ -3160,7 +3162,7 @@ async function renderTribunApp() {
   // solo fechas que mapean a un partido de liga.json (descarta filas viejas huérfanas)
   const dates = [...new Set([..._ta.forms, ..._ta.punts].map(r => r.match_date).filter(d => d && dateMap[d]))];
   const fechas = dates.map(d => ({ date: d, fecha: dateMap[d].fecha, rival: dateMap[d].rival }))
-    .sort((a, b) => a.fecha - b.fecha);
+    .sort((a, b) => (a.date || '').localeCompare(b.date || ''));  // cronológico (no por nº de fecha, que se desfasa con postergaciones)
 
   if (!fechas.length) {
     cont.innerHTML = `<div class="stats-empty">👥<br><br>Todavía no hay votos de la gente.<br><span style="font-size:12px;color:#666;">Armá tu formación o poné tus puntajes para sumar el primero.</span></div>`;
