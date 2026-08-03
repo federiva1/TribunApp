@@ -39,7 +39,10 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   position: sticky; top: 0; z-index: 50; backdrop-filter: blur(10px);
 }
 .logo-wrap { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-.logo-wrap img { height: 52px; object-fit: contain; }
+/* Logo.png es 1880x836 (ratio 2.25) → a 72px de alto ocupa ~162px de ancho.
+   Tamaño anterior (por si hay que volver): height: 52px;  (fixture.html y tablas.html siguen en 52px) */
+.logo-wrap img { height: 72px; object-fit: contain; }
+@media (max-width: 430px) { .logo-wrap img { height: 60px; } }
 .header-chip {
   font-family: 'Barlow Condensed', sans-serif;
   font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase;
