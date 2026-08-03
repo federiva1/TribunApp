@@ -103,7 +103,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 }
 .club-tile {
   position: relative; cursor: pointer; overflow: hidden;
-  border-radius: 14px; padding: 14px; aspect-ratio: 1.25;   /* = ratio de las fotos, entran completas */
+  border-radius: 14px; padding: 14px; aspect-ratio: 1.78;   /* = ratio de las fotos, entran completas */
   display: flex; flex-direction: column; justify-content: flex-end;
   background-color: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09);
   transition: transform 0.12s ease, border-color 0.2s;
@@ -137,10 +137,6 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   transition: max-height 0.3s ease, opacity 0.3s ease, margin-top 0.3s ease;
 }
 .club-tile:hover .club-tile-desc { max-height: 52px; opacity: 1; margin-top: 5px; }   /* 52px = hasta 3 líneas, no corta */
-/* En pantallas táctiles no hay hover: la descripción se muestra siempre. */
-@media (hover: none) {
-  .club-tile-desc { max-height: 52px; opacity: 1; margin-top: 5px; }
-}
 /* Foto de cada sección (fotos/secciones/, recortadas al gráfico y optimizadas) */
 .tile-formacion    .club-tile-photo { background-image: url('fotos/secciones/formacion.jpg'); }
 .tile-puntajes     .club-tile-photo { background-image: url('fotos/secciones/puntajes.jpg'); }
@@ -155,6 +151,9 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   color: rgba(255,255,255,0.5); margin-top: 4px; min-height: 15px;
 }
 .club-tile-sub b { color: var(--club-color); font-weight: 600; }
+/* En pantallas angostas el tile apaisado deja poco alto para el texto: se le da
+   algo más de altura (la foto recorta un poco a los lados, que es lo de menos). */
+@media (max-width: 480px) { .club-tile { aspect-ratio: 1.35; } }
 @media (max-width: 360px) { .club-tile-title { font-size: 17px; } }
 /* ===== SECONDARY ROW ===== */
 .secondary-row {
