@@ -31,6 +31,9 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
   backdrop-filter:blur(10px);gap:12px;
 }
 .logo-wrap{display:flex;align-items:center;gap:10px;text-decoration:none;}
+/* Logo del header — MISMO tamaño en todas las páginas de la web (si se cambia, cambiarlo en todas). */
+.logo-wrap img{height:72px;object-fit:contain;}
+@media (max-width:430px){.logo-wrap img{height:60px;}}
 .header-chip{
   font-family:'Barlow Condensed',sans-serif;
   font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;
@@ -279,7 +282,7 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
 
 <header id="site-header">
   <a class="logo-wrap" href="index.html">
-    <img src="Logo.png" alt="TribunApp" style="height:56px;object-fit:contain;">
+    <img src="Logo.png" alt="TribunApp">
   </a>
   <div class="header-actions">
     <a class="header-pill" href="fixture.html">

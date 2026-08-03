@@ -37,7 +37,9 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   position: sticky; top: 0; z-index: 50; backdrop-filter: blur(10px);
 }
 .logo-wrap { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-.logo-wrap img { height: 52px; object-fit: contain; }
+/* Logo del header — MISMO tamaño en todas las páginas de la web (si se cambia, cambiarlo en todas). */
+.logo-wrap img { height: 72px; object-fit: contain; }
+@media (max-width: 430px) { .logo-wrap img { height: 60px; } }
 .header-actions { display: flex; gap: 8px; align-items: center; }
 .header-pill {
   display: flex; align-items: center; gap: 7px;
