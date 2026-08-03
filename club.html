@@ -28,7 +28,9 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 
 /* ===== HOME SCREEN ===== */
 #home-screen { min-height: 100vh; background: var(--dark); }
-#home-app { background: var(--dark2); max-width: 480px; margin: 0 auto; min-height: 100vh; position: relative; }
+/* 600px (antes 480) para que los tiles del menú queden ~275x150, casi el 16:9 de
+   las fotos de sección, y no se recorte el texto que traen las imágenes. */
+#home-app { background: var(--dark2); max-width: 600px; margin: 0 auto; min-height: 100vh; position: relative; }
 
 /* Header del club */
 .club-header {
@@ -155,7 +157,8 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   display: none; position: fixed; inset: 0; z-index: 100;
   background: var(--dark); overflow-y: auto;
 }
-.overlay-inner { background: var(--dark2); max-width: 480px; margin: 0 auto; min-height: 100vh; position: relative; padding: 12px; }
+/* Mismo ancho que #home-app (600px) para que no salte al abrir/cerrar una sección. */
+.overlay-inner { background: var(--dark2); max-width: 600px; margin: 0 auto; min-height: 100vh; position: relative; padding: 12px; }
 .back-btn {
   display: flex; align-items: center; gap: 6px;
   font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 1px;
@@ -751,13 +754,11 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
     <div class="club-tile tile-estadisticas" onclick="location.href='equipo.html?c='+encodeURIComponent(new URLSearchParams(location.search).get('c')||'')+'&s=estadisticas&from=club'">
       <div class="club-tile-body">
         <div class="club-tile-title">ESTADÍSTICAS</div>
-        <div class="club-tile-sub">Rendimiento por fecha</div>
       </div>
     </div>
     <div class="club-tile tile-tribunapp" onclick="location.href='tribunapp-equipo.html?c='+encodeURIComponent(new URLSearchParams(location.search).get('c')||'')+'&from=club'">
       <div class="club-tile-body">
         <div class="club-tile-title">EST. TRIBUNAPP</div>
-        <div class="club-tile-sub">Lo que vota la gente</div>
       </div>
     </div>
   </div>
@@ -906,7 +907,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 
 <!-- PANTALLA FECHA ANTERIOR -->
 <div id="prev-fecha-screen" style="display:none;position:fixed;inset:0;z-index:300;background:var(--dark);overflow-y:auto;">
-<div style="background:var(--dark2);padding:12px;max-width:480px;margin:0 auto;min-height:100vh;">
+<div style="background:var(--dark2);padding:12px;max-width:600px;margin:0 auto;min-height:100vh;">
   <button class="back-btn" id="back-prev-fecha-btn">← Volver</button>
   <div id="prev-fecha-header" style="text-align:center;margin-bottom:14px;"></div>
   <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2px;color:#555;text-transform:uppercase;margin:14px 0 8px;">⚽ Formaciones de la gente</div>
