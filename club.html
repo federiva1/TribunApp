@@ -103,32 +103,49 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 }
 .club-tile {
   position: relative; cursor: pointer; overflow: hidden;
-  border-radius: 14px; padding: 18px 14px; min-height: 150px;
+  border-radius: 14px; padding: 14px; aspect-ratio: 1.25;   /* = ratio de las fotos, entran completas */
   display: flex; flex-direction: column; justify-content: flex-end;
   background-color: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09);
-  background-size: cover; background-position: center;
-  transition: transform 0.12s ease, background-color 0.2s, border-color 0.2s;
+  transition: transform 0.12s ease, border-color 0.2s;
 }
 .club-tile:active { transform: scale(0.975); }
 .club-tile:hover { border-color: var(--club-color); }
 .club-tile::before {
   content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
-  background: var(--club-color); z-index: 2;
+  background: var(--club-color); z-index: 3;
 }
-/* Velo oscuro solo en la mitad de abajo: deja ver la foto y mantiene legible el texto
-   (las fotos ya son oscuras — brillo medio 30-80 de 255 — así que no hace falta más). */
+/* La foto va en su propia capa para poder agrandarla en hover sin mover el texto */
+.club-tile-photo {
+  position: absolute; inset: 0; z-index: 0;
+  background-size: cover; background-position: center;
+  transition: transform 0.45s ease;
+}
+.club-tile:hover .club-tile-photo { transform: scale(1.09); }
+/* Velo oscuro hacia abajo: deja ver la foto y mantiene legible el texto */
 .club-tile::after {
   content: ''; position: absolute; inset: 0; z-index: 1;
-  background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.25) 45%, rgba(0,0,0,0.72) 100%);
-  transition: background 0.2s;
+  background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.22) 42%, rgba(0,0,0,0.74) 100%);
+  transition: background 0.3s;
 }
-.club-tile:hover::after { background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.15) 45%, rgba(0,0,0,0.65) 100%); }
+.club-tile:hover::after { background: linear-gradient(180deg, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.38) 42%, rgba(0,0,0,0.86) 100%); }
 .club-tile-body { position: relative; z-index: 2; }
-/* Foto de cada sección (fotos/secciones/, optimizadas a 800px) */
-.tile-formacion    { background-image: url('fotos/secciones/formacion.jpg'); }
-.tile-puntajes     { background-image: url('fotos/secciones/puntajes.jpg'); }
-.tile-estadisticas { background-image: url('fotos/secciones/estadisticas.jpg'); }
-.tile-tribunapp    { background-image: url('fotos/secciones/est-tribunapp.jpg'); }
+/* Descripción corta: aparece al pasar el mouse por encima */
+.club-tile-desc {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 12.5px; letter-spacing: 0.3px;
+  color: rgba(255,255,255,0.8); line-height: 1.25;
+  max-height: 0; opacity: 0; overflow: hidden; margin-top: 0;
+  transition: max-height 0.3s ease, opacity 0.3s ease, margin-top 0.3s ease;
+}
+.club-tile:hover .club-tile-desc { max-height: 52px; opacity: 1; margin-top: 5px; }   /* 52px = hasta 3 líneas, no corta */
+/* En pantallas táctiles no hay hover: la descripción se muestra siempre. */
+@media (hover: none) {
+  .club-tile-desc { max-height: 52px; opacity: 1; margin-top: 5px; }
+}
+/* Foto de cada sección (fotos/secciones/, recortadas al gráfico y optimizadas) */
+.tile-formacion    .club-tile-photo { background-image: url('fotos/secciones/formacion.jpg'); }
+.tile-puntajes     .club-tile-photo { background-image: url('fotos/secciones/puntajes.jpg'); }
+.tile-estadisticas .club-tile-photo { background-image: url('fotos/secciones/estadisticas.jpg'); }
+.tile-tribunapp    .club-tile-photo { background-image: url('fotos/secciones/est-tribunapp.jpg'); }
 .club-tile-title {
   font-family: 'Bebas Neue', sans-serif; font-size: 19px; letter-spacing: 1.5px;
   color: #fff; line-height: 1.05;
@@ -138,7 +155,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   color: rgba(255,255,255,0.5); margin-top: 4px; min-height: 15px;
 }
 .club-tile-sub b { color: var(--club-color); font-weight: 600; }
-@media (max-width: 360px) { .club-tile-title { font-size: 17px; } .club-tile { min-height: 132px; } }
+@media (max-width: 360px) { .club-tile-title { font-size: 17px; } }
 /* ===== SECONDARY ROW ===== */
 .secondary-row {
   display: flex; height: 48px;
@@ -740,25 +757,33 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   <!-- MENÚ PRINCIPAL — 4 SECCIONES -->
   <div class="club-grid">
     <div class="club-tile tile-formacion" onclick="openSection('formation')">
+      <div class="club-tile-photo"></div>
       <div class="club-tile-body">
         <div class="club-tile-title">ARMÁ TU FORMACIÓN</div>
         <div class="club-tile-sub" id="tile-formacion-sub"></div>
+        <div class="club-tile-desc">Elegí los 11 que pondrías vos</div>
       </div>
     </div>
     <div class="club-tile tile-puntajes" onclick="openSection('scores')">
+      <div class="club-tile-photo"></div>
       <div class="club-tile-body">
         <div class="club-tile-title">PONÉ TU PUNTAJE</div>
         <div class="club-tile-sub" id="tile-puntaje-sub"></div>
+        <div class="club-tile-desc">Calificá a cada jugador del partido</div>
       </div>
     </div>
     <div class="club-tile tile-estadisticas" onclick="location.href='equipo.html?c='+encodeURIComponent(new URLSearchParams(location.search).get('c')||'')+'&s=estadisticas&from=club'">
+      <div class="club-tile-photo"></div>
       <div class="club-tile-body">
         <div class="club-tile-title">ESTADÍSTICAS</div>
+        <div class="club-tile-desc">Rendimiento del equipo fecha por fecha</div>
       </div>
     </div>
     <div class="club-tile tile-tribunapp" onclick="location.href='tribunapp-equipo.html?c='+encodeURIComponent(new URLSearchParams(location.search).get('c')||'')+'&from=club'">
+      <div class="club-tile-photo"></div>
       <div class="club-tile-body">
         <div class="club-tile-title">EST. TRIBUNAPP</div>
+        <div class="club-tile-desc">Lo que vota la gente</div>
       </div>
     </div>
   </div>
