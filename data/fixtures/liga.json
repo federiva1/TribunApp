@@ -1047,9 +1047,9 @@
     "status": {
       "utcTime": "2026-08-02T22:15:00+00:00",
       "started": true,
-      "finished": false,
-      "short": "1H",
-      "elapsed": 30
+      "finished": true,
+      "short": "FT",
+      "elapsed": 90
     }
   },
   {
@@ -1066,17 +1066,17 @@
       "id": "478",
       "slug": "instituto"
     },
-    "home_score": null,
-    "away_score": null,
+    "home_score": 0,
+    "away_score": 0,
     "home_pen": null,
     "away_pen": null,
     "winner": null,
     "status": {
       "utcTime": "2026-08-03T00:30:00+00:00",
-      "started": false,
+      "started": true,
       "finished": false,
-      "short": "NS",
-      "elapsed": null
+      "short": "2H",
+      "elapsed": 64
     }
   },
   {
@@ -1217,16 +1217,16 @@
   {
     "round": "Clausura - 4",
     "fecha": 4,
-    "api_id": "1493053",
+    "api_id": "1493054",
     "home": {
-      "name": "Gimnasia L.P.",
-      "id": "434",
-      "slug": "gimnasialp"
+      "name": "Independiente",
+      "id": "453",
+      "slug": "independiente"
     },
     "away": {
-      "name": "Barracas Central",
-      "id": "2432",
-      "slug": "barracascentral"
+      "name": "Platense",
+      "id": "1064",
+      "slug": "clubatleticoplatense"
     },
     "home_score": null,
     "away_score": null,
@@ -1234,7 +1234,34 @@
     "away_pen": null,
     "winner": null,
     "status": {
-      "utcTime": "2026-08-09T20:00:00+00:00",
+      "utcTime": "2026-08-09T00:30:00+00:00",
+      "started": false,
+      "finished": false,
+      "short": "NS",
+      "elapsed": null
+    }
+  },
+  {
+    "round": "Clausura - 4",
+    "fecha": 4,
+    "api_id": "1493058",
+    "home": {
+      "name": "San Lorenzo",
+      "id": "460",
+      "slug": "sanlorenzo"
+    },
+    "away": {
+      "name": "Huracan",
+      "id": "445",
+      "slug": "huracan"
+    },
+    "home_score": null,
+    "away_score": null,
+    "home_pen": null,
+    "away_pen": null,
+    "winner": null,
+    "status": {
+      "utcTime": "2026-08-09T18:00:00+00:00",
       "started": false,
       "finished": false,
       "short": "NS",
@@ -1281,33 +1308,6 @@
       "name": "Central Cordoba de Santiago",
       "id": "1065",
       "slug": "centralcordobadesantiago"
-    },
-    "home_score": null,
-    "away_score": null,
-    "home_pen": null,
-    "away_pen": null,
-    "winner": null,
-    "status": {
-      "utcTime": "2026-08-09T20:00:00+00:00",
-      "started": false,
-      "finished": false,
-      "short": "NS",
-      "elapsed": null
-    }
-  },
-  {
-    "round": "Clausura - 4",
-    "fecha": 4,
-    "api_id": "1493051",
-    "home": {
-      "name": "Defensa Y Justicia",
-      "id": "442",
-      "slug": "defensayjusticia"
-    },
-    "away": {
-      "name": "Newells Old Boys",
-      "id": "457",
-      "slug": "newellsoldboys"
     },
     "home_score": null,
     "away_score": null,
@@ -1406,33 +1406,6 @@
   {
     "round": "Clausura - 4",
     "fecha": 4,
-    "api_id": "1493054",
-    "home": {
-      "name": "Independiente",
-      "id": "453",
-      "slug": "independiente"
-    },
-    "away": {
-      "name": "Platense",
-      "id": "1064",
-      "slug": "clubatleticoplatense"
-    },
-    "home_score": null,
-    "away_score": null,
-    "home_pen": null,
-    "away_pen": null,
-    "winner": null,
-    "status": {
-      "utcTime": "2026-08-09T20:00:00+00:00",
-      "started": false,
-      "finished": false,
-      "short": "NS",
-      "elapsed": null
-    }
-  },
-  {
-    "round": "Clausura - 4",
-    "fecha": 4,
     "api_id": "1493048",
     "home": {
       "name": "Atletico Tucuman",
@@ -1470,60 +1443,6 @@
       "name": "Lanus",
       "id": "446",
       "slug": "lanus"
-    },
-    "home_score": null,
-    "away_score": null,
-    "home_pen": null,
-    "away_pen": null,
-    "winner": null,
-    "status": {
-      "utcTime": "2026-08-09T20:00:00+00:00",
-      "started": false,
-      "finished": false,
-      "short": "NS",
-      "elapsed": null
-    }
-  },
-  {
-    "round": "Clausura - 4",
-    "fecha": 4,
-    "api_id": "1493047",
-    "home": {
-      "name": "Argentinos JRS",
-      "id": "458",
-      "slug": "argentinosjuniors"
-    },
-    "away": {
-      "name": "Racing Club",
-      "id": "436",
-      "slug": "racingclub"
-    },
-    "home_score": null,
-    "away_score": null,
-    "home_pen": null,
-    "away_pen": null,
-    "winner": null,
-    "status": {
-      "utcTime": "2026-08-09T20:00:00+00:00",
-      "started": false,
-      "finished": false,
-      "short": "NS",
-      "elapsed": null
-    }
-  },
-  {
-    "round": "Clausura - 4",
-    "fecha": 4,
-    "api_id": "1493058",
-    "home": {
-      "name": "San Lorenzo",
-      "id": "460",
-      "slug": "sanlorenzo"
-    },
-    "away": {
-      "name": "Huracan",
-      "id": "445",
-      "slug": "huracan"
     },
     "home_score": null,
     "away_score": null,
@@ -1613,6 +1532,87 @@
     "winner": null,
     "status": {
       "utcTime": "2026-08-09T20:00:00+00:00",
+      "started": false,
+      "finished": false,
+      "short": "NS",
+      "elapsed": null
+    }
+  },
+  {
+    "round": "Clausura - 4",
+    "fecha": 4,
+    "api_id": "1493053",
+    "home": {
+      "name": "Gimnasia L.P.",
+      "id": "434",
+      "slug": "gimnasialp"
+    },
+    "away": {
+      "name": "Barracas Central",
+      "id": "2432",
+      "slug": "barracascentral"
+    },
+    "home_score": null,
+    "away_score": null,
+    "home_pen": null,
+    "away_pen": null,
+    "winner": null,
+    "status": {
+      "utcTime": "2026-08-09T20:45:00+00:00",
+      "started": false,
+      "finished": false,
+      "short": "NS",
+      "elapsed": null
+    }
+  },
+  {
+    "round": "Clausura - 4",
+    "fecha": 4,
+    "api_id": "1493051",
+    "home": {
+      "name": "Defensa Y Justicia",
+      "id": "442",
+      "slug": "defensayjusticia"
+    },
+    "away": {
+      "name": "Newells Old Boys",
+      "id": "457",
+      "slug": "newellsoldboys"
+    },
+    "home_score": null,
+    "away_score": null,
+    "home_pen": null,
+    "away_pen": null,
+    "winner": null,
+    "status": {
+      "utcTime": "2026-08-09T20:45:00+00:00",
+      "started": false,
+      "finished": false,
+      "short": "NS",
+      "elapsed": null
+    }
+  },
+  {
+    "round": "Clausura - 4",
+    "fecha": 4,
+    "api_id": "1493047",
+    "home": {
+      "name": "Argentinos JRS",
+      "id": "458",
+      "slug": "argentinosjuniors"
+    },
+    "away": {
+      "name": "Racing Club",
+      "id": "436",
+      "slug": "racingclub"
+    },
+    "home_score": null,
+    "away_score": null,
+    "home_pen": null,
+    "away_pen": null,
+    "winner": null,
+    "status": {
+      "utcTime": "2026-08-09T23:15:00+00:00",
       "started": false,
       "finished": false,
       "short": "NS",
