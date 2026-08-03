@@ -101,19 +101,32 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 }
 .club-tile {
   position: relative; cursor: pointer; overflow: hidden;
-  border-radius: 14px; padding: 18px 14px; min-height: 132px;
-  display: flex; flex-direction: column; justify-content: space-between;
-  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09);
-  transition: transform 0.12s ease, background 0.2s, border-color 0.2s;
+  border-radius: 14px; padding: 18px 14px; min-height: 150px;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  background-color: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09);
+  background-size: cover; background-position: center;
+  transition: transform 0.12s ease, background-color 0.2s, border-color 0.2s;
 }
 .club-tile:active { transform: scale(0.975); }
-.club-tile:hover { background: rgba(255,255,255,0.07); border-color: var(--club-color); }
+.club-tile:hover { border-color: var(--club-color); }
 .club-tile::before {
   content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
-  background: var(--club-color);
+  background: var(--club-color); z-index: 2;
 }
-.club-tile-icon { font-size: 26px; line-height: 1; }
-.club-tile-body { margin-top: auto; }
+/* Velo oscuro solo en la mitad de abajo: deja ver la foto y mantiene legible el texto
+   (las fotos ya son oscuras — brillo medio 30-80 de 255 — así que no hace falta más). */
+.club-tile::after {
+  content: ''; position: absolute; inset: 0; z-index: 1;
+  background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.25) 45%, rgba(0,0,0,0.72) 100%);
+  transition: background 0.2s;
+}
+.club-tile:hover::after { background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.15) 45%, rgba(0,0,0,0.65) 100%); }
+.club-tile-body { position: relative; z-index: 2; }
+/* Foto de cada sección (fotos/secciones/, optimizadas a 800px) */
+.tile-formacion    { background-image: url('fotos/secciones/formacion.jpg'); }
+.tile-puntajes     { background-image: url('fotos/secciones/puntajes.jpg'); }
+.tile-estadisticas { background-image: url('fotos/secciones/estadisticas.jpg'); }
+.tile-tribunapp    { background-image: url('fotos/secciones/est-tribunapp.jpg'); }
 .club-tile-title {
   font-family: 'Bebas Neue', sans-serif; font-size: 19px; letter-spacing: 1.5px;
   color: #fff; line-height: 1.05;
@@ -123,7 +136,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   color: rgba(255,255,255,0.5); margin-top: 4px; min-height: 15px;
 }
 .club-tile-sub b { color: var(--club-color); font-weight: 600; }
-@media (max-width: 360px) { .club-tile-title { font-size: 17px; } .club-tile { min-height: 120px; } }
+@media (max-width: 360px) { .club-tile-title { font-size: 17px; } .club-tile { min-height: 132px; } }
 /* ===== SECONDARY ROW ===== */
 .secondary-row {
   display: flex; height: 48px;
@@ -723,29 +736,25 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 
   <!-- MENÚ PRINCIPAL — 4 SECCIONES -->
   <div class="club-grid">
-    <div class="club-tile" onclick="openSection('formation')">
-      <div class="club-tile-icon">⚽</div>
+    <div class="club-tile tile-formacion" onclick="openSection('formation')">
       <div class="club-tile-body">
         <div class="club-tile-title">ARMÁ TU FORMACIÓN</div>
         <div class="club-tile-sub" id="tile-formacion-sub"></div>
       </div>
     </div>
-    <div class="club-tile" onclick="openSection('scores')">
-      <div class="club-tile-icon">⭐</div>
+    <div class="club-tile tile-puntajes" onclick="openSection('scores')">
       <div class="club-tile-body">
         <div class="club-tile-title">PONÉ TU PUNTAJE</div>
         <div class="club-tile-sub" id="tile-puntaje-sub"></div>
       </div>
     </div>
-    <div class="club-tile" onclick="location.href='equipo.html?c='+encodeURIComponent(new URLSearchParams(location.search).get('c')||'')+'&s=estadisticas&from=club'">
-      <div class="club-tile-icon">📊</div>
+    <div class="club-tile tile-estadisticas" onclick="location.href='equipo.html?c='+encodeURIComponent(new URLSearchParams(location.search).get('c')||'')+'&s=estadisticas&from=club'">
       <div class="club-tile-body">
         <div class="club-tile-title">ESTADÍSTICAS</div>
         <div class="club-tile-sub">Rendimiento por fecha</div>
       </div>
     </div>
-    <div class="club-tile" onclick="location.href='tribunapp-equipo.html?c='+encodeURIComponent(new URLSearchParams(location.search).get('c')||'')+'&from=club'">
-      <div class="club-tile-icon">👥</div>
+    <div class="club-tile tile-tribunapp" onclick="location.href='tribunapp-equipo.html?c='+encodeURIComponent(new URLSearchParams(location.search).get('c')||'')+'&from=club'">
       <div class="club-tile-body">
         <div class="club-tile-title">EST. TRIBUNAPP</div>
         <div class="club-tile-sub">Lo que vota la gente</div>
