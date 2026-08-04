@@ -286,7 +286,9 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 #results-screen h2 { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: #fff; letter-spacing: 2px; text-align: center; margin-bottom: 4px; }
 .subtitle { font-size: 11px; color: #666; text-align: center; margin-bottom: 14px; }
 .tier-row { display: flex; align-items: stretch; margin-bottom: 6px; border-radius: 8px; overflow: hidden; min-height: 56px; }
-.tier-label { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 54px; padding: 6px 4px; font-family: 'Bebas Neue', sans-serif; font-size: 11px; letter-spacing: 1px; text-align: center; flex-shrink: 0; line-height: 1.2; }
+.tier-label { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; width: 84px; flex-shrink: 0; padding: 8px 6px; text-align: center; line-height: 1.15; }
+.tier-label-name  { font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 1.2px; }
+.tier-label-rango { font-family: 'Bebas Neue', sans-serif; font-size: 10px; letter-spacing: .8px; opacity: .6; }
 .tier-s .tier-label { background: #b71c1c; color: #fff; }
 .tier-a .tier-label { background: #c62828; color: #fff; }
 .tier-b .tier-label { background: #6a1515; color: #fff; }
@@ -1507,14 +1509,19 @@ async function showResults() {
     totalEl.textContent = `${total} formación${total !== 1 ? 'es' : ''} enviada${total !== 1 ? 's' : ''}`;
     list.innerHTML = '';
     const tiers = [
-      { cls: 'tier-s', min: 81, max: 100 }, { cls: 'tier-a', min: 61, max: 80 },
-      { cls: 'tier-b', min: 41, max: 60 }, { cls: 'tier-c', min: 21, max: 40 }, { cls: 'tier-d', min: 0, max: 20 }
+      { cls: 'tier-s', min: 80, max: 100, label: 'Titular'  },
+      { cls: 'tier-a', min: 60, max: 79,  label: 'Probable' },
+      { cls: 'tier-b', min: 40, max: 59,  label: 'En duda'  },
+      { cls: 'tier-c', min: 20, max: 39,  label: 'Suplente' },
+      { cls: 'tier-d', min: 0,  max: 19,  label: 'Reserva'  }
     ];
     tiers.forEach(tier => {
       const inTier = players.filter(p => p.pct >= tier.min && p.pct <= tier.max);
       if (!inTier.length) return;
       const row = document.createElement('div'); row.className = `tier-row ${tier.cls}`;
-      const label = document.createElement('div'); label.className = 'tier-label'; label.textContent = tier.min + '-' + tier.max + '%';
+      const label = document.createElement('div'); label.className = 'tier-label';
+      label.innerHTML = `<div class="tier-label-name">${tier.label}</div>`
+        + `<div class="tier-label-rango">${tier.min}-${tier.max}%</div>`;
       row.appendChild(label);
       const pDiv = document.createElement('div'); pDiv.className = 'tier-players';
       inTier.forEach(p => {
