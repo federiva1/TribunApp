@@ -1458,7 +1458,21 @@ function renderPlantel() {
   wrap.dataset.rendered = '1';
   wrap.innerHTML = '';
 
-  const jugadores = plantelData.jugadores;
+  // Dos formatos: club = array [{num,name,position}] (position en inglés y plural);
+  // Mundial = {jugadores:[{numero,nombre,posicion}]}. Se normalizan a uno solo.
+  const POS_EN = { keepers: 'GK', goalkeepers: 'GK', defenders: 'DEF', midfielders: 'MED', attackers: 'DEL', forwards: 'DEL' };
+  const crudos = Array.isArray(plantelData) ? plantelData : (plantelData.jugadores || []);
+  const jugadores = crudos.map(j => {
+    const n = (j.numero != null && j.numero !== '') ? j.numero : j.num;
+    const num = (n === '' || n == null) ? null : parseInt(n, 10);
+    return {
+      numero: Number.isNaN(num) ? null : num,
+      nombre: j.nombre || j.name || '',
+      fid: j.fid,
+      posicion: j.posicion || POS_EN[String(j.position || '').toLowerCase()] || 'DEL'
+    };
+  });
+
   const porPos = {};
   for (const j of jugadores) {
     const pos = j.posicion || 'DEL';
@@ -1469,7 +1483,7 @@ function renderPlantel() {
   for (const pos of POS_ORDER) {
     const grupo = porPos[pos];
     if (!grupo?.length) continue;
-    grupo.sort((a, b) => (a.numero ?? 99) - (b.numero ?? 99));
+    grupo.sort((a, b) => (a.numero ?? 999) - (b.numero ?? 999));   // los sin dorsal, al final
 
     const sec = document.createElement('div');
     sec.className = 'pos-seccion';
