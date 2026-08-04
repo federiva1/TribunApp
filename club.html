@@ -1078,7 +1078,6 @@ const playedSquad    = CLUB.playedSquad   || [];
 let squad            = [];
 const FECHAS         = CLUB.fechas        || [];
 
-const FOTO = fid => `fotos/${CLUB_SLUG}/${fid}.png`;
 
 // ---- Render header ----
 document.getElementById('back-btn').onclick = () => {
@@ -1202,11 +1201,6 @@ function kitChip(slug, num, size) {
   return wrap;
 }
 
-// Compat: makeAvatar mantiene la firma (src se ignora — ya no usamos fotos).
-function makeAvatar(src, num, size) {
-  return kitChip(CLUB_SLUG, num, size);
-}
-
 // ============================================================
 // FORMACIÓN — GRID DE JUGADORES
 // ============================================================
@@ -1223,7 +1217,7 @@ function renderGrid() {
     const blocked = isInjured || isSuspended;
     const chip = document.createElement('div');
     chip.className = 'player-chip' + (used ? ' used' : '') + (blocked ? ' injured' : '');
-    chip.appendChild(makeAvatar(FOTO(p.fid), p.num, 36));
+    chip.appendChild(kitChip(CLUB_SLUG, p.num, 36));
     const nm = document.createElement('span'); nm.className = 'chip-name'; nm.textContent = p.name; chip.appendChild(nm);
     if (isInjured) { const b = document.createElement('div'); b.className = 'injury-badge'; b.textContent = '🏥'; chip.appendChild(b); }
     if (isSuspended) { const b = document.createElement('div'); b.className = 'injury-badge'; b.style.background = '#f9a825'; b.textContent = '🟨'; chip.appendChild(b); }
@@ -1526,7 +1520,7 @@ async function showResults() {
       const pDiv = document.createElement('div'); pDiv.className = 'tier-players';
       inTier.forEach(p => {
         const wrap = document.createElement('div'); wrap.className = 'tier-player';
-        wrap.appendChild(makeAvatar(FOTO(p.fid || 0), p.num, 36));
+        wrap.appendChild(kitChip(CLUB_SLUG, p.num, 36));
         const info = document.createElement('div'); info.style.cssText = 'display:flex;flex-direction:column;gap:1px;';
         const name = document.createElement('div'); name.className = 'tier-player-name'; name.textContent = p.name;
         const pct = document.createElement('div'); pct.style.cssText = 'font-size:10px;color:var(--club-color);font-family:"Bebas Neue",sans-serif;'; pct.textContent = p.pct + '%';
@@ -1728,7 +1722,7 @@ function makeScoreCard(p, rank, avatarSize = 44, noMedal = false) {
   card.style.cssText = 'background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:5px;position:relative;';
   if (!noMedal && rank === 0) card.style.borderColor = 'rgba(229,57,53,0.4)';
   const rankEl = document.createElement('div'); rankEl.style.cssText = 'position:absolute;top:6px;left:8px;font-family:"Bebas Neue",sans-serif;font-size:11px;color:rgba(255,255,255,0.3);'; rankEl.textContent = (!noMedal && rank < 3) ? medals[rank] : `${rank + 1}°`;
-  card.appendChild(rankEl); card.appendChild(makeAvatar(FOTO(p.fid), p.num, avatarSize));
+  card.appendChild(rankEl); card.appendChild(kitChip(CLUB_SLUG, p.num, avatarSize));
   const nameEl = document.createElement('div'); nameEl.style.cssText = 'font-size:11px;color:#ccc;text-align:center;line-height:1.2;'; nameEl.textContent = p.name; card.appendChild(nameEl);
   const valEl = document.createElement('div'); valEl.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:22px;color:var(--club-color);line-height:1;'; valEl.textContent = typeof p.avg !== 'undefined' ? p.avg.toFixed(1) : p.val; card.appendChild(valEl);
   return card;
@@ -2388,7 +2382,7 @@ function _statsRenderTierList(cont, forms) {
     const pDiv = document.createElement('div'); pDiv.className = 'tier-players';
     inTier.forEach(p => {
       const wrap = document.createElement('div'); wrap.className = 'tier-player';
-      wrap.appendChild(makeAvatar(FOTO(p.fid || 0), p.num, 36));
+      wrap.appendChild(kitChip(CLUB_SLUG, p.num, 36));
       const info = document.createElement('div'); info.style.cssText = 'display:flex;flex-direction:column;gap:1px;';
       const nm = document.createElement('div'); nm.className = 'tier-player-name'; nm.textContent = p.name;
       const pct = document.createElement('div'); pct.style.cssText = 'font-size:10px;color:var(--club-color);font-family:"Bebas Neue",sans-serif;';
@@ -2605,7 +2599,7 @@ function _statsRenderPlayerChips(cont, rows) {
   rows.slice().sort((a, b) => (b.minutos || 0) - (a.minutos || 0)).forEach(r => {
     const on = !eq.hiddenPlayers.has(r.norm);
     const chip = document.createElement('div'); chip.className = 'stats-pchip' + (on ? '' : ' off');
-    chip.appendChild(makeAvatar(FOTO(r.fid || 0), r.num || '', 22));
+    chip.appendChild(kitChip(CLUB_SLUG, r.num || '', 22));
     const nm = document.createElement('span'); nm.className = 'pchip-name';
     nm.textContent = r.nombre.split(' ').filter(Boolean).slice(-1)[0] || r.nombre;
     chip.appendChild(nm);
@@ -2701,7 +2695,7 @@ function _statsWideTable(rows, nFechas) {
     const tr = document.createElement('tr');
     const tdN = document.createElement('td'); tdN.className = 'name-col';
     const cell = document.createElement('div'); cell.className = 'stats-name-cell';
-    cell.appendChild(makeAvatar(FOTO(r.fid || 0), r.num || '', 26));
+    cell.appendChild(kitChip(CLUB_SLUG, r.num || '', 26));
     const nm = document.createElement('span'); nm.className = 'snc-name'; nm.textContent = r.nombre;
     cell.appendChild(nm); tdN.appendChild(cell); tr.appendChild(tdN);
     cols.forEach(c => {
