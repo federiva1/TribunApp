@@ -1,0 +1,9 @@
+{
+  "_comentario": "Ajustes manuales que se aplican DESPUES de scrapear FotMob, para casos que FotMob no refleja bien (tipicamente jugadores a prestamo, que quedan listados en el club de origen). Los aplica scripts/fetch_planteles_liga.py, asi sobreviven a cada refresco. 'agregar' = jugadores que faltan; 'quitar' = nombres a sacar (match por apellido, sin tildes).",
+  "barracascentral": {
+    "agregar": [
+      { "num": "77", "name": "Facundo Bruera", "fid": 971264, "nationality": "ARG", "position": "attackers" }
+    ],
+    "quitar": []
+  }
+}

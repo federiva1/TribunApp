@@ -26,11 +26,50 @@ from clubes_map import lookup
 
 ROOT = Path(__file__).resolve().parent.parent
 PLANTELES = ROOT / 'data' / 'planteles'
+OVERRIDES = ROOT / 'data' / 'planteles_overrides.json'
 
 
 def app_slug(scraper_slug: str) -> str:
     """velez-sarsfield -> velezsarsfield (el slug que usa el frontend)."""
     return scraper_slug.replace('-', '')
+
+
+def _norm(s: str) -> str:
+    import unicodedata
+    s = unicodedata.normalize('NFD', str(s or '')).encode('ascii', 'ignore').decode()
+    return ' '.join(s.lower().split())
+
+
+def aplicar_overrides(slug: str, players: list) -> str:
+    """Aplica los ajustes manuales de data/planteles_overrides.json.
+
+    FotMob deja a los jugadores a préstamo en el club de origen, así que algunos
+    no aparecen en el squad del club donde realmente juegan. Este archivo los
+    corrige y se aplica en cada refresco (si no, se perderían).
+    """
+    if not OVERRIDES.exists():
+        return ''
+    try:
+        ov = json.loads(OVERRIDES.read_text(encoding='utf-8')).get(slug) or {}
+    except Exception as e:
+        print(f'    (overrides ilegibles: {e})')
+        return ''
+
+    notas = []
+    quitar = {_norm(n) for n in ov.get('quitar', [])}
+    if quitar:
+        antes = len(players)
+        players[:] = [p for p in players
+                      if not any(q in _norm(p.get('name')) for q in quitar)]
+        if antes != len(players):
+            notas.append(f'-{antes - len(players)} manual')
+
+    for nuevo in ov.get('agregar', []):
+        if any(_norm(p.get('name')) == _norm(nuevo.get('name')) for p in players):
+            continue                      # ya lo trajo FotMob: no duplicar
+        players.append(dict(nuevo))
+        notas.append(f"+{nuevo.get('name')}")
+    return ('  [manual: ' + ', '.join(notas) + ']') if notas else ''
 
 
 def main() -> int:
@@ -57,10 +96,13 @@ def main() -> int:
         except Exception as e:
             print(f'    (backfill api-sports falló para {slug}: {e})')
 
+        # Ajustes manuales (jugadores a préstamo que FotMob deja en el club de origen)
+        nota_ov = aplicar_overrides(slug, players)
+
         sin_num = [p['name'] for p in players if not str(p.get('num') or '').strip()]
         total_fuera += len(sin_num)
 
-        nota = (f'  (+{len(filled)} de api-sports)' if filled else '')
+        nota = (f'  (+{len(filled)} de api-sports)' if filled else '') + nota_ov
         if sin_num:
             nota += f'  ({len(sin_num)} en blanco: {", ".join(sin_num[:3])}{"…" if len(sin_num) > 3 else ""})'
         prefix = '[dry] ' if dry else '      '
