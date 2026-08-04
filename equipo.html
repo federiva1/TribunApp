@@ -202,6 +202,10 @@ html.deep-stats #estadisticas-screen { display: block; }
 .eqt-table th:not(.name-col), .eqt-table td:not(.name-col) { border-left:2px solid rgba(255,255,255,0.14); }
 .eqt-table th.name-col, .eqt-table td.name-col { position:sticky; left:0; z-index:1; background:var(--dark2); box-shadow:1px 0 0 rgba(255,255,255,0.07); text-align:left; }
 .eqt-table td.name-col { min-width:168px; max-width:210px; color:#fff; }
+/* Mobile: la columna Jugador NO queda fija al scrollear lateralmente (scrollea con el resto). */
+@media (max-width: 720px) {
+  .eqt-table th.name-col, .eqt-table td.name-col { position:static; box-shadow:none; }
+}
 .eqt-name-cell { display:flex; align-items:center; gap:8px; }
 .eqt-name-cell img { width:26px; height:26px; border-radius:50%; object-fit:cover; background:rgba(255,255,255,0.06); flex:0 0 auto; }
 .eqt-name-cell .nm { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
