@@ -101,8 +101,6 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 }
 .tabla-body-row.top3 .col-rank { color: var(--gold); }
 .tabla-body-row.releg .col-rank { color: var(--rojo); }
-.tabla-body-row.link { cursor: pointer; text-decoration: none; color: inherit; transition: background 0.15s; }
-.tabla-body-row.link:hover { background: rgba(79,195,247,0.08); }
 /* divisor de clasificación (corte playoff / descenso) */
 .cut-divider { height: 0; border-top: 1px dashed rgba(79,195,247,0.4); margin: 0 10px; }
 .cut-divider.releg { border-top-color: rgba(229,57,53,0.45); }
@@ -389,10 +387,10 @@ function renderTable() {
     const rank = t.rank || (i + 1);
     const relegPos = kind === 'promedios' && i >= teams.length - 2; // últimos 2 = descenso
 
-    const row = document.createElement(slug ? 'a' : 'div');
-    row.className = 'tabla-row tabla-body-row' + (rank <= 3 ? ' top3' : '') + (relegPos ? ' releg' : '') + (slug ? ' link' : '');
+    // Las filas NO linkean a club.html: al scrollear la tabla se disparaban toques accidentales.
+    const row = document.createElement('div');
+    row.className = 'tabla-row tabla-body-row' + (rank <= 3 ? ' top3' : '') + (relegPos ? ' releg' : '');
     row.style.gridTemplateColumns = layout.cols;
-    if (slug) row.href = `club.html?c=${slug}`;
 
     const rankEl = document.createElement('div'); rankEl.className = 'col-rank'; rankEl.textContent = rank;
 
