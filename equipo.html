@@ -1481,15 +1481,13 @@ function renderPlantel() {
     for (const j of grupo) {
       const card = document.createElement('div');
       card.className = 'jugador-card';
-      const numHTML = j.numero != null ? `<span class="jugador-num">${j.numero}</span>` : '';
+      // Avatar = kit del club con el dorsal (mismo criterio que el resto de la app).
       card.innerHTML = `
-        ${numHTML}
-        <div class="jugador-foto-wrap">
-          <img class="jugador-foto" src="fotos/${j.fid}.png" alt="${escapeHtml(j.nombre)}"
-               onerror="this.parentElement.innerHTML='<div class=\\'jugador-foto-placeholder\\'>👤</div>'">
-        </div>
+        <div class="jugador-foto-wrap" style="border:none;background:none;"></div>
         <span class="jugador-nombre">${escapeHtml(apellido(j.nombre))}</span>
       `;
+      card.querySelector('.jugador-foto-wrap')
+          .appendChild(kitChip(slug, j.numero != null ? j.numero : '', 54));
       grid.appendChild(card);
     }
     sec.appendChild(grid);
@@ -3052,9 +3050,7 @@ function accBuildCard(j, idx, teamColor) {
   card.id = cardId;
   card.innerHTML = `
     <div class="player-row">
-      <div class="player-avatar" style="background:${teamColor}20;border-color:${teamColor}40">
-        <img src="${j.fid ? FOTO(j.fid) : (j.srcId ? `https://media.api-sports.io/football/players/${j.srcId}.png` : 'fotos/sin-foto.png')}" alt="" onerror="this.onerror=null;this.src='fotos/sin-foto.png';this.style.display='none'">
-      </div>
+      <div class="player-avatar" style="border:none;"></div>
       <div class="player-info">
         <div class="player-name">${escapeHtml(j.nombre)}</div>
         <div class="player-meta">${j.min}' · ${j.portero?'Portero':'Jugador'} · ${j.pj} PJ</div>
@@ -3063,6 +3059,8 @@ function accBuildCard(j, idx, teamColor) {
       ${detail ? '<div class="expand-btn">▼</div>' : ''}
     </div>
     ${detail ? `<div class="player-detail-panel">${detail}</div>` : ''}`;
+  // Avatar = kit del club con el dorsal (igual que el resto de la app).
+  card.querySelector('.player-avatar').appendChild(kitChip(slug, j.num || '', 40));
 
   if (detail) {
     card.querySelector('.player-row').addEventListener('click', () => card.classList.toggle('open'));
@@ -3109,6 +3107,7 @@ async function loadAcumulado() {
           nombre: j.nombre, portero: j.portero, pj: 0,
           fid: enPlantel?.fid ?? null,
           srcId: j.id ?? null,
+          num: _eqNumOk(enPlantel?.num) || _eqNumOk(j.num) || '',
           min: 0, goles: 0, asist: 0,
           top: {}, ataque: {}, defensa: {}, duelos: {},
           portero_stats: j.portero ? { paradas: null, goles_contra: null } : null

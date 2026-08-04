@@ -746,7 +746,7 @@ async function init(){
   document.getElementById('sw-name-local').textContent = nb(p.local).toUpperCase();
   document.getElementById('sw-name-visit').textContent = nb(p.visitante).toUpperCase();
 
-  // Render jugadores (con fotos desde plantel)
+  // Render jugadores (el plantel aporta el dorsal para el kit)
   const [sqLocal, sqVisit] = await Promise.all([loadSquad(p.local), loadSquad(p.visitante)]);
   renderPlayers(data.jugadores[p.local],   p.local,    'panel-local',  sqLocal);
   renderPlayers(data.jugadores[p.visitante],p.visitante,'panel-visit', sqVisit);
