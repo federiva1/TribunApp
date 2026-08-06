@@ -326,7 +326,6 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .score-avatar-wrap img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: none; }
 .score-avatar-wrap .av-fb { font-family: 'Bebas Neue', sans-serif; font-size: 13px; color: #fff; }
 .score-player-info { flex: 1; }
-.score-player-num { font-size: 11px; color: var(--club-color); font-weight: 500; }
 .score-player-name { font-size: 13px; color: #fff; }
 .score-btns { display: flex; gap: 3px; flex-wrap: wrap; justify-content: flex-end; }
 .score-btn {
@@ -874,7 +873,8 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   <div id="action-bar" style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">
     <div style="font-size:12px;color:#888;">Titulares: <b id="count2" style="color:var(--club-color);font-size:15px;">0</b>/11</div>
     <div style="display:flex;gap:6px;">
-      <button id="download-pitch-btn" style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:9px 14px;cursor:not-allowed;opacity:0.3;transition:opacity 0.3s;" disabled>Descargar</button>
+      <button id="save-pitch-btn" data-solo="1" style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:9px 12px;cursor:not-allowed;opacity:0.3;transition:opacity 0.3s;" disabled>⬇</button>
+      <button id="download-pitch-btn" style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:9px 12px;cursor:not-allowed;opacity:0.3;transition:opacity 0.3s;" disabled>𝕏</button>
       <button id="confirm-btn" style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;background:var(--club-color);color:#fff;border:none;border-radius:8px;padding:9px 14px;cursor:not-allowed;opacity:0.3;transition:opacity 0.3s;" disabled>Enviar a encuesta</button>
     </div>
   </div>
@@ -909,12 +909,14 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
     </div>
     <div id="scores-mine-pane">
       <div id="scores-mine-list"></div>
-      <button id="download-my-scores-btn" style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;background:#2e7d32;color:#fff;border:none;border-radius:8px;padding:10px;cursor:pointer;width:100%;margin-top:8px;">⬇ Descargar mis puntajes</button>
+      <button id="download-my-scores-btn" style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;background:#2e7d32;color:#fff;border:none;border-radius:8px;padding:10px;cursor:pointer;width:100%;margin-top:8px;">𝕏 Compartir en X</button>
+      <button id="save-my-scores-btn" data-solo="1" style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.22);border-radius:8px;padding:9px;cursor:pointer;width:100%;margin-top:6px;">⬇ Descargar imagen</button>
     </div>
     <div id="scores-global-pane" style="display:none;">
       <div id="scores-total-votes" style="font-size:11px;color:#555;text-align:center;margin-bottom:8px;"></div>
       <div id="scores-results-list"><div style="color:#555;text-align:center;padding:20px;">Cargando...</div></div>
-      <button id="download-scores-results-btn" style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;background:#2e7d32;color:#fff;border:none;border-radius:8px;padding:10px;cursor:pointer;width:100%;margin-top:8px;">⬇ Descargar resultados</button>
+      <button id="download-scores-results-btn" style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;background:#2e7d32;color:#fff;border:none;border-radius:8px;padding:10px;cursor:pointer;width:100%;margin-top:8px;">𝕏 Compartir en X</button>
+      <button id="save-scores-results-btn" data-solo="1" style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.22);border-radius:8px;padding:9px;cursor:pointer;width:100%;margin-top:6px;">⬇ Descargar imagen</button>
     </div>
     <button id="back-scores-results-btn" class="btn-secondary" style="margin-top:8px;">← Volver</button>
   </div>
@@ -1063,9 +1065,12 @@ let FECHA_ACTUAL = '';
 // SCORES_RIVAL/SCORES_MATCH_DATE se guardan/consultan en Supabase; scoresSquad = jugadores
 // que jugaron (titulares + suplentes que ingresaron + DT), traídos de data/partidos/{id}.json.
 let SCORES_RIVAL = '', SCORES_MATCH_DATE = '', SCORES_FT = null, scoresMatchId = null, scoresSquad = [], scoresSent = false;
+// Datos del partido para las placas para compartir (escudo del rival, marcador, nº de fecha).
+let RIVAL_SLUG = '', FECHA_NUM = null;
+let SCORES_RIVAL_SLUG = '', SCORES_MARCADOR = '', SCORES_FECHA_NUM = null;
 
 // Gate coordinado: 24 hs de puntajes desde el FT, después se cierran y se abre la formación
-// de la fecha siguiente. Se calcula client-side en applyGating() (no depende de estado.json).
+// de la fecha siguiente. Se calcula client-side en applyGating() (no hay archivo de estado).
 let PUNTAJES_OPEN = false, FORMACION_OPEN = true;
 
 const LS_KEY         = `${CLUB_SLUG}_formacion`;
@@ -1104,8 +1109,19 @@ document.getElementById('formation-success-title').textContent = `¡Gracias, hin
 // ESTADO FORMACIÓN
 // ============================================================
 let onPitch = [], draggingNew = null, activePitchDrag = null;
+
+// Identidad de un jugador: el fid del plantel (único), NO el dorsal. Hay números
+// repetidos de verdad (ej. River: Lucas Beltrán y Matías Viña con el 18); usando
+// el num, poner a uno marcaba a los dos como usados en el banco y el ✕ podía
+// sacar al que no era.
+function _pKey(p) {
+  if (!p) return '';
+  return (p.fid != null && p.fid !== '') ? 'f' + p.fid : 'n' + p.num + '|' + (p.name || '');
+}
 let dragOffX = 0, dragOffY = 0, sending = false, wasReady = false;
 let userScores = {}, scoresWasReady = false;
+// Promedios globales del último cálculo, para la placa para compartir.
+let _scoresGlobalAvg = {}, _scoresGlobalVotos = 0;
 
 const pitch = document.getElementById('pitch');
 const grid = document.getElementById('player-grid');
@@ -1202,6 +1218,260 @@ function kitChip(slug, num, size) {
 }
 
 // ============================================================
+// PLACA PARA COMPARTIR (formato T1: 1600x900, apaisado)
+// ------------------------------------------------------------
+// Un solo motor para las tres descargas: formación, mis puntajes y puntajes
+// de la gente. 16:9 porque es la relación que Twitter/X muestra sin recortar
+// en el timeline. Se arma a 800x450 y html2canvas la sube a 2x = 1600x900.
+// ============================================================
+const SHARE_W = 800, SHARE_H = 450, SHARE_GOLD = '#f2c200';
+
+function _shEscudo(slug, size) {
+  const i = document.createElement('img');
+  i.src = `escudos/${slug}.png`;
+  i.style.cssText = `width:${size}px;height:${size}px;object-fit:contain;`;
+  i.onerror = () => { i.style.opacity = '0.15'; };
+  return i;
+}
+
+// Chip del kit + (opcional) pastilla con el puntaje + apellido debajo.
+function _shChip(p, size) {
+  const cell = document.createElement('div');
+  cell.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:4px;';
+  const w = document.createElement('div'); w.style.position = 'relative';
+  const kit = clubKit(CLUB_SLUG);
+  const c = document.createElement('div');
+  c.style.cssText = `width:${size}px;height:${size}px;border-radius:50%;box-sizing:border-box;`
+    + `display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.22);`
+    + `background:${kitBackground(kit, size)};`;
+  const n = document.createElement('span');
+  n.style.cssText = `font-family:'Bebas Neue',sans-serif;font-size:${Math.round(size * .42)}px;color:#fff;text-shadow:${NUM_OUTLINE};line-height:1;`;
+  n.textContent = p.num || ''; c.appendChild(n); w.appendChild(c);
+  if (p.val != null) {
+    const b = document.createElement('div');
+    b.style.cssText = `position:absolute;right:${-Math.round(size * .42)}px;bottom:-5px;background:${SHARE_GOLD};color:#111;`
+      + `font-family:'Bebas Neue',sans-serif;font-size:${Math.round(size * .37)}px;min-width:${Math.round(size * .62)}px;`
+      + `height:${Math.round(size * .52)}px;display:flex;align-items:center;justify-content:center;border-radius:6px;border:2px solid #0b0f1c;`;
+    b.textContent = p.val; w.appendChild(b);
+  }
+  cell.appendChild(w);
+  const lbl = document.createElement('div');
+  lbl.style.cssText = 'font-size:12px;color:#dfe4ee;font-weight:600;text-align:center;line-height:1.1;margin-top:2px;white-space:nowrap;';
+  lbl.textContent = _shApellido(p.name); cell.appendChild(lbl);
+  return cell;
+}
+
+function _shApellido(name) {
+  const t = String(name || '').trim().split(/\s+/);
+  return t.length > 1 ? t[t.length - 1] : (t[0] || '');
+}
+
+// Coordenadas de la cancha en apaisado. La cancha de "armá tu formación" es
+// vertical con el ataque hacia arriba: se rota 90° (x' = 100 - y, y' = x) para
+// que el arquero quede a la izquierda y el ataque a la derecha.
+function _shRotar(j) {
+  return { ...j, sx: Math.max(7, Math.min(93, 100 - j.yPct)), sy: Math.max(12, Math.min(88, j.xPct)) };
+}
+
+// Cuando no hay posiciones libres (puntajes), se arma por líneas según el puesto
+// del plantel: 4 columnas repartidas y cada una centrada verticalmente.
+function _shPorLineas(jugadores) {
+  const GRUPOS = [['keepers', 9], ['defenders', 32], ['midfielders', 57], ['attackers', 82]];
+  const out = [];
+  GRUPOS.forEach(([grupo, sx]) => {
+    const linea = jugadores.filter(j => j.grupo === grupo);
+    linea.forEach((j, i) => out.push({ ...j, sx, sy: ((i + 1) / (linea.length + 1)) * 100 }));
+  });
+  // Cualquiera sin puesto reconocido va al medio, para no perderlo.
+  jugadores.filter(j => !GRUPOS.some(g => g[0] === j.grupo))
+           .forEach((j, i) => out.push({ ...j, sx: 57, sy: 20 + i * 22 }));
+  return out;
+}
+
+// Puesto del jugador según el plantel (para el modo por líneas).
+function _shGrupo(nombre) {
+  const norm = s => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const sq = (typeof squad !== 'undefined' ? squad : []);
+  const m = sq.find(s => norm(s.name) === norm(nombre))
+         || sq.find(s => norm(s.name).split(' ').pop() === norm(nombre).split(' ').pop());
+  return (m && m.position) || 'midfielders';
+}
+
+function _shBanco(sup, dt) {
+  const s = document.createElement('div');
+  s.style.cssText = 'height:96px;flex:0 0 auto;display:flex;align-items:center;gap:14px;padding:0 22px;'
+    + 'background:rgba(0,0,0,.3);border-top:1px solid rgba(255,255,255,.09);box-sizing:border-box;';
+  const l = document.createElement('div');
+  l.style.cssText = "font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;color:#7d879e;line-height:1.05;width:58px;flex:0 0 auto;";
+  l.innerHTML = 'INGRE-<br>SARON'; s.appendChild(l);
+  const row = document.createElement('div');
+  row.style.cssText = 'flex:1;display:flex;gap:16px;align-items:center;justify-content:center;padding-right:16px;';
+  if (sup.length) sup.forEach(p => row.appendChild(_shChip(p, 34)));
+  else { const e = document.createElement('div'); e.style.cssText = 'font-size:13px;color:#5d6479;'; e.textContent = 'Sin cambios'; row.appendChild(e); }
+  s.appendChild(row);
+  if (dt) {
+    const sep = document.createElement('div');
+    sep.style.cssText = 'width:1px;height:44px;background:rgba(255,255,255,.14);margin:0 4px;';
+    s.appendChild(sep);
+    const d = document.createElement('div'); d.style.cssText = 'flex:0 0 auto;display:flex;align-items:center;gap:9px;';
+    const kit = clubKit(CLUB_SLUG);
+    const ch = document.createElement('div');
+    ch.style.cssText = `width:34px;height:34px;border-radius:50%;box-sizing:border-box;display:flex;align-items:center;justify-content:center;`
+      + `border:2px solid rgba(255,255,255,.22);background:${kitBackground(kit, 34)};`;
+    const cn = document.createElement('span');
+    cn.style.cssText = `font-family:'Bebas Neue',sans-serif;font-size:14px;color:#fff;text-shadow:${NUM_OUTLINE};line-height:1;`;
+    cn.textContent = 'DT'; ch.appendChild(cn); d.appendChild(ch);
+    const info = document.createElement('div');
+    info.innerHTML = `<div style="font-size:10px;color:#7d879e;letter-spacing:2px;">DT</div>`
+      + `<div style="font-size:14px;font-weight:600;line-height:1.15;white-space:nowrap;">${escapeHtml(_shApellido(dt.name))}</div>`;
+    d.appendChild(info);
+    if (dt.val != null) {
+      const v = document.createElement('div');
+      v.style.cssText = `font-family:'Bebas Neue',sans-serif;font-size:26px;color:${SHARE_GOLD};font-weight:700;`;
+      v.textContent = dt.val; d.appendChild(v);
+    }
+    s.appendChild(d);
+  }
+  return s;
+}
+
+// Líneas de la cancha en apaisado (arco izquierdo = propio, ataque a la derecha).
+// Verticales en % para que sirva igual con banco (cancha más baja) y sin banco.
+function _shCanchaLineas(pitch) {
+  const L = 'rgba(255,255,255,.34)';
+  const div = css => { const d = document.createElement('div'); d.style.cssText = 'position:absolute;box-sizing:border-box;' + css; pitch.appendChild(d); return d; };
+  div(`inset:10px;border:2px solid ${L};`);                                        // límite del campo
+  div(`left:50%;top:10px;bottom:10px;width:0;border-left:2px solid ${L};`);         // línea del medio
+  div(`left:50%;top:50%;width:112px;height:112px;margin:-56px 0 0 -56px;border:2px solid ${L};border-radius:50%;`);
+  div(`left:50%;top:50%;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;background:${L};border-radius:50%;`);
+  [true, false].forEach(izq => {
+    const lado = izq ? 'left:10px;' : 'right:10px;';
+    div(`${lado}top:21%;height:58%;width:80px;border:2px solid ${L};${izq ? 'border-left:none;' : 'border-right:none;'}`);
+    div(`${lado}top:34%;height:32%;width:33px;border:2px solid ${L};${izq ? 'border-left:none;' : 'border-right:none;'}`);
+    div(`${izq ? 'left:64px;' : 'right:64px;'}top:50%;width:6px;height:6px;margin-top:-3px;background:${L};border-radius:50%;`);
+    // Sin arco del área: html2canvas ignora clip-path y lo dibujaba como círculo entero.
+  });
+}
+
+// o = { titulo, marcador, rivalSlug, sub, pie, jugadores:[{num,name,val,sx,sy}], sup, dt }
+function _shCard(o) {
+  const c = document.createElement('div');
+  c.style.cssText = `position:fixed;left:-99999px;top:0;width:${SHARE_W}px;height:${SHARE_H}px;box-sizing:border-box;`
+    + `overflow:hidden;color:#fff;font-family:'Barlow Condensed',sans-serif;display:flex;`
+    + `background:linear-gradient(120deg,#0d1730,#070b16);`;
+
+  const panel = document.createElement('div');
+  panel.style.cssText = `width:250px;flex:0 0 auto;padding:26px 22px;display:flex;flex-direction:column;`
+    + `justify-content:space-between;background:rgba(0,0,0,.4);border-right:3px solid ${SHARE_GOLD};box-sizing:border-box;`;
+  const top = document.createElement('div');
+  const row = document.createElement('div'); row.style.cssText = 'display:flex;align-items:center;gap:12px;';
+  row.appendChild(_shEscudo(CLUB_SLUG, 46));
+  const sc = document.createElement('div');
+  sc.style.cssText = "font-family:'Bebas Neue',sans-serif;font-size:" + (o.marcador.length > 3 ? '26px' : '40px') + ";letter-spacing:2px;line-height:1;";
+  sc.textContent = o.marcador; row.appendChild(sc);
+  if (o.rivalSlug) row.appendChild(_shEscudo(o.rivalSlug, 46));
+  top.appendChild(row);
+  const t = document.createElement('div');
+  t.style.cssText = "font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:1px;line-height:1.05;margin-top:18px;";
+  t.textContent = o.titulo; top.appendChild(t);
+  const s = document.createElement('div'); s.style.cssText = 'font-size:14px;color:#8b93a7;margin-top:8px;';
+  s.textContent = o.sub || ''; top.appendChild(s);
+  panel.appendChild(top);
+  const bot = document.createElement('div');
+  bot.innerHTML = `<div style="font-size:14px;color:#8b93a7;margin-bottom:12px;">${escapeHtml(o.pie || '')}</div>`
+    + `<div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:${SHARE_GOLD};letter-spacing:1px;">TRIBUNAPP</div>`
+    + `<div style="font-size:13px;color:#5d6479;margin-top:2px;">tribunapp.com.ar</div>`;
+  panel.appendChild(bot); c.appendChild(panel);
+
+  const der = document.createElement('div'); der.style.cssText = 'flex:1;display:flex;flex-direction:column;min-width:0;';
+  const pitch = document.createElement('div');
+  pitch.style.cssText = 'flex:1;position:relative;overflow:hidden;background:'
+    + 'repeating-linear-gradient(90deg, rgba(255,255,255,.055) 0 68px, transparent 68px 136px),'
+    + 'linear-gradient(160deg,#12492a,#0a2f1a);';
+  _shCanchaLineas(pitch);
+  o.jugadores.forEach(j => {
+    const cell = _shChip(j, 42);
+    cell.style.position = 'absolute';
+    cell.style.left = j.sx + '%'; cell.style.top = j.sy + '%';
+    cell.style.transform = 'translate(-50%,-50%)';
+    pitch.appendChild(cell);
+  });
+  der.appendChild(pitch);
+  if (o.sup || o.dt) der.appendChild(_shBanco(o.sup || [], o.dt));
+  c.appendChild(der);
+  return c;
+}
+
+async function _shCanvas(o) {
+  const el = _shCard(o);
+  document.body.appendChild(el);
+  try {
+    const imgs = [...el.querySelectorAll('img')];
+    await Promise.all(imgs.map(i => i.complete ? null : new Promise(r => { i.onload = r; i.onerror = r; })));
+    if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch (e) {} }
+    await new Promise(r => setTimeout(r, 120));
+    // Tope de tiempo: si una hoja de estilos externa queda colgada, html2canvas
+    // se queda esperando para siempre y el botón moría en "Generando...".
+    const canvas = await Promise.race([
+      html2canvas(el, { backgroundColor: '#070b16', scale: 2, useCORS: true, logging: false, width: SHARE_W, height: SHARE_H }),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('timeout al generar la imagen')), 20000)),
+    ]);
+    return canvas;
+  } finally { el.remove(); }
+}
+
+// En celular conviene el menú nativo: es la ÚNICA vía que adjunta la imagen sola
+// (X con la foto ya puesta, sin login ni API). No se puede limitar a una sola red:
+// la lista de apps la arma el sistema operativo, la página no la controla.
+// En desktop ese mismo menú es la hoja del SO (Zoom, Outlook, Paint...), que no
+// sirve, así que ahí se descarga el PNG y se abre el compositor de X con el texto
+// y el link; la imagen se adjunta a mano porque el intent de X no la acepta.
+function _esCelular() {
+  return navigator.maxTouchPoints > 0 && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
+async function _shCompartir(canvas, filename, texto, soloDescargar) {
+  const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+  if (!blob) throw new Error('sin blob');
+
+  if (!soloDescargar && _esCelular()) {
+    try {
+      const file = new File([blob], filename, { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], text: texto + ' https://tribunapp.com.ar' });
+        return 'compartido';
+      }
+    } catch (e) {
+      if (e && e.name === 'AbortError') return 'cancelado';
+      // Gesto perdido o permiso denegado: sigue por el camino de descarga.
+    }
+  }
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.download = filename; a.href = url; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+  if (soloDescargar) return 'descargado';
+  window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(texto + ' https://tribunapp.com.ar'),
+              '_blank', 'noopener');
+  return 'tweet';
+}
+
+async function _shFlujo(btn, label, opts, filename, texto) {
+  const orig = btn.textContent;
+  btn.textContent = 'Generando...'; btn.disabled = true;
+  try {
+    const canvas = await _shCanvas(opts);
+    const r = await _shCompartir(canvas, filename, texto, btn.dataset.solo === '1');
+    if (r === 'tweet') showToast('Imagen descargada — adjuntala en el tweet 🔥');
+    else if (r === 'compartido') showToast('¡Compartido! 🔥');
+    else if (r === 'descargado') showToast('¡Imagen descargada!');
+  } catch (e) {
+    console.error('share', e);
+    showToast('No se pudo generar la imagen.');
+  } finally { btn.textContent = label || orig; btn.disabled = false; }
+}
+
+// ============================================================
 // FORMACIÓN — GRID DE JUGADORES
 // ============================================================
 function renderGrid() {
@@ -1211,7 +1481,7 @@ function renderGrid() {
     return;
   }
   squad.forEach(p => {
-    const used = onPitch.find(x => x.num === p.num);
+    const used = onPitch.find(x => _pKey(x) === _pKey(p));
     const isInjured = INJURED.includes(p.num);
     const isSuspended = SUSPENDED.includes(p.num);
     const blocked = isInjured || isSuspended;
@@ -1234,8 +1504,8 @@ function renderGrid() {
   });
 }
 
-function removePlayer(num) {
-  const idx = onPitch.findIndex(x => x.num === num);
+function removePlayer(key) {
+  const idx = onPitch.findIndex(x => _pKey(x) === key);
   if (idx === -1) return;
   onPitch[idx].el.remove(); onPitch.splice(idx, 1);
   updateCounter(); renderGrid();
@@ -1254,7 +1524,7 @@ function makePitchPlayer(p) {
   numTag.textContent = p.name;
   el.appendChild(bubble); el.appendChild(numTag);
   const xbtn = document.createElement('button'); xbtn.className = 'xbtn'; xbtn.textContent = '✕';
-  xbtn.addEventListener('click', e => { e.stopPropagation(); removePlayer(p.num); });
+  xbtn.addEventListener('click', e => { e.stopPropagation(); removePlayer(_pKey(p)); });
   el.appendChild(xbtn);
   return el;
 }
@@ -1268,7 +1538,7 @@ const POSICION_ZONE = {
   attackers:   { x: 50, y: 28 },
 };
 function placeFromBench(p) {
-  if (onPitch.find(x => x.num === p.num)) return;
+  if (onPitch.find(x => _pKey(x) === _pKey(p))) return;
   if (onPitch.length >= 11) { showToast('Ya tenés 11 en la cancha'); return; }
   const zone = POSICION_ZONE[p.position] || { x: 50, y: 50 };
   const occupied = (tx, ty) => onPitch.some(o => Math.hypot(o.xPct - tx, o.yPct - ty) < 12);
@@ -1295,7 +1565,7 @@ function placeFromBench(p) {
 }
 
 function addToPitch(p, xPct, yPct, silent = false) {
-  if (onPitch.find(x => x.num === p.num)) return;
+  if (onPitch.find(x => _pKey(x) === _pKey(p))) return;
   const el = makePitchPlayer(p);
   el.style.left = xPct + '%'; el.style.top = yPct + '%';
   el.addEventListener('touchstart', ev => startPitchDrag(ev, el, p), { passive: false });
@@ -1323,7 +1593,7 @@ function handleMove(cx, cy) {
     let px = Math.max(3, Math.min(97, ((cx - rect.left - dragOffX) / pitch.clientWidth) * 100));
     let py = Math.max(3, Math.min(97, ((cy - rect.top - dragOffY) / pitch.clientHeight) * 100));
     activePitchDrag.el.style.left = px + '%'; activePitchDrag.el.style.top = py + '%';
-    const obj = onPitch.find(o => o.num === activePitchDrag.p.num);
+    const obj = onPitch.find(o => _pKey(o) === _pKey(activePitchDrag.p));
     if (obj) { obj.xPct = px; obj.yPct = py; }
     grid.classList.toggle('drag-over', isOver(grid, cx, cy));
   }
@@ -1331,7 +1601,7 @@ function handleMove(cx, cy) {
 
 function handleEnd(cx, cy) {
   if (activePitchDrag) {
-    if (isOver(grid, cx, cy)) removePlayer(activePitchDrag.p.num);
+    if (isOver(grid, cx, cy)) removePlayer(_pKey(activePitchDrag.p));
     grid.classList.remove('drag-over'); activePitchDrag = null;
   } else if (draggingNew) {
     if (isOver(pitch, cx, cy) && onPitch.length < 11) {
@@ -1358,9 +1628,13 @@ function updateCounter() {
   const dlBtn = document.getElementById('download-pitch-btn');
   const cfBtn = document.getElementById('confirm-btn');
   const alreadyVoted = !!localStorage.getItem(LS_KEY);
-  dlBtn.disabled = !isReady;
-  dlBtn.style.opacity = isReady ? '1' : '0.3';
-  dlBtn.style.cursor = isReady ? 'pointer' : 'not-allowed';
+  const svBtn = document.getElementById('save-pitch-btn');
+  [dlBtn, svBtn].forEach(b => {
+    if (!b) return;
+    b.disabled = !isReady;
+    b.style.opacity = isReady ? '1' : '0.3';
+    b.style.cursor = isReady ? 'pointer' : 'not-allowed';
+  });
   if (alreadyVoted) {
     cfBtn.disabled = true; cfBtn.style.opacity = '0.3'; cfBtn.style.cursor = 'not-allowed'; cfBtn.textContent = 'Ya enviaste ✓';
   } else {
@@ -1384,7 +1658,10 @@ async function initSquad() {
   try {
     const saved = localStorage.getItem(LS_FORMATION_KEY);
     if (saved) {
-      JSON.parse(saved).forEach(j => { const p = squad.find(s => s.num === j.num); if (p) addToPitch(p, j.x, j.y, true); });
+      JSON.parse(saved).forEach(j => {
+        const p = squad.find(s => j.fid != null && s.fid === j.fid) || squad.find(s => s.num === j.num);
+        if (p) addToPitch(p, j.x, j.y, true);
+      });
       updateCounter();
     }
   } catch(e) {}
@@ -1392,30 +1669,29 @@ async function initSquad() {
 }
 initSquad();
 
-// ---- Descargar formación ----
-document.getElementById('download-pitch-btn').addEventListener('click', async () => {
-  const btn = document.getElementById('download-pitch-btn');
+// ---- Compartir formación ----
+// Usa la placa T1 (apaisada) con los jugadores en la posición donde el usuario
+// los dejó en la cancha, rotada 90° para que entre en 16:9.
+function _shOptsFormacion() {
+  const conRival = RIVAL && RIVAL !== 'Por definir';
+  return {
+    titulo: 'MI FORMACIÓN',
+    marcador: conRival ? 'VS' : '',
+    rivalSlug: conRival ? RIVAL_SLUG : '',
+    sub: (FECHA_NUM ? `Fecha ${FECHA_NUM} · ` : '') + (conRival ? `vs ${RIVAL}` : 'Próxima fecha'),
+    pie: `${CLUB.nombreCorto} · armá la tuya`,
+    jugadores: onPitch.map(j => _shRotar({ num: j.num, name: j.name, xPct: j.xPct, yPct: j.yPct })),
+  };
+}
+async function _shFormacion(btn, label) {
   if (onPitch.length !== 11) return;
-  btn.textContent = 'Generando...'; btn.disabled = true;
-  document.querySelectorAll('.xbtn').forEach(x => x.style.display = 'none');
-  try {
-    await new Promise(r => setTimeout(r, 150));
-    const canvas = await html2canvas(pitch, { backgroundColor: '#2d7a3a', scale: 2, useCORS: true, allowTaint: false, logging: false });
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = 'rgba(255,255,255,0.4)';
-    ctx.font = `bold ${Math.round(canvas.width * 0.04)}px sans-serif`;
-    ctx.textAlign = 'right';
-    ctx.fillText(`Mi formación ${CLUB.nombreCorto}${RIVAL !== 'Por definir' ? ' vs ' + RIVAL : ''}`, canvas.width - 12, canvas.height - 12);
-    const link = document.createElement('a');
-    link.download = `mi-formacion-${CLUB_SLUG}.png`;
-    link.href = canvas.toDataURL('image/png'); link.click();
-    showToast('¡Descargada! Compartila 🔥');
-  } catch(e) { showToast('No se pudo generar la imagen.'); }
-  finally {
-    document.querySelectorAll('.xbtn').forEach(x => x.style.display = '');
-    btn.textContent = 'Descargar'; btn.disabled = false; updateCounter();
-  }
-});
+  const conRival = RIVAL && RIVAL !== 'Por definir';
+  await _shFlujo(btn, label, _shOptsFormacion(), `mi-formacion-${CLUB_SLUG}.png`,
+     `Mi 11 de ${CLUB.nombreCorto}${conRival ? ' para el partido vs ' + RIVAL : ''}. Armá el tuyo 👇`);
+  updateCounter();
+}
+document.getElementById('download-pitch-btn').addEventListener('click', function () { _shFormacion(this, '𝕏'); });
+document.getElementById('save-pitch-btn').addEventListener('click', function () { _shFormacion(this, '⬇'); });
 
 // ---- Enviar a encuesta ----
 document.getElementById('confirm-btn').addEventListener('click', async () => {
@@ -1687,10 +1963,10 @@ function renderScores() {
       const disp = _scoresDispNum(p);
       const row = document.createElement('div'); row.className = 'score-player-row'; row.dataset.id = p.id;
       row.appendChild(kitChip(CLUB_SLUG, disp, 36));
+      // Sin línea "#dorsal": ya está en el kit chip. Al DT lo identifica su título de grupo.
       const info = document.createElement('div'); info.className = 'score-player-info';
-      const numEl = document.createElement('div'); numEl.className = 'score-player-num'; numEl.textContent = p.tipo === 'dt' ? 'DT' : (disp ? `#${disp}` : '');
       const nameEl = document.createElement('div'); nameEl.className = 'score-player-name'; nameEl.textContent = p.name;
-      info.appendChild(numEl); info.appendChild(nameEl); row.appendChild(info);
+      info.appendChild(nameEl); row.appendChild(info);
       const btns = document.createElement('div'); btns.className = 'score-btns';
       if (userScores[p.id] != null) row.classList.add('voted');
       for (let i = 1; i <= 10; i++) {
@@ -1724,7 +2000,7 @@ function makeScoreCard(p, rank, avatarSize = 44, noMedal = false) {
   const rankEl = document.createElement('div'); rankEl.style.cssText = 'position:absolute;top:6px;left:8px;font-family:"Bebas Neue",sans-serif;font-size:11px;color:rgba(255,255,255,0.3);'; rankEl.textContent = (!noMedal && rank < 3) ? medals[rank] : `${rank + 1}°`;
   card.appendChild(rankEl); card.appendChild(kitChip(CLUB_SLUG, p.num, avatarSize));
   const nameEl = document.createElement('div'); nameEl.style.cssText = 'font-size:11px;color:#ccc;text-align:center;line-height:1.2;'; nameEl.textContent = p.name; card.appendChild(nameEl);
-  const valEl = document.createElement('div'); valEl.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:22px;color:var(--club-color);line-height:1;'; valEl.textContent = typeof p.avg !== 'undefined' ? p.avg.toFixed(1) : p.val; card.appendChild(valEl);
+  const valEl = document.createElement('div'); valEl.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:22px;color:#fff;font-weight:700;line-height:1;'; valEl.textContent = typeof p.avg !== 'undefined' ? p.avg.toFixed(1) : p.val; card.appendChild(valEl);
   return card;
 }
 
@@ -1762,17 +2038,31 @@ document.getElementById('scores-confirm-btn').addEventListener('click', async ()
 });
 
 // Fila de puntaje con kit chip — reusada por "Tus puntajes" y "Resultados globales".
+// Sin línea "#dorsal": el número ya está en el kit chip, y en var(--club-color) no se
+// leía sobre el fondo oscuro (caso Boca, azul). El puntaje va en blanco y bold por lo mismo.
 function _scoreRow(p, valueText) {
   const disp = _scoresDispNum(p);
   const row = document.createElement('div');
   row.style.cssText = 'display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:8px 10px;margin-bottom:6px;';
   row.appendChild(kitChip(CLUB_SLUG, disp, 34));
   const info = document.createElement('div'); info.style.flex = '1';
-  info.innerHTML = `<div style="font-size:11px;color:var(--club-color);">${p.tipo === 'dt' ? 'DT' : (disp ? '#' + disp : '')}</div><div style="font-size:13px;color:#fff;">${escapeHtml(p.name)}</div>`;
+  info.innerHTML = `<div style="font-size:13px;color:#fff;">${escapeHtml(p.name)}</div>`;
   row.appendChild(info);
-  const val = document.createElement('div'); val.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:24px;color:var(--club-color);line-height:1;'; val.textContent = valueText;
+  const val = document.createElement('div'); val.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:24px;color:#fff;font-weight:700;line-height:1;'; val.textContent = valueText;
   row.appendChild(val);
   return row;
+}
+
+// Pinta las filas de puntajes separando al DT: los jugadores van rankeados y el DT
+// queda aparte al final bajo su propio título, igual que en la lista de votación
+// (si no, se pierde en el medio del ranking).
+function _renderScoreRows(cont, players, fmt) {
+  players.filter(p => p.tipo !== 'dt').forEach(p => cont.appendChild(_scoreRow(p, fmt(p))));
+  const dts = players.filter(p => p.tipo === 'dt');
+  if (!dts.length) return;
+  const t = document.createElement('div'); t.className = 'scores-section-title'; t.textContent = 'DIRECTOR TÉCNICO';
+  cont.appendChild(t);
+  dts.forEach(p => cont.appendChild(_scoreRow(p, fmt(p))));
 }
 
 // Tras confirmar: pantalla con 2 solapas (Tus puntajes | Resultados globales).
@@ -1798,14 +2088,15 @@ function renderMyScores() {
   const sorted = scoresSquad.map(p => ({ ...p, val: userScores[p.id] })).filter(p => p.val != null).sort((a, b) => b.val - a.val);
   cont.innerHTML = '';
   if (!sorted.length) { cont.innerHTML = '<div style="color:#555;text-align:center;padding:20px;">Sin puntajes.</div>'; return; }
-  sorted.forEach(p => cont.appendChild(_scoreRow(p, p.val)));
+  _renderScoreRows(cont, sorted, p => p.val);
 }
 
 document.getElementById('back-scores-results-btn').addEventListener('click', () => {
   document.getElementById('scores-results-screen').style.display = 'none';
   closeSection('scores');   // Volver → home del club
 });
-document.getElementById('download-my-scores-btn').addEventListener('click', downloadMyScores);
+document.getElementById('download-my-scores-btn').addEventListener('click', function () { downloadMyScores(this); });
+document.getElementById('save-my-scores-btn').addEventListener('click', function () { downloadMyScores(this); });
 
 async function showScoresResults() {
   const list = document.getElementById('scores-results-list');
@@ -1822,45 +2113,55 @@ async function showScoresResults() {
     data.forEach(row => Object.entries(row.puntajes || {}).forEach(([num, val]) => { const n = Number(val); if (isNaN(n)) return; sum[num] = (sum[num] || 0) + n; cnt[num] = (cnt[num] || 0) + 1; }));
     const byId = {}; scoresSquad.forEach(p => byId[String(p.id)] = p);
     const ranked = Object.keys(sum).map(id => { const p = byId[id] || { id, name: '#' + id, tipo: '' }; return { ...p, avg: sum[id] / cnt[id] }; }).sort((a, b) => b.avg - a.avg);
+    // Guardados para la placa para compartir (evita recalcular al descargar).
+    _scoresGlobalAvg = {}; ranked.forEach(p => _scoresGlobalAvg[String(p.id)] = p.avg);
+    _scoresGlobalVotos = data.length;
     list.innerHTML = '';
-    ranked.forEach(p => list.appendChild(_scoreRow(p, p.avg.toFixed(1))));
+    _renderScoreRows(list, ranked, p => p.avg.toFixed(1));
   } catch(e) { list.innerHTML = '<div style="color:#555;text-align:center;padding:20px;">Error al cargar.</div>'; }
 }
 
-async function downloadMyScores() {
-  try {
-    const tmp = document.createElement('div'); tmp.style.cssText = 'background:#1a1a2e;padding:16px;width:320px;position:fixed;left:-9999px;top:0;';
-    const title = document.createElement('div'); title.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:20px;color:#fff;text-align:center;margin-bottom:4px;letter-spacing:2px;'; title.textContent = 'MIS PUNTAJES';
-    const sub = document.createElement('div'); sub.style.cssText = 'font-size:11px;color:#666;text-align:center;margin-bottom:12px;'; sub.textContent = `${CLUB.nombreCorto} vs ${SCORES_RIVAL}`;
-    tmp.appendChild(title); tmp.appendChild(sub);
-    const sorted = scoresSquad.map(p => ({ ...p, val: userScores[p.id] })).filter(p => p.val != null).sort((a, b) => b.val - a.val);
-    sorted.forEach(p => tmp.appendChild(_scoreRow(p, p.val)));
-    document.body.appendChild(tmp);
-    await new Promise(r => setTimeout(r, 200));
-    const canvas = await html2canvas(tmp, { backgroundColor: '#1a1a2e', scale: 2, logging: false }); document.body.removeChild(tmp);
-    const link = document.createElement('a'); link.download = `mis-puntajes-${CLUB_SLUG}.png`; link.href = canvas.toDataURL('image/png'); link.click();
-    showToast('¡Descargada!');
-  } catch(e) { showToast('No se pudo generar.'); }
+// Arma el payload de la placa T1 a partir de un mapa {idJugador: valor}.
+// `fmt` convierte el valor a texto (puntaje entero o promedio con un decimal).
+function _shOptsPuntajes(valorPorId, fmt, titulo, pie) {
+  const conVal = p => { const v = valorPorId[String(p.id)]; return v == null ? null : fmt(v); };
+  const titulares = scoresSquad.filter(p => p.tipo === 'titular')
+    .map(p => ({ num: _scoresDispNum(p), name: p.name, val: conVal(p), grupo: _shGrupo(p.name) }));
+  const sup = scoresSquad.filter(p => p.tipo === 'suplente')
+    .map(p => ({ num: _scoresDispNum(p), name: p.name, val: conVal(p) }));
+  const dtj = scoresSquad.find(p => p.tipo === 'dt');
+  return {
+    titulo,
+    marcador: SCORES_MARCADOR || 'VS',
+    rivalSlug: SCORES_RIVAL_SLUG,
+    sub: (SCORES_FECHA_NUM ? `Fecha ${SCORES_FECHA_NUM} · ` : '') + `vs ${SCORES_RIVAL}`,
+    pie,
+    jugadores: _shPorLineas(titulares),
+    sup,
+    dt: dtj ? { name: dtj.name, val: conVal(dtj) } : null,
+  };
 }
 
-document.getElementById('download-scores-results-btn').addEventListener('click', async () => {
-  const btn = document.getElementById('download-scores-results-btn'); btn.textContent = 'Generando...'; btn.disabled = true;
-  try {
-    const tmp = document.createElement('div'); tmp.style.cssText = 'background:#1a1a2e;padding:16px;width:320px;position:fixed;left:-9999px;top:0;';
-    const title = document.createElement('div'); title.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:20px;color:#fff;text-align:center;margin-bottom:4px;letter-spacing:2px;'; title.textContent = 'PUNTAJES DE LA GENTE';
-    const sub = document.createElement('div'); sub.style.cssText = 'font-size:11px;color:#666;text-align:center;margin-bottom:12px;'; sub.textContent = `${CLUB.nombreCorto} vs ${SCORES_RIVAL}`;
-    tmp.appendChild(title); tmp.appendChild(sub);
-    const listEl = document.getElementById('scores-results-list'); const clone = listEl.cloneNode(true);
-    const origAvatars = listEl.querySelectorAll('img'); const cloneAvatars = clone.querySelectorAll('img');
-    origAvatars.forEach((img, i) => { if (img.complete && img.naturalWidth > 0) { cloneAvatars[i].src = img.src; cloneAvatars[i].style.display = 'block'; const fb = cloneAvatars[i].nextElementSibling; if (fb) fb.style.display = 'none'; } });
-    tmp.appendChild(clone); document.body.appendChild(tmp);
-    await new Promise(r => setTimeout(r, 300));
-    const canvas = await html2canvas(tmp, { backgroundColor: '#1a1a2e', scale: 2, logging: false, useCORS: true }); document.body.removeChild(tmp);
-    const link = document.createElement('a'); link.download = `puntajes-${CLUB_SLUG}.png`; link.href = canvas.toDataURL('image/png'); link.click();
-    showToast('¡Descargado!');
-  } catch(e) { showToast('No se pudo generar.'); }
-  finally { btn.textContent = '⬇ Descargar resultados'; btn.disabled = false; }
-});
+async function downloadMyScores(btn) {
+  btn = btn || document.getElementById('download-my-scores-btn');
+  const mapa = {}; Object.entries(userScores).forEach(([k, v]) => mapa[String(k)] = v);
+  await _shFlujo(btn, btn.dataset.solo === '1' ? '⬇ Descargar imagen' : '𝕏 Compartir en X',
+    _shOptsPuntajes(mapa, v => String(v), 'MIS PUNTAJES', `${CLUB.nombreCorto} · puntuá vos`),
+    `mis-puntajes-${CLUB_SLUG}.png`,
+    `Mis puntajes de ${CLUB.nombreCorto} vs ${SCORES_RIVAL}. ¿Coincidís? Puntuá vos 👇`);
+}
+
+async function _shPuntajesGlobales(btn) {
+  if (!Object.keys(_scoresGlobalAvg).length) { showToast('Todavía no hay resultados para compartir.'); return; }
+  const votos = _scoresGlobalVotos;
+  await _shFlujo(btn, btn.dataset.solo === '1' ? '⬇ Descargar imagen' : '𝕏 Compartir en X',
+    _shOptsPuntajes(_scoresGlobalAvg, v => v.toFixed(1), 'PUNTAJES DE LA GENTE',
+                    `${votos} hincha${votos !== 1 ? 's' : ''} ${votos !== 1 ? 'votaron' : 'votó'}`),
+    `puntajes-${CLUB_SLUG}.png`,
+    `Así puntuó la gente a ${CLUB.nombreCorto} vs ${SCORES_RIVAL} (${votos} votos). Puntuá vos 👇`);
+}
+document.getElementById('download-scores-results-btn').addEventListener('click', function () { _shPuntajesGlobales(this); });
+document.getElementById('save-scores-results-btn').addEventListener('click', function () { _shPuntajesGlobales(this); });
 
 // ============================================================
 // FECHAS / FIXTURE / ESTADÍSTICAS
@@ -2942,7 +3243,10 @@ async function resolveMatchContext() {
       const { proximo, ultimo } = await clubLigaMatches();
       // Formación → próximo partido
       if (proximo) {
-        RIVAL = _matchInfo(proximo).rival;
+        const inf = _matchInfo(proximo);
+        RIVAL = inf.rival;
+        RIVAL_SLUG = inf.opp.slug || '';
+        FECHA_NUM = proximo.fecha;
         const utc = proximo.status && proximo.status.utcTime;   // match_date = día local AR (UTC-3)
         if (utc) FECHA_ACTUAL = new Date(new Date(utc).getTime() - 3 * 3600 * 1000).toISOString().slice(0, 10);
       }
@@ -2970,7 +3274,14 @@ resolveMatchContext();
 // desde data/partidos/{id}.json y setea el contexto de puntajes.
 async function resolveScoresContext(ultimo) {
   if (!ultimo) return;
-  SCORES_RIVAL = _matchInfo(ultimo).rival;
+  const inf = _matchInfo(ultimo);
+  SCORES_RIVAL = inf.rival;
+  SCORES_RIVAL_SLUG = inf.opp.slug || '';
+  SCORES_FECHA_NUM = ultimo.fecha;
+  // Marcador visto desde el club (GF-GC), para el encabezado de la placa.
+  SCORES_MARCADOR = inf.isHome
+    ? `${ultimo.home_score}-${ultimo.away_score}`
+    : `${ultimo.away_score}-${ultimo.home_score}`;
   const utc = ultimo.status && ultimo.status.utcTime;
   // match_date canónico = día local AR del kickoff (misma derivación que la formación,
   // así formaciones y puntajes del mismo partido agrupan bajo la misma fecha).
@@ -2992,13 +3303,18 @@ async function resolveScoresContext(ultimo) {
   } catch(e) {}
 }
 
-// Gate: 24 hs de puntajes desde el FT (o ?testpuntajes=1 para probar); si no, formación abierta.
+// Gate: 24 hs de puntajes desde el FT; si no, formación abierta. Para probar hay
+// dos overrides por URL, independientes entre sí: ?testpuntajes=1 fuerza los
+// puntajes y ?testformacion=1 fuerza la formación (sirve durante la ventana de
+// puntajes, que es justo cuando la formación queda cerrada).
 function applyGating() {
-  const override = new URLSearchParams(location.search).get('testpuntajes') === '1';
+  const qs = new URLSearchParams(location.search);
+  const override  = qs.get('testpuntajes')  === '1';
+  const fOverride = qs.get('testformacion') === '1';
   const hasData = scoresSquad.length > 0;
   const within24h = SCORES_FT ? (Date.now() - SCORES_FT.getTime()) < 24 * 3600 * 1000 : false;
   PUNTAJES_OPEN = override || (hasData && within24h);
-  FORMACION_OPEN = !PUNTAJES_OPEN && !!(RIVAL && RIVAL !== 'Por definir');
+  FORMACION_OPEN = fOverride || (!PUNTAJES_OPEN && !!(RIVAL && RIVAL !== 'Por definir'));
 }
 
 // Tags de rival: formación = próximo; puntajes = último jugado.

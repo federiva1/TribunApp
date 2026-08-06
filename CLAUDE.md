@@ -46,10 +46,6 @@ python scripts/fetch_fixtures.py          # liga + copas
 python scripts/fetch_fixtures.py --liga   # only liga
 python scripts/fetch_fixtures.py --copas  # only copa files
 
-# Automation scripts (also run by GitHub Actions — require API_SPORTS_KEY env var)
-python scripts/update_estado.py    # poll api-sports for FT matches → open puntajes
-python scripts/close_puntajes.py   # close puntajes 48h after matchDate
-
 # === Stats por partido (genéricos, post-partido) ===
 
 # Stats globales del partido (api-sports /fixtures/statistics) → data/estadisticas/{slug}[_copa].json
@@ -162,7 +158,7 @@ Para los scripts Python hay un equivalente: `scripts/clubes_map.py` (slug → `{
 - **Player squads**: static JSON at `data/planteles/{slug}.json`. Fields: `num`, `name`, `fid`, `nationality`, `position`. **Pueden tener `num` duplicados** (ej AAAJ #10 = Lescano y Florentín) porque más de un jugador comparte número; la sección ESTADÍSTICAS desambigua cruzando con `partido.jugadores[].nombre` de FotMob. Se actualizan con `python scripts/fetch_planteles_liga.py` (skill `/actualizar-planteles`). Flujo: scrapea FotMob → **backfill** de dorsales faltantes con api-sports (`backfill_plantel_nums.fill_blanks`, integrado en la skill) → escribe TODOS; los que igual quedan sin número (juveniles/reserva que ninguna fuente tiene, ~pocos) se conservan **en blanco** (ya NO se descartan). Ojo: FotMob trae la plantilla completa (algunos clubes 40-52, incluye reserva/juveniles). **Dorsal faltante**: FotMob a veces no da el número → queda `num: ''` (antes un bug escribía el string `'None'`, corregido en `scraper_planteles.py` con `str(... or '')`). `scripts/backfill_plantel_nums.py` también corre solo para completar vacíos. Los dorsales no cambian en el torneo → se corre una vez (o ante altas/bajas). El frontend de stats descarta `''`/`'None'` y cae al número del partido.
 - **Player photos**: `fotos/{slug}/{fid}.png` — legacy. La UI actual usa **kit chips** (círculo con el patrón/color del club, ver `js/kits.js`), no fotos, así que `fetch_planteles_liga.py` no las descarga.
 - **Community data**: read/written to Supabase. The `club` column (slug) differentiates the 30 teams.
-- **Puntajes gate**: `data/estado.json` — one entry per club with `{ puntajesOpen, rival, matchDate }`. Fetched by `club.html` with `cache: 'no-store'` on every load. Updated by GitHub Actions (see below).
+- **Puntajes gate**: no hay archivo de estado. Se calcula client-side en `applyGating()` (`club.html`) — ver "Puntajes gate (liga)" abajo.
 
 ### Módulos JS compartidos (frontend liga)
 - **`js/kits.js`** — fuente ÚNICA de los kits (kit chips): `KITS` (patrón por club), `clubKit(slug)` (fallback = sólido con color de escudo), `kitBackground(kit, size)`, `NUM_OUTLINE`. La usan `club.html` (formación/puntajes) y `estadisticas.html` (avatares). `type`: solid | stripesV | stripesH | halves | band (franja horizontal) | bandV (franja vertical) | sash (diagonal ↘) | sashR (diagonal ↙) | svg (patrón vectorial embebido, ej. la 'V' de Vélez, con `center/100%`). `div` opcional = grosor de bastón (más alto = más finos). El número siempre blanco con contorno. **`kits-preview.html`** renderiza los 30 kits para revisarlos.
@@ -218,26 +214,30 @@ Estado del módulo: global `_stats = { data, formaciones, puntajes, tab, fechaSe
 
 `_renderStatsTabWeb` usa la global `squad` cargada por `initSquad()` (no `CLUB.squad`, que nunca se completa). El tier list de formaciones prioriza `j.name` y `j.fid` del snapshot del vote sobre la lookup en squad por la misma razón de duplicados.
 
-### Puntajes automation (`data/estado.json` + GitHub Actions)
+### Puntajes gate (liga) — client-side, sin archivo de estado
 
-`data/estado.json` is a static file committed to the repo:
-```json
-{
-  "bocajuniors": { "puntajesOpen": false, "rival": "Central Cordoba de Santiago", "matchDate": "2026-05-03" },
-  ...
-}
+No hay `data/estado.json`: se borró junto con `update_estado.py`, `close_puntajes.py` y los
+workflows `match-monitor.yml` / `close-puntajes.yml` (tenían el cron comentado desde junio 2026
+y el frontend ya no los leía). El gate se calcula solo, en `applyGating()` de `club.html`:
+
+```js
+PUNTAJES_OPEN = override || (hasData && within24h);
 ```
+- `hasData` — existe `data/partidos/{id}.json` con jugadores del club (lo genera `liga-match-stats.yml`).
+- `within24h` — pasaron menos de 24 h desde el **kickoff** del último partido de `liga.json`.
+- `override` — `?testpuntajes=1` en la URL, para probar fuera de la ventana.
 
-Three scheduled workflows in `.github/workflows/`:
-- **`update-fixtures.yml`** — runs `fetch_fixtures.py` at 9h and 21h UTC to keep fixture JSONs current.
-- **`match-monitor.yml`** — runs `update_estado.py` every 15 min; when a match is FT it sets `puntajesOpen: true`.
-- **`close-puntajes.yml`** — runs `close_puntajes.py` every 6h; closes puntajes where `matchDate` is >48h in the past.
+El contexto (rival, `match_date`, plantel que jugó) lo arma `resolveMatchContext()` /
+`resolveScoresContext()` leyendo `liga.json` + `data/partidos/index.json`. El Mundial sí conserva
+su propio gate por archivo (`data/estado_mundial.json`, ver más abajo).
 
-All three use `stefanzweifel/git-auto-commit-action@v5` with `[skip ci]` in the commit message to avoid loops. They require the `API_SPORTS_KEY` secret set in GitHub → Settings → Secrets.
+Workflows programados que quedan en `.github/workflows/`:
+- **`update-fixtures.yml`** — corre `fetch_fixtures.py` para mantener los JSON de fixtures al día.
+- **`liga-match-stats.yml`** — cada 3 h, genera `data/partidos/{id}.json` de los FT de la liga.
+- **`update-mundial-fixtures.yml`** / **`mundial-match-stats.yml`** — el pipeline del Mundial.
 
-In `club.html`, `PUNTAJES_OPEN` is loaded async from `estado.json` (only for liga, not copa context). It gates the puntajes section in `openSection('scores')`.
-
-**Por automatizar** (ver `FLUJO.md`): un workflow `post-match-stats.yml` que dispare los scrapers (`fetch_match_stats.py` + `scrape_fotmob_partidos.py`) cuando `match-monitor` detecta FT, esperando ~30–60 min para que FotMob procese. `scrape_fotmob_partidos.py` ahora baja el `__NEXT_DATA__` **por HTTP (urllib)** igual que el del Mundial (Playwright quedó como fallback opcional), así que **no** hace falta Playwright en el runner para el camino normal.
+Usan `stefanzweifel/git-auto-commit-action@v5` con `[skip ci]` en el mensaje para evitar loops, y
+requieren el secret `API_SPORTS_KEY` en GitHub → Settings → Secrets.
 
 ### copas.html
 Hardcoded arrays `LIBERTADORES_SLUGS` and `SUDAMERICANA_SLUGS` define Argentine participants. Groups fetched live from api-sports (Libertadores: `league=13`, Sudamericana: `league=11`).
@@ -358,7 +358,7 @@ Fetched by `equipo.html` on load (with `?v=${Date.now()}` cache bust). Controls 
 - `var currentUser = null` in config.js is intentional — `var` hoisting makes it available to inline scripts before auth.js loads. Do not change to `let` or `const`.
 - `data/fixtures/{slug}.json` exists for all 30 clubs (liga) and 12 copa files. Regenerated by `fetch_fixtures.py` (skips `argentinosjuniors.json` que es manual).
 - **Nunca ordenar/elegir partidos por número de fecha — siempre por fecha REAL (`status.utcTime`).** El número de fecha (`fecha` en `liga.json`, `fecha_num` en `data/partidos`) NO es cronológico: una postergación deja p.ej. la F2 a jugarse *después* de la F3 (caso real: Estudiantes F2 vs Boca movido entre F3 y F4). Cualquier lógica de "próximo partido", "fecha actual" o listado cronológico debe sortear por `status.utcTime` (liga.json) o por el `fecha`-string de día (`data/partidos`/fixtures per-club), no por el número. Ya corregido en `fixture.html` (lista por equipo + fecha auto-abierta), `club.html` (`clubLigaMatches` próximo, selector Est.TribunApp, default de stats). Ojo: `fecha` significa cosas distintas según el archivo — en `liga.json` es el **número** de fecha (el día está en `status.utcTime`), mientras que en `data/partidos/*.json` y `data/fixtures/{slug}.json` es un **string de día** `YYYY-MM-DD` (el número está en `fecha_num`/`num`). Los datos se auto-sincronizan: `update-fixtures.yml` regenera `liga.json` desde api-sports cada 2 h, así que una postergación reflejada en la API entra sola (parche manual a `liga.json` solo si la API tarda).
-- `data/estado.json` drives puntajes open/close state. Update via `update_estado.py` o GitHub Actions.
+- El gate de puntajes de la liga se calcula client-side (`applyGating()` en `club.html`): 24 h desde el kickoff + que exista `data/partidos/{id}.json`. Ya no hay `data/estado.json`. Para probar fuera de la ventana: `?testpuntajes=1`.
 - `data/estadisticas/{slug}[_copa].json` se genera con `fetch_match_stats.py` + `scrape_fotmob_partidos.py` (en ese orden — el segundo recomputa el `xG` sumando individual). Para fechas viejas de AAAJ existe `excel_to_json.py` (deprecado pero mantenido).
 - `fetch_match_stats.py` y `scrape_fotmob_partidos.py` aceptan `--slug --copa --date` y resuelven IDs vía `clubes_map.py`. Para clubes nuevos hay que agregar el `fotmob` ID a ese archivo.
 - `match_date` es el matching canónico para Supabase ↔ JSON. Nunca matchear por `rival` string.
