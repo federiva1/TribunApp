@@ -3242,13 +3242,18 @@ async function resolveScoresContext(ultimo) {
   } catch(e) {}
 }
 
-// Gate: 24 hs de puntajes desde el FT (o ?testpuntajes=1 para probar); si no, formación abierta.
+// Gate: 24 hs de puntajes desde el FT; si no, formación abierta. Para probar hay
+// dos overrides por URL, independientes entre sí: ?testpuntajes=1 fuerza los
+// puntajes y ?testformacion=1 fuerza la formación (sirve durante la ventana de
+// puntajes, que es justo cuando la formación queda cerrada).
 function applyGating() {
-  const override = new URLSearchParams(location.search).get('testpuntajes') === '1';
+  const qs = new URLSearchParams(location.search);
+  const override  = qs.get('testpuntajes')  === '1';
+  const fOverride = qs.get('testformacion') === '1';
   const hasData = scoresSquad.length > 0;
   const within24h = SCORES_FT ? (Date.now() - SCORES_FT.getTime()) < 24 * 3600 * 1000 : false;
   PUNTAJES_OPEN = override || (hasData && within24h);
-  FORMACION_OPEN = !PUNTAJES_OPEN && !!(RIVAL && RIVAL !== 'Por definir');
+  FORMACION_OPEN = fOverride || (!PUNTAJES_OPEN && !!(RIVAL && RIVAL !== 'Por definir'));
 }
 
 // Tags de rival: formación = próximo; puntajes = último jugado.
