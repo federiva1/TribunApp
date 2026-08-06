@@ -5,13 +5,13 @@ Documento del ciclo de vida de cada fecha y de cómo funciona la sección de est
 ## Ciclo de una fecha
 
 1. **Pre-partido** — La gente arma su formación ideal y la sube a Supabase (`formaciones`). Visible para todos (logueados y no logueados).
-2. **Durante el partido** — La sección de puntajes está cerrada (`data/estado.json` tiene `puntajesOpen: false` para ese club).
-3. **Final del partido (FT)** — `update_estado.py` (cron cada 15 min) detecta el estado FT en api-sports y abre `puntajesOpen: true`. La sección de puntajes queda activa para que la gente vote 1–10.
+2. **Durante el partido** — La sección de puntajes está cerrada: todavía no existe `data/partidos/{id}.json` para ese partido.
+3. **Final del partido (FT)** — `liga-match-stats.yml` (cada 3 h) genera `data/partidos/{id}.json` con el plantel que jugó. Con ese archivo presente, `applyGating()` en `club.html` abre los puntajes y la gente vota 1–10.
 4. **Post-partido inmediato** — Se corre el scraping para popular las estadísticas reales:
    - `scrape_fotmob_partidos.py` baja `playerStats` de FotMob para AAAJ y el rival → `partidos[].jugadores` y `partidos[].jugadoresRival`.
    - `fetch_match_stats.py` baja stats globales de api-sports → `partidos[].stats_partido` (posesión, tiros, pases, faltas, córners, amarillas, rojas).
    - El xG de cada equipo se recomputa sumando el xG individual de los jugadores que jugaron (api-sports no provee xG consistente para LPF).
-5. **48h después del partido** — `close_puntajes.py` (cron cada 6h) cierra los puntajes (`puntajesOpen: false`). A partir de ahí los datos quedan congelados para el acumulado.
+5. **24h después del kickoff** — Los puntajes se cierran solos: `applyGating()` deja de cumplir `within24h`. No hay cron ni archivo de estado; los datos quedan congelados para el acumulado. Para probar fuera de la ventana existe `?testpuntajes=1`.
 6. **Lectura en la web** — Las estadísticas se muestran en la sección ESTADÍSTICAS (auth-gated): *Equipo* (datos reales del partido) y *Página* (tier list de formaciones + podio de puntajes).
 
 Después se repite el ciclo para la siguiente fecha.
@@ -23,8 +23,7 @@ Después se repite el ciclo para la siguiente fecha.
 | Workflow | Cron | Qué hace |
 |---|---|---|
 | `update-fixtures.yml` | 9h y 21h UTC | Regenera `data/fixtures/{slug}.json` para los 30 clubes y las copas |
-| `match-monitor.yml` | cada 15 min | Detecta FT y abre puntajes (`update_estado.py`) |
-| `close-puntajes.yml` | cada 6h | Cierra puntajes 48h después del partido |
+| `liga-match-stats.yml` | cada 3h | Genera `data/partidos/{id}.json` de los partidos FT de la liga (api-sports + FotMob). Es lo que abre los puntajes. |
 
 Todos commitean con `[skip ci]` para evitar loops.
 
@@ -40,7 +39,6 @@ Todos commitean con `[skip ci]` para evitar loops.
 
 ### Por automatizar
 
-- **Workflow `post-match-stats.yml`**: cuando `match-monitor` detecta FT para un club, dispara los dos scrapers (FotMob + api-sports). Requiere agregar Playwright al runner de Actions (`pip install playwright && playwright install chromium`). Conviene esperar ~30–60 min después del FT para que FotMob procese todo.
 - **Generalización del scraper a 30 clubes**: hoy `scrape_fotmob_partidos.py` está hardcodeado para AAAJ (TEAM_ID 10086, lista de 4 partidos). Hay que cambiarlo para que tome `(slug, season)` y arme la lista de URLs desde `data/fixtures/{slug}.json` + el endpoint de FotMob `/api/data/teams?id=...`.
 
 ## Estructura de datos

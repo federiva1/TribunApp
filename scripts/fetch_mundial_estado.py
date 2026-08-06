@@ -4,7 +4,7 @@ Genera/actualiza data/estado_mundial.json para las 48 selecciones (ventana punta
 leyendo data/fixtures/mundial.json.
 
 Para cada equipo determina el partido activo/próximo:
- - Si hay partido EN CURSO → puntajesOpen según update_estado (no se toca aquí)
+ - Si hay partido EN CURSO → puntajesOpen se conserva como esté (no se toca aquí)
  - Si hay partido TERMINADO reciente (≤ 24h) → puntajesOpen conservado
  - Si no hay partido aún jugado → puntajesOpen: false, rival y match_date del próximo
 

@@ -205,7 +205,7 @@ if (typeof CLUBES_CONFIG !== 'undefined') Object.keys(CLUBES_CONFIG).forEach(fun
   NAMES_ES[s] = c.nombreCorto || c.nombre;
   [c.nombre, c.nombreCorto, s].forEach(function(n){ if (n) NAME_TO_SLUG[_norm(n)] = s; });
 });
-// El rival en estado.json / Supabase es un NOMBRE api-sports; resolverlo a slug para el escudo.
+// El rival en Supabase es un NOMBRE api-sports; resolverlo a slug para el escudo.
 function rivalSlug(name) {
   if (!name) return '';
   var n = _norm(name);
