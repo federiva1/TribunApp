@@ -1335,6 +1335,24 @@ function _shBanco(sup, dt) {
   return s;
 }
 
+// Líneas de la cancha en apaisado (arco izquierdo = propio, ataque a la derecha).
+// Verticales en % para que sirva igual con banco (cancha más baja) y sin banco.
+function _shCanchaLineas(pitch) {
+  const L = 'rgba(255,255,255,.34)';
+  const div = css => { const d = document.createElement('div'); d.style.cssText = 'position:absolute;box-sizing:border-box;' + css; pitch.appendChild(d); return d; };
+  div(`inset:10px;border:2px solid ${L};`);                                        // límite del campo
+  div(`left:50%;top:10px;bottom:10px;width:0;border-left:2px solid ${L};`);         // línea del medio
+  div(`left:50%;top:50%;width:112px;height:112px;margin:-56px 0 0 -56px;border:2px solid ${L};border-radius:50%;`);
+  div(`left:50%;top:50%;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;background:${L};border-radius:50%;`);
+  [true, false].forEach(izq => {
+    const lado = izq ? 'left:10px;' : 'right:10px;';
+    div(`${lado}top:21%;height:58%;width:80px;border:2px solid ${L};${izq ? 'border-left:none;' : 'border-right:none;'}`);
+    div(`${lado}top:34%;height:32%;width:33px;border:2px solid ${L};${izq ? 'border-left:none;' : 'border-right:none;'}`);
+    div(`${izq ? 'left:64px;' : 'right:64px;'}top:50%;width:6px;height:6px;margin-top:-3px;background:${L};border-radius:50%;`);
+    // Sin arco del área: html2canvas ignora clip-path y lo dibujaba como círculo entero.
+  });
+}
+
 // o = { titulo, marcador, rivalSlug, sub, pie, jugadores:[{num,name,val,sx,sy}], sup, dt }
 function _shCard(o) {
   const c = document.createElement('div');
@@ -1367,12 +1385,10 @@ function _shCard(o) {
 
   const der = document.createElement('div'); der.style.cssText = 'flex:1;display:flex;flex-direction:column;min-width:0;';
   const pitch = document.createElement('div');
-  pitch.style.cssText = 'flex:1;position:relative;background:'
-    + 'repeating-linear-gradient(90deg, rgba(255,255,255,.03) 0 62px, transparent 62px 124px),'
-    + 'radial-gradient(circle at 45% 50%, rgba(11,42,107,.5), transparent 72%);';
-  const box = document.createElement('div');
-  box.style.cssText = 'position:absolute;inset:12px;border:2px solid rgba(255,255,255,.12);border-radius:6px;';
-  pitch.appendChild(box);
+  pitch.style.cssText = 'flex:1;position:relative;overflow:hidden;background:'
+    + 'repeating-linear-gradient(90deg, rgba(255,255,255,.055) 0 68px, transparent 68px 136px),'
+    + 'linear-gradient(160deg,#12492a,#0a2f1a);';
+  _shCanchaLineas(pitch);
   o.jugadores.forEach(j => {
     const cell = _shChip(j, 42);
     cell.style.position = 'absolute';
