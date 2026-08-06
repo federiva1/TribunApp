@@ -1,5 +1,5 @@
 {
-  "_comentario": "Ajustes manuales que se aplican DESPUES de scrapear FotMob, para casos que FotMob no refleja bien (tipicamente jugadores a prestamo, que quedan listados en el club de origen). Los aplica scripts/fetch_planteles_liga.py, asi sobreviven a cada refresco. 'agregar' = jugadores que faltan; 'quitar' = nombres a sacar (match por apellido, sin tildes).",
+  "_comentario": "Ajustes manuales que se aplican DESPUES de scrapear FotMob, para casos que FotMob no refleja bien (tipicamente pases recientes, que quedan listados en el club de origen). Los aplica scripts/fetch_planteles_liga.py, asi sobreviven a cada refresco. 'agregar' = jugadores que faltan; 'quitar' = nombres a sacar (match por apellido, sin tildes); 'numeros' = corregir dorsal {nombre: num}.",
   "barracascentral": {
     "agregar": [
       {
@@ -15,7 +15,10 @@
   "riverplate": {
     "agregar": [],
     "quitar": [
-      "Maximiliano Salas"
+      "Maximiliano Salas",
+      "Matías Viña",
+      "Germán Pezzella",
+      "Kendry Páez"
     ]
   },
   "independienterivadavia": {
@@ -29,5 +32,26 @@
       }
     ],
     "quitar": []
+  },
+  "bocajuniors": {
+    "agregar": [],
+    "quitar": [
+      "Agustín Marchesín"
+    ]
+  },
+  "independiente": {
+    "agregar": [],
+    "quitar": [],
+    "numeros": {
+      "Lautaro Millán": "14",
+      "Maximiliano Meza": "8"
+    }
+  },
+  "talleres": {
+    "agregar": [],
+    "quitar": [],
+    "numeros": {
+      "Bruno Barticciotto": "99"
+    }
   }
 }

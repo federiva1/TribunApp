@@ -69,6 +69,18 @@ def aplicar_overrides(slug: str, players: list) -> str:
             continue                      # ya lo trajo FotMob: no duplicar
         players.append(dict(nuevo))
         notas.append(f"+{nuevo.get('name')}")
+
+    # Corrección de dorsal: FotMob a veces trae el número viejo y dos jugadores
+    # quedan con el mismo. El match es por apellido (o nombre completo), sin tildes.
+    for nombre, num in (ov.get('numeros') or {}).items():
+        clave = _norm(nombre)
+        for p in players:
+            if clave in _norm(p.get('name')):
+                if str(p.get('num') or '') != str(num):
+                    p['num'] = str(num)
+                    notas.append(f"{p.get('name')}={num}")
+                break
+
     return ('  [manual: ' + ', '.join(notas) + ']') if notas else ''
 
 
