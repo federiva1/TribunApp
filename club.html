@@ -1427,37 +1427,71 @@ async function _shCanvas(o) {
 // sirve, así que ahí se descarga el PNG y se abre el compositor de X con el texto
 // y el link; la imagen se adjunta a mano porque el intent de X no la acepta.
 function _esCelular() {
-  return navigator.maxTouchPoints > 0 && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const ua = navigator.userAgent;
+  // iPadOS 13+ se hace pasar por Macintosh: se lo detecta por el touch.
+  return navigator.maxTouchPoints > 0 && (/Android|iPhone|iPad|iPod/i.test(ua) || /Macintosh/.test(ua));
+}
+
+// Caché de imágenes ya generadas, por clave ('formacion' | 'mis' | 'globales').
+// Es lo que permite que el click llame a navigator.share SIN ningún await previo:
+// el navegador solo abre el menú nativo si sigue vigente el gesto del usuario, y
+// generar la imagen en ese momento (1-2 s) lo consume. Cuando eso pasaba, share
+// tiraba NotAllowedError y caíamos a abrir X en el browser, que es justo lo que
+// obliga a loguearse en vez de usar la app.
+const _shCache = {};
+function _shInvalidar(key) { delete _shCache[key]; }
+
+async function _shPregenerar(key, opts) {
+  try {
+    const canvas = await _shCanvas(opts);
+    _shCache[key] = await new Promise(r => canvas.toBlob(r, 'image/png'));
+  } catch (e) { /* si falla, el click lo genera a mano */ }
+}
+
+// Comparte un blob YA generado. Primera instrucción = navigator.share, sin awaits
+// antes, para no perder el gesto.
+function _shCompartirBlob(blob, filename, texto, soloDescargar) {
+  const txt = texto + ' https://tribunapp.com.ar';
+  if (!soloDescargar && _esCelular()) {
+    try {
+      const file = new File([blob], filename, { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        return navigator.share({ files: [file], text: txt })
+          .then(() => 'compartido')
+          .catch(e => (e && e.name === 'AbortError') ? 'cancelado' : _shBajar(blob, filename, txt, false));
+      }
+    } catch (e) { /* sin soporte de archivos: descarga */ }
+  }
+  return Promise.resolve(_shBajar(blob, filename, txt, soloDescargar));
+}
+
+function _shBajar(blob, filename, txt, soloDescargar) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.download = filename; a.href = url; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+  if (soloDescargar) return 'descargado';
+  window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(txt), '_blank', 'noopener');
+  return 'tweet';
 }
 
 async function _shCompartir(canvas, filename, texto, soloDescargar) {
   const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
   if (!blob) throw new Error('sin blob');
-
-  if (!soloDescargar && _esCelular()) {
-    try {
-      const file = new File([blob], filename, { type: 'image/png' });
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], text: texto + ' https://tribunapp.com.ar' });
-        return 'compartido';
-      }
-    } catch (e) {
-      if (e && e.name === 'AbortError') return 'cancelado';
-      // Gesto perdido o permiso denegado: sigue por el camino de descarga.
-    }
-  }
-
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.download = filename; a.href = url; a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 5000);
-  if (soloDescargar) return 'descargado';
-  window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(texto + ' https://tribunapp.com.ar'),
-              '_blank', 'noopener');
-  return 'tweet';
+  return _shCompartirBlob(blob, filename, texto, soloDescargar);
 }
 
-async function _shFlujo(btn, label, opts, filename, texto) {
+// key (opcional) = entrada del caché. Si la imagen ya está pregenerada, se comparte
+// en el acto y el gesto del usuario sigue vivo → sale el menú nativo con la app de X.
+async function _shFlujo(btn, label, opts, filename, texto, key) {
   const orig = btn.textContent;
+  const listo = key && _shCache[key];
+  if (listo) {
+    const r = await _shCompartirBlob(listo, filename, texto, btn.dataset.solo === '1');
+    if (r === 'tweet') showToast('Imagen descargada — adjuntala en el tweet 🔥');
+    else if (r === 'compartido') showToast('¡Compartido! 🔥');
+    else if (r === 'descargado') showToast('¡Imagen descargada!');
+    return;
+  }
   btn.textContent = 'Generando...'; btn.disabled = true;
   try {
     const canvas = await _shCanvas(opts);
@@ -1628,6 +1662,7 @@ function updateCounter() {
   const dlBtn = document.getElementById('download-pitch-btn');
   const cfBtn = document.getElementById('confirm-btn');
   const alreadyVoted = !!localStorage.getItem(LS_KEY);
+  _shAgendarFormacion();
   const svBtn = document.getElementById('save-pitch-btn');
   [dlBtn, svBtn].forEach(b => {
     if (!b) return;
@@ -1687,8 +1722,19 @@ async function _shFormacion(btn, label) {
   if (onPitch.length !== 11) return;
   const conRival = RIVAL && RIVAL !== 'Por definir';
   await _shFlujo(btn, label, _shOptsFormacion(), `mi-formacion-${CLUB_SLUG}.png`,
-     `Mi 11 de ${CLUB.nombreCorto}${conRival ? ' para el partido vs ' + RIVAL : ''}. Armá el tuyo 👇`);
+     `Mi 11 de ${CLUB.nombreCorto}${conRival ? ' para el partido vs ' + RIVAL : ''}. Armá el tuyo 👇`,
+     'formacion');
   updateCounter();
+}
+
+// Con los 11 puestos se genera la imagen de fondo, para que el botón solo tenga
+// que compartirla. Cualquier movimiento en la cancha la invalida.
+let _shTimerForm = null;
+function _shAgendarFormacion() {
+  _shInvalidar('formacion');
+  clearTimeout(_shTimerForm);
+  if (onPitch.length !== 11) return;
+  _shTimerForm = setTimeout(() => _shPregenerar('formacion', _shOptsFormacion()), 700);
 }
 document.getElementById('download-pitch-btn').addEventListener('click', function () { _shFormacion(this, '𝕏'); });
 document.getElementById('save-pitch-btn').addEventListener('click', function () { _shFormacion(this, '⬇'); });
@@ -2089,6 +2135,8 @@ function renderMyScores() {
   cont.innerHTML = '';
   if (!sorted.length) { cont.innerHTML = '<div style="color:#555;text-align:center;padding:20px;">Sin puntajes.</div>'; return; }
   _renderScoreRows(cont, sorted, p => p.val);
+  _shInvalidar('mis');
+  setTimeout(() => _shPregenerar('mis', _shOptsMis()), 500);
 }
 
 document.getElementById('back-scores-results-btn').addEventListener('click', () => {
@@ -2118,6 +2166,10 @@ async function showScoresResults() {
     _scoresGlobalVotos = data.length;
     list.innerHTML = '';
     _renderScoreRows(list, ranked, p => p.avg.toFixed(1));
+    _shInvalidar('globales');
+    setTimeout(() => _shPregenerar('globales', _shOptsPuntajes(
+      _scoresGlobalAvg, v => v.toFixed(1), 'PUNTAJES DE LA GENTE',
+      `${data.length} hincha${data.length !== 1 ? 's' : ''} ${data.length !== 1 ? 'votaron' : 'votó'}`)), 500);
   } catch(e) { list.innerHTML = '<div style="color:#555;text-align:center;padding:20px;">Error al cargar.</div>'; }
 }
 
@@ -2142,13 +2194,19 @@ function _shOptsPuntajes(valorPorId, fmt, titulo, pie) {
   };
 }
 
+function _shOptsMis() {
+  const mapa = {}; Object.entries(userScores).forEach(([k, v]) => mapa[String(k)] = v);
+  return _shOptsPuntajes(mapa, v => String(v), 'MIS PUNTAJES', `${CLUB.nombreCorto} · puntuá vos`);
+}
+
 async function downloadMyScores(btn) {
   btn = btn || document.getElementById('download-my-scores-btn');
   const mapa = {}; Object.entries(userScores).forEach(([k, v]) => mapa[String(k)] = v);
   await _shFlujo(btn, btn.dataset.solo === '1' ? '⬇ Descargar imagen' : '𝕏 Compartir en X',
     _shOptsPuntajes(mapa, v => String(v), 'MIS PUNTAJES', `${CLUB.nombreCorto} · puntuá vos`),
     `mis-puntajes-${CLUB_SLUG}.png`,
-    `Mis puntajes de ${CLUB.nombreCorto} vs ${SCORES_RIVAL}. ¿Coincidís? Puntuá vos 👇`);
+    `Mis puntajes de ${CLUB.nombreCorto} vs ${SCORES_RIVAL}. ¿Coincidís? Puntuá vos 👇`,
+    'mis');
 }
 
 async function _shPuntajesGlobales(btn) {
@@ -2158,7 +2216,8 @@ async function _shPuntajesGlobales(btn) {
     _shOptsPuntajes(_scoresGlobalAvg, v => v.toFixed(1), 'PUNTAJES DE LA GENTE',
                     `${votos} hincha${votos !== 1 ? 's' : ''} ${votos !== 1 ? 'votaron' : 'votó'}`),
     `puntajes-${CLUB_SLUG}.png`,
-    `Así puntuó la gente a ${CLUB.nombreCorto} vs ${SCORES_RIVAL} (${votos} votos). Puntuá vos 👇`);
+    `Así puntuó la gente a ${CLUB.nombreCorto} vs ${SCORES_RIVAL} (${votos} votos). Puntuá vos 👇`,
+    'globales');
 }
 document.getElementById('download-scores-results-btn').addEventListener('click', function () { _shPuntajesGlobales(this); });
 document.getElementById('save-scores-results-btn').addEventListener('click', function () { _shPuntajesGlobales(this); });
