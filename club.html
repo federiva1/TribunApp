@@ -326,7 +326,6 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .score-avatar-wrap img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: none; }
 .score-avatar-wrap .av-fb { font-family: 'Bebas Neue', sans-serif; font-size: 13px; color: #fff; }
 .score-player-info { flex: 1; }
-.score-player-num { font-size: 11px; color: var(--club-color); font-weight: 500; }
 .score-player-name { font-size: 13px; color: #fff; }
 .score-btns { display: flex; gap: 3px; flex-wrap: wrap; justify-content: flex-end; }
 .score-btn {
@@ -1687,10 +1686,10 @@ function renderScores() {
       const disp = _scoresDispNum(p);
       const row = document.createElement('div'); row.className = 'score-player-row'; row.dataset.id = p.id;
       row.appendChild(kitChip(CLUB_SLUG, disp, 36));
+      // Sin línea "#dorsal": ya está en el kit chip. Al DT lo identifica su título de grupo.
       const info = document.createElement('div'); info.className = 'score-player-info';
-      const numEl = document.createElement('div'); numEl.className = 'score-player-num'; numEl.textContent = p.tipo === 'dt' ? 'DT' : (disp ? `#${disp}` : '');
       const nameEl = document.createElement('div'); nameEl.className = 'score-player-name'; nameEl.textContent = p.name;
-      info.appendChild(numEl); info.appendChild(nameEl); row.appendChild(info);
+      info.appendChild(nameEl); row.appendChild(info);
       const btns = document.createElement('div'); btns.className = 'score-btns';
       if (userScores[p.id] != null) row.classList.add('voted');
       for (let i = 1; i <= 10; i++) {
@@ -1724,7 +1723,7 @@ function makeScoreCard(p, rank, avatarSize = 44, noMedal = false) {
   const rankEl = document.createElement('div'); rankEl.style.cssText = 'position:absolute;top:6px;left:8px;font-family:"Bebas Neue",sans-serif;font-size:11px;color:rgba(255,255,255,0.3);'; rankEl.textContent = (!noMedal && rank < 3) ? medals[rank] : `${rank + 1}°`;
   card.appendChild(rankEl); card.appendChild(kitChip(CLUB_SLUG, p.num, avatarSize));
   const nameEl = document.createElement('div'); nameEl.style.cssText = 'font-size:11px;color:#ccc;text-align:center;line-height:1.2;'; nameEl.textContent = p.name; card.appendChild(nameEl);
-  const valEl = document.createElement('div'); valEl.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:22px;color:var(--club-color);line-height:1;'; valEl.textContent = typeof p.avg !== 'undefined' ? p.avg.toFixed(1) : p.val; card.appendChild(valEl);
+  const valEl = document.createElement('div'); valEl.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:22px;color:#fff;font-weight:700;line-height:1;'; valEl.textContent = typeof p.avg !== 'undefined' ? p.avg.toFixed(1) : p.val; card.appendChild(valEl);
   return card;
 }
 
@@ -1762,17 +1761,31 @@ document.getElementById('scores-confirm-btn').addEventListener('click', async ()
 });
 
 // Fila de puntaje con kit chip — reusada por "Tus puntajes" y "Resultados globales".
+// Sin línea "#dorsal": el número ya está en el kit chip, y en var(--club-color) no se
+// leía sobre el fondo oscuro (caso Boca, azul). El puntaje va en blanco y bold por lo mismo.
 function _scoreRow(p, valueText) {
   const disp = _scoresDispNum(p);
   const row = document.createElement('div');
   row.style.cssText = 'display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:8px 10px;margin-bottom:6px;';
   row.appendChild(kitChip(CLUB_SLUG, disp, 34));
   const info = document.createElement('div'); info.style.flex = '1';
-  info.innerHTML = `<div style="font-size:11px;color:var(--club-color);">${p.tipo === 'dt' ? 'DT' : (disp ? '#' + disp : '')}</div><div style="font-size:13px;color:#fff;">${escapeHtml(p.name)}</div>`;
+  info.innerHTML = `<div style="font-size:13px;color:#fff;">${escapeHtml(p.name)}</div>`;
   row.appendChild(info);
-  const val = document.createElement('div'); val.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:24px;color:var(--club-color);line-height:1;'; val.textContent = valueText;
+  const val = document.createElement('div'); val.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:24px;color:#fff;font-weight:700;line-height:1;'; val.textContent = valueText;
   row.appendChild(val);
   return row;
+}
+
+// Pinta las filas de puntajes separando al DT: los jugadores van rankeados y el DT
+// queda aparte al final bajo su propio título, igual que en la lista de votación
+// (si no, se pierde en el medio del ranking).
+function _renderScoreRows(cont, players, fmt) {
+  players.filter(p => p.tipo !== 'dt').forEach(p => cont.appendChild(_scoreRow(p, fmt(p))));
+  const dts = players.filter(p => p.tipo === 'dt');
+  if (!dts.length) return;
+  const t = document.createElement('div'); t.className = 'scores-section-title'; t.textContent = 'DIRECTOR TÉCNICO';
+  cont.appendChild(t);
+  dts.forEach(p => cont.appendChild(_scoreRow(p, fmt(p))));
 }
 
 // Tras confirmar: pantalla con 2 solapas (Tus puntajes | Resultados globales).
@@ -1798,7 +1811,7 @@ function renderMyScores() {
   const sorted = scoresSquad.map(p => ({ ...p, val: userScores[p.id] })).filter(p => p.val != null).sort((a, b) => b.val - a.val);
   cont.innerHTML = '';
   if (!sorted.length) { cont.innerHTML = '<div style="color:#555;text-align:center;padding:20px;">Sin puntajes.</div>'; return; }
-  sorted.forEach(p => cont.appendChild(_scoreRow(p, p.val)));
+  _renderScoreRows(cont, sorted, p => p.val);
 }
 
 document.getElementById('back-scores-results-btn').addEventListener('click', () => {
@@ -1823,7 +1836,7 @@ async function showScoresResults() {
     const byId = {}; scoresSquad.forEach(p => byId[String(p.id)] = p);
     const ranked = Object.keys(sum).map(id => { const p = byId[id] || { id, name: '#' + id, tipo: '' }; return { ...p, avg: sum[id] / cnt[id] }; }).sort((a, b) => b.avg - a.avg);
     list.innerHTML = '';
-    ranked.forEach(p => list.appendChild(_scoreRow(p, p.avg.toFixed(1))));
+    _renderScoreRows(list, ranked, p => p.avg.toFixed(1));
   } catch(e) { list.innerHTML = '<div style="color:#555;text-align:center;padding:20px;">Error al cargar.</div>'; }
 }
 
@@ -1834,7 +1847,7 @@ async function downloadMyScores() {
     const sub = document.createElement('div'); sub.style.cssText = 'font-size:11px;color:#666;text-align:center;margin-bottom:12px;'; sub.textContent = `${CLUB.nombreCorto} vs ${SCORES_RIVAL}`;
     tmp.appendChild(title); tmp.appendChild(sub);
     const sorted = scoresSquad.map(p => ({ ...p, val: userScores[p.id] })).filter(p => p.val != null).sort((a, b) => b.val - a.val);
-    sorted.forEach(p => tmp.appendChild(_scoreRow(p, p.val)));
+    _renderScoreRows(tmp, sorted, p => p.val);
     document.body.appendChild(tmp);
     await new Promise(r => setTimeout(r, 200));
     const canvas = await html2canvas(tmp, { backgroundColor: '#1a1a2e', scale: 2, logging: false }); document.body.removeChild(tmp);
