@@ -1410,19 +1410,43 @@ async function _shCanvas(o) {
     await Promise.all(imgs.map(i => i.complete ? null : new Promise(r => { i.onload = r; i.onerror = r; })));
     if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch (e) {} }
     await new Promise(r => setTimeout(r, 120));
-    return await html2canvas(el, { backgroundColor: '#070b16', scale: 2, useCORS: true, logging: false, width: SHARE_W, height: SHARE_H });
+    // Tope de tiempo: si una hoja de estilos externa queda colgada, html2canvas
+    // se queda esperando para siempre y el botón moría en "Generando...".
+    const canvas = await Promise.race([
+      html2canvas(el, { backgroundColor: '#070b16', scale: 2, useCORS: true, logging: false, width: SHARE_W, height: SHARE_H }),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('timeout al generar la imagen')), 20000)),
+    ]);
+    return canvas;
   } finally { el.remove(); }
 }
 
-// Solo X/Twitter, a propósito: NO se usa navigator.share porque en desktop abre
-// la hoja de compartir del sistema operativo (Zoom, Outlook, Paint...) en vez de
-// la red que queremos. Siempre se descarga el PNG y se abre el compositor de X
-// con el texto y el link; el usuario adjunta la imagen que quedó descargada.
-// La API de intent de X no permite adjuntar la imagen por URL: no hay forma de
-// evitar ese paso manual sin publicar por API (que requiere OAuth y es paga).
+// En celular conviene el menú nativo: es la ÚNICA vía que adjunta la imagen sola
+// (X con la foto ya puesta, sin login ni API). No se puede limitar a una sola red:
+// la lista de apps la arma el sistema operativo, la página no la controla.
+// En desktop ese mismo menú es la hoja del SO (Zoom, Outlook, Paint...), que no
+// sirve, así que ahí se descarga el PNG y se abre el compositor de X con el texto
+// y el link; la imagen se adjunta a mano porque el intent de X no la acepta.
+function _esCelular() {
+  return navigator.maxTouchPoints > 0 && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
 async function _shCompartir(canvas, filename, texto, soloDescargar) {
   const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
   if (!blob) throw new Error('sin blob');
+
+  if (!soloDescargar && _esCelular()) {
+    try {
+      const file = new File([blob], filename, { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], text: texto + ' https://tribunapp.com.ar' });
+        return 'compartido';
+      }
+    } catch (e) {
+      if (e && e.name === 'AbortError') return 'cancelado';
+      // Gesto perdido o permiso denegado: sigue por el camino de descarga.
+    }
+  }
+
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a'); a.download = filename; a.href = url; a.click();
   setTimeout(() => URL.revokeObjectURL(url), 5000);
@@ -1439,7 +1463,8 @@ async function _shFlujo(btn, label, opts, filename, texto) {
     const canvas = await _shCanvas(opts);
     const r = await _shCompartir(canvas, filename, texto, btn.dataset.solo === '1');
     if (r === 'tweet') showToast('Imagen descargada — adjuntala en el tweet 🔥');
-    else showToast('¡Imagen descargada!');
+    else if (r === 'compartido') showToast('¡Compartido! 🔥');
+    else if (r === 'descargado') showToast('¡Imagen descargada!');
   } catch (e) {
     console.error('share', e);
     showToast('No se pudo generar la imagen.');
