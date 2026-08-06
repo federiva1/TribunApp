@@ -1452,26 +1452,30 @@ async function _shPregenerar(key, opts) {
 // antes, para no perder el gesto.
 function _shCompartirBlob(blob, filename, texto, soloDescargar) {
   const txt = texto + ' https://tribunapp.com.ar';
-  if (!soloDescargar && _esCelular()) {
+  if (!soloDescargar && _esCelular() && navigator.share) {
     try {
       const file = new File([blob], filename, { type: 'image/png' });
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      // Si canShare no existe se intenta igual: hay navegadores que comparten
+      // archivos sin implementarlo. Si no puede, tira y cae a la descarga.
+      if (!navigator.canShare || navigator.canShare({ files: [file] })) {
         return navigator.share({ files: [file], text: txt })
           .then(() => 'compartido')
-          .catch(e => (e && e.name === 'AbortError') ? 'cancelado' : _shBajar(blob, filename, txt, false));
+          .catch(e => (e && e.name === 'AbortError') ? 'cancelado' : _shBajar(blob, filename, txt, false, true));
       }
-    } catch (e) { /* sin soporte de archivos: descarga */ }
+      // El navegador no puede adjuntar archivos (caso típico: Chrome en iPhone).
+      return Promise.resolve(_shBajar(blob, filename, txt, false, true));
+    } catch (e) { /* sigue por la descarga */ }
   }
   return Promise.resolve(_shBajar(blob, filename, txt, soloDescargar));
 }
 
-function _shBajar(blob, filename, txt, soloDescargar) {
+function _shBajar(blob, filename, txt, soloDescargar, sinAdjunto) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a'); a.download = filename; a.href = url; a.click();
   setTimeout(() => URL.revokeObjectURL(url), 5000);
   if (soloDescargar) return 'descargado';
   window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(txt), '_blank', 'noopener');
-  return 'tweet';
+  return sinAdjunto ? 'tweet-sin-imagen' : 'tweet';
 }
 
 async function _shCompartir(canvas, filename, texto, soloDescargar) {
@@ -1482,23 +1486,26 @@ async function _shCompartir(canvas, filename, texto, soloDescargar) {
 
 // key (opcional) = entrada del caché. Si la imagen ya está pregenerada, se comparte
 // en el acto y el gesto del usuario sigue vivo → sale el menú nativo con la app de X.
+function _shAvisar(r) {
+  if (r === 'compartido') showToast('¡Compartido! 🔥');
+  else if (r === 'descargado') showToast('¡Imagen descargada!');
+  else if (r === 'tweet-sin-imagen') showToast('Tu navegador no adjunta imágenes. Se descargó: sumala con el ícono de la foto (o usá Safari).');
+  else if (r === 'tweet') showToast('Imagen descargada — adjuntala en el tweet 🔥');
+}
+
 async function _shFlujo(btn, label, opts, filename, texto, key) {
   const orig = btn.textContent;
   const listo = key && _shCache[key];
   if (listo) {
     const r = await _shCompartirBlob(listo, filename, texto, btn.dataset.solo === '1');
-    if (r === 'tweet') showToast('Imagen descargada — adjuntala en el tweet 🔥');
-    else if (r === 'compartido') showToast('¡Compartido! 🔥');
-    else if (r === 'descargado') showToast('¡Imagen descargada!');
+    _shAvisar(r);
     return;
   }
   btn.textContent = 'Generando...'; btn.disabled = true;
   try {
     const canvas = await _shCanvas(opts);
     const r = await _shCompartir(canvas, filename, texto, btn.dataset.solo === '1');
-    if (r === 'tweet') showToast('Imagen descargada — adjuntala en el tweet 🔥');
-    else if (r === 'compartido') showToast('¡Compartido! 🔥');
-    else if (r === 'descargado') showToast('¡Imagen descargada!');
+    _shAvisar(r);
   } catch (e) {
     console.error('share', e);
     showToast('No se pudo generar la imagen.');
