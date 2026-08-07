@@ -665,6 +665,9 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   color: #fff; white-space: nowrap; transition: all 0.15s; user-select: none; text-transform: uppercase;
 }
 .stats-col-chip.off { background: transparent; color: rgba(255,255,255,0.28); border-color: rgba(255,255,255,0.06); }
+.stats-export-btn { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 0.5px; background: rgba(255,255,255,0.06); color: #dff0ff; border: 1px solid rgba(255,255,255,0.18); border-radius: 8px; padding: 6px 13px; cursor: pointer; transition: all 0.15s; }
+.stats-export-btn:hover { background: var(--club-color); border-color: var(--club-color); color: #fff; }
+.stats-export-btn:disabled { opacity: 0.5; cursor: default; }
 /* chips de jugadores */
 .stats-pchip {
   flex: 0 0 auto; display: flex; align-items: center; gap: 6px; padding: 3px 11px 3px 3px;
@@ -3061,7 +3064,10 @@ function _renderStatsTabEquipo(cont) {
     cont.appendChild(e);
     return;
   }
+  cont.appendChild(_statsExportBar());
   cont.appendChild(_statsWideTable(visibles, fechasArr.length));
+  // Completar el contexto del export con el scope de fechas (para la leyenda).
+  if (_stats.eqLast) { _stats.eqLast.fechasArr = fechasArr; _stats.eqLast.fechasDisp = fechasDisp; }
 }
 
 // Agrega los jugadores (jugo:true) de las fechas dadas, sumando campos numéricos.
@@ -3216,7 +3222,98 @@ function _statsWideTable(rows, nFechas) {
     tbody.appendChild(tr);
   });
   table.appendChild(tbody); wrap.appendChild(table);
+  // Guardar lo EXACTAMENTE mostrado (columnas visibles + filas ordenadas) para exportar.
+  _stats.eqLast = { cols, rows: sorted, nFechas };
   return wrap;
+}
+
+// ---- Exportar la tabla del tab Equipo (lo que se ve, con los filtros) a Excel ----
+// Carga SheetJS on-demand del mismo CDN que ya usa la app; si falla, cae a CSV.
+let _xlsxPromise = null;
+function _loadXLSX() {
+  if (window.XLSX) return Promise.resolve(window.XLSX);
+  if (_xlsxPromise) return _xlsxPromise;
+  _xlsxPromise = new Promise((resolve) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+    s.onload = () => resolve(window.XLSX || null);
+    s.onerror = () => resolve(null);
+    document.head.appendChild(s);
+  });
+  return _xlsxPromise;
+}
+
+function _statsExportVal(r, c) {
+  const v = r[c.key];
+  if (v === null || v === undefined) return '';
+  if (c.frac) { const t = r[c.frac]; return (t != null) ? `${v}/${t}` : v; }
+  if (c.dec && typeof v === 'number') return Number(v.toFixed(2));
+  return (typeof v === 'number') ? v : String(v);
+}
+
+// Leyenda (qué se está exportando). Concisa: "todas/todos" cuando no hay filtro.
+function _statsExportLeyenda(L) {
+  const eq = _stats.eq;
+  const lines = [];
+  lines.push(`${CLUB.nombre} · Estadísticas de jugadores`);
+  const seasonEl = document.getElementById('stats-season-label');
+  if (seasonEl && seasonEl.textContent.trim()) lines.push(seasonEl.textContent.trim());
+  const allF = L.fechasDisp && L.fechasArr.length === L.fechasDisp.length;
+  lines.push(allF ? `Todas las fechas (${L.fechasArr.length})` : `Fechas: ${L.fechasArr.join(', ')}`);
+  if (!eq.hiddenPlayers || eq.hiddenPlayers.size === 0) lines.push(`Todos los jugadores (${L.rows.length})`);
+  else if (L.rows.length <= 8) lines.push(`Jugadores: ${L.rows.map(r => r.nombre).join(', ')}`);
+  else lines.push(`Jugadores: ${L.rows.length} seleccionados`);
+  lines.push((!eq.hiddenCols || eq.hiddenCols.size === 0)
+    ? 'Todas las estadísticas' : `Columnas: ${L.cols.map(c => c.label).join(', ')}`);
+  const d = new Date();
+  const dd = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+  lines.push(`Exportado de tribunapp.com.ar · ${dd}`);
+  return lines;
+}
+
+async function _statsExport(btn) {
+  const L = _stats.eqLast;
+  if (!L || !L.rows || !L.rows.length) { showToast('No hay datos para exportar.'); return; }
+  const label = btn.textContent;
+  btn.textContent = 'Generando…'; btn.disabled = true;
+  try {
+    const ley = _statsExportLeyenda(L);
+    const header = ['N°', 'Jugador', ...L.cols.map(c => c.label)];
+    const dataRows = L.rows.map(r => [r.num || '', r.nombre, ...L.cols.map(c => _statsExportVal(r, c))]);
+    const aoa = [...ley.map(t => [t]), [], header, ...dataRows];
+    const base = `estadisticas-${CLUB_SLUG}`;
+
+    const XLSX = await _loadXLSX();
+    if (XLSX) {
+      const ws = XLSX.utils.aoa_to_sheet(aoa);
+      ws['!cols'] = [{ wch: 4 }, { wch: 22 }, ...L.cols.map(() => ({ wch: 7 }))];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Estadísticas');
+      XLSX.writeFile(wb, base + '.xlsx');
+      showToast('¡Excel descargado!');
+    } else {
+      // Fallback CSV (BOM + ; para que Excel en español abra las columnas).
+      const esc = v => { const s = String(v ?? ''); return /[";\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+      const csv = '﻿' + aoa.map(row => row.map(esc).join(';')).join('\r\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = base + '.csv'; a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+      showToast('Descargado (CSV, se abre en Excel).');
+    }
+  } catch (e) { console.error('export', e); showToast('No se pudo exportar.'); }
+  finally { btn.textContent = label; btn.disabled = false; }
+}
+
+function _statsExportBar() {
+  const bar = document.createElement('div');
+  bar.style.cssText = 'display:flex;justify-content:flex-end;margin:2px 0 8px;';
+  const btn = document.createElement('button');
+  btn.className = 'stats-export-btn';
+  btn.textContent = '⬇ Exportar a Excel';
+  btn.onclick = () => _statsExport(btn);
+  bar.appendChild(btn);
+  return bar;
 }
 
 function _statsScoreboard(partido) {
