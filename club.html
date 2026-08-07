@@ -1635,7 +1635,10 @@ function handleMove(cx, cy) {
     let py = Math.max(3, Math.min(97, ((cy - rect.top - dragOffY) / pitch.clientHeight) * 100));
     activePitchDrag.el.style.left = px + '%'; activePitchDrag.el.style.top = py + '%';
     const obj = onPitch.find(o => _pKey(o) === _pKey(activePitchDrag.p));
-    if (obj) { obj.xPct = px; obj.yPct = py; }
+    // Al mover un jugador cambian las posiciones de la placa: la imagen que
+    // estaba pregenerada quedó vieja. (updateCounter, que es quien reagenda,
+    // no corre en el drag porque la cantidad de jugadores no cambia.)
+    if (obj) { obj.xPct = px; obj.yPct = py; _shInvalidar('formacion'); }
     grid.classList.toggle('drag-over', isOver(grid, cx, cy));
   }
 }
@@ -1643,6 +1646,7 @@ function handleMove(cx, cy) {
 function handleEnd(cx, cy) {
   if (activePitchDrag) {
     if (isOver(grid, cx, cy)) removePlayer(_pKey(activePitchDrag.p));
+    else _shAgendarFormacion();      // quedó en otra posición: regenerar la placa
     grid.classList.remove('drag-over'); activePitchDrag = null;
   } else if (draggingNew) {
     if (isOver(pitch, cx, cy) && onPitch.length < 11) {
