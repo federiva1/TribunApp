@@ -2445,12 +2445,25 @@ async function renderCurrentFechaGuest() {
     sCont.innerHTML = '';
     if (!sData.length) { sCont.innerHTML = '<div style="text-align:center;color:#555;padding:16px;font-size:13px;">Sin puntajes aún.</div>'; }
     else {
-      const totals = {}, counts2 = {};
-      sData.forEach(row => { Object.entries(row.puntajes || {}).forEach(([n, v]) => { if (v == null || v === '' || isNaN(Number(v))) return; totals[n] = (totals[n] || 0) + Number(v); counts2[n] = (counts2[n] || 0) + 1; }); });
-      Object.keys(totals).map(n => ({ num: Number(n), name: (CLUB.squad || []).find(s => s.num === Number(n))?.name || `#${n}`, avg: totals[n] / counts2[n] }))
+      // Resolver la clave del voto: id de partido (voto nuevo) vía _taSquadIndex,
+      // o dorsal (voto legacy) vía el plantel. Agregar por nombre normalizado.
+      const squadIdx = await _taSquadIndex();
+      const totals = {}, counts2 = {}, meta = {};
+      sData.forEach(row => { Object.entries(row.puntajes || {}).forEach(([k, v]) => {
+        if (v == null || v === '' || isNaN(Number(v))) return;
+        let name = squadIdx[k] ? squadIdx[k].name : null;
+        if (!name) { const s0 = (typeof squad !== 'undefined' ? squad : []).find(s => String(s.num) === String(k)); name = s0 ? s0.name : ('#' + k); }
+        const sqm = _statsMatchSquad(name, (typeof squad !== 'undefined' ? squad : []));   // nombre canónico + num del plantel
+        const dispName = sqm ? sqm.name : name;
+        const num = sqm ? sqm.num : (squadIdx[k] ? (squadIdx[k].num || '') : '');
+        const gk = _statsNorm(dispName);
+        if (!meta[gk]) meta[gk] = { name: dispName, num };
+        totals[gk] = (totals[gk] || 0) + Number(v); counts2[gk] = (counts2[gk] || 0) + 1;
+      }); });
+      Object.keys(totals).map(gk => ({ num: meta[gk].num, name: meta[gk].name, avg: totals[gk] / counts2[gk] }))
         .sort((a, b) => b.avg - a.avg).slice(0, 6).forEach(p => {
           const row = document.createElement('div'); row.className = 'score-result-row';
-          const numEl = document.createElement('div'); numEl.className = 'score-result-num'; numEl.textContent = `#${p.num}`;
+          const numEl = document.createElement('div'); numEl.className = 'score-result-num'; numEl.textContent = p.num ? `#${p.num}` : '';
           const nameEl = document.createElement('div'); nameEl.className = 'score-result-name'; nameEl.textContent = p.name;
           const barWrap = document.createElement('div'); barWrap.className = 'score-result-bar-wrap';
           const bar = document.createElement('div'); bar.className = 'score-result-bar'; bar.style.width = (p.avg / 10 * 100) + '%'; barWrap.appendChild(bar);
@@ -2867,7 +2880,7 @@ function _statsRenderTierList(cont, forms) {
 // punts: filas crudas de Supabase
 // partidosScope: array de partidos del JSON sobre los que cuenta el podio
 // minFechas: mínimo de fechas que el jugador debe haber jugado
-function _statsRenderPodio(cont, punts, partidosScope, minFechas) {
+async function _statsRenderPodio(cont, punts, partidosScope, minFechas) {
   const title = document.createElement('div');
   title.className = 'stats-section-title';
   title.style.marginTop = '20px';
@@ -2884,33 +2897,49 @@ function _statsRenderPodio(cont, punts, partidosScope, minFechas) {
     return;
   }
 
-  // Para cada num en el scope, identificar al jugador que REALMENTE jugó.
-  // El squad tiene nums duplicados (ej #23 = Verón y López). Resolvemos vía
-  // FotMob: el nombre en partido.jugadores es la fuente de verdad.
-  // numToPlayer[num] = { name, fid, dates: Set(date jugadas) }
-  const numToPlayer = {};
+  // Identidad del voto: los puntajes se guardan por ID de jugador del partido
+  // (para desambiguar dorsales repetidos), pero también hay votos legacy migrados
+  // keyeados por dorsal. Resolvemos cada clave a un jugador vía _taSquadIndex
+  // (id→nombre desde data/partidos) con fallback al dorsal del plantel, y agregamos
+  // por NOMBRE normalizado (une legacy+nuevo del mismo jugador). playedByName solo
+  // incluye a los que realmente jugaron (jugo:true) en el scope, por fecha.
+  const playedByName = {};
   (partidosScope || []).forEach(p => {
     (p.jugadores || []).filter(j => j.jugo).forEach(j => {
       const sq = _statsMatchSquad(j.nombre, squad);
       if (!sq) return;
-      const num = sq.num;
-      if (!numToPlayer[num]) numToPlayer[num] = { name: sq.name, fid: sq.fid, dates: new Set() };
-      numToPlayer[num].dates.add(p.date);
+      const key = _statsNorm(sq.name);
+      if (!playedByName[key]) playedByName[key] = { name: sq.name, fid: sq.fid, num: sq.num, dates: new Set() };
+      playedByName[key].dates.add(p.date);
     });
   });
+
+  // Resuelve la clave del voto a la MISMA clave-nombre que playedByName. data/partidos
+  // trae el nombre abreviado ("B. Cortes") y el plantel el completo, así que ambos se
+  // pasan por _statsMatchSquad para caer en el nombre canónico del plantel.
+  const squadIdx = await _taSquadIndex();
+  const voteName = k => {
+    let nm = (squadIdx[k] && squadIdx[k].name) || null;        // voto nuevo (id de partido)
+    if (!nm) { const s = squad.find(s => String(s.num) === String(k)); nm = s ? s.name : null; }  // legacy (dorsal)
+    if (!nm) return null;
+    const sq = _statsMatchSquad(nm, squad);
+    return _statsNorm(sq ? sq.name : nm);
+  };
 
   const totals = {}, voteCounts = {}, votedDates = {};
   punts.forEach(row => {
     const date = row.match_date;
-    Object.entries(row.puntajes || {}).forEach(([num, val]) => {
-      const p = numToPlayer[num];
-      if (!p) return;                              // num no jugó en ningún partido del scope
-      if (date && !p.dates.has(date)) return;      // jugador no jugó esta fecha específica
+    Object.entries(row.puntajes || {}).forEach(([k, val]) => {
+      const nm = voteName(k);
+      if (!nm) return;
+      const p = playedByName[nm];
+      if (!p) return;                              // no jugó en ningún partido del scope
+      if (date && !p.dates.has(date)) return;      // no jugó esa fecha específica
       if (val == null || val === '' || isNaN(Number(val))) return;   // S/P: no cuenta ni como voto
-      totals[num] = (totals[num] || 0) + Number(val);
-      voteCounts[num] = (voteCounts[num] || 0) + 1;
-      if (!votedDates[num]) votedDates[num] = new Set();
-      votedDates[num].add(date || '__sinfecha');   // filas legacy sin fecha = 1 pseudo-fecha
+      totals[nm] = (totals[nm] || 0) + Number(val);
+      voteCounts[nm] = (voteCounts[nm] || 0) + 1;
+      if (!votedDates[nm]) votedDates[nm] = new Set();
+      votedDates[nm].add(date || '__sinfecha');   // filas legacy sin fecha = 1 pseudo-fecha
     });
   });
 
@@ -2924,12 +2953,12 @@ function _statsRenderPodio(cont, punts, partidosScope, minFechas) {
   const M = allCnt ? allSum / allCnt : 5.5, C = 2;
   const multi = (partidosScope || []).length > 1;
   const results = Object.keys(totals)
-    .filter(num => (votedDates[num]?.size || 0) >= cutoff)
-    .map(num => {
-      const p = numToPlayer[num];
-      const nF = votedDates[num].size;
-      const avg = totals[num] / voteCounts[num];
-      return { num: Number(num), name: p.name, fid: p.fid, avg,
+    .filter(nm => (votedDates[nm]?.size || 0) >= cutoff)
+    .map(nm => {
+      const p = playedByName[nm];
+      const nF = votedDates[nm].size;
+      const avg = totals[nm] / voteCounts[nm];
+      return { num: p.num, name: p.name, fid: p.fid, avg,
                pj: multi ? nF : null, adj: (avg * nF + C * M) / (nF + C) };
     })
     .sort((a, b) => b.adj - a.adj);
