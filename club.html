@@ -2139,6 +2139,7 @@ function makeScoreCard(p, rank, avatarSize = 44, noMedal = false) {
   card.appendChild(rankEl); card.appendChild(kitChip(CLUB_SLUG, p.num, avatarSize));
   const nameEl = document.createElement('div'); nameEl.style.cssText = 'font-size:11px;color:#ccc;text-align:center;line-height:1.2;'; nameEl.textContent = p.name; card.appendChild(nameEl);
   const valEl = document.createElement('div'); valEl.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:22px;color:#fff;font-weight:700;line-height:1;'; valEl.textContent = typeof p.avg !== 'undefined' ? p.avg.toFixed(1) : p.val; card.appendChild(valEl);
+  if (p.pj != null) { const pjEl = document.createElement('div'); pjEl.style.cssText = 'font-size:9px;color:rgba(255,255,255,0.35);line-height:1;'; pjEl.textContent = `${p.pj} fecha${p.pj !== 1 ? 's' : ''}`; card.appendChild(pjEl); }
   return card;
 }
 
@@ -2906,13 +2907,24 @@ function _statsRenderPodio(cont, punts, partidosScope, minFechas) {
   });
 
   const cutoff = Math.max(1, minFechas || 1);
+  // ORDEN por promedio ajustado por participación (estilo IMDb): al promedio real
+  // se le suman C fechas "fantasma" al promedio general M del scope. Con pocas
+  // fechas puntuadas el jugador gravita hacia M, así una sola gran fecha no le
+  // gana a un rendimiento sostenido. El número que se MUESTRA es el promedio real.
+  const allSum = Object.values(totals).reduce((a, b) => a + b, 0);
+  const allCnt = Object.values(voteCounts).reduce((a, b) => a + b, 0);
+  const M = allCnt ? allSum / allCnt : 5.5, C = 2;
+  const multi = (partidosScope || []).length > 1;
   const results = Object.keys(totals)
     .filter(num => (votedDates[num]?.size || 0) >= cutoff)
     .map(num => {
       const p = numToPlayer[num];
-      return { num: Number(num), name: p.name, fid: p.fid, avg: totals[num] / voteCounts[num] };
+      const nF = votedDates[num].size;
+      const avg = totals[num] / voteCounts[num];
+      return { num: Number(num), name: p.name, fid: p.fid, avg,
+               pj: multi ? nF : null, adj: (avg * nF + C * M) / (nF + C) };
     })
-    .sort((a, b) => b.avg - a.avg);
+    .sort((a, b) => b.adj - a.adj);
 
   if (!results.length) {
     const e = document.createElement('div'); e.className = 'stats-empty';

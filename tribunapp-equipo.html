@@ -306,26 +306,43 @@ function calcFormaciones(rows) {
 }
 
 function calcPuntajes(rows) {
-  // Agregar por jugador: suma y cantidad de votos reales + cantidad de S/P (null/'')
+  // Agregar por jugador: suma y cantidad de votos reales + S/P (null/'') + fechas puntuadas
   var agg = {};
+  var fechasScope = {};
+  var globalSum = 0, globalCnt = 0;
   rows.forEach(function(r) {
+    if (r.match_date) fechasScope[r.match_date] = true;
     Object.entries(r.puntajes || {}).forEach(function(entry) {
       var num = entry[0], val = entry[1];
-      if (!agg[num]) agg[num] = { realSum: 0, realCount: 0, spCount: 0 };
+      if (!agg[num]) agg[num] = { realSum: 0, realCount: 0, spCount: 0, fechas: {} };
       if (val === null || val === undefined || val === '') { agg[num].spCount++; return; }
       var n = Number(val);
       if (isNaN(n)) return;
       agg[num].realSum += n; agg[num].realCount++;
+      globalSum += n; globalCnt++;
+      if (r.match_date) agg[num].fechas[r.match_date] = true;
     });
   });
-  // Promedio simple de los puntajes reales (los S/P no cuentan), igual que club.html.
-  // Se muestra siempre con 1 decimal en el render → sin inconsistencias entre fecha y acumulado.
+  // El promedio que se MUESTRA es el simple de los votos reales (los S/P no cuentan),
+  // igual que club.html. Dos reglas de participación (mismas que el podio de club.html):
+  //  - Cutoff en el acumulado: entrás solo si te puntuaron en ≥ la mitad de las fechas.
+  //  - ORDEN por promedio ajustado (estilo IMDb): C fechas "fantasma" al promedio
+  //    general M del scope; con pocas fechas gravitás hacia M, así una sola gran
+  //    fecha no le gana a un rendimiento sostenido.
+  var nScope = Object.keys(fechasScope).length;
+  var cutoff = nScope > 1 ? Math.ceil(nScope / 2) : 1;
+  var M = globalCnt ? globalSum / globalCnt : 5.5, C = 2;
   return Object.keys(agg).map(function(num) {
     var a = agg[num];
+    var nF = Object.keys(a.fechas).length;
     var avg = a.realCount > 0 ? a.realSum / a.realCount : null;
-    return { num: num, avg: avg, votes: a.realCount };
+    var adj = avg == null ? null : (avg * nF + C * M) / (nF + C);
+    return { num: num, avg: avg, votes: a.realCount, fechas: nF, adj: adj };
+  }).filter(function(p) {
+    if (nScope <= 1) return true;              // una sola fecha (o legacy sin match_date)
+    return p.fechas >= cutoff;
   }).sort(function(a, b) {
-    return (b.avg == null ? -1 : b.avg) - (a.avg == null ? -1 : a.avg);
+    return (b.adj == null ? -1 : b.adj) - (a.adj == null ? -1 : a.adj);
   });
 }
 
@@ -423,7 +440,7 @@ function renderPodio(players, container, squad) {
       '<div class="podio-medal">' + medals[i] + '</div>' +
       '<div class="podio-name">' + esc(puntName(p.num, squad)) + '</div>' +
       '<div class="podio-val">' + (p.avg == null ? '—' : p.avg.toFixed(1)) + '</div>' +
-      '<div class="podio-label">' + p.votes + ' voto' + (p.votes !== 1 ? 's' : '') + '</div>';
+      '<div class="podio-label">' + p.votes + ' voto' + (p.votes !== 1 ? 's' : '') + (p.fechas > 1 ? ' · ' + p.fechas + ' fechas' : '') + '</div>';
     podioEl.appendChild(item);
   });
   container.appendChild(podioEl);
