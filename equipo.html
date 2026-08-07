@@ -1126,11 +1126,11 @@ html.deep-stats #estadisticas-screen { display: block; }
       const displayName = _username || (_currentUser.email || '').split('@')[0];
       let html = '';
       if (_equipoHincha) {
-        html += '<img class="auth-btn-avatar" src="escudos/' + _equipoHincha + '.png" onerror="this.style.display=\'none\'">';
+        html += '<img class="auth-btn-avatar" src="escudos/' + escapeHtml(_equipoHincha) + '.png" onerror="this.style.display=\'none\'">';
       } else {
         html += '<span style="font-size:16px;line-height:1;">👤</span>';
       }
-      html += '<span class="auth-btn-name">' + displayName + '</span>';
+      html += '<span class="auth-btn-name">' + escapeHtml(displayName) + '</span>';
       btn.innerHTML = html;
     } else {
       btn.classList.remove('logged-in');

@@ -355,6 +355,7 @@ async function computarLideres(index){
       if(!res.ok) continue;
       data = await res.json();
     }catch(e){ continue; }
+    if(!data || !data.partido || !data.jugadores) continue;   // JSON incompleto: saltar ese partido, no abortar todo
 
     for(const team of [data.partido.local, data.partido.visitante]){
       const jugs = data.jugadores[team]||[];

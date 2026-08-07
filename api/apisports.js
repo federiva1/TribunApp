@@ -6,12 +6,20 @@ export const config = { runtime: 'edge' };
 // /status (que filtra datos de la cuenta) y cualquier otro uso abusivo del proxy.
 const ALLOWED = ['fixtures', 'standings', 'teams', 'players'];
 
+const UPSTREAM = 'https://v3.football.api-sports.io';
+
 // Orígenes permitidos (defensa adicional contra uso del proxy desde afuera).
+// Se parsea el hostname y se compara exacto/sufijo — un regex sin anclar dejaba
+// pasar tribunapp.com.ar.evil.com. Falta de header = fetch mismo-origen (los GET
+// same-origin no mandan Origin), se permite; el gate real es la allowlist de path.
 function originOk(req) {
-  const o = req.headers.get('origin') || req.headers.get('referer') || '';
-  if (!o) return true; // mismo-origen (sin header) — fetch interno
-  return /(^|\/\/)([a-z0-9-]+\.)*tribunapp\.com\.ar/i.test(o) ||
-         /(^|\/\/)([a-z0-9-]+\.)*vercel\.app/i.test(o);
+  const raw = req.headers.get('origin') || req.headers.get('referer') || '';
+  if (!raw) return true;
+  let host;
+  try { host = new URL(raw).hostname.toLowerCase(); } catch (e) { return false; }
+  return host === 'tribunapp.com.ar' ||
+         host.endsWith('.tribunapp.com.ar') ||
+         host.endsWith('.vercel.app');
 }
 
 export default async function handler(req) {
@@ -29,7 +37,27 @@ export default async function handler(req) {
   if (!apiPath && pathParam) apiPath = '/' + pathParam;
   url.searchParams.delete('path');
 
-  const seg = apiPath.replace(/^\/+/, '').split(/[/?]/)[0].toLowerCase();
+  // NORMALIZAR antes de validar: se construye la URL upstream y se re-parsea, así
+  // cualquier `..` o `//` se colapsa y validamos el path REAL. Antes se validaba el
+  // primer segmento del path crudo, pero fetch() (edge/WHATWG URL) colapsa los
+  // `..` recién al pegar → `path=fixtures/../status` pasaba el gate y llegaba a
+  // /status (datos de la cuenta) gastando la cuota paga.
+  let normPath;
+  try {
+    const u = new URL(apiPath.replace(/^\/*/, '/'), UPSTREAM);
+    if (u.origin !== UPSTREAM) {            // apiPath absoluto/protocol-relative (//evil.com)
+      return new Response(JSON.stringify({ error: 'path no permitido' }), {
+        status: 403, headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    normPath = u.pathname;                  // ya normalizado, sin `..`
+  } catch (e) {
+    return new Response(JSON.stringify({ error: 'path inválido' }), {
+      status: 400, headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  const seg = normPath.replace(/^\/+/, '').split('/')[0].toLowerCase();
   if (!ALLOWED.includes(seg)) {
     return new Response(JSON.stringify({ error: 'endpoint no permitido' }), {
       status: 403, headers: { 'Content-Type': 'application/json' },
@@ -49,7 +77,7 @@ export default async function handler(req) {
   const cacheControl = isLive ? 'no-store' : 'public, max-age=60';
 
   const qs = url.searchParams.toString();
-  const upstream = 'https://v3.football.api-sports.io' + apiPath + (qs ? '?' + qs : '');
+  const upstream = UPSTREAM + normPath + (qs ? '?' + qs : '');
 
   const res = await fetch(upstream, { headers: { 'x-apisports-key': key } });
   const body = await res.arrayBuffer();

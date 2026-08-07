@@ -2446,7 +2446,7 @@ async function renderCurrentFechaGuest() {
     if (!sData.length) { sCont.innerHTML = '<div style="text-align:center;color:#555;padding:16px;font-size:13px;">Sin puntajes aún.</div>'; }
     else {
       const totals = {}, counts2 = {};
-      sData.forEach(row => { Object.entries(row.puntajes || {}).forEach(([n, v]) => { totals[n] = (totals[n] || 0) + Number(v); counts2[n] = (counts2[n] || 0) + 1; }); });
+      sData.forEach(row => { Object.entries(row.puntajes || {}).forEach(([n, v]) => { if (v == null || v === '' || isNaN(Number(v))) return; totals[n] = (totals[n] || 0) + Number(v); counts2[n] = (counts2[n] || 0) + 1; }); });
       Object.keys(totals).map(n => ({ num: Number(n), name: (CLUB.squad || []).find(s => s.num === Number(n))?.name || `#${n}`, avg: totals[n] / counts2[n] }))
         .sort((a, b) => b.avg - a.avg).slice(0, 6).forEach(p => {
           const row = document.createElement('div'); row.className = 'score-result-row';
@@ -2964,7 +2964,9 @@ function _renderStatsTabEquipo(cont) {
 
   // Init / saneo del estado de fechas
   const fechasDisp = partidosConDatos.map(p => p.fecha).sort((a, b) => a - b);
-  const ultima = Math.max(...fechasDisp);
+  // Default = último partido CRONOLÓGICO (por date real), no el de mayor número de
+  // fecha (una postergación deja la F2 después de la F3 — ver regla en CLAUDE.md).
+  const ultima = partidosConDatos.reduce((a, b) => ((a.date || '') > (b.date || '') ? a : b)).fecha;
   if (eq.fechas === null) eq.fechas = new Set([ultima]);
   eq.fechas = new Set([...eq.fechas].filter(f => fechasDisp.includes(f)));
   if (!eq.fechas.size) eq.fechas = new Set([ultima]);
@@ -3744,7 +3746,8 @@ async function _taRenderVotos() {
     punts.forEach(row => {
       const o = row.puntajes || {};
       Object.keys(o).forEach(k => {
-        const v = Number(o[k]); if (isNaN(v)) return;
+        const raw = o[k]; if (raw == null || raw === '') return;   // S/P: no cuenta (Number(null)===0)
+        const v = Number(raw); if (isNaN(v)) return;
         sum[k] = (sum[k] || 0) + v; cnt[k] = (cnt[k] || 0) + 1;
         (fechas[k] = fechas[k] || new Set()).add(row.match_date);
       });

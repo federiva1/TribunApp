@@ -597,7 +597,8 @@ function renderPlayers(jugs, teamSlug, containerId, squad){
 
     const enPlantel = _matchSquad(j.nombre, squad);
     // Sin fotos: la "avatar" es un círculo con el color del club y el dorsal.
-    const dorsal = (enPlantel && enPlantel.num) || j.num || '';
+    const rawDorsal = (enPlantel && enPlantel.num) || j.num || '';
+    const dorsal = (rawDorsal === 'None') ? '' : rawDorsal;   // descartar el string 'None' legacy
 
     const card = document.createElement('div');
     card.className='player-card';
@@ -648,7 +649,7 @@ async function loadSquad(slug){
 // El motor de la ficha en vivo (buildPayloadLive) vive en js/match-live.js
 // Decide la fuente: JSON pre-generado (post-partido, FotMob) o api-sports en vivo.
 async function loadMatchData(){
-  const apiFid=params.get('fid')||'';
+  const apiFid=(params.get('fid')||'').replace(/[^0-9]/g,'');   // solo dígitos: no ensuciar la query del proxy
   let json=null;
   try{ const r=await fetch(`data/partidos/${matchId}.json?v=${Date.now()}`); if(r.ok) json=await r.json(); }catch(e){}
   const apiId=apiFid||(json&&json.partido&&json.partido.api_id)||'';
