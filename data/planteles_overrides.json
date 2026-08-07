@@ -1,5 +1,5 @@
 {
-  "_comentario": "Ajustes manuales que se aplican DESPUES de scrapear FotMob, para casos que FotMob no refleja bien (tipicamente pases recientes, que quedan listados en el club de origen). Los aplica scripts/fetch_planteles_liga.py, asi sobreviven a cada refresco. 'agregar' = jugadores que faltan; 'quitar' = nombres a sacar (match por apellido, sin tildes); 'numeros' = corregir dorsal {nombre: num}.",
+  "_comentario": "Ajustes manuales que se aplican DESPUES de scrapear FotMob, para casos que FotMob no refleja bien (pases recientes, dorsales viejos). Los aplica scripts/fetch_planteles_liga.py, asi sobreviven a cada refresco. 'agregar' = jugadores que faltan; 'quitar' = nombres a sacar (substring, sin tildes); 'numeros' = corregir dorsal {nombre: num} (num '' = sin numero).",
   "barracascentral": {
     "agregar": [
       {
@@ -28,6 +28,13 @@
         "name": "Maximiliano Salas",
         "fid": 730647,
         "nationality": "ARG",
+        "position": "attackers"
+      },
+      {
+        "num": "",
+        "name": "Luis Díaz",
+        "fid": 1433139,
+        "nationality": "COL",
         "position": "attackers"
       }
     ],
@@ -59,6 +66,41 @@
     "quitar": [],
     "numeros": {
       "Franco Vázquez": "6"
+    }
+  },
+  "rosariocentral": {
+    "agregar": [
+      {
+        "num": "88",
+        "name": "Alan Rodríguez",
+        "fid": 1035611,
+        "nationality": "URU",
+        "position": "midfielders"
+      }
+    ],
+    "quitar": [
+      "Santiago Burgos"
+    ]
+  },
+  "aldosivi": {
+    "agregar": [
+      {
+        "num": "13",
+        "name": "Braian Cufré",
+        "fid": 684991,
+        "nationality": "ARG",
+        "position": "defenders"
+      }
+    ],
+    "quitar": [
+      "Guillermo Enrique",
+      "Roberto Bochi"
+    ],
+    "numeros": {
+      "Alan Sosa": "22",
+      "Federico Laurelli": "17",
+      "Sebastián Moyano": "",
+      "Federico Gino": ""
     }
   }
 }

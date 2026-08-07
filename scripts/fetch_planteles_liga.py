@@ -111,6 +111,10 @@ def main() -> int:
         # Ajustes manuales (jugadores a préstamo que FotMob deja en el club de origen)
         nota_ov = aplicar_overrides(slug, players)
 
+        # Orden: primero los que tienen dorsal (en su orden actual, agrupado por
+        # posición), y al final los que quedaron sin número. Estable.
+        players.sort(key=lambda p: 1 if not str(p.get('num') or '').strip() else 0)
+
         sin_num = [p['name'] for p in players if not str(p.get('num') or '').strip()]
         total_fuera += len(sin_num)
 
