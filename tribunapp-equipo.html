@@ -311,7 +311,8 @@ function calcPuntajes(rows) {
   var fechasScope = {};
   var globalSum = 0, globalCnt = 0;
   rows.forEach(function(r) {
-    if (r.match_date) fechasScope[r.match_date] = true;
+    var fkey = r.match_date || '__sinfecha';   // filas legacy sin fecha = 1 pseudo-fecha
+    fechasScope[fkey] = true;
     Object.entries(r.puntajes || {}).forEach(function(entry) {
       var num = entry[0], val = entry[1];
       if (!agg[num]) agg[num] = { realSum: 0, realCount: 0, spCount: 0, fechas: {} };
@@ -320,7 +321,7 @@ function calcPuntajes(rows) {
       if (isNaN(n)) return;
       agg[num].realSum += n; agg[num].realCount++;
       globalSum += n; globalCnt++;
-      if (r.match_date) agg[num].fechas[r.match_date] = true;
+      agg[num].fechas[fkey] = true;
     });
   });
   // El promedio que se MUESTRA es el simple de los votos reales (los S/P no cuentan),

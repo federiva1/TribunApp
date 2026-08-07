@@ -2439,13 +2439,14 @@ async function showScoresResults() {
         else { const n = Number(val); if (!isNaN(n)) { agg[num].realSum += n; agg[num].realCount++; } }
       });
     });
-    // Regla S/P: como el formulario obliga a puntuar a todos, el total de votos incluye los S/P.
-    // Si >50% de los votos de un jugador son S/P → cada S/P pesa 0; si ≤50% → cada S/P pesa 2 (no le baja tanto).
+    // Regla S/P unificada con la liga (club.html) y Est. TribunApp: el S/P no cuenta
+    // para el promedio — ni suma ni entra al denominador ("no lo puedo evaluar" ≠
+    // "jugó mal"). `votes` son los votos REALES; un jugador con solo S/P queda sin
+    // promedio y no se lista. (Antes acá el S/P valía 0 o 2 según el %, lo que podía
+    // dejar promedios de 1.5 a quien entró 5 minutos.)
     const computeAvg = a => {
-      const total = a.realCount + a.spCount;
-      if (!total) return { avg: null, votes: 0 };
-      const spVal = (a.spCount / total) > 0.5 ? 0 : 2;
-      return { avg: (a.realSum + spVal * a.spCount) / total, votes: total };
+      if (!a.realCount) return { avg: null, votes: 0 };
+      return { avg: a.realSum / a.realCount, votes: a.realCount };
     };
     const isDT = num => num === '' || num == null || String(num) === '0';
     const sqR = window._squadPuntajes || squad;

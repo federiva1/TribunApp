@@ -2902,7 +2902,7 @@ function _statsRenderPodio(cont, punts, partidosScope, minFechas) {
       totals[num] = (totals[num] || 0) + Number(val);
       voteCounts[num] = (voteCounts[num] || 0) + 1;
       if (!votedDates[num]) votedDates[num] = new Set();
-      if (date) votedDates[num].add(date);
+      votedDates[num].add(date || '__sinfecha');   // filas legacy sin fecha = 1 pseudo-fecha
     });
   });
 
