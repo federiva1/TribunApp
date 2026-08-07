@@ -334,6 +334,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   color: #aaa; font-size: 11px; font-weight: 500; cursor: pointer;
   transition: all 0.15s; display: flex; align-items: center; justify-content: center;
 }
+.score-btn.sp { width: auto; padding: 0 6px; font-size: 10px; letter-spacing: 0.5px; }
 .score-btn:hover { border-color: var(--club-color); color: #fff; }
 .score-btn.selected { background: var(--club-color); border-color: var(--club-color); color: #fff; }
 
@@ -1175,7 +1176,13 @@ function openSection(section) {
     }
     btn.style.display = ''; btn.style.background = ''; btn.style.opacity = '';
     renderScores();
-    if (already) { btn.textContent = 'Ya enviaste ✓'; btn.disabled = true; btn.style.opacity = '0.5'; btn.classList.remove('ready'); }
+    if (already) {
+      btn.textContent = 'Ya enviaste ✓'; btn.disabled = true; btn.style.opacity = '0.5'; btn.classList.remove('ready');
+      // Ya votó: entrar directo a "Tus puntajes | Resultados globales", que es donde
+      // están compartir y descargar. Antes quedaba solo la lista bloqueada, sin
+      // forma de volver a ver los resultados ni de bajar la imagen.
+      enterPostScores();
+    }
     else { btn.textContent = 'Confirmar puntajes'; btn.disabled = false; btn.classList.remove('ready'); }
   }
 }
@@ -1319,7 +1326,7 @@ function _shChip(p, size) {
     const b = document.createElement('div');
     b.style.cssText = `position:absolute;right:${-Math.round(size * .42)}px;bottom:-5px;background:${SHARE_GOLD};color:#111;`
       + `font-family:'Bebas Neue',sans-serif;font-size:${Math.round(size * .37)}px;min-width:${Math.round(size * .62)}px;`
-      + `height:${Math.round(size * .52)}px;display:flex;align-items:center;justify-content:center;border-radius:6px;border:2px solid #0b0f1c;`;
+      + `height:${Math.round(size * .52)}px;padding:0 3px;display:flex;align-items:center;justify-content:center;border-radius:6px;border:2px solid #0b0f1c;`;
     b.textContent = p.val; w.appendChild(b);
   }
   cell.appendChild(w);
@@ -2090,13 +2097,22 @@ function renderScores() {
       const nameEl = document.createElement('div'); nameEl.className = 'score-player-name'; nameEl.textContent = p.name;
       info.appendChild(nameEl); row.appendChild(info);
       const btns = document.createElement('div'); btns.className = 'score-btns';
-      if (userScores[p.id] != null) row.classList.add('voted');
+      if (p.id in userScores) row.classList.add('voted');
       for (let i = 1; i <= 10; i++) {
         const btn = document.createElement('button'); btn.className = 'score-btn'; btn.textContent = i;
         if (userScores[p.id] === i) btn.classList.add('selected');
         if (already) btn.disabled = true;
         btn.addEventListener('click', () => { if (already) return; userScores[p.id] = i; btns.querySelectorAll('.score-btn').forEach((b, idx) => b.classList.toggle('selected', idx + 1 === i)); row.classList.add('voted'); checkScoresReady(); });
         btns.appendChild(btn);
+      }
+      if (p.tipo === 'suplente') {
+        // S/P = sin puntaje (jugó muy poco para evaluarlo). Se guarda null, la misma
+        // convención que el Mundial (equipo.html); los promedios lo descartan.
+        const sp = document.createElement('button'); sp.className = 'score-btn sp'; sp.textContent = 'S/P'; sp.title = 'Sin puntaje';
+        if (p.id in userScores && userScores[p.id] === null) sp.classList.add('selected');
+        if (already) sp.disabled = true;
+        sp.addEventListener('click', () => { if (already) return; userScores[p.id] = null; btns.querySelectorAll('.score-btn').forEach(b => b.classList.toggle('selected', b === sp)); row.classList.add('voted'); checkScoresReady(); });
+        btns.appendChild(sp);
       }
       row.appendChild(btns); list.appendChild(row);
     });
@@ -2207,10 +2223,11 @@ function switchScoresTab(tab) {
 
 function renderMyScores() {
   const cont = document.getElementById('scores-mine-list');
-  const sorted = scoresSquad.map(p => ({ ...p, val: userScores[p.id] })).filter(p => p.val != null).sort((a, b) => b.val - a.val);
+  const sorted = scoresSquad.filter(p => p.id in userScores).map(p => ({ ...p, val: userScores[p.id] }))
+    .sort((a, b) => ((b.val == null ? -1 : b.val)) - ((a.val == null ? -1 : a.val)));   // S/P al final
   cont.innerHTML = '';
   if (!sorted.length) { cont.innerHTML = '<div style="color:#555;text-align:center;padding:20px;">Sin puntajes.</div>'; return; }
-  _renderScoreRows(cont, sorted, p => p.val);
+  _renderScoreRows(cont, sorted, p => p.val == null ? 'S/P' : p.val);
   _shInvalidar('mis');
   setTimeout(() => _shPregenerar('mis', _shOptsMis()), 500);
 }
@@ -2234,7 +2251,7 @@ async function showScoresResults() {
     if (!data.length) { list.innerHTML = '<div style="color:#555;text-align:center;padding:20px;">Sin resultados aún. ¡Sé el primero!</div>'; totalEl.textContent = ''; return; }
     totalEl.textContent = `${data.length} hincha${data.length !== 1 ? 's' : ''} puntu${data.length !== 1 ? 'aron' : 'ó'}`;
     const sum = {}, cnt = {};
-    data.forEach(row => Object.entries(row.puntajes || {}).forEach(([num, val]) => { const n = Number(val); if (isNaN(n)) return; sum[num] = (sum[num] || 0) + n; cnt[num] = (cnt[num] || 0) + 1; }));
+    data.forEach(row => Object.entries(row.puntajes || {}).forEach(([num, val]) => { if (val == null || val === '') return; const n = Number(val); if (isNaN(n)) return; sum[num] = (sum[num] || 0) + n; cnt[num] = (cnt[num] || 0) + 1; }));
     const byId = {}; scoresSquad.forEach(p => byId[String(p.id)] = p);
     const ranked = Object.keys(sum).map(id => { const p = byId[id] || { id, name: '#' + id, tipo: '' }; return { ...p, avg: sum[id] / cnt[id] }; }).sort((a, b) => b.avg - a.avg);
     // Guardados para la placa para compartir (evita recalcular al descargar).
@@ -2252,7 +2269,12 @@ async function showScoresResults() {
 // Arma el payload de la placa T1 a partir de un mapa {idJugador: valor}.
 // `fmt` convierte el valor a texto (puntaje entero o promedio con un decimal).
 function _shOptsPuntajes(valorPorId, fmt, titulo, pie) {
-  const conVal = p => { const v = valorPorId[String(p.id)]; return v == null ? null : fmt(v); };
+  const conVal = p => {
+    const k = String(p.id);
+    if (!(k in valorPorId)) return null;          // sin voto: sin pastilla
+    const v = valorPorId[k];
+    return v == null ? 'S/P' : fmt(v);            // null = S/P
+  };
   const titulares = scoresSquad.filter(p => p.tipo === 'titular')
     .map(p => ({ num: _scoresDispNum(p), name: p.name, val: conVal(p), grupo: _shGrupo(p.name) }));
   const sup = scoresSquad.filter(p => p.tipo === 'suplente')
@@ -2875,6 +2897,7 @@ function _statsRenderPodio(cont, punts, partidosScope, minFechas) {
       const p = numToPlayer[num];
       if (!p) return;                              // num no jugó en ningún partido del scope
       if (date && !p.dates.has(date)) return;      // jugador no jugó esta fecha específica
+      if (val == null || val === '' || isNaN(Number(val))) return;   // S/P: no cuenta ni como voto
       totals[num] = (totals[num] || 0) + Number(val);
       voteCounts[num] = (voteCounts[num] || 0) + 1;
       if (!votedDates[num]) votedDates[num] = new Set();
@@ -3301,7 +3324,7 @@ async function openPrevFecha(f) {
     if (!sData.length) { sCont.innerHTML = '<div style="text-align:center;color:#555;padding:20px;font-size:13px;">Sin puntajes.</div>'; }
     else {
       const totals = {}, counts2 = {};
-      sData.forEach(row => { Object.entries(row.puntajes || {}).forEach(([num, val]) => { totals[num] = (totals[num] || 0) + Number(val); counts2[num] = (counts2[num] || 0) + 1; }); });
+      sData.forEach(row => { Object.entries(row.puntajes || {}).forEach(([num, val]) => { if (val == null || val === '' || isNaN(Number(val))) return; totals[num] = (totals[num] || 0) + Number(val); counts2[num] = (counts2[num] || 0) + 1; }); });
       const results = Object.keys(totals).map(num => { const ps = (f.playedSquad || []).find(s => s.num === Number(num)); return { num: Number(num), name: ps?.name || `#${num}`, fid: ps?.fid || 0, avg: totals[num] / counts2[num] }; }).sort((a, b) => b.avg - a.avg);
       results.forEach(p => {
         const row = document.createElement('div'); row.className = 'score-result-row';
