@@ -1234,19 +1234,87 @@ function _shEscudo(slug, size) {
   return i;
 }
 
+// El kit se dibuja en un <canvas>, no con el background CSS de kits.js: html2canvas
+// no soporta repeating-linear-gradient y dejaba el chip vacío en los 13 clubes de
+// bastones (Unión, Racing, Estudiantes, Talleres…). El canvas lo copia tal cual.
+function _shKitCanvas(size) {
+  const kit = clubKit(CLUB_SLUG);
+  const S = size * 2;                       // 2x para que no se pixele al exportar
+  const c = document.createElement('canvas');
+  c.width = c.height = S;
+  c.style.cssText = `width:${size}px;height:${size}px;display:block;border-radius:50%;`;
+  const g = c.getContext('2d');
+  const a = kit.colors[0] || '#888', b = kit.colors[1] || '#ffffff';
+  g.fillStyle = a; g.fillRect(0, 0, S, S);
+
+  // Bandas perpendiculares a un eje rotado. Las fracciones son del ANCHO del chip
+  // (0 = borde izquierdo, 1 = derecho), igual que los % de kitBackground en kits.js.
+  const bandas = (grados, defs) => {
+    g.save();
+    g.translate(S / 2, S / 2); g.rotate(grados * Math.PI / 180);
+    defs.forEach(([desde, hasta, col]) => {
+      g.fillStyle = col;
+      g.fillRect(S * (desde - 0.5), -S, S * (hasta - desde), 2 * S);
+    });
+    g.restore();
+  };
+
+  const w = Math.max(3, Math.round(size / (kit.div || 6))) * 2 / S;   // ancho de bastón, en fracción
+  switch (kit.type) {
+    case 'stripesV':
+    case 'stripesH': {
+      const defs = [];
+      for (let x = -0.5, i = 0; x < 1.5; x += w, i++) if (i % 2) defs.push([x, x + w, b]);
+      bandas(kit.type === 'stripesH' ? 90 : 0, defs);
+      break;
+    }
+    case 'halves': bandas(0, [[0.5, 1.5, b]]); break;
+    case 'bandV':  bandas(0, [[0.33, 0.67, b]]); break;
+    case 'band':   bandas(90, [[0.36, 0.64, b]]); break;
+    case 'sash':   bandas(-45, [[0.42, 0.58, b]]); break;
+    case 'sashR':  bandas(45, [[0.42, 0.58, b]]); break;
+    case 'svg': {
+      // Se dibuja el polígono del SVG embebido (la 'V' de Vélez) sobre el fondo.
+      // Solo soporta paths simples de M/L/Z, que es lo único que hay en kits.js.
+      const path = (kit.svg || '').match(/d='([^']+)'/);
+      const fill = (kit.svg || '').match(/fill='(?:%23|#)([0-9a-fA-F]{3,6})'/);
+      const nums = path ? (path[1].match(/-?\d+(?:\.\d+)?/g) || []).map(Number) : [];
+      if (nums.length >= 6) {
+        g.fillStyle = '#' + (fill ? fill[1] : '000');
+        g.beginPath();
+        for (let i = 0; i + 1 < nums.length; i += 2) {
+          const x = nums[i] / 100 * S, y = nums[i + 1] / 100 * S;
+          if (i === 0) g.moveTo(x, y); else g.lineTo(x, y);
+        }
+        g.closePath(); g.fill();
+      }
+      break;
+    }
+    default: break;                                                                      // solid: ya está pintado
+  }
+  return c;
+}
+
+// Círculo con el kit (canvas) y el número encima.
+function _shChipKit(num, size) {
+  const c = document.createElement('div');
+  c.style.cssText = `width:${size}px;height:${size}px;border-radius:50%;box-sizing:border-box;position:relative;`
+    + `overflow:hidden;border:2px solid rgba(255,255,255,.22);flex:0 0 auto;`;
+  c.appendChild(_shKitCanvas(size));
+  const n = document.createElement('span');
+  n.style.cssText = `position:absolute;inset:0;display:flex;align-items:center;justify-content:center;`
+    + `font-family:'Bebas Neue',sans-serif;font-size:${Math.round(size * .42)}px;color:#fff;`
+    + `text-shadow:${NUM_OUTLINE};line-height:1;`;
+  n.textContent = num || ''; c.appendChild(n);
+  return c;
+}
+
 // Chip del kit + (opcional) pastilla con el puntaje + apellido debajo.
 function _shChip(p, size) {
   const cell = document.createElement('div');
   cell.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:4px;';
   const w = document.createElement('div'); w.style.position = 'relative';
-  const kit = clubKit(CLUB_SLUG);
-  const c = document.createElement('div');
-  c.style.cssText = `width:${size}px;height:${size}px;border-radius:50%;box-sizing:border-box;`
-    + `display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.22);`
-    + `background:${kitBackground(kit, size)};`;
-  const n = document.createElement('span');
-  n.style.cssText = `font-family:'Bebas Neue',sans-serif;font-size:${Math.round(size * .42)}px;color:#fff;text-shadow:${NUM_OUTLINE};line-height:1;`;
-  n.textContent = p.num || ''; c.appendChild(n); w.appendChild(c);
+  const c = _shChipKit(p.num, size); w.appendChild(c);
   if (p.val != null) {
     const b = document.createElement('div');
     b.style.cssText = `position:absolute;right:${-Math.round(size * .42)}px;bottom:-5px;background:${SHARE_GOLD};color:#111;`
@@ -1305,8 +1373,11 @@ function _shBanco(sup, dt) {
   l.style.cssText = "font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;color:#7d879e;line-height:1.05;width:58px;flex:0 0 auto;";
   l.innerHTML = 'INGRE-<br>SARON'; s.appendChild(l);
   const row = document.createElement('div');
-  row.style.cssText = 'flex:1;display:flex;gap:16px;align-items:center;justify-content:center;padding-right:16px;';
-  if (sup.length) sup.forEach(p => row.appendChild(_shChip(p, 34)));
+  // Con 5 suplentes el contenido no entra y empujaba al DT fuera del borde.
+  const chico = sup.length >= 5;
+  row.style.cssText = `flex:1;min-width:0;display:flex;gap:${chico ? 10 : 16}px;`
+    + 'align-items:center;justify-content:center;padding-right:14px;';
+  if (sup.length) sup.forEach(p => row.appendChild(_shChip(p, chico ? 30 : 34)));
   else { const e = document.createElement('div'); e.style.cssText = 'font-size:13px;color:#5d6479;'; e.textContent = 'Sin cambios'; row.appendChild(e); }
   s.appendChild(row);
   if (dt) {
@@ -1314,13 +1385,7 @@ function _shBanco(sup, dt) {
     sep.style.cssText = 'width:1px;height:44px;background:rgba(255,255,255,.14);margin:0 4px;';
     s.appendChild(sep);
     const d = document.createElement('div'); d.style.cssText = 'flex:0 0 auto;display:flex;align-items:center;gap:9px;';
-    const kit = clubKit(CLUB_SLUG);
-    const ch = document.createElement('div');
-    ch.style.cssText = `width:34px;height:34px;border-radius:50%;box-sizing:border-box;display:flex;align-items:center;justify-content:center;`
-      + `border:2px solid rgba(255,255,255,.22);background:${kitBackground(kit, 34)};`;
-    const cn = document.createElement('span');
-    cn.style.cssText = `font-family:'Bebas Neue',sans-serif;font-size:14px;color:#fff;text-shadow:${NUM_OUTLINE};line-height:1;`;
-    cn.textContent = 'DT'; ch.appendChild(cn); d.appendChild(ch);
+    d.appendChild(_shChipKit('DT', 34));
     const info = document.createElement('div');
     info.innerHTML = `<div style="font-size:10px;color:#7d879e;letter-spacing:2px;">DT</div>`
       + `<div style="font-size:14px;font-weight:600;line-height:1.15;white-space:nowrap;">${escapeHtml(_shApellido(dt.name))}</div>`;
