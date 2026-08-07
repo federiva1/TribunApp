@@ -12,6 +12,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TribunApp</title>
+<meta name="description" content="Formación ideal, puntajes de los hinchas, fixture y estadísticas de tu club de la Liga Profesional Argentina.">
+<meta property="og:title" content="TribunApp">
+<meta property="og:description" content="Formación ideal, puntajes de los hinchas, fixture y estadísticas de tu club de la Liga Profesional Argentina.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="es_AR">
+<meta property="og:image" content="https://www.tribunapp.com.ar/Logo.png">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
@@ -1090,6 +1097,7 @@ document.getElementById('back-btn').onclick = () => {
   // La home unifica torneo local + copas, así que "volver" siempre va al index.
   window.location.href = 'index.html';
 };
+document.title = `${CLUB.nombre} — TribunApp`;
 document.getElementById('club-escudo-header').src = `escudos/${CLUB_SLUG}.png`;
 document.getElementById('club-nombre-header').textContent = CLUB.nombre;
 (CLUB.colores || []).forEach(c => {

@@ -12,6 +12,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Equipo — TribunApp</title>
+<meta name="description" content="Perfil del equipo: plantel, formación de la gente, puntajes de los hinchas y estadísticas por partido.">
+<meta property="og:title" content="Equipo — TribunApp">
+<meta property="og:description" content="Perfil del equipo: plantel, formación de la gente, puntajes de los hinchas y estadísticas por partido.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="es_AR">
+<meta property="og:image" content="https://www.tribunapp.com.ar/Logo.png">
+<meta name="twitter:card" content="summary_large_image">
 <script>
   // Entrada directa a estadísticas (?s=estadisticas): marca el <html> ANTES de
   // pintar el body para no mostrar el home del club por un instante (flash).
@@ -2522,6 +2529,7 @@ async function init() {
 
     nombreEquipo = NAMES_ES[slug] || (Array.isArray(plantelData) ? '' : plantelData.equipo)
                    || _cfg.nombre || (slug.charAt(0).toUpperCase() + slug.slice(1));
+    if (nombreEquipo) document.title = `${nombreEquipo} — TribunApp`;
     document.title = `${nombreEquipo} — TribunApp`;
     document.getElementById('club-escudo').src = `escudos/${slug}.png`;
     document.getElementById('club-nombre').textContent = nombreEquipo.toUpperCase();
