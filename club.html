@@ -1374,11 +1374,43 @@ function _shRotar(j) {
 // volante que figura como delantero en el plantel se dibuja arriba. Por eso solo
 // se usa si FotMob no trajo el lineup; si trajo la mayoría, los pocos jugadores
 // sin `pos` se ubican con las líneas para no perderlos.
+// Remapeo del eje largo. FotMob usa x=10 para el arquero y 29..90 para el resto,
+// que en esta cancha deja al arquero prácticamente sobre el punto del penal
+// (10 % ≈ 60px, penal a 64px) y a los delanteros DENTRO del área rival (87 % vs
+// borde del área a 85 %). Se corre el equipo hacia atrás: arquero en el área
+// chica, última línea pegada al área propia y delanteros apenas afuera del área
+// rival. Es monótona y afín, así que respeta la formación y el espaciado
+// relativo entre líneas que da FotMob.
+// Referencias de la cancha, en % del ancho: área chica 7,1 · penal 10,6 ·
+// área 15 · mitad 50 · área rival 85.
+const SH_X_GK = 5;    // arquero (dentro del área chica)
+const SH_X_DEF = 21;  // línea más retrasada de campo, pegada al área propia
+const SH_X_FWD = 80;  // línea más adelantada, apenas afuera del área rival
+
+// El rango de x de FotMob depende de la formación (una línea de 4 va en x=29 y
+// una de 5 en x=36), así que anclarlo a un valor fijo deja la defensa lejos del
+// área en unos casos y un hueco muerto adelante en otros. Se normaliza POR
+// PARTIDO: la línea más retrasada del XI cae en SH_X_DEF y la más adelantada en
+// SH_X_FWD, con las del medio interpoladas. Al ser afín y creciente respeta la
+// formación y el espaciado relativo entre líneas.
+function _shEscalaX(campo) {
+  const xs = campo.map(j => j.pos.x);
+  const min = Math.min(...xs), max = Math.max(...xs);
+  if (!(max > min)) return () => (SH_X_DEF + SH_X_FWD) / 2;   // XI en una sola línea
+  return x => SH_X_DEF + (x - min) * (SH_X_FWD - SH_X_DEF) / (max - min);
+}
+
 function _shPosiciones(jugadores) {
   const conPos = jugadores.filter(j => j.pos && j.pos.x != null && j.pos.y != null);
   if (conPos.length < Math.ceil(jugadores.length * 0.7)) return _shPorLineas(jugadores);
   const cl = (v, min, max) => Math.max(min, Math.min(max, v));
-  const ubicados = conPos.map(j => ({ ...j, sx: cl(j.pos.x, 7, 93), sy: cl(j.pos.y, 12, 88) }));
+  // FotMob nunca pone a un jugador de campo por debajo de x=29, así que el x sirve
+  // de respaldo si el partido no trae la marca de arquero.
+  const esArq = j => j.portero || j.pos.x < 20;
+  const campo = conPos.filter(j => !esArq(j));
+  const mapX = campo.length ? _shEscalaX(campo) : (x => x);
+  const ubicados = conPos.map(j => ({ ...j,
+    sx: cl(esArq(j) ? SH_X_GK : mapX(j.pos.x), 4, 93), sy: cl(j.pos.y, 12, 88) }));
   const resto = jugadores.filter(j => !(j.pos && j.pos.x != null && j.pos.y != null));
   return ubicados.concat(resto.length ? _shPorLineas(resto) : []);
 }
@@ -3623,7 +3655,7 @@ async function resolveScoresContext(ultimo) {
     if (jug) {
       scoresSquad = jug
         .filter(j => j.tipo === 'titular' || j.tipo === 'dt' || (j.tipo === 'suplente' && j.min != null && j.min > 0))
-        .map(j => ({ id: j.id, name: j.nombre, num: j.num || '', tipo: j.tipo, min: j.min, pos: j.pos || null }));
+        .map(j => ({ id: j.id, name: j.nombre, num: j.num || '', tipo: j.tipo, min: j.min, pos: j.pos || null, portero: !!j.portero }));
       SCORES_FORMACION = ((data.partido || {}).formacion || {})[CLUB_SLUG] || '';
     }
   } catch(e) {}
