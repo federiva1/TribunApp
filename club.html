@@ -835,7 +835,6 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
     <div class="subtitle">¿A quién elegiría la gente?</div>
     <div id="total-votes" style="font-size:11px;color:#555;text-align:center;margin-bottom:10px;"></div>
     <div id="results-list"><div style="text-align:center;color:#666;padding:20px;font-size:13px;">Cargando...</div></div>
-    <button id="download-results-btn" style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;background:#2e7d32;color:#fff;border:2px solid #fff;border-radius:8px;padding:10px;cursor:pointer;width:100%;margin-top:8px;">⬇ Descargar resultados</button>
     <button id="ver-feed-btn" style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;background:var(--club-color);color:#fff;border:2px solid #fff;border-radius:8px;padding:10px;cursor:pointer;width:100%;margin-top:8px;">👥 Ver equipos de la gente</button>
     <button id="back-results-btn" style="font-family:'Bebas Neue',sans-serif;font-size:15px;color:#aaa;background:none;border:1px solid #333;border-radius:8px;padding:8px 20px;cursor:pointer;width:100%;margin-top:8px;">← Volver</button>
   </div>
@@ -1947,28 +1946,6 @@ async function showResults() {
     });
   } catch(e) { list.innerHTML = '<div style="text-align:center;color:#666;padding:20px;font-size:13px;">Error al cargar resultados.</div>'; }
 }
-
-document.getElementById('download-results-btn').addEventListener('click', async () => {
-  const btn = document.getElementById('download-results-btn');
-  btn.textContent = 'Generando...'; btn.disabled = true;
-  try {
-    const tmp = document.createElement('div');
-    tmp.style.cssText = 'background:#1a1a2e;padding:16px;width:320px;position:fixed;left:-9999px;top:0;font-family:"DM Sans",sans-serif;';
-    const title = document.createElement('div'); title.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:20px;color:#fff;text-align:center;margin-bottom:4px;letter-spacing:2px;'; title.textContent = 'RESULTADOS FORMACIÓN';
-    const sub = document.createElement('div'); sub.style.cssText = 'font-size:11px;color:#666;text-align:center;margin-bottom:12px;'; sub.textContent = `${CLUB.nombreCorto} vs ${RIVAL}`;
-    tmp.appendChild(title); tmp.appendChild(sub);
-    const listEl = document.getElementById('results-list'); const clone = listEl.cloneNode(true);
-    const origAvatars = listEl.querySelectorAll('img'); const cloneAvatars = clone.querySelectorAll('img');
-    origAvatars.forEach((img, i) => { if (img.complete && img.naturalWidth > 0) { cloneAvatars[i].src = img.src; cloneAvatars[i].style.display = 'block'; const fb = cloneAvatars[i].nextElementSibling; if (fb) fb.style.display = 'none'; } });
-    tmp.appendChild(clone); document.body.appendChild(tmp);
-    await new Promise(r => setTimeout(r, 300));
-    const canvas = await html2canvas(tmp, { backgroundColor: '#1a1a2e', scale: 2, logging: false, useCORS: true });
-    document.body.removeChild(tmp);
-    const link = document.createElement('a'); link.download = `resultados-${CLUB_SLUG}.png`; link.href = canvas.toDataURL('image/png'); link.click();
-    showToast('¡Descargado!');
-  } catch(e) { showToast('No se pudo generar.'); }
-  finally { btn.textContent = '⬇ Descargar resultados'; btn.disabled = false; }
-});
 
 // ---- Feed ----
 document.getElementById('ver-feed-btn').addEventListener('click', openFeed);
