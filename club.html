@@ -1244,6 +1244,10 @@ function kitChip(slug, num, size) {
 // en el timeline. Se arma a 800x450 y html2canvas la sube a 2x = 1600x900.
 // ============================================================
 const SHARE_W = 800, SHARE_H = 450, SHARE_GOLD = '#f2c200';
+// Diámetro de la ficha en la cancha de la placa. Va atado al ancho de la cancha:
+// al ensancharla (panel 250→195) las fichas quedaban chicas y la cancha vacía.
+// `let` a propósito, para poder barrer valores al comparar renders.
+let SHARE_CHIP = 46;
 
 function _shEscudo(slug, size) {
   const i = document.createElement('img');
@@ -1496,7 +1500,7 @@ function _shCard(o) {
     + 'linear-gradient(160deg,#12492a,#0a2f1a);';
   _shCanchaLineas(pitch);
   o.jugadores.forEach(j => {
-    const cell = _shChip(j, 42);
+    const cell = _shChip(j, SHARE_CHIP);
     cell.style.position = 'absolute';
     cell.style.left = j.sx + '%'; cell.style.top = j.sy + '%';
     cell.style.transform = 'translate(-50%,-50%)';
