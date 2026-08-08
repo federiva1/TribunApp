@@ -1939,7 +1939,7 @@ async function showResults() {
         wrap.appendChild(kitChip(CLUB_SLUG, p.num, 36));
         const info = document.createElement('div'); info.style.cssText = 'display:flex;flex-direction:column;gap:1px;';
         const name = document.createElement('div'); name.className = 'tier-player-name'; name.textContent = p.name;
-        const pct = document.createElement('div'); pct.style.cssText = 'font-size:10px;color:var(--club-color);font-family:"Bebas Neue",sans-serif;'; pct.textContent = p.pct + '%';
+        const pct = document.createElement('div'); pct.style.cssText = 'font-size:10px;color:#fff;font-family:"Bebas Neue",sans-serif;'; pct.textContent = p.pct + '%';
         info.appendChild(name); info.appendChild(pct); wrap.appendChild(info); pDiv.appendChild(wrap);
       });
       row.appendChild(pDiv); list.appendChild(row);
