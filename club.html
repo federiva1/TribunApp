@@ -1408,8 +1408,8 @@ function _shBanco(sup, dt) {
   s.style.cssText = 'height:96px;flex:0 0 auto;display:flex;align-items:center;gap:14px;padding:0 22px;'
     + 'background:rgba(0,0,0,.3);border-top:1px solid rgba(255,255,255,.09);box-sizing:border-box;';
   const l = document.createElement('div');
-  l.style.cssText = "font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;color:#7d879e;line-height:1.05;width:58px;flex:0 0 auto;";
-  l.innerHTML = 'INGRE-<br>SARON'; s.appendChild(l);
+  l.style.cssText = "font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;color:#7d879e;line-height:1.05;width:80px;flex:0 0 auto;white-space:nowrap;";
+  l.textContent = 'INGRESARON'; s.appendChild(l);
   const row = document.createElement('div');
   // Con 5 suplentes el contenido no entra y empujaba al DT fuera del borde.
   const chico = sup.length >= 5;
@@ -1464,15 +1464,18 @@ function _shCard(o) {
     + `background:linear-gradient(120deg,#0d1730,#070b16);`;
 
   const panel = document.createElement('div');
-  panel.style.cssText = `width:250px;flex:0 0 auto;padding:26px 22px;display:flex;flex-direction:column;`
+  // Panel angosto a propósito: todo lo que se le saca de ancho se lo gana la cancha.
+  // El contenido del encabezado (escudo + marcador + escudo) queda al límite, así que
+  // tocar este ancho obliga a revisar el tamaño de los escudos y el gap de la fila.
+  panel.style.cssText = `width:195px;flex:0 0 auto;padding:26px 16px;display:flex;flex-direction:column;`
     + `justify-content:space-between;background:rgba(0,0,0,.4);border-right:3px solid ${SHARE_GOLD};box-sizing:border-box;`;
   const top = document.createElement('div');
-  const row = document.createElement('div'); row.style.cssText = 'display:flex;align-items:center;gap:12px;';
-  row.appendChild(_shEscudo(CLUB_SLUG, 46));
+  const row = document.createElement('div'); row.style.cssText = 'display:flex;align-items:center;gap:8px;';
+  row.appendChild(_shEscudo(CLUB_SLUG, 44));
   const sc = document.createElement('div');
   sc.style.cssText = "font-family:'Bebas Neue',sans-serif;font-size:" + (o.marcador.length > 3 ? '26px' : '40px') + ";letter-spacing:2px;line-height:1;";
   sc.textContent = o.marcador; row.appendChild(sc);
-  if (o.rivalSlug) row.appendChild(_shEscudo(o.rivalSlug, 46));
+  if (o.rivalSlug) row.appendChild(_shEscudo(o.rivalSlug, 44));
   top.appendChild(row);
   const t = document.createElement('div');
   t.style.cssText = "font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:1px;line-height:1.05;margin-top:18px;";
@@ -2305,14 +2308,14 @@ function _shOptsPuntajes(valorPorId, fmt, titulo, pie) {
 
 function _shOptsMis() {
   const mapa = {}; Object.entries(userScores).forEach(([k, v]) => mapa[String(k)] = v);
-  return _shOptsPuntajes(mapa, v => String(v), 'MIS PUNTAJES', `${CLUB.nombreCorto} · puntuá vos`);
+  return _shOptsPuntajes(mapa, v => String(v), 'MIS PUNTAJES', CLUB.nombreCorto);
 }
 
 async function downloadMyScores(btn) {
   btn = btn || document.getElementById('download-my-scores-btn');
   const mapa = {}; Object.entries(userScores).forEach(([k, v]) => mapa[String(k)] = v);
   await _shFlujo(btn, btn.dataset.solo === '1' ? '⬇ Descargar imagen' : '𝕏 Compartir en X',
-    _shOptsPuntajes(mapa, v => String(v), 'MIS PUNTAJES', `${CLUB.nombreCorto} · puntuá vos`),
+    _shOptsPuntajes(mapa, v => String(v), 'MIS PUNTAJES', CLUB.nombreCorto),
     `mis-puntajes-${CLUB_SLUG}.png`,
     `Mis puntajes de ${CLUB.nombreCorto} vs ${SCORES_RIVAL}. ¿Coincidís? Puntuá vos 👇`,
     'mis');
