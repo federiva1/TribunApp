@@ -1078,6 +1078,8 @@ let SCORES_RIVAL = '', SCORES_MATCH_DATE = '', SCORES_FT = null, scoresMatchId =
 // Datos del partido para las placas para compartir (escudo del rival, marcador, nº de fecha).
 let RIVAL_SLUG = '', FECHA_NUM = null;
 let SCORES_RIVAL_SLUG = '', SCORES_MARCADOR = '', SCORES_FECHA_NUM = null;
+// Formación real del partido (ej. '5-3-2'), de data/partidos/{id}.json.
+let SCORES_FORMACION = '';
 
 // Gate coordinado: 24 hs de puntajes desde el FT, después se cierran y se abre la formación
 // de la fecha siguiente. Se calcula client-side en applyGating() (no hay archivo de estado).
@@ -1356,6 +1358,25 @@ function _shApellido(name) {
 // que el arquero quede a la izquierda y el ataque a la derecha.
 function _shRotar(j) {
   return { ...j, sx: Math.max(7, Math.min(93, 100 - j.yPct)), sy: Math.max(12, Math.min(88, j.xPct)) };
+}
+
+// Posiciones de la placa de puntajes. Se prefiere la formación REAL del partido
+// (`pos` de data/partidos/{id}.json, que sale del lineup de FotMob: coordenadas
+// normalizadas sobre la cancha apaisada, arquero a la izquierda — la misma
+// orientación de la placa, así que se usan tal cual).
+//
+// El fallback por líneas agrupa por el puesto genérico del PLANTEL, no por cómo
+// se jugó ese partido: un carrilero aparece en la línea de defensores y un
+// volante que figura como delantero en el plantel se dibuja arriba. Por eso solo
+// se usa si FotMob no trajo el lineup; si trajo la mayoría, los pocos jugadores
+// sin `pos` se ubican con las líneas para no perderlos.
+function _shPosiciones(jugadores) {
+  const conPos = jugadores.filter(j => j.pos && j.pos.x != null && j.pos.y != null);
+  if (conPos.length < Math.ceil(jugadores.length * 0.7)) return _shPorLineas(jugadores);
+  const cl = (v, min, max) => Math.max(min, Math.min(max, v));
+  const ubicados = conPos.map(j => ({ ...j, sx: cl(j.pos.x, 7, 93), sy: cl(j.pos.y, 12, 88) }));
+  const resto = jugadores.filter(j => !(j.pos && j.pos.x != null && j.pos.y != null));
+  return ubicados.concat(resto.length ? _shPorLineas(resto) : []);
 }
 
 // Cuando no hay posiciones libres (puntajes), se arma por líneas según el puesto
@@ -2266,7 +2287,7 @@ function _shOptsPuntajes(valorPorId, fmt, titulo, pie) {
     return v == null ? 'S/P' : fmt(v);            // null = S/P
   };
   const titulares = scoresSquad.filter(p => p.tipo === 'titular')
-    .map(p => ({ num: _scoresDispNum(p), name: p.name, val: conVal(p), grupo: _shGrupo(p.name) }));
+    .map(p => ({ num: _scoresDispNum(p), name: p.name, val: conVal(p), grupo: _shGrupo(p.name), pos: p.pos }));
   const sup = scoresSquad.filter(p => p.tipo === 'suplente')
     .map(p => ({ num: _scoresDispNum(p), name: p.name, val: conVal(p) }));
   const dtj = scoresSquad.find(p => p.tipo === 'dt');
@@ -2276,7 +2297,7 @@ function _shOptsPuntajes(valorPorId, fmt, titulo, pie) {
     rivalSlug: SCORES_RIVAL_SLUG,
     sub: (SCORES_FECHA_NUM ? `Fecha ${SCORES_FECHA_NUM} · ` : '') + `vs ${SCORES_RIVAL}`,
     pie,
-    jugadores: _shPorLineas(titulares),
+    jugadores: _shPosiciones(titulares),
     sup,
     dt: dtj ? { name: dtj.name, val: conVal(dtj) } : null,
   };
@@ -3595,7 +3616,8 @@ async function resolveScoresContext(ultimo) {
     if (jug) {
       scoresSquad = jug
         .filter(j => j.tipo === 'titular' || j.tipo === 'dt' || (j.tipo === 'suplente' && j.min != null && j.min > 0))
-        .map(j => ({ id: j.id, name: j.nombre, num: j.num || '', tipo: j.tipo, min: j.min }));
+        .map(j => ({ id: j.id, name: j.nombre, num: j.num || '', tipo: j.tipo, min: j.min, pos: j.pos || null }));
+      SCORES_FORMACION = ((data.partido || {}).formacion || {})[CLUB_SLUG] || '';
     }
   } catch(e) {}
 }
