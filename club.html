@@ -1781,7 +1781,8 @@ async function initSquad() {
     const res = await fetch(`data/planteles/${CLUB_SLUG}.json`);
     if (res.ok) {
       const data = await res.json();
-      squad = data.sort((a, b) => (Number(a.num) || 0) - (Number(b.num) || 0));
+      const numOrInf = n => { const v = Number(n); return (n === '' || n == null || Number.isNaN(v)) ? Infinity : v; };
+      squad = data.sort((a, b) => numOrInf(a.num) - numOrInf(b.num));
     }
   } catch(e) {}
   try {
