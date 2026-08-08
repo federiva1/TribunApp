@@ -3572,9 +3572,22 @@ async function resolveScoresContext(ultimo) {
   if (utc) { SCORES_FT = new Date(utc); SCORES_MATCH_DATE = new Date(SCORES_FT.getTime() - 3 * 3600 * 1000).toISOString().slice(0, 10); }
   try {
     const idx = await fetch(`data/partidos/index.json?t=${Date.now()}`).then(r => r.ok ? r.json() : []);
-    const mine = idx.filter(e => e.local === CLUB_SLUG || e.visitante === CLUB_SLUG)
-                    .sort((a, b) => (a.fecha || '').localeCompare(b.fecha || ''));
-    const entry = mine[mine.length - 1];   // el partido con datos más reciente
+    // El plantel a puntuar tiene que ser el de ESTE partido (`ultimo`), no el del
+    // último que tenga datos. El pipeline (liga-match-stats.yml) corre cada 3 h, así
+    // que entre el FT y su corrida el partido recién jugado todavía no está en
+    // index.json: antes se caía al partido ANTERIOR y se abrían los puntajes con el
+    // rival y el match_date del nuevo, pero con los jugadores del viejo.
+    // index.json guarda el día UTC y SCORES_MATCH_DATE el día local AR (UTC-3), así
+    // que para un mismo partido pueden diferir en 1 → se compara con esa tolerancia.
+    const mismoDia = e => !!SCORES_MATCH_DATE && !!e.fecha &&
+      Math.abs(Date.parse(e.fecha + 'T12:00:00Z') - Date.parse(SCORES_MATCH_DATE + 'T12:00:00Z')) <= 36 * 3600 * 1000;
+    const entry = idx.find(e => {
+      const par = [e.local, e.visitante];
+      return par.includes(CLUB_SLUG) && (!SCORES_RIVAL_SLUG || par.includes(SCORES_RIVAL_SLUG)) && mismoDia(e);
+    });
+    // Sin entrada para este partido = todavía sin procesar. Se deja scoresSquad vacío
+    // a propósito: applyGating() lo lee como hasData=false y mantiene los puntajes
+    // cerrados hasta que haya datos reales (mejor cerrado que con el plantel equivocado).
     if (!entry) return;
     scoresMatchId = entry.id;
     const data = await fetch(`data/partidos/${entry.id}.json?t=${Date.now()}`).then(r => r.ok ? r.json() : null);
