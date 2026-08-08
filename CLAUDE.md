@@ -276,7 +276,7 @@ Vista **ELIMINATORIA** (default) — cuadro de 32 equipos que se completa solo a
 - **`data/partidos/{id}.json`** — Stats de un partido específico. Schema:
   ```json
   {
-    "partido": { "local", "visitante", "goles_local", "goles_visitante", "fecha", "estadio", "competicion", "goles_detalle": { "local": [...], "visitante": [...] } },
+    "partido": { "local", "visitante", "goles_local", "goles_visitante", "fecha", "estadio", "competicion", "goles_detalle": { "local": [...], "visitante": [...] }, "formacion": { "{slug-local}": "4-3-3", "{slug-visitante}": "5-3-2" } },
     "top_stats": [ { "label", "local", "visitante", "tipo": "posesion|numero|texto", "local_val", "visitante_val" } ],
     "jugadores": {
       "{slug-local}": [ /* array de jugadores */ ],
@@ -289,6 +289,7 @@ Vista **ELIMINATORIA** (default) — cuadro de 32 equipos que se completa solo a
   {
     "nombre": "Carlos Harvey", "id": 1017520, "mvp": false, "portero": false,
     "min": 84, "goles": 1, "asist": 0,
+    "pos": { "x": 61.0, "y": 79.0 },   // solo titulares: posición REAL en la cancha
     "top":    { "tiros_totales", "disparos_puerta", "oport_creadas", "grandes_oport", "acc_defensivas", "pases_precisos" },
     "ataque": { "toques", "toques_area", "regates", "pases_ultimo_tercio", "tiros_largos", "perdida_balon" },
     "defensa": { "acc_defensivas", "entradas", "interceptaciones", "recuperaciones", "despejes", "bloqueos", "regateado" },
@@ -297,6 +298,10 @@ Vista **ELIMINATORIA** (default) — cuadro de 32 equipos que se completa solo a
   }
   ```
   Campos opcionales son `null` cuando FotMob no reporta el valor (se muestran como `—`). `regates` y `terrestres`/`aereos` son strings fracción (`"2/5"`). Los jugadores están ordenados por minutos desc.
+
+  **`pos` + `partido.formacion` (formación real)** — salen del `lineup` de FotMob (`horizontalLayout`, normalizado 0..1 sobre la cancha **apaisada con el arquero a la izquierda**, que es justo la orientación de la placa → se guardan como % sin transformar). Los captura `scrape_fotmob_mundial._lineup_por_equipo()` / `_aplicar_lineup()`, así que entran solos en cada corrida del pipeline. El match FotMob ↔ api-sports es **por dorsal** (único dentro de un XI), con fallback por nombre y por token del apellido — hace falta porque api-sports abrevia ("D. Fernandez") y en los apellidos compuestos cada fuente elige una parte distinta ("Hernán López Muñoz"). Para backfillear partidos viejos: `python scripts/backfill_formaciones.py` (solo FotMob, **no** necesita la API key; idempotente, `--force` recalcula).
+
+  Lo usa la placa de puntajes en `club.html` (`_shPosiciones()`): si al menos el 70 % de los titulares tiene `pos`, dibuja la formación real y ubica el resto con el layout por líneas; si no, cae entero a `_shPorLineas()`. Ojo: ese fallback agrupa por el puesto **genérico del plantel**, no por cómo se jugó el partido (un carrilero cae en la línea de defensores, un volante que en el plantel figura como delantero se dibuja arriba) — por eso la posición real se prefiere siempre que esté.
 
 ### Escudos de selecciones
 

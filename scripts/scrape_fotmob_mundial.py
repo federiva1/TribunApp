@@ -391,6 +391,77 @@ def _fetch_next_data(url: str, headed: bool = False) -> dict:
     return _next_data_browser(url, headed)
 
 
+def _lineup_por_equipo(content: dict, local_slug: str, visitante_slug: str,
+                       local_team_id) -> dict:
+    """Formación real + posición de cada titular, del `lineup` de FotMob.
+
+    `horizontalLayout` viene normalizado 0..1 sobre la cancha APAISADA y con el
+    arquero a la izquierda, que es exactamente la orientación de la placa para
+    compartir → se guarda como % sin transformar.
+
+    Devuelve {slug: {'formacion': '4-3-3',
+                     'pos':     {nombre_normalizado: {x, y}},
+                     'por_num': {dorsal: {x, y}}}}.
+    """
+    lu = content.get('lineup') or {}
+    out: dict = {}
+    for side in ('homeTeam', 'awayTeam'):
+        t = lu.get(side) or {}
+        if not t.get('starters'):
+            continue
+        slug = local_slug if t.get('id') == local_team_id else visitante_slug
+        pos, por_num = {}, {}
+        for p in t['starters']:
+            h = p.get('horizontalLayout') or {}
+            if h.get('x') is None or h.get('y') is None:
+                continue
+            xy = {'x': round(h['x'] * 100, 1), 'y': round(h['y'] * 100, 1)}
+            pos[normalize(p.get('name') or '')] = xy
+            num = str(p.get('shirtNumber') or '').strip()
+            if num:
+                por_num[num] = xy
+        if pos:
+            out[slug] = {'formacion': t.get('formation') or '',
+                         'pos': pos, 'por_num': por_num}
+    return out
+
+
+def _aplicar_lineup(payload: dict, lineups: dict) -> None:
+    """Escribe formación (en `partido`) y `pos` por titular (en cada jugador).
+
+    El match es por DORSAL (único dentro de un XI y estable entre las dos fuentes),
+    con fallback por nombre normalizado y por apellido. Hace falta el fallback
+    porque api-sports a veces abrevia ("D. Fernandez") y porque en los apellidos
+    compuestos cada fuente elige una parte distinta ("Hernán López Muñoz").
+    Los que no matchean quedan sin `pos` y el frontend cae al layout por líneas.
+    """
+    formaciones = {}
+    for slug, info in lineups.items():
+        formaciones[slug] = info['formacion']
+        por_num = info.get('por_num') or {}
+        por_apellido = {}
+        for n, xy in info['pos'].items():
+            for tok in n.split():
+                por_apellido.setdefault(tok, []).append(xy)
+        for j in payload['jugadores'].get(slug, []):
+            if j.get('tipo') != 'titular':
+                continue
+            xy = por_num.get(str(j.get('num') or '').strip())
+            if xy is None:
+                n = normalize(j.get('nombre') or '')
+                xy = info['pos'].get(n)
+                if xy is None:
+                    # Cualquier token del nombre que identifique a un solo titular
+                    # (los apellidos compuestos no coinciden token a token).
+                    cand = [c for tok in n.split() for c in por_apellido.get(tok, [])]
+                    unicos = [dict(t) for t in {tuple(sorted(c.items())) for c in cand}]
+                    xy = unicos[0] if len(unicos) == 1 else None
+            if xy:
+                j['pos'] = xy
+    if formaciones:
+        payload['partido']['formacion'] = formaciones
+
+
 def _enrich_payload_from_nd(nd: dict, payload: dict) -> dict:
     """Extrae playerStats del __NEXT_DATA__ de FotMob y enriquece el payload del
     partido (top/ataque/defensa/duelos, MVP, xG). Devuelve el payload modificado.
@@ -449,6 +520,17 @@ def _enrich_payload_from_nd(nd: dict, payload: dict) -> dict:
 
     payload['jugadores'][local_slug]     = enrich_players(payload['jugadores'].get(local_slug, []),     ps_local)
     payload['jugadores'][visitante_slug] = enrich_players(payload['jugadores'].get(visitante_slug, []), ps_visitante)
+
+    # Formación real + posición de cada titular en la cancha (para la placa).
+    try:
+        lineups = _lineup_por_equipo(content, local_slug, visitante_slug, local_team_id)
+        if lineups:
+            _aplicar_lineup(payload, lineups)
+            print('Formación: ' + ', '.join(f'{s}={i["formacion"]}' for s, i in lineups.items()))
+        else:
+            print('Formación: FotMob no trajo lineup (se usa el layout por líneas)')
+    except Exception as e:
+        print(f'Formación: no se pudo extraer ({e})')
 
     # El id del POTM es de FotMob (≠ id api-sports), así que el match es por nombre.
     # api-sports suele abreviar ("L. Messi") y no matchea el tokset exacto con
