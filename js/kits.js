@@ -53,6 +53,15 @@ function clubKit(slug) {
 }
 
 // `background` CSS del kit, con anchos proporcionales al tamaño del chip.
+// SVG → data: URI apto para un url() sin comillas. Se normaliza el '%23' que traen
+// los kits (el '#' de los colores ya viene escapado) antes de encodear, para no
+// terminar con un doble escape '%2523'. encodeURIComponent deja pasar ' ( ),
+// que en un url() sin comillas también rompen, así que se encodean aparte.
+function _svgUri(svg) {
+  return encodeURIComponent(String(svg || '').replace(/%23/g, '#'))
+    .replace(/[()']/g, function (c) { return '%' + c.charCodeAt(0).toString(16).toUpperCase(); });
+}
+
 function kitBackground(kit, size) {
   var a = kit.colors[0], b = kit.colors[1] || '#ffffff';
   var w = Math.max(3, Math.round(size / (kit.div || 6)));
@@ -64,7 +73,13 @@ function kitBackground(kit, size) {
     case 'bandV':    return 'linear-gradient(90deg, ' + a + ' 0 33%, ' + b + ' 33% 67%, ' + a + ' 67% 100%)';
     case 'sash':     return 'linear-gradient(45deg, ' + a + ' 0 42%, ' + b + ' 42% 58%, ' + a + ' 58% 100%)';
     case 'sashR':    return 'linear-gradient(-45deg, ' + a + ' 0 42%, ' + b + ' 42% 58%, ' + a + ' 58% 100%)';
-    case 'svg':      return (a || '#ffffff') + ' url("data:image/svg+xml,' + (kit.svg || '') + '") center/100% no-repeat';
+    // OJO: el valor que devuelve esta función también se interpola en atributos
+    // style="..." armados con innerHTML (tribunapp-equipo.html, estadisticas.html),
+    // así que NO puede contener comillas: una comilla doble cerraba el atributo y
+    // el resto del CSS se volcaba como texto en la página. Por eso el data: URI va
+    // sin comillas y percent-encodeado — url() sin comillas tampoco admite espacios,
+    // comillas simples ni paréntesis. Cualquier tipo nuevo debe respetar lo mismo.
+    case 'svg':      return (a || '#ffffff') + ' url(data:image/svg+xml,' + _svgUri(kit.svg) + ') center/100% no-repeat';
     default:         return a;
   }
 }
