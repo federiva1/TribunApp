@@ -76,6 +76,60 @@ def build(f):
         },
     }
 
+def _resultados_procesados():
+    """{api_id: {'local','visitante','gl','gv'}} de los partidos ya procesados.
+
+    data/partidos/{id}.json lo genera fetch_liga_partidos.py desde el endpoint
+    POR-ID de api-sports, que marca FT apenas termina el partido. El agregado por
+    liga que usa este script tarda bastante más — se lo vio devolviendo "1H 0-0"
+    más de 10 minutos después del final, en cuatro fechas seguidas — así que estos
+    archivos sirven de respaldo para no quedarse con el estado viejo.
+    """
+    out = {}
+    for f in (ROOT / 'data' / 'partidos').glob('*.json'):
+        if f.stem in ('index', 'standings'):
+            continue
+        try:
+            p = json.loads(f.read_text(encoding='utf-8')).get('partido') or {}
+        except Exception:
+            continue
+        api_id = p.get('api_id')
+        if api_id is None or p.get('goles_local') is None or p.get('goles_visitante') is None:
+            continue
+        out[str(api_id)] = {'local': p.get('local'), 'visitante': p.get('visitante'),
+                            'gl': p['goles_local'], 'gv': p['goles_visitante']}
+    return out
+
+
+def reparar_estados(entries):
+    """Marca FT los partidos que el agregado todavía da en curso pero que ya tienen
+    archivo en data/partidos. Devuelve la lista de los reparados.
+
+    Solo corrige hacia "terminado": nunca pisa un partido que la API ya da por
+    finalizado ni inventa un resultado donde no hay archivo. Antes de aplicar
+    verifica que los slugs de local y visitante coincidan, para que un api_id que
+    no cuadre no escriba el resultado en el partido equivocado.
+    """
+    procesados = _resultados_procesados()
+    reparados = []
+    for e in entries:
+        if e['status']['finished']:
+            continue
+        r = procesados.get(str(e.get('api_id')))
+        if not r:
+            continue
+        if {r['local'], r['visitante']} != {e['home']['slug'], e['away']['slug']}:
+            print(f"  ! api_id {e['api_id']}: slugs no coinciden "
+                  f"({r['local']}-{r['visitante']} vs {e['home']['slug']}-{e['away']['slug']}), se saltea")
+            continue
+        gl, gv = (r['gl'], r['gv']) if r['local'] == e['home']['slug'] else (r['gv'], r['gl'])
+        e['home_score'], e['away_score'] = gl, gv
+        e['winner'] = None if gl == gv else (e['home']['slug'] if gl > gv else e['away']['slug'])
+        e['status'].update({'started': True, 'finished': True, 'short': 'FT', 'elapsed': 90})
+        reparados.append(f"{e['home']['slug']} {gl}-{gv} {e['away']['slug']}")
+    return reparados
+
+
 def main():
     print(f'Fetching Liga (league={LEAGUE} season={SEASON})...')
     resp = get(f'/fixtures?league={LEAGUE}&season={SEASON}').get('response', [])
@@ -84,6 +138,13 @@ def main():
     # Solo Clausura
     clausura = [f for f in resp if f['league']['round'].startswith('Clausura')]
     entries = [build(f) for f in clausura]
+    # El agregado de api-sports se atrasa al terminar un partido: se completa con
+    # lo que ya haya en data/partidos (endpoint por-id, que marca FT al instante).
+    reparados = reparar_estados(entries)
+    if reparados:
+        print(f'  Completados desde data/partidos ({len(reparados)}, el agregado los daba en curso):')
+        for r in reparados:
+            print(f'    · {r}')
     entries.sort(key=lambda e: (e['fecha'] or 0, e['status']['utcTime']))
     OUT.write_text(json.dumps(entries, indent=2, ensure_ascii=False), encoding='utf-8')
     print(f'  Guardado: {OUT} ({len(entries)} partidos de Clausura)')
