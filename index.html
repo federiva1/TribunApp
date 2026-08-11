@@ -110,6 +110,10 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .live-card-lado .nom { font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .live-card-lado .escudo-ini { width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,0.1); display: inline-flex; align-items: center; justify-content: center; font-family: 'Barlow Condensed', sans-serif; font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.6); flex-shrink: 0; }
 .live-card-score { font-family: 'Bebas Neue', sans-serif; font-size: 21px; letter-spacing: 1px; color: #fff; flex-shrink: 0; }
+.live-card-goles { display: flex; justify-content: space-between; gap: 10px; font-family: 'Barlow Condensed', sans-serif; font-size: 11.5px; color: rgba(255,255,255,0.55); line-height: 1.45; }
+.live-card-goles > div { min-width: 0; }
+.live-card-goles .gol-away { text-align: right; }
+.live-card-goles .gol { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .vista-btn {
   font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 600;
   letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.6);
@@ -440,8 +444,24 @@ renderGrid(ZONA_B, 'zonaB-grid');
       }
     } catch (e) {}
     if (!vivos.length) { strip.style.display = 'none'; return; }
+    // Goleadores por lado, de los events que live=all trae en cada fixture.
+    // "J. Álvarez 15'" + apóstrofe del minuto; gol en contra marcado (e/c) y
+    // penal (p). Si la API no manda events (a veces tarda), no se muestra nada.
+    const golesDe = (r, teamId) => (r.events || [])
+      .filter(ev => ev.type === 'Goal' && ev.detail !== 'Missed Penalty'
+                    && ev.team && ev.team.id === teamId && ev.player && ev.player.name)
+      .map(ev => {
+        const min = ev.time && ev.time.elapsed != null
+          ? `${ev.time.elapsed}${ev.time.extra ? '+' + ev.time.extra : ''}'` : '';
+        const sufijo = ev.detail === 'Own Goal' ? ' (e/c)' : (ev.detail === 'Penalty' ? ' (p)' : '');
+        return `<div class="gol">⚽ ${esc(ev.player.name)}${sufijo} ${esc(min)}</div>`;
+      }).join('');
     cardsEl.innerHTML = vivos.map(r => {
       const m = MATCHES[String(r.fixture.id)];
+      const gH = golesDe(r, r.teams && r.teams.home && r.teams.home.id);
+      const gA = golesDe(r, r.teams && r.teams.away && r.teams.away.id);
+      const goles = (gH || gA)
+        ? `<div class="live-card-goles"><div>${gH}</div><div class="gol-away">${gA}</div></div>` : '';
       return `<a class="live-card" href="${m.href}">
         <div class="live-card-meta"><span>${esc(m.etiqueta)}</span><span class="live-card-min">● ${esc(minTxt(r.fixture.status))}</span></div>
         <div class="live-card-fila">
@@ -449,6 +469,7 @@ renderGrid(ZONA_B, 'zonaB-grid');
           <div class="live-card-score">${r.goals.home ?? 0} - ${r.goals.away ?? 0}</div>
           <div class="live-card-lado away"><span class="nom">${esc(nom(m.away))}</span>${escudo(m.away)}</div>
         </div>
+        ${goles}
       </a>`;
     }).join('');
     strip.style.display = '';
