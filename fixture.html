@@ -271,7 +271,7 @@ const DIAS_ES  = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 const MESES_ES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const EN_CURSO = new Set(['1H','HT','2H','ET','BT','P','SUSP']);
 
-let LIGA = [], COPAS = {}, STATS_IDX = {};
+let LIGA = [], COPAS = {}, STATS_IDX = {}, STATS_RAW = [];
 let faseActiva = 'clausura';   // 'clausura' | 'copas'
 let copaActiva = 'libertadores';
 let teamFilter = '';           // slug o ''
@@ -281,6 +281,12 @@ const FASES = [{ key: 'clausura', label: 'Clausura' }, { key: 'copas', label: 'C
 function nombreCorto(slug) {
   const c = (typeof CLUBES_CONFIG !== 'undefined') ? CLUBES_CONFIG[slug] : null;
   return (c && c.nombreCorto) || slug;
+}
+// Como nombreCorto, pero con el nombre api-sports de respaldo: en copa el rival
+// extranjero no está en CLUBES_CONFIG y su slug derivado no sirve de etiqueta.
+function nomEquipo(slug, nombre) {
+  const c = (typeof CLUBES_CONFIG !== 'undefined') ? CLUBES_CONFIG[slug] : null;
+  return (c && c.nombreCorto) || nombre || slug;
 }
 function horaAR(utc) { const d = new Date(utc); d.setHours(d.getHours()-3); return `${String(d.getUTCHours()).padStart(2,'0')}:${String(d.getUTCMinutes()).padStart(2,'0')}`; }
 function fechaAR(utc) { const d = new Date(utc); d.setHours(d.getHours()-3); return `${DIAS_ES[d.getUTCDay()]} ${d.getUTCDate()} ${MESES_ES[d.getUTCMonth()]}`; }
@@ -296,6 +302,7 @@ async function cargar() {
     COPAS = rc && rc.ok ? await rc.json() : {};
     // Índice de partidos con estadísticas cargadas: clave local|visitante|fecha → id
     const idx = ri && ri.ok ? await ri.json() : [];
+    STATS_RAW = idx;
     STATS_IDX = {};
     idx.forEach(e => { STATS_IDX[`${e.local}|${e.visitante}|${e.fecha}`] = e.id; });
     poblarFiltro();
@@ -333,18 +340,40 @@ async function actualizarEnVivo() {
       _mergeStatus(p, r);
       cambio = true; hayEnVivo = true;
     });
+    // Copas: mismo merge. Su shape es plano (short/elapsed al tope, sin objeto status).
+    const copaPartidos = ['libertadores', 'sudamericana']
+      .flatMap(k => ((COPAS[k] || {}).partidos) || []);
+    const _mergeCopa = (p, fx) => {
+      const st = fx.fixture.status;
+      p.short = st.short; p.elapsed = st.elapsed;
+      p.home_score = fx.goals.home; p.away_score = fx.goals.away;
+    };
+    copaPartidos.forEach(p => {
+      const r = byId[String(p.api_id)];
+      if (!r) return;
+      _mergeCopa(p, r);
+      cambio = true; hayEnVivo = true;
+    });
     // Un partido que figura EN CURSO pero ya no está en live=all → terminó (o el
     // snapshot de liga.json quedó viejo): traemos su estado final individual para
     // que no quede "jugándose" para siempre.
     const cerrar = LIGA.filter(p => p.api_id && !byId[String(p.api_id)]
       && p.status && EN_CURSO.has(p.status.short) && !p.status.finished);
+    const cerrarCopa = copaPartidos.filter(p => p.api_id && !byId[String(p.api_id)]
+      && EN_CURSO.has(p.short));
     await Promise.all(cerrar.map(async p => {
       try {
         const rr = await fetch(`/api/apisports/fixtures?id=${p.api_id}`, { cache: 'no-store' });
         const fx = rr.ok ? (((await rr.json()).response) || [])[0] : null;
         if (fx) { _mergeStatus(p, fx); cambio = true; }
       } catch (e) {}
-    }));
+    }).concat(cerrarCopa.map(async p => {
+      try {
+        const rr = await fetch(`/api/apisports/fixtures?id=${p.api_id}`, { cache: 'no-store' });
+        const fx = rr.ok ? (((await rr.json()).response) || [])[0] : null;
+        if (fx) { _mergeCopa(p, fx); cambio = true; }
+      } catch (e) {}
+    })));
     if (cambio) render();
     return hayEnVivo;
   } catch (e) { return false; }
@@ -531,7 +560,7 @@ function metaHora(p) {
   const finished = (p.status ? p.status.finished : ['FT','AET','PEN'].includes(p.short));
   const utc = p.status ? p.status.utcTime : p.utcTime;
   if (enCurso) {
-    const el = p.status ? p.status.elapsed : null;
+    const el = p.status ? p.status.elapsed : (p.elapsed != null ? p.elapsed : null);
     let txt = 'EN VIVO';
     if (short === 'HT') txt = 'ENTRETIEMPO';
     else if (short === 'SUSP') txt = 'SUSPENDIDO';
@@ -664,7 +693,7 @@ function renderStatsHTML(data) {
   const p = data.partido;
   const cols = _matchColors(p.local, p.visitante), cl = cols[0], cv = cols[1];
   const al = _accent(cl), av = _accent(cv);
-  const hdr = `<div class="fstat-hdr"><span style="color:${al}">${_fEsc(nombreCorto(p.local))}</span><span class="fstat-vs">vs</span><span style="color:${av}">${_fEsc(nombreCorto(p.visitante))}</span></div>`;
+  const hdr = `<div class="fstat-hdr"><span style="color:${al}">${_fEsc(nomEquipo(p.local, p.local_nombre))}</span><span class="fstat-vs">vs</span><span style="color:${av}">${_fEsc(nomEquipo(p.visitante, p.visitante_nombre))}</span></div>`;
   const rows = (data.top_stats || []).map(s => {
     if (s.tipo === 'posesion') {
       return `<div class="fstat-poss"><div class="fstat-poss-bar">`
@@ -694,6 +723,7 @@ function _fichaGol(g) {
 }
 function renderFichaHTML(data) {
   const p = data.partido;
+  const nombres = {}; nombres[p.local] = p.local_nombre; nombres[p.visitante] = p.visitante_nombre;
   const gd = p.goles_detalle || {};
   const goles = (gd.local || []).concat(gd.visitante || []).sort((a, b) => (a.min || 0) - (b.min || 0));
   const golesHTML = goles.length ? `<div class="ficha-goles">${goles.map(_fichaGol).join('')}</div>` : '';
@@ -705,7 +735,7 @@ function renderFichaHTML(data) {
     let rows = tit.map(_fichaPlayerRow).join('');
     if (sub.length) rows += `<div class="ficha-subhdr">Ingresaron</div>` + sub.map(_fichaPlayerRow).join('');
     if (!rows) rows = `<div class="ficha-subhdr">Formación aún no confirmada</div>`;
-    return `<div class="ficha-team"><div class="ficha-team-hdr"><span>${_fEsc(nombreCorto(slug))}</span></div><div class="ficha-rows">${rows}</div></div>`;
+    return `<div class="ficha-team"><div class="ficha-team-hdr"><span>${_fEsc(nomEquipo(slug, nombres[slug]))}</span></div><div class="ficha-rows">${rows}</div></div>`;
   }).join('');
   return golesHTML + `<div class="ficha-teams">${teamsHTML}</div>`;
 }
@@ -730,6 +760,21 @@ function ladoCopa(t, cls) {
   return `<div class="${cls}">${inner}</div>`;
 }
 
+// data/partidos de copa: el rival extranjero no tiene slug en copas.json, así que
+// se busca por el club argentino + competición de la copa + día (tolerancia 1:
+// index.json guarda día UTC y utcTime puede caer al día siguiente en hora local).
+function statsIdForCopa(p) {
+  const arg = (p.home.slug && p.home.arg !== false) ? p.home.slug : (p.away.slug || p.home.slug);
+  if (!arg) return null;
+  const fecha = (p.utcTime || '').slice(0, 10);
+  if (!fecha) return null;
+  const compRe = copaActiva === 'libertadores' ? /libertadores/i : /sudamericana/i;
+  const e = STATS_RAW.find(e => (e.local === arg || e.visitante === arg)
+    && compRe.test(e.competicion || '')
+    && e.fecha && Math.abs(Date.parse(e.fecha + 'T12:00:00Z') - Date.parse(fecha + 'T12:00:00Z')) <= 36 * 3600 * 1000);
+  return e ? e.id : null;
+}
+
 function cardCopa(p, copaCls, leg) {
   // ganador por marcador de esa llave (leg)
   let clsH = 'equipo-lado home', clsA = 'equipo-lado away';
@@ -739,12 +784,32 @@ function cardCopa(p, copaCls, leg) {
     if (hs > as) { clsH += ' ganador'; clsA += ' perdedor'; }
     else         { clsA += ' ganador'; clsH += ' perdedor'; }
   }
-  const pseudo = { short: p.short, utcTime: p.utcTime, status: null };
+  const pseudo = { short: p.short, utcTime: p.utcTime, elapsed: p.elapsed, status: null };
   const card = document.createElement('div');
   card.className = `partido-card ${copaCls}`;
+  // Mismas dos pestañas inline que la liga (ficha en vivo desde api-sports por
+  // api_id; stats globales). El rival extranjero sale con su nombre api-sports.
+  const fid = p.api_id || '';
+  const enCurso = EN_CURSO.has(p.short);
+  const sid = statsIdForCopa(p);
+  const started = fid && (enCurso || finished || !!sid);
+  const icoUsers = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
+  const icoStats = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`;
+  const acciones = started
+    ? `<div class="ficha-btns">
+         <button class="ficha-toggle" type="button" data-sec="ficha">${icoUsers}<span class="txt">Ficha del partido</span> <span class="ficha-caret">▾</span></button>
+         <button class="ficha-toggle" type="button" data-sec="stats">${icoStats}<span class="txt">Ver estadísticas del partido</span> <span class="ficha-caret">▾</span></button>
+       </div>`
+    : '';
   card.innerHTML =
     `<div class="partido-meta"><span class="etq leg">${leg}</span>${metaHora(pseudo)}</div>
-     <div class="partido-fila">${ladoCopa(p.home, clsH)}${marcador(hs, as, p.home_pen, p.away_pen)}${ladoCopa(p.away, clsA)}</div>`;
+     <div class="partido-fila">${ladoCopa(p.home, clsH)}${marcador(hs, as, p.home_pen, p.away_pen)}${ladoCopa(p.away, clsA)}</div>
+     ${started ? `<div class="partido-acciones">${acciones}<div class="ficha-panel" data-fid="${fid}" hidden></div></div>` : ''}`;
+  if (started) {
+    const cont = card.querySelector('.partido-acciones');
+    cont.querySelectorAll('.ficha-toggle').forEach(btn =>
+      btn.addEventListener('click', () => toggleSection(cont, fid, btn.dataset.sec)));
+  }
   return card;
 }
 
