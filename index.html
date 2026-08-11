@@ -83,6 +83,33 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 
 /* ===== TOGGLE VISTA ===== */
 .vista-toggle { display: flex; gap: 8px; justify-content: center; margin-bottom: 26px; }
+
+/* ===== EN JUEGO (partidos en curso, liga + copas) ===== */
+#live-strip { margin-bottom: 22px; }
+.live-strip-title {
+  font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 3px;
+  color: var(--verde, #2ad572); text-align: center; margin-bottom: 10px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.live-dot { width: 8px; height: 8px; border-radius: 50%; background: #2ad572; animation: livePulse 1.4s ease-in-out infinite; }
+@keyframes livePulse { 0%,100% { opacity: 1; } 50% { opacity: 0.25; } }
+.live-cards { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.live-card {
+  display: flex; flex-direction: column; gap: 6px; min-width: 250px; max-width: 330px; flex: 0 1 auto;
+  background: rgba(42,213,114,0.05); border: 1px solid rgba(42,213,114,0.35);
+  border-radius: 12px; padding: 10px 14px; text-decoration: none; color: #fff;
+  transition: background 0.2s, border-color 0.2s;
+}
+.live-card:hover { background: rgba(42,213,114,0.1); border-color: rgba(42,213,114,0.6); }
+.live-card-meta { display: flex; justify-content: space-between; align-items: center; font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.45); }
+.live-card-min { color: #2ad572; font-weight: 700; }
+.live-card-fila { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.live-card-lado { display: flex; align-items: center; gap: 7px; flex: 1; min-width: 0; }
+.live-card-lado.away { justify-content: flex-end; }
+.live-card-lado img { width: 24px; height: 24px; object-fit: contain; flex-shrink: 0; }
+.live-card-lado .nom { font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.live-card-lado .escudo-ini { width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,0.1); display: inline-flex; align-items: center; justify-content: center; font-family: 'Barlow Condensed', sans-serif; font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.6); flex-shrink: 0; }
+.live-card-score { font-family: 'Bebas Neue', sans-serif; font-size: 21px; letter-spacing: 1px; color: #fff; flex-shrink: 0; }
 .vista-btn {
   font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 600;
   letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.6);
@@ -205,6 +232,12 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   <div id="loading-state"><div class="loading-msg">CARGANDO...</div></div>
 
   <div id="contenido" style="display:none;">
+    <!-- Partidos en curso (liga + copas). Oculto si no hay ninguno. -->
+    <div id="live-strip" style="display:none;">
+      <div class="live-strip-title"><span class="live-dot"></span>EN JUEGO</div>
+      <div class="live-cards" id="live-cards"></div>
+    </div>
+
     <!-- toggle -->
     <div class="vista-toggle">
       <button class="vista-btn active" id="btn-local" onclick="cambiarVista('local')">Torneo Local</button>
@@ -348,6 +381,81 @@ renderGrid(ZONA_B, 'zonaB-grid');
   try { copas = await (await fetch(`data/fixtures/copas.json?t=${Date.now()}`)).json(); } catch (e) {}
   renderCopaGrid(copas.libertadores, 'lib', 'lib-grid', 'lib-ronda');
   renderCopaGrid(copas.sudamericana, 'sud', 'sud-grid', 'sud-ronda');
+})();
+
+// ── EN JUEGO: partidos en curso (liga + copas), poll de 60s a live=all ──
+// Se matchea live=all contra los api_id de liga.json/copas.json: así solo
+// aparecen NUESTROS partidos (live=all trae todas las ligas del mundo) y de paso
+// tenemos slugs/etiquetas locales. El proxy solo existe en prod; si falla, la
+// tira queda oculta y el resto del index no se entera.
+(async () => {
+  const strip = document.getElementById('live-strip');
+  const cardsEl = document.getElementById('live-cards');
+  if (!strip || !cardsEl) return;
+
+  // api_id → metadatos del partido (etiqueta + lados con slug/nombre/logo)
+  const MATCHES = {};
+  try {
+    const [liga, copas] = await Promise.all([
+      fetch(`data/fixtures/liga.json?t=${Date.now()}`).then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch(`data/fixtures/copas.json?t=${Date.now()}`).then(r => r.ok ? r.json() : null).catch(() => null),
+    ]);
+    (liga || []).forEach(p => {
+      if (!p.api_id) return;
+      MATCHES[String(p.api_id)] = {
+        etiqueta: p.fecha ? `Fecha ${p.fecha}` : 'Liga', href: 'fixture.html',
+        home: { slug: p.home.slug, name: p.home.name }, away: { slug: p.away.slug, name: p.away.name },
+      };
+    });
+    [['libertadores', 'Libertadores'], ['sudamericana', 'Sudamericana']].forEach(([key, lbl]) => {
+      ((((copas || {})[key]) || {}).partidos || []).forEach(p => {
+        if (!p.api_id) return;
+        MATCHES[String(p.api_id)] = {
+          etiqueta: lbl, href: `fixture.html?copa=${key}`,
+          home: { slug: p.home.slug, name: p.home.name, logo: p.home.logo },
+          away: { slug: p.away.slug, name: p.away.name, logo: p.away.logo },
+        };
+      });
+    });
+  } catch (e) {}
+  if (!Object.keys(MATCHES).length) return;
+
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const escudo = t => {
+    if (t.slug) return `<img src="escudos/${t.slug}.png" alt="" onerror="this.style.opacity=0.2">`;
+    const ini = (t.name || '').split(/\s+/).map(w => w[0] || '').join('').slice(0, 3).toUpperCase();
+    if (t.logo) return `<img src="${esc(t.logo)}" alt="" onerror="this.outerHTML='<span class=&quot;escudo-ini&quot;>${esc(ini)}</span>'">`;
+    return `<span class="escudo-ini">${esc(ini)}</span>`;
+  };
+  const nom = t => t.slug ? nombreCorto(t.slug) : (t.name || '');
+  const minTxt = st => st.short === 'HT' ? 'ET' : (st.short === 'SUSP' ? 'SUSP' : (st.elapsed != null ? `${st.elapsed}'` : 'VIVO'));
+
+  async function pollLive() {
+    let vivos = [];
+    try {
+      const res = await fetch('/api/apisports/fixtures?live=all', { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        vivos = (data.response || []).filter(r => MATCHES[String(r.fixture.id)]);
+      }
+    } catch (e) {}
+    if (!vivos.length) { strip.style.display = 'none'; return; }
+    cardsEl.innerHTML = vivos.map(r => {
+      const m = MATCHES[String(r.fixture.id)];
+      return `<a class="live-card" href="${m.href}">
+        <div class="live-card-meta"><span>${esc(m.etiqueta)}</span><span class="live-card-min">● ${esc(minTxt(r.fixture.status))}</span></div>
+        <div class="live-card-fila">
+          <div class="live-card-lado">${escudo(m.home)}<span class="nom">${esc(nom(m.home))}</span></div>
+          <div class="live-card-score">${r.goals.home ?? 0} - ${r.goals.away ?? 0}</div>
+          <div class="live-card-lado away"><span class="nom">${esc(nom(m.away))}</span>${escudo(m.away)}</div>
+        </div>
+      </a>`;
+    }).join('');
+    strip.style.display = '';
+  }
+  const tick = () => { if (!document.hidden) pollLive(); };
+  tick();
+  setInterval(tick, 60000);
 })();
 
 // ── Ordenar cada zona por su posición en la tabla, en tiempo real ──
