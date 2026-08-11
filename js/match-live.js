@@ -120,6 +120,9 @@
     return {
       partido: {
         local: localSlug, visitante: visitSlug, goles_local: goals.home, goles_visitante: goals.away,
+        // Nombres api-sports para mostrar: en copa el rival extranjero no está en
+        // CLUBES_CONFIG y su slug derivado ("deportivorecoleta") no sirve de etiqueta.
+        local_nombre: home.name || '', visitante_nombre: away.name || '',
         fecha: fecha, estadio: estadio, competicion: competicion, api_id: String(fixture.id),
         goles_detalle: { local: golesLocal, visitante: golesVisit }
       },
