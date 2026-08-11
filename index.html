@@ -110,6 +110,10 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .live-card-lado .nom { font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .live-card-lado .escudo-ini { width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,0.1); display: inline-flex; align-items: center; justify-content: center; font-family: 'Barlow Condensed', sans-serif; font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.6); flex-shrink: 0; }
 .live-card-score { font-family: 'Bebas Neue', sans-serif; font-size: 21px; letter-spacing: 1px; color: #fff; flex-shrink: 0; }
+/* Sudamericana con su color de identidad (el mismo ámbar del apartado Copas). */
+.live-card.sud { background: rgba(230,81,0,0.07); border-color: rgba(255,167,38,0.4); }
+.live-card.sud:hover { background: rgba(230,81,0,0.13); border-color: rgba(255,167,38,0.65); }
+.live-card.sud .live-card-min { color: var(--sud-light); }
 .live-card-goles { display: flex; justify-content: space-between; gap: 10px; font-family: 'Barlow Condensed', sans-serif; font-size: 11.5px; color: rgba(255,255,255,0.55); line-height: 1.45; }
 .live-card-goles > div { min-width: 0; }
 .live-card-goles .gol-away { text-align: right; }
@@ -416,6 +420,7 @@ renderGrid(ZONA_B, 'zonaB-grid');
         if (!p.api_id) return;
         MATCHES[String(p.api_id)] = {
           etiqueta: lbl, href: `fixture.html?copa=${key}`,
+          cls: key === 'sudamericana' ? 'sud' : '',
           home: { slug: p.home.slug, name: p.home.name, logo: p.home.logo },
           away: { slug: p.away.slug, name: p.away.name, logo: p.away.logo },
         };
@@ -462,7 +467,7 @@ renderGrid(ZONA_B, 'zonaB-grid');
       const gA = golesDe(r, r.teams && r.teams.away && r.teams.away.id);
       const goles = (gH || gA)
         ? `<div class="live-card-goles"><div>${gH}</div><div class="gol-away">${gA}</div></div>` : '';
-      return `<a class="live-card" href="${m.href}">
+      return `<a class="live-card${m.cls ? ' ' + m.cls : ''}" href="${m.href}">
         <div class="live-card-meta"><span>${esc(m.etiqueta)}</span><span class="live-card-min">● ${esc(minTxt(r.fixture.status))}</span></div>
         <div class="live-card-fila">
           <div class="live-card-lado">${escudo(m.home)}<span class="nom">${esc(nom(m.home))}</span></div>
