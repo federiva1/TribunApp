@@ -192,6 +192,8 @@ When `COPA` URL param is set (`'libertadores'` or `'sudamericana'`):
 - FIXTURE usa `league=13` / `league=11` en vez de `128`
 - VER FECHAS carga `data/fixtures/{slug}_{copa}.json`
 - ESTADÍSTICAS carga `data/estadisticas/{slug}_{copa}.json`. Si el archivo no existe, muestra "próximamente".
+- **Formación**: el rival y el `match_date` salen del **primer partido sin resultado** del fixture por-club (el archivo se regenera cada 2 h, así que al avanzar de ronda el rival entra solo; `rivalLibertadores`/`rivalSudamericana` de clubes.js quedan como fallback inicial). El string de rival es el nombre api-sports — el mismo que va a la columna `rival` de Supabase.
+- **Puntajes (mismo gate de 24 h que la liga)**: `resolveCopaScoresContext()` toma el último partido con kickoff pasado de `data/fixtures/copas.json` (trae `utcTime`) y busca el archivo en `data/partidos` por club + competición + día (tolerancia 1 día; el rival extranjero no tiene slug). El gate NO mira el `short`/`finished` de copas.json a propósito (sale del agregado de api-sports, que se atrasa): kickoff pasado + archivo del partido presente = abierto. Los tiles del home en copa los arma `updateCopaTiles()` (`fillTiles` hace early-return con `COPA`, si no mostraría los partidos de liga).
 
 #### FIXTURE — toggle Apertura/Clausura
 Para liga, una sola llamada a api-sports trae todos los partidos del año. El toggle filtra por `league.round` (busca "apertura"/"clausura" case-insensitive) con fallback al mes (≤6 = Apertura, ≥7 = Clausura). Default = torneo en curso según el mes de hoy. El toggle no aparece en contexto de copa.
