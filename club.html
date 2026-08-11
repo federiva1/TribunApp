@@ -3845,7 +3845,14 @@ async function renderEstadClub() {
     try {
       const r = await fetch(`data/partidos/index.json?t=${Date.now()}`);
       const all = r.ok ? await r.json() : [];
-      _ec.idx = all.filter(e => e.local === CLUB_SLUG || e.visitante === CLUB_SLUG)
+      // Filtrar por la competición del modo actual: data/partidos mezcla liga y
+      // copas (el pipeline procesa ambas), y sin esto los partidos de copa
+      // aparecerían en la barra de fechas de la página de liga y viceversa.
+      const esCopa = e => /libertadores|sudamericana/i.test(e.competicion || '');
+      const deEsteModo = COPA === 'libertadores' ? (e => /libertadores/i.test(e.competicion || ''))
+                       : COPA === 'sudamericana'  ? (e => /sudamericana/i.test(e.competicion || ''))
+                       : (e => !esCopa(e));
+      _ec.idx = all.filter(e => (e.local === CLUB_SLUG || e.visitante === CLUB_SLUG) && deEsteModo(e))
                    .sort((a, b) => (a.fecha || '').localeCompare(b.fecha || ''));
     } catch (e) { _ec.idx = []; }
   }
