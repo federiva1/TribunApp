@@ -274,6 +274,14 @@ const EN_CURSO = new Set(['1H','HT','2H','ET','BT','P','SUSP']);
 let LIGA = [], COPAS = {}, STATS_IDX = {}, STATS_RAW = [];
 let faseActiva = 'clausura';   // 'clausura' | 'copas'
 let copaActiva = 'libertadores';
+// Deep-link desde el index (tira EN JUEGO): ?copa=libertadores|sudamericana
+// abre directo en el tab COPAS con esa copa seleccionada.
+{
+  const _copaQS = new URLSearchParams(location.search).get('copa');
+  if (_copaQS === 'libertadores' || _copaQS === 'sudamericana') {
+    faseActiva = 'copas'; copaActiva = _copaQS;
+  }
+}
 let teamFilter = '';           // slug o ''
 
 const FASES = [{ key: 'clausura', label: 'Clausura' }, { key: 'copas', label: 'Copas' }];
