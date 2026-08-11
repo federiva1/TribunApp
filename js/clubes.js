@@ -13,7 +13,7 @@ const CLUBES_CONFIG = {
     id: 450, nombre: 'Estudiantes de La Plata', nombreCorto: 'Estudiantes',
     color: '#e53935', colorSecundario: '#fff',
     colores: ['#e53935', '#fff'],
-    rivalLibertadores: 'Flamengo',
+    rivalLibertadores: 'U. Catolica',
     rivalActual: 'Talleres',
     squad: []
   },
@@ -22,6 +22,7 @@ const CLUBES_CONFIG = {
     color: '#003087', colorSecundario: '#f5c518',
     colores: ['#003087', '#f5c518'],
     rivalLibertadores: 'Cruzeiro',
+    rivalSudamericana: 'Deportivo Recoleta',
     rivalActual: 'Def. Justicia',
     squad: []
   },
@@ -73,7 +74,7 @@ const CLUBES_CONFIG = {
     id: 1064, nombre: 'Platense', nombreCorto: 'Platense',
     color: '#003087', colorSecundario: '#f5c518',
     colores: ['#6d4c41', '#fff'],
-    rivalLibertadores: 'Santa Fe',
+    rivalLibertadores: 'Coquimbo Unido',
     rivalActual: 'Cen. Córdoba',
     squad: []
   },
@@ -117,7 +118,7 @@ const CLUBES_CONFIG = {
     id: 473, nombre: 'Independiente Rivadavia', nombreCorto: 'Ind. Rivadavia',
     color: '#003087', colorSecundario: '#fff',
     colores: ['#1a237e', '#fff'],
-    rivalLibertadores: 'Deportivo La Guaira',
+    rivalLibertadores: 'Fluminense',
     rivalActual: 'Banfield',
     squad: []
   },
@@ -125,7 +126,7 @@ const CLUBES_CONFIG = {
     id: 435, nombre: 'River Plate', nombreCorto: 'River',
     color: '#e53935', colorSecundario: '#fff',
     colores: ['#e53935', '#fff'],
-    rivalSudamericana: 'RB Bragantino',
+    rivalSudamericana: 'Santa Fe',
     rivalActual: 'Aldosivi',
     squad: []
   },
@@ -155,7 +156,7 @@ const CLUBES_CONFIG = {
     id: 437, nombre: 'Rosario Central', nombreCorto: 'Rosario C',
     color: '#f5c518', colorSecundario: '#1a1a1a',
     colores: ['#003087', '#f5c518'],
-    rivalLibertadores: 'UCV',
+    rivalLibertadores: 'Corinthians',
     rivalActual: 'Sarmiento',
     squad: []
   },
@@ -163,7 +164,7 @@ const CLUBES_CONFIG = {
     id: 452, nombre: 'Tigre', nombreCorto: 'Tigre',
     color: '#e53935', colorSecundario: '#f5c518',
     colores: ['#e53935', '#003087'],
-    rivalSudamericana: 'America de Cali',
+    rivalSudamericana: 'Atletico Torque',
     rivalActual: 'Huracán',
     squad: []
   },

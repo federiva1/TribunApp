@@ -68,6 +68,9 @@ COPAS = {
         'slugs': [
             'tigre', 'sanlorenzo', 'racingclub',
             'deportivoriestra', 'riverplate', 'barracascentral',
+            # Tercero del grupo de Libertadores → cruza a octavos de Sudamericana.
+            # Mantiene también su archivo _libertadores (historia de la fase de grupos).
+            'bocajuniors',
         ],
     },
 }

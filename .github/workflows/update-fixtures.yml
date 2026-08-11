@@ -16,6 +16,16 @@ jobs:
         with:
           python-version: '3.11'
 
+      # Los stats de partidos corren PRIMERO a propósito: fetch_liga_fixtures
+      # completa los partidos que el agregado de api-sports da atrasados usando
+      # data/partidos/{id}.json (reparar_estados), así que esos archivos tienen
+      # que generarse antes en la misma corrida. Idempotente: los partidos ya
+      # procesados se saltean sin gastar llamadas.
+      - name: Stats de partidos FT (base para reparar_estados)
+        env:
+          API_SPORTS_KEY: ${{ secrets.API_SPORTS_KEY }}
+        run: python scripts/fetch_liga_partidos.py --torneo clausura
+
       - name: Fetch fixtures (por club + liga.json + copas.json)
         env:
           API_SPORTS_KEY: ${{ secrets.API_SPORTS_KEY }}
@@ -28,4 +38,4 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: 'chore: actualizar fixtures [skip ci]'
-          file_pattern: 'data/fixtures/*.json'
+          file_pattern: 'data/fixtures/*.json data/partidos/*.json'
