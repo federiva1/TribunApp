@@ -3590,6 +3590,9 @@ function _matchInfo(p) {
   return { fecha: p.fecha, rival, isHome, opp };
 }
 async function fillTiles() {
+  // En modo copa los tiles los arma updateCopaTiles() con el contexto de la copa;
+  // acá se saldría a liga.json y mostraría los partidos del torneo local.
+  if (COPA) return;
   const { proximo, ultimo } = await clubLigaMatches();
   const fSub = document.getElementById('tile-formacion-sub');
   const pSub = document.getElementById('tile-puntaje-sub');
@@ -3623,18 +3626,91 @@ async function resolveMatchContext() {
       updateTilesGating();
       return;
     }
-    // Copa: fixture por-club como antes (sin el gate coordinado de puntajes).
+    // Copa: mismo esquema que la liga — formación para el próximo partido y
+    // puntajes para el último jugado, con el gate de 24 h.
     const suffix = `_${COPA}`;
-    const r = await fetch(`data/fixtures/${CLUB_SLUG}${suffix}.json`);
+    const r = await fetch(`data/fixtures/${CLUB_SLUG}${suffix}.json?t=${Date.now()}`);
     if (r.ok) {
       const fixtures = await r.json();
-      const match = fixtures.find(f => f.rival === RIVAL && f.goles === null);
-      if (match) FECHA_ACTUAL = match.fecha;
+      // Próximo = primera entrada sin resultado. El rival se toma del ARCHIVO y no
+      // de clubes.js (rivalLibertadores/rivalSudamericana quedan como fallback del
+      // valor inicial): el archivo se regenera solo cada 2 h, así que al avanzar de
+      // ronda el rival nuevo entra sin tocar la config a mano. El string es el
+      // nombre api-sports, el mismo que va a la columna `rival` de Supabase.
+      const match = fixtures.find(f => f.goles === null);
+      if (match) { RIVAL = match.rival; FECHA_ACTUAL = match.fecha; }
     }
+    await resolveCopaScoresContext();
+    applyGating();
     refreshMatchTags();
+    updateCopaTiles();
   } catch(e) {}
 }
 resolveMatchContext();
+
+// Contexto de puntajes en modo copa: último partido con kickoff pasado según
+// data/fixtures/copas.json (trae utcTime, que el fixture por-club no tiene).
+// El gate NO depende del estado (short/finished) de copas.json a propósito: ese
+// archivo sale del agregado de api-sports, que tarda en marcar FT (mismo lag que
+// obligó a reparar liga.json). Alcanza con kickoff pasado + que exista el archivo
+// del partido en data/partidos — que viene del endpoint por-id, sin lag.
+async function resolveCopaScoresContext() {
+  const copas = await fetch(`data/fixtures/copas.json?t=${Date.now()}`).then(r => r.ok ? r.json() : null).catch(() => null);
+  const partidos = ((copas || {})[COPA] || {}).partidos || [];
+  const mios = partidos
+    .filter(p => (p.home.slug === CLUB_SLUG || p.away.slug === CLUB_SLUG) &&
+                 p.utcTime && new Date(p.utcTime) <= new Date())
+    .sort((a, b) => (a.utcTime || '').localeCompare(b.utcTime || ''));
+  const u = mios[mios.length - 1];
+  if (!u) return;
+  const isHome = u.home.slug === CLUB_SLUG;
+  const opp = isHome ? u.away : u.home;
+  SCORES_RIVAL = opp.name;
+  SCORES_RIVAL_SLUG = opp.slug || '';   // rival extranjero: sin slug → la placa omite su escudo
+  SCORES_FECHA_NUM = null;              // copa: sin número de fecha (el sub de la placa lo omite)
+  SCORES_MARCADOR = (u.home_score != null && u.away_score != null)
+    ? (isHome ? `${u.home_score}-${u.away_score}` : `${u.away_score}-${u.home_score}`) : '';
+  SCORES_FT = new Date(u.utcTime);
+  SCORES_MATCH_DATE = new Date(SCORES_FT.getTime() - 3 * 3600 * 1000).toISOString().slice(0, 10);
+  try {
+    const idx = await fetch(`data/partidos/index.json?t=${Date.now()}`).then(r => r.ok ? r.json() : []);
+    // El rival de copa es extranjero (sin slug propio), así que acá se matchea por
+    // club + competición de ESTA copa + día. index.json guarda el día UTC y
+    // SCORES_MATCH_DATE el local AR → tolerancia de 1 día, igual que en liga.
+    const compRe = COPA === 'libertadores' ? /libertadores/i : /sudamericana/i;
+    const mismoDia = e => !!e.fecha &&
+      Math.abs(Date.parse(e.fecha + 'T12:00:00Z') - Date.parse(SCORES_MATCH_DATE + 'T12:00:00Z')) <= 36 * 3600 * 1000;
+    const entry = idx.find(e => (e.local === CLUB_SLUG || e.visitante === CLUB_SLUG) &&
+                                compRe.test(e.competicion || '') && mismoDia(e));
+    if (!entry) return;   // sin datos aún → applyGating deja los puntajes cerrados
+    scoresMatchId = entry.id;
+    const data = await fetch(`data/partidos/${entry.id}.json?t=${Date.now()}`).then(r => r.ok ? r.json() : null);
+    const jug = data && data.jugadores && data.jugadores[CLUB_SLUG];
+    if (jug) {
+      scoresSquad = jug
+        .filter(j => j.tipo === 'titular' || j.tipo === 'dt' || (j.tipo === 'suplente' && j.min != null && j.min > 0))
+        .map(j => ({ id: j.id, name: j.nombre, num: j.num || '', tipo: j.tipo, min: j.min, pos: j.pos || null, portero: !!j.portero }));
+      SCORES_FORMACION = ((data.partido || {}).formacion || {})[CLUB_SLUG] || '';
+    }
+  } catch (e) {}
+}
+
+// Tiles del home en modo copa: formación → próximo cruce, puntajes → último jugado.
+// (En modo liga los arma fillTiles/updateTilesGating con liga.json.)
+function updateCopaTiles() {
+  const badge = open => open ? ' <span style="color:#66bb6a;font-weight:600;">· Abierto</span>' : ' <span style="color:#777;">· Cerrado</span>';
+  const copaLbl = COPA === 'libertadores' ? 'Libertadores' : 'Sudamericana';
+  const fSub = document.getElementById('tile-formacion-sub');
+  const pSub = document.getElementById('tile-puntaje-sub');
+  if (fSub) {
+    if (RIVAL && RIVAL !== 'Por definir') fSub.innerHTML = `${copaLbl} · vs ${escapeHtml(RIVAL)}${badge(FORMACION_OPEN)}`;
+    else fSub.textContent = 'Sin próximo partido';
+  }
+  if (pSub) {
+    if (SCORES_RIVAL) pSub.innerHTML = `${copaLbl} · vs ${escapeHtml(SCORES_RIVAL)}${badge(PUNTAJES_OPEN)}`;
+    else pSub.textContent = 'Al terminar el partido';
+  }
+}
 
 // Carga el plantel que jugó el último partido (titulares + suplentes que ingresaron + DT)
 // desde data/partidos/{id}.json y setea el contexto de puntajes.
