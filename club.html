@@ -3685,6 +3685,15 @@ async function resolveCopaScoresContext() {
     if (!entry) return;   // sin datos aún → applyGating deja los puntajes cerrados
     scoresMatchId = entry.id;
     const data = await fetch(`data/partidos/${entry.id}.json?t=${Date.now()}`).then(r => r.ok ? r.json() : null);
+    // Marcador desde el archivo del partido, que viene del endpoint por-id: el de
+    // copas.json sale del agregado y puede quedar viejo un rato tras el FT (caso
+    // real: Boca 3-1 Recoleta con copas.json mostrando todavía el 0-1 parcial).
+    const pd = (data || {}).partido || {};
+    if (pd.goles_local != null && pd.goles_visitante != null) {
+      SCORES_MARCADOR = entry.local === CLUB_SLUG
+        ? `${pd.goles_local}-${pd.goles_visitante}`
+        : `${pd.goles_visitante}-${pd.goles_local}`;
+    }
     const jug = data && data.jugadores && data.jugadores[CLUB_SLUG];
     if (jug) {
       scoresSquad = jug
