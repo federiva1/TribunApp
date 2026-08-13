@@ -32,8 +32,12 @@ jobs:
           API_SPORTS_KEY: ${{ secrets.API_SPORTS_KEY }}
         run: python scripts/fetch_liga_partidos.py --competicion copas
 
+      # Tabla xG ("moral"): solo lee data/partidos, sin llamadas a APIs.
+      - name: Tabla xG
+        run: python scripts/build_tabla_xg.py
+
       - name: Commit stats de partidos
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: 'chore: stats de partidos de Liga [skip ci]'
-          file_pattern: 'data/partidos/*.json'
+          file_pattern: 'data/partidos/*.json data/tabla_xg.json'

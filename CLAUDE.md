@@ -46,6 +46,12 @@ python scripts/fetch_fixtures.py          # liga + copas
 python scripts/fetch_fixtures.py --liga   # only liga
 python scripts/fetch_fixtures.py --copas  # only copa files
 
+# Tabla xG ("tabla moral") → data/tabla_xg.json. Resultado de cada partido = parte
+# entera del xG de cada equipo (0.98 vs 0.57 = 0-0; 0.98 vs 1.02 = 0-1). Solo lee
+# data/partidos (sin APIs); la corren update-fixtures.yml y liga-match-stats.yml,
+# y la consume el tab "Tabla xG" de tablas.html.
+python scripts/build_tabla_xg.py
+
 # === Stats por partido (genéricos, post-partido) ===
 
 # Stats globales del partido (api-sports /fixtures/statistics) → data/estadisticas/{slug}[_copa].json
