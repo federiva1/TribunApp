@@ -364,7 +364,7 @@ async function loadAll() {
 const LAYOUTS = {
   actual:    { cols: '26px 26px 1fr 26px 24px 24px 24px 34px 78px 34px', cut: 8, cutType: 'playoff' },
   anual:     { cols: '26px 26px 1fr 26px 24px 24px 24px 34px 34px',       cut: 0, cutType: null },
-  xg:        { cols: '26px 26px 1fr 26px 24px 24px 24px 34px 46px 46px 34px', cut: 0, cutType: null },
+  xg:        { cols: '26px 26px 1fr 26px 24px 24px 24px 34px 34px 34px 34px', cut: 0, cutType: null },
   promedios: { cols: '26px 26px 1fr 34px 34px 60px',                       cut: 0, cutType: null }
 };
 
@@ -472,7 +472,7 @@ function renderTable() {
           const d = document.createElement('div');
           d.className = 'col-num col-hide-sm';
           d.style.color = 'rgba(255,255,255,0.55)';
-          d.textContent = (v == null) ? '—' : Number(v).toFixed(2);
+          d.textContent = (v == null) ? '—' : String(Math.round(Number(v)));
           return d;
         };
         row.appendChild(mkXg(t.xgf));
