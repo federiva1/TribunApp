@@ -257,6 +257,7 @@ async function loadXG() {
       rank: i + 1,
       team: { id: t.id, name: t.slug },
       points: t.pts, goalsDiff: t.dif,
+      xgf: t.xgf, xgc: t.xgc,
       all: { played: t.pj, win: t.g, draw: t.e, lose: t.p,
              goals: { for: t.gf, against: t.gc } },
     }));
@@ -363,6 +364,7 @@ async function loadAll() {
 const LAYOUTS = {
   actual:    { cols: '26px 26px 1fr 26px 24px 24px 24px 34px 78px 34px', cut: 8, cutType: 'playoff' },
   anual:     { cols: '26px 26px 1fr 26px 24px 24px 24px 34px 34px',       cut: 0, cutType: null },
+  xg:        { cols: '26px 26px 1fr 26px 24px 24px 24px 34px 46px 46px 34px', cut: 0, cutType: null },
   promedios: { cols: '26px 26px 1fr 34px 34px 60px',                       cut: 0, cutType: null }
 };
 
@@ -372,7 +374,7 @@ function renderTable() {
   cont.innerHTML = '';
 
   let teams, kind;
-  if (tab === 'xg') { teams = XG ? (zona === 'A' ? XG.A : XG.B) : null; kind = 'anual'; }
+  if (tab === 'xg') { teams = XG ? (zona === 'A' ? XG.A : XG.B) : null; kind = 'xg'; }
   else if (tab === 'actual') { teams = DATA && (zona === 'A' ? DATA.zonaA : DATA.zonaB); kind = 'actual'; }
   else if (tab === 'anual') { teams = DATA && DATA.anual; kind = 'anual'; }
   else { teams = DATA && DATA.promedios; kind = 'promedios'; }
@@ -402,6 +404,7 @@ function renderTable() {
       '<div class="col-num">PJ</div><div class="col-num">G</div><div class="col-num">E</div><div class="col-num">P</div>' +
       '<div class="col-num">DG</div>' +
       (kind === 'actual' ? '<div class="col-num col-hide-sm">Forma</div>' : '') +
+      (kind === 'xg' ? '<div class="col-num col-hide-sm">xGF</div><div class="col-num col-hide-sm">xGC</div>' : '') +
       '<div style="text-align:right">Pts</div>';
   }
   wrap.appendChild(head);
@@ -463,6 +466,17 @@ function renderTable() {
         const formEl = document.createElement('div'); formEl.className = 'col-form col-hide-sm';
         (t.form || '').slice(-5).split('').forEach(c => formEl.appendChild(formChip(c)));
         row.appendChild(formEl);
+      }
+      if (kind === 'xg') {
+        const mkXg = v => {
+          const d = document.createElement('div');
+          d.className = 'col-num col-hide-sm';
+          d.style.color = 'rgba(255,255,255,0.55)';
+          d.textContent = (v == null) ? '—' : Number(v).toFixed(2);
+          return d;
+        };
+        row.appendChild(mkXg(t.xgf));
+        row.appendChild(mkXg(t.xgc));
       }
 
       const ptsEl = document.createElement('div'); ptsEl.className = 'col-pts'; ptsEl.textContent = t.points;
