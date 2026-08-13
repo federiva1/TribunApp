@@ -364,7 +364,7 @@ async function loadAll() {
 const LAYOUTS = {
   actual:    { cols: '26px 26px 1fr 26px 24px 24px 24px 34px 78px 34px', cut: 8, cutType: 'playoff' },
   anual:     { cols: '26px 26px 1fr 26px 24px 24px 24px 34px 34px',       cut: 0, cutType: null },
-  xg:        { cols: '26px 26px 1fr 26px 24px 24px 24px 34px 34px 34px 34px', cut: 0, cutType: null },
+  xg:        { cols: '26px 26px 1fr 26px 22px 22px 22px 24px 24px 32px 32px 32px 34px', cut: 0, cutType: null },
   promedios: { cols: '26px 26px 1fr 34px 34px 60px',                       cut: 0, cutType: null }
 };
 
@@ -402,6 +402,7 @@ function renderTable() {
     head.innerHTML =
       '<div class="col-rank">#</div><div></div><div>Equipo</div>' +
       '<div class="col-num">PJ</div><div class="col-num">G</div><div class="col-num">E</div><div class="col-num">P</div>' +
+      (kind === 'xg' ? '<div class="col-num">GF</div><div class="col-num">GC</div>' : '') +
       '<div class="col-num">DG</div>' +
       (kind === 'actual' ? '<div class="col-num col-hide-sm">Forma</div>' : '') +
       (kind === 'xg' ? '<div class="col-num col-hide-sm">xGF</div><div class="col-num col-hide-sm">xGC</div>' : '') +
@@ -455,6 +456,14 @@ function renderTable() {
       row.appendChild(mk(a.win));
       row.appendChild(mk(a.draw));
       row.appendChild(mk(a.lose));
+
+      if (kind === 'xg') {
+        // Goles MORALES (parte entera del xG de cada partido) — son los que arman
+        // la tabla. Distintos del xG crudo acumulado que va en xGF/xGC.
+        const g = (t.all && t.all.goals) || {};
+        row.appendChild(mk(g.for));
+        row.appendChild(mk(g.against));
+      }
 
       const dg = t.goalsDiff != null ? t.goalsDiff : 0;
       const dgEl = document.createElement('div');
