@@ -34,8 +34,12 @@ jobs:
           python scripts/fetch_liga_fixtures.py
           python scripts/fetch_copas_fixtures.py
 
+      # Tabla xG ("moral"): solo lee data/partidos, sin llamadas a APIs.
+      - name: Tabla xG
+        run: python scripts/build_tabla_xg.py
+
       - name: Commit updated fixtures
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: 'chore: actualizar fixtures [skip ci]'
-          file_pattern: 'data/fixtures/*.json data/partidos/*.json'
+          file_pattern: 'data/fixtures/*.json data/partidos/*.json data/tabla_xg.json'
