@@ -1126,12 +1126,23 @@ document.getElementById('back-btn').onclick = () => {
 document.title = `${CLUB.nombre} — TribunApp`;
 document.getElementById('club-escudo-header').src = `escudos/${CLUB_SLUG}.png`;
 document.getElementById('club-nombre-header').textContent = CLUB.nombre;
-(CLUB.colores || []).forEach(c => {
-  const d = document.createElement('span');
-  d.className = 'club-color-dot';
-  d.style.background = c;
-  document.getElementById('club-color-dots').appendChild(d);
-});
+// Piloto (solo Banfield): escudo en lugar de las esferas de color del header.
+// Si convence, se saca el condicional y aplica a los 30 clubes.
+if (CLUB_SLUG === 'banfield') {
+  const img = document.createElement('img');
+  img.src = `escudos/${CLUB_SLUG}.png`;
+  img.alt = CLUB.nombreCorto;
+  img.style.cssText = 'width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 1px 3px rgba(0,0,0,.5));';
+  img.onerror = () => { img.style.display = 'none'; };
+  document.getElementById('club-color-dots').appendChild(img);
+} else {
+  (CLUB.colores || []).forEach(c => {
+    const d = document.createElement('span');
+    d.className = 'club-color-dot';
+    d.style.background = c;
+    document.getElementById('club-color-dots').appendChild(d);
+  });
+}
 document.getElementById('formation-rival-tag').textContent = RIVAL !== 'Por definir' ? `${CLUB.nombreCorto} vs ${RIVAL}` : '';
 document.getElementById('scores-rival-tag').textContent = RIVAL !== 'Por definir' ? `${CLUB.nombreCorto} vs ${RIVAL}` : '';
 // Labels de filtro en resultados
