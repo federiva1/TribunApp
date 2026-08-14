@@ -1752,7 +1752,7 @@ function renderGrid() {
     chip.className = 'player-chip' + (used ? ' used' : '') + (blocked ? ' injured' : '');
     chip.appendChild(kitChip(CLUB_SLUG, p.num, 36));
     const nm = document.createElement('span'); nm.className = 'chip-name'; nm.textContent = p.name; chip.appendChild(nm);
-    if (isInjured) { const b = document.createElement('div'); b.className = 'injury-badge'; b.textContent = '🏥'; chip.appendChild(b); }
+    if (isInjured) { const b = document.createElement('div'); b.className = 'injury-badge'; b.textContent = '✚'; b.style.color = '#fff'; b.style.fontWeight = '700'; chip.appendChild(b); }
     if (isSuspended) { const b = document.createElement('div'); b.className = 'injury-badge'; b.style.background = '#f9a825'; b.textContent = '🟨'; chip.appendChild(b); }
     if (!used && !blocked) {
       // Arrastrar sigue funcionando; un tap (sin desplazamiento) ubica al jugador solo.
