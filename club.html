@@ -1921,7 +1921,10 @@ async function initSquad() {
     if (res.ok) {
       const data = await res.json();
       const numOrInf = n => { const v = Number(n); return (n === '' || n == null || Number.isNaN(v)) ? Infinity : v; };
-      squad = data.sort((a, b) => numOrInf(a.num) - numOrInf(b.num));
+      // Lesionados/suspendidos al FINAL del banco (después incluso de los sin
+      // dorsal): no se pueden usar, que no ocupen un lugar visible al principio.
+      const bloqueado = p => (INJURED.includes(p.num) || SUSPENDED.includes(p.num)) ? 1 : 0;
+      squad = data.sort((a, b) => (bloqueado(a) - bloqueado(b)) || (numOrInf(a.num) - numOrInf(b.num)));
     }
   } catch(e) {}
   try {
