@@ -37,6 +37,35 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 #home-screen { min-height: 100vh; background: var(--dark); }
 #home-app { background: var(--dark2); max-width: 560px; margin: 0 auto; min-height: 100vh; position: relative; }
 
+/* ===== HEADER GLOBAL (mismo que index.html, para que el club no quede aislado del sitio) ===== */
+#site-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 18px 10px; gap: 12px;
+  background: linear-gradient(180deg, rgba(79,195,247,0.12) 0%, transparent 100%);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.logo-wrap { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+/* Logo del header — MISMO tamaño en todas las páginas de la web (si se cambia, cambiarlo en todas). */
+.logo-wrap img { height: 72px; object-fit: contain; }
+@media (max-width: 430px) { .logo-wrap img { height: 60px; } }
+.header-actions { display: flex; gap: 8px; align-items: center; }
+.header-pill {
+  display: flex; align-items: center; gap: 7px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px; padding: 7px 13px;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 0.5px;
+  color: rgba(255,255,255,0.85); cursor: pointer; text-decoration: none;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+.header-pill svg { width: 15px; height: 15px; flex-shrink: 0; }
+.header-pill:hover { background: rgba(79,195,247,0.16); border-color: rgba(79,195,247,0.45); color: #fff; }
+.header-pill-label { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 0.5px; }
+@media (max-width: 560px) {
+  .header-pill-label { display: none; }
+  .header-pill { width: 36px; height: 36px; padding: 0; gap: 0; justify-content: center; }
+  .header-actions { gap: 6px; }
+}
+
 /* Header del club */
 .club-header {
   display: flex; align-items: center; gap: 12px;
@@ -752,6 +781,31 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 </style>
 </head>
 <body>
+
+<!-- HEADER GLOBAL — misma navegación que index.html -->
+<header id="site-header">
+  <a class="logo-wrap" href="index.html">
+    <img src="Logo.png" alt="TribunApp">
+  </a>
+  <div class="header-actions">
+    <a class="header-pill" href="fixture.html" data-help="Fixture: todos los partidos por fecha, con resultados y la ficha de cada partido.">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span class="header-pill-label">Fixture</span>
+    </a>
+    <a class="header-pill" href="tablas.html" data-help="Tablas: posiciones del torneo en curso, tabla anual y promedios, en tiempo real.">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      <span class="header-pill-label">Tablas</span>
+    </a>
+    <a class="header-pill" href="estadisticas-torneo.html" data-help="Estadísticas del torneo: goleadores, asistidores y los datos de cada equipo y partido.">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span class="header-pill-label">Estadísticas</span>
+    </a>
+    <a class="header-pill" href="estadisticas-tribunapp.html" data-help="Estadísticas de la comunidad: las formaciones más votadas y los puntajes que los hinchas le pusieron a cada jugador.">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span class="header-pill-label">TribunApp</span>
+    </a>
+  </div>
+</header>
 
 <!-- PANTALLA PRINCIPAL -->
 <div id="home-screen">
