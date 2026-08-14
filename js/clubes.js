@@ -145,6 +145,8 @@ const CLUBES_CONFIG = {
     squad: []
   },
   racingclub: {
+    // Di Césare (3): lesión grave, afuera por el resto del torneo → bloqueado en formación
+    injured: ['3'],
     id: 436, nombre: 'Racing Club', nombreCorto: 'Racing',
     color: '#1a1a1a', colorSecundario: '#e53935',
     colores: ['#29b6f6', '#fff'],
