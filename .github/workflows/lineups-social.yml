@@ -1,0 +1,58 @@
+name: Tweet de formaciones confirmadas
+
+# Cada 10 min, pero con guard barato: solo sigue (instala Playwright, llama a la
+# API) si hay un partido nuestro con kickoff entre -15 y +25 min sin postear.
+# El tiro típico cae ~20 min antes del partido; si api-sports todavía no confirmó
+# las alineaciones, reintenta en las corridas siguientes hasta 15 min después.
+#
+# Sin los secrets de X (X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN,
+# X_ACCESS_TOKEN_SECRET) corre en MODO ENSAYO: genera las imágenes y las
+# commitea en data/social/preview/ para revisarlas, sin tuitear.
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: lineups-social
+  cancel-in-progress: false
+
+jobs:
+  social:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # Guard sin dependencias: lee data/fixtures y corta si no hay candidatos.
+      - name: ¿Hay partidos en ventana?
+        id: check
+        run: python scripts/social_lineups.py --check
+
+      - name: Instalar Playwright
+        if: steps.check.outputs.hay == '1'
+        run: |
+          pip install playwright requests requests-oauthlib
+          python -m playwright install --with-deps chromium
+
+      - name: Generar formaciones y tuitear
+        if: steps.check.outputs.hay == '1'
+        env:
+          API_SPORTS_KEY: ${{ secrets.API_SPORTS_KEY }}
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_SECRET: ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
+        run: python scripts/social_lineups.py
+
+      - name: Commit estado (y previews en modo ensayo)
+        if: steps.check.outputs.hay == '1'
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'chore: formaciones posteadas [skip ci]'
+          file_pattern: 'data/social/*'
