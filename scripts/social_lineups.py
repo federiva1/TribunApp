@@ -47,9 +47,11 @@ from clubes_map import CLUBES  # noqa: E402
 
 # ── metadatos de clubes (nombres/hashtags desde js/clubes.js) ────────────────
 def _nombres_cortos():
+    # Ojo con las comillas: los nombres con apóstrofo van entre dobles
+    # (nombreCorto: "Newell's"), así que hay que aceptar los dos estilos.
     src = (ROOT / 'js' / 'clubes.js').read_text(encoding='utf-8')
-    return {m.group(1): m.group(2) for m in
-            re.finditer(r"^  ([a-z0-9]+):\s*\{[^}]*?nombreCorto:\s*'([^']*)'",
+    return {m.group(1): m.group(3) for m in
+            re.finditer(r"""^  ([a-z0-9]+):\s*\{[^}]*?nombreCorto:\s*(['"])(.*?)\2""",
                         src, re.M | re.S)}
 
 
