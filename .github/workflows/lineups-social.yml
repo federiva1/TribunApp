@@ -13,6 +13,11 @@ on:
   schedule:
     - cron: '*/10 * * * *'
   workflow_dispatch:
+    inputs:
+      fixture:
+        description: 'api_id puntual a forzar (ignora la ventana horaria)'
+        required: false
+        default: ''
 
 concurrency:
   group: lineups-social
@@ -30,9 +35,15 @@ jobs:
           python-version: '3.11'
 
       # Guard sin dependencias: lee data/fixtures y corta si no hay candidatos.
+      # Con un fixture forzado a mano se saltea el guard directamente.
       - name: ¿Hay partidos en ventana?
         id: check
-        run: python scripts/social_lineups.py --check
+        run: |
+          if [ -n "${{ inputs.fixture }}" ]; then
+            echo "hay=1" >> "$GITHUB_OUTPUT"
+          else
+            python scripts/social_lineups.py --check
+          fi
 
       - name: Instalar Playwright
         if: steps.check.outputs.hay == '1'
@@ -48,7 +59,12 @@ jobs:
           X_API_SECRET: ${{ secrets.X_API_SECRET }}
           X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
           X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
-        run: python scripts/social_lineups.py
+        run: |
+          if [ -n "${{ inputs.fixture }}" ]; then
+            python scripts/social_lineups.py --test-fixture "${{ inputs.fixture }}"
+          else
+            python scripts/social_lineups.py
+          fi
 
       - name: Commit estado (y previews en modo ensayo)
         if: steps.check.outputs.hay == '1'
