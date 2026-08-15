@@ -1,9 +1,10 @@
 name: Tweet de formaciones confirmadas
 
-# Cada 10 min, pero con guard barato: solo sigue (instala Playwright, llama a la
-# API) si hay un partido nuestro con kickoff entre -15 y +25 min sin postear.
-# El tiro típico cae ~20 min antes del partido; si api-sports todavía no confirmó
-# las alineaciones, reintenta en las corridas siguientes hasta 15 min después.
+# Cada 5 min, pero con guard barato: solo sigue (instala Playwright, llama a la
+# API) si hay un partido nuestro que arranca dentro de los próximos 32 min y no
+# se posteó. Da ~6 intentos por partido (30, 25, 20, 15, 10 y 5 min antes); el
+# primero que encuentra los dos XI confirmados postea y los demás lo saltean.
+# Pasado el kickoff ya no se intenta: las formaciones se publican antes.
 #
 # Sin los secrets de X (X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN,
 # X_ACCESS_TOKEN_SECRET) corre en MODO ENSAYO: genera las imágenes y las
@@ -11,7 +12,7 @@ name: Tweet de formaciones confirmadas
 
 on:
   schedule:
-    - cron: '*/10 * * * *'
+    - cron: '*/5 * * * *'
   workflow_dispatch:
     inputs:
       fixture:
