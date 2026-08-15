@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>TribunApp — Pizarra táctica</title>
+<style>
+@font-face { font-family:'Bebas Neue'; font-weight:400;
+  src:url('fonts/bebas-neue-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family:'Barlow Condensed'; font-weight:400;
+  src:url('fonts/barlow-condensed-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family:'Barlow Condensed'; font-weight:600;
+  src:url('fonts/barlow-condensed-latin-600-normal.woff2') format('woff2'); }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#0a0f1e; color:#fff; font-family:'Barlow Condensed',sans-serif; min-height:100vh; }
+header { display:flex; align-items:center; gap:14px; padding:10px 16px; flex-wrap:wrap;
+         background:#10182e; border-bottom:1px solid rgba(255,255,255,.08); }
+header h1 { font-family:'Bebas Neue'; font-size:22px; letter-spacing:2px; }
+header h1 span { color:#38bdf8; }
+select, button {
+  background:#1a2338; color:#fff; border:1px solid rgba(255,255,255,.18);
+  border-radius:8px; padding:6px 10px; font-family:inherit; font-size:14px; cursor:pointer; }
+select { max-width:230px; }
+button:hover { background:#243152; border-color:rgba(255,255,255,.35); }
+button.on { background:#38bdf8; color:#06121f; border-color:#38bdf8; font-weight:600; }
+button.danger { border-color:rgba(255,90,90,.5); }
+.bar { display:flex; align-items:center; gap:8px; padding:8px 16px; flex-wrap:wrap; }
+.bar .sep { width:1px; height:22px; background:rgba(255,255,255,.15); margin:0 4px; }
+.bar .lbl { font-size:13px; color:#8b93a7; letter-spacing:1px; }
+.swatch { width:26px; height:26px; border-radius:50%; border:2px solid rgba(255,255,255,.25); padding:0; }
+.swatch.on { border-color:#fff; transform:scale(1.15); }
+#wrap { padding:0 16px 8px; }
+#board { display:block; width:100%; border-radius:12px; touch-action:none; cursor:crosshair; }
+.benches { display:flex; gap:14px; padding:4px 16px 16px; flex-wrap:wrap; }
+.bench { flex:1; min-width:320px; background:#10182e; border:1px solid rgba(255,255,255,.08);
+         border-radius:12px; padding:10px; }
+.bench h3 { display:flex; align-items:center; gap:8px; margin-bottom:8px;
+            font-family:'Bebas Neue'; font-size:16px; letter-spacing:1px; color:#8b93a7; }
+.chips { display:flex; flex-wrap:wrap; gap:6px; max-height:132px; overflow-y:auto; }
+.pchip { display:flex; align-items:center; gap:5px; background:#1a2338; border:1px solid rgba(255,255,255,.14);
+         border-radius:16px; padding:3px 10px 3px 4px; font-size:13px; cursor:pointer; user-select:none; }
+.pchip:hover { border-color:#38bdf8; }
+.pchip.used { opacity:.35; pointer-events:none; }
+.pchip .n { width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+            font-family:'Bebas Neue'; font-size:12px; color:#fff;
+            text-shadow:0 0 2px #000, 0 0 2px #000; border:1.5px solid rgba(255,255,255,.8); }
+.hint { padding:0 16px 18px; font-size:13px; color:#5d6479; }
+</style>
+</head>
+<body>
+<header>
+  <h1>TRIBUN<span>APP</span> · PIZARRA TÁCTICA</h1>
+  <select id="sel-match"><option value="">Cargar XI de un partido…</option></select>
+  <button id="btn-png">Descargar PNG</button>
+</header>
+
+<div class="bar">
+  <span class="lbl">HERRAMIENTA</span>
+  <button data-tool="move" class="on">Mover</button>
+  <button data-tool="arrow">Flecha</button>
+  <button data-tool="dash">Línea punteada</button>
+  <button data-tool="zone">Zona</button>
+  <button data-tool="pen">Lápiz</button>
+  <div class="sep"></div>
+  <span class="lbl">COLOR</span>
+  <button class="swatch on" data-color="#ffffff" style="background:#ffffff"></button>
+  <button class="swatch" data-color="#ffd60a" style="background:#ffd60a"></button>
+  <button class="swatch" data-color="#ff453a" style="background:#ff453a"></button>
+  <button class="swatch" data-color="#38bdf8" style="background:#38bdf8"></button>
+  <div class="sep"></div>
+  <button id="btn-undo">Deshacer dibujo</button>
+  <button id="btn-clear" class="danger">Borrar dibujos</button>
+  <button id="btn-reset" class="danger">Vaciar cancha</button>
+</div>
+
+<div id="wrap"><canvas id="board"></canvas></div>
+
+<div class="benches">
+  <div class="bench">
+    <h3>EQUIPO A · <select id="sel-a"></select></h3>
+    <div class="chips" id="chips-a"></div>
+  </div>
+  <div class="bench">
+    <h3>EQUIPO B · <select id="sel-b"></select></h3>
+    <div class="chips" id="chips-b"></div>
+  </div>
+</div>
+<div class="hint">Tocá un jugador del banco para ponerlo en la cancha · arrastralo para moverlo ·
+doble click/doble tap lo saca · la pelota ⚽ se arrastra como un jugador.</div>
+
+<script src="js/clubes.js"></script>
+<script src="js/kits.js"></script>
+<script src="js/club-colors.js"></script>
+<script>
+// ============================================================
+// Pizarra táctica — canvas horizontal (cancha completa).
+// Vive solo en la rama `pizarra`, no se linkea desde el sitio.
+// ============================================================
+const W = 1600, H = 1000, M = 46;            // tamaño interno y margen de la cancha
+const R = 26;                                 // radio de ficha
+const cv = document.getElementById('board');
+const ctx = cv.getContext('2d');
+
+const state = {
+  players: [],          // {team:'A'|'B', slug, num, name, x, y} — x/y en coords internas
+  ball: { x: W/2, y: H/2 },
+  shapes: [],           // {type:'arrow'|'dash'|'zone'|'pen', color, pts:[{x,y}...]}
+  tool: 'move', color: '#ffffff',
+  drag: null, drawing: null,
+  teams: { A: 'sanlorenzo', B: 'union' },
+  squads: { A: [], B: [] },
+};
+
+// ---------- canvas / DPR ----------
+function fit() {
+  const w = cv.parentElement.clientWidth;
+  const h = w * H / W;
+  const dpr = window.devicePixelRatio || 1;
+  cv.style.height = h + 'px';
+  cv.width = W * dpr / (W / w) ; // ancho visible * dpr
+  cv.height = h * dpr;
+  ctx.setTransform(cv.width / W, 0, 0, cv.height / H, 0, 0);
+  render();
+}
+window.addEventListener('resize', fit);
+
+function evPos(e) {
+  const r = cv.getBoundingClientRect();
+  return { x: (e.clientX - r.left) / r.width * W, y: (e.clientY - r.top) / r.height * H };
+}
+
+// ---------- cancha ----------
+function drawPitch() {
+  const g = ctx.createLinearGradient(0, 0, W, H);
+  g.addColorStop(0, '#12492a'); g.addColorStop(1, '#0a2f1a');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = 'rgba(255,255,255,.035)';
+  for (let i = 0; i < 16; i += 2) ctx.fillRect(i * W / 16, 0, W / 16, H);
+
+  ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 3;
+  const iw = W - 2 * M, ih = H - 2 * M;
+  ctx.strokeRect(M, M, iw, ih);
+  ctx.beginPath(); ctx.moveTo(W/2, M); ctx.lineTo(W/2, H - M); ctx.stroke();
+  ctx.beginPath(); ctx.arc(W/2, H/2, 110, 0, Math.PI * 2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(W/2, H/2, 5, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.fill();
+  for (const side of [0, 1]) {
+    const x0 = side ? W - M : M, dir = side ? -1 : 1;
+    ctx.strokeRect(Math.min(x0, x0 + dir * 190), H/2 - 240, 190, 480);   // área grande
+    ctx.strokeRect(Math.min(x0, x0 + dir * 70),  H/2 - 110, 70, 220);    // área chica
+    ctx.beginPath(); ctx.arc(x0 + dir * 130, H/2, 5, 0, Math.PI*2); ctx.fill(); // punto penal
+    ctx.beginPath();                                                     // semicírculo del área
+    ctx.arc(x0 + dir * 130, H/2, 110, side ? Math.PI/2+0.45 : -Math.PI/2+0.45,
+            side ? Math.PI*1.5-0.45 : Math.PI/2-0.45);
+    ctx.stroke();
+  }
+}
+
+// ---------- kits en canvas ----------
+function paintKit(x, y, r, slug) {
+  const kit = (typeof clubKit === 'function' && slug) ? clubKit(slug) : { type:'solid', colors:['#39445c'] };
+  const cols = kit.colors || ['#39445c'];
+  ctx.save();
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.clip();
+  ctx.fillStyle = cols[0]; ctx.fillRect(x - r, y - r, 2*r, 2*r);
+  const c2 = cols[1] || cols[0];
+  const n = Math.max(2, Math.min(8, kit.div || 5));
+  if (kit.type === 'stripesV') {
+    const wS = 2*r/n;
+    for (let i = 0; i < n; i++) if (i % 2) { ctx.fillStyle = c2; ctx.fillRect(x - r + i*wS, y - r, wS, 2*r); }
+  } else if (kit.type === 'stripesH') {
+    const hS = 2*r/n;
+    for (let i = 0; i < n; i++) if (i % 2) { ctx.fillStyle = c2; ctx.fillRect(x - r, y - r + i*hS, 2*r, hS); }
+  } else if (kit.type === 'halves') {
+    ctx.fillStyle = c2; ctx.fillRect(x, y - r, r, 2*r);
+  } else if (kit.type === 'band') {
+    ctx.fillStyle = c2; ctx.fillRect(x - r, y - r*0.35, 2*r, r*0.7);
+  } else if (kit.type === 'bandV') {
+    ctx.fillStyle = c2; ctx.fillRect(x - r*0.35, y - r, r*0.7, 2*r);
+  } else if (kit.type === 'sash' || kit.type === 'sashR') {
+    ctx.strokeStyle = c2; ctx.lineWidth = r*0.55; ctx.beginPath();
+    if (kit.type === 'sash') { ctx.moveTo(x - r, y - r); ctx.lineTo(x + r, y + r); }
+    else { ctx.moveTo(x + r, y - r); ctx.lineTo(x - r, y + r); }
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawPlayer(p) {
+  paintKit(p.x, p.y, R, p.slug);
+  ctx.beginPath(); ctx.arc(p.x, p.y, R, 0, Math.PI * 2);
+  ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255,255,255,.92)'; ctx.stroke();
+  ctx.font = "22px 'Bebas Neue'"; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(0,0,0,.65)';
+  ctx.strokeText(p.num || '', p.x, p.y + 1);
+  ctx.fillStyle = '#fff'; ctx.fillText(p.num || '', p.x, p.y + 1);
+  const tag = apellido(p.name);
+  ctx.font = "600 17px 'Barlow Condensed'";
+  const tw = ctx.measureText(tag).width + 14;
+  ctx.fillStyle = 'rgba(10,15,30,.85)';
+  ctx.beginPath(); ctx.roundRect(p.x - tw/2, p.y + R + 5, tw, 22, 11); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.fillText(tag, p.x, p.y + R + 16);
+}
+
+function apellido(n) { return (n || '').length <= 14 ? n : n.split(' ').slice(-1)[0]; }
+
+function drawBall() {
+  const { x, y } = state.ball;
+  ctx.beginPath(); ctx.arc(x, y, 12, 0, Math.PI*2); ctx.fillStyle = '#fff'; ctx.fill();
+  ctx.lineWidth = 1.5; ctx.strokeStyle = '#111'; ctx.stroke();
+  ctx.fillStyle = '#111';
+  for (const a of [0, 1.26, 2.51, 3.77, 5.03]) {
+    ctx.beginPath(); ctx.arc(x + Math.cos(a)*6, y + Math.sin(a)*6, 2.6, 0, Math.PI*2); ctx.fill();
+  }
+}
+
+// ---------- dibujos ----------
+function drawShape(s) {
+  ctx.strokeStyle = s.color; ctx.fillStyle = s.color; ctx.lineWidth = 5;
+  ctx.setLineDash(s.type === 'dash' ? [14, 12] : []);
+  const p = s.pts;
+  if (s.type === 'pen') {
+    ctx.beginPath(); ctx.moveTo(p[0].x, p[0].y);
+    for (const q of p) ctx.lineTo(q.x, q.y);
+    ctx.stroke();
+  } else if (s.type === 'zone') {
+    const a = p[0], b = p[p.length-1];
+    ctx.save(); ctx.globalAlpha = 0.22;
+    ctx.beginPath();
+    ctx.ellipse((a.x+b.x)/2, (a.y+b.y)/2, Math.abs(b.x-a.x)/2 || 4, Math.abs(b.y-a.y)/2 || 4, 0, 0, Math.PI*2);
+    ctx.fill(); ctx.restore();
+    ctx.globalAlpha = 0.9; ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.ellipse((a.x+b.x)/2, (a.y+b.y)/2, Math.abs(b.x-a.x)/2 || 4, Math.abs(b.y-a.y)/2 || 4, 0, 0, Math.PI*2);
+    ctx.stroke(); ctx.globalAlpha = 1;
+  } else {                                   // arrow / dash
+    const a = p[0], b = p[p.length-1];
+    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+    ctx.setLineDash([]);
+    const ang = Math.atan2(b.y - a.y, b.x - a.x);
+    ctx.beginPath();
+    ctx.moveTo(b.x, b.y);
+    ctx.lineTo(b.x - 20*Math.cos(ang - 0.4), b.y - 20*Math.sin(ang - 0.4));
+    ctx.lineTo(b.x - 20*Math.cos(ang + 0.4), b.y - 20*Math.sin(ang + 0.4));
+    ctx.closePath(); ctx.fill();
+  }
+  ctx.setLineDash([]);
+}
+
+function render() {
+  drawPitch();
+  for (const s of state.shapes) drawShape(s);
+  if (state.drawing) drawShape(state.drawing);
+  for (const p of state.players) drawPlayer(p);
+  drawBall();
+}
+
+// ---------- interacción ----------
+function hit(pos) {
+  const b = state.ball;
+  if (Math.hypot(pos.x - b.x, pos.y - b.y) < 20) return { kind: 'ball' };
+  for (let i = state.players.length - 1; i >= 0; i--) {
+    const p = state.players[i];
+    if (Math.hypot(pos.x - p.x, pos.y - p.y) < R + 6) return { kind: 'player', p };
+  }
+  return null;
+}
+
+let lastTap = { t: 0, p: null };
+cv.addEventListener('pointerdown', e => {
+  const pos = evPos(e);
+  const h = hit(pos);
+  if (state.tool === 'move' || h) {          // mover siempre gana sobre un jugador
+    if (!h) return;
+    if (h.kind === 'player') {
+      const now = Date.now();                // doble tap = sacar de la cancha
+      if (lastTap.p === h.p && now - lastTap.t < 350) {
+        state.players = state.players.filter(q => q !== h.p);
+        lastTap = { t: 0, p: null }; renderBenches(); render(); return;
+      }
+      lastTap = { t: now, p: h.p };
+      state.drag = h.p;
+    } else state.drag = state.ball;
+    cv.setPointerCapture(e.pointerId);
+    return;
+  }
+  state.drawing = { type: state.tool === 'arrow' ? 'arrow' : state.tool, color: state.color, pts: [pos] };
+  cv.setPointerCapture(e.pointerId);
+});
+cv.addEventListener('pointermove', e => {
+  const pos = evPos(e);
+  if (state.drag) {
+    state.drag.x = Math.max(10, Math.min(W - 10, pos.x));
+    state.drag.y = Math.max(10, Math.min(H - 10, pos.y));
+    render();
+  } else if (state.drawing) {
+    if (state.drawing.type === 'pen') state.drawing.pts.push(pos);
+    else state.drawing.pts[1] = pos;
+    render();
+  }
+});
+cv.addEventListener('pointerup', () => {
+  if (state.drawing && state.drawing.pts.length > 1) {
+    const a = state.drawing.pts[0], b = state.drawing.pts[state.drawing.pts.length - 1];
+    if (Math.hypot(b.x - a.x, b.y - a.y) > 12) state.shapes.push(state.drawing);
+  }
+  state.drag = null; state.drawing = null; render();
+});
+
+// ---------- toolbar ----------
+document.querySelectorAll('[data-tool]').forEach(b => b.onclick = () => {
+  document.querySelectorAll('[data-tool]').forEach(x => x.classList.remove('on'));
+  b.classList.add('on'); state.tool = b.dataset.tool;
+  cv.style.cursor = state.tool === 'move' ? 'grab' : 'crosshair';
+});
+document.querySelectorAll('.swatch').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.swatch').forEach(x => x.classList.remove('on'));
+  b.classList.add('on'); state.color = b.dataset.color;
+});
+document.getElementById('btn-undo').onclick = () => { state.shapes.pop(); render(); };
+document.getElementById('btn-clear').onclick = () => { state.shapes = []; render(); };
+document.getElementById('btn-reset').onclick = () => {
+  state.players = []; state.shapes = []; state.ball = { x: W/2, y: H/2 };
+  renderBenches(); render();
+};
+document.getElementById('btn-png').onclick = () => {
+  const a = document.createElement('a');
+  a.download = 'pizarra-tribunapp.png';
+  a.href = cv.toDataURL('image/png');
+  a.click();
+};
+
+// ---------- equipos / bancos ----------
+const SLUGS = Object.keys(CLUBES_CONFIG).sort(
+  (a, b) => CLUBES_CONFIG[a].nombreCorto.localeCompare(CLUBES_CONFIG[b].nombreCorto));
+
+for (const [id, key] of [['sel-a', 'A'], ['sel-b', 'B']]) {
+  const sel = document.getElementById(id);
+  for (const s of SLUGS) {
+    const o = document.createElement('option');
+    o.value = s; o.textContent = CLUBES_CONFIG[s].nombreCorto;
+    sel.appendChild(o);
+  }
+  sel.value = state.teams[key];
+  sel.onchange = () => setTeam(key, sel.value);
+}
+
+async function setTeam(key, slug) {
+  state.teams[key] = slug;
+  state.players = state.players.filter(p => p.team !== key);
+  try {
+    const r = await fetch(`data/planteles/${slug}.json`);
+    state.squads[key] = await r.json();
+  } catch (e) { state.squads[key] = []; }
+  renderBenches(); render();
+}
+
+function renderBenches() {
+  for (const key of ['A', 'B']) {
+    const box = document.getElementById('chips-' + key.toLowerCase());
+    box.innerHTML = '';
+    const slug = state.teams[key];
+    const kit = (typeof clubKit === 'function') ? clubKit(slug) : { colors: ['#39445c'] };
+    for (const j of state.squads[key]) {
+      const used = state.players.some(p => p.team === key && p.name === j.name);
+      const d = document.createElement('div');
+      d.className = 'pchip' + (used ? ' used' : '');
+      const n = document.createElement('span');
+      n.className = 'n'; n.textContent = j.num || '·';
+      n.style.background = (typeof kitBackground === 'function') ? kitBackground(kit, 22) : '#39445c';
+      d.appendChild(n);
+      d.appendChild(document.createTextNode(j.name));
+      d.onclick = () => addPlayer(key, slug, j);
+      box.appendChild(d);
+    }
+  }
+}
+
+function addPlayer(key, slug, j) {
+  // lugar libre: columna según equipo, fila donde no moleste
+  const baseX = key === 'A' ? W * 0.25 : W * 0.75;
+  let x = baseX, y = H / 2, tries = 0;
+  while (state.players.some(p => Math.hypot(p.x - x, p.y - y) < R * 2.4) && tries < 40) {
+    const a = tries * 2.4; const rr = 40 + tries * 14;
+    x = baseX + Math.cos(a) * rr; y = H/2 + Math.sin(a) * rr; tries++;
+  }
+  state.players.push({ team: key, slug, num: j.num || '', name: j.name, x, y });
+  renderBenches(); render();
+}
+
+// ---------- cargar XI reales de un partido ----------
+async function loadIndex() {
+  try {
+    const r = await fetch('data/partidos/index.json');
+    const idx = (await r.json()).filter(e => e.competicion && !e.competicion.toLowerCase().includes('mundial'));
+    idx.sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
+    const sel = document.getElementById('sel-match');
+    for (const e of idx.slice(0, 60)) {
+      const o = document.createElement('option');
+      o.value = e.id;
+      o.textContent = `${e.fecha} · ${e.local_nombre || e.local} ${e.goles_local}-${e.goles_visitante} ${e.visitante_nombre || e.visitante}`;
+      sel.appendChild(o);
+    }
+    sel.onchange = () => sel.value && loadMatch(sel.value);
+  } catch (e) { /* sin index: la pizarra sigue sirviendo a mano */ }
+}
+
+async function loadMatch(id) {
+  const r = await fetch(`data/partidos/${id}.json`);
+  const d = await r.json();
+  const home = d.partido.local, away = d.partido.visitante;
+  document.getElementById('sel-a').value = home;
+  document.getElementById('sel-b').value = away;
+  await setTeam('A', home); await setTeam('B', away);
+  state.players = [];
+  for (const [key, slug, mirror] of [['A', home, false], ['B', away, true]]) {
+    const js = (d.jugadores && d.jugadores[slug]) || [];
+    const xi = js.filter(j => j.pos).slice(0, 11);
+    const resto = js.filter(j => !j.pos && (j.tipo === 'titular' || j.min >= 45)).slice(0, 11 - xi.length);
+    for (const j of xi) {
+      // pos de FotMob: cancha apaisada, arquero a la IZQUIERDA, x/y en %
+      let px = 6 + (j.pos.x / 100) * 42;          // 0..100 → mitad izquierda (6..48)
+      let py = M + (j.pos.y / 100) * (H - 2 * M);
+      if (mirror) { px = 100 - px; py = H - py + 0; }
+      state.players.push({ team: key, slug, num: numDe(j, key), name: j.nombre,
+                           x: px / 100 * W, y: py });
+    }
+    // los que no traen pos van en columna sobre su mitad
+    resto.forEach((j, i) => state.players.push({
+      team: key, slug, num: numDe(j, key), name: j.nombre,
+      x: (mirror ? W * 0.62 : W * 0.38), y: M + 60 + i * 70 }));
+  }
+  renderBenches(); render();
+}
+
+function numDe(j, key) {
+  if (j.num) return String(j.num);
+  const en = state.squads[key].find(p => norm(p.name) === norm(j.nombre));
+  return en ? String(en.num || '') : '';
+}
+function norm(s) {
+  return (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
+
+// ---------- init ----------
+(async function init() {
+  await Promise.all([
+    document.fonts.load("22px 'Bebas Neue'"),
+    document.fonts.load("600 17px 'Barlow Condensed'"),
+  ]).catch(() => {});
+  await setTeam('A', state.teams.A);
+  await setTeam('B', state.teams.B);
+  loadIndex();
+  fit();
+})();
+</script>
+</body>
+</html>
