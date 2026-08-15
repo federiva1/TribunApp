@@ -24,6 +24,8 @@ select, button {
 select { max-width:230px; }
 button:hover { background:#243152; border-color:rgba(255,255,255,.35); }
 button.on { background:#38bdf8; color:#06121f; border-color:#38bdf8; font-weight:600; }
+button.rec { background:#c62828; border-color:#ff5a5a; font-weight:600; animation:pulse 1.2s infinite; }
+@keyframes pulse { 0%,100% { box-shadow:0 0 0 0 rgba(255,90,90,.5); } 50% { box-shadow:0 0 0 7px rgba(255,90,90,0); } }
 button.danger { border-color:rgba(255,90,90,.5); }
 .bar { display:flex; align-items:center; gap:8px; padding:8px 16px; flex-wrap:wrap; }
 .bar .sep { width:1px; height:22px; background:rgba(255,255,255,.15); margin:0 4px; }
@@ -53,6 +55,11 @@ button.danger { border-color:rgba(255,90,90,.5); }
   <h1>TRIBUN<span>APP</span> · PIZARRA TÁCTICA</h1>
   <select id="sel-match"><option value="">Cargar XI de un partido…</option></select>
   <button id="btn-png">Descargar PNG</button>
+  <button id="btn-rec">● Grabar video</button>
+  <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:#8b93a7;cursor:pointer">
+    <input type="checkbox" id="chk-mic" checked> con micrófono
+  </label>
+  <span id="rec-info" style="font-size:13px;color:#8b93a7"></span>
 </header>
 
 <div class="bar">
@@ -329,6 +336,74 @@ document.getElementById('btn-png').onclick = () => {
   a.href = cv.toDataURL('image/png');
   a.click();
 };
+
+// ---------- grabación de video (canvas + micrófono) ----------
+// canvas.captureStream solo emite cuadros cuando el canvas se repinta, así que
+// durante la grabación corre un loop de rAF que repinta siempre (30 fps reales).
+const rec = { mr: null, chunks: [], mic: null, raf: 0, t0: 0, timer: 0 };
+const btnRec = document.getElementById('btn-rec');
+const recInfo = document.getElementById('rec-info');
+
+function recMime() {
+  for (const m of ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus',
+                   'video/webm', 'video/mp4']) {
+    if (window.MediaRecorder && MediaRecorder.isTypeSupported(m)) return m;
+  }
+  return '';
+}
+
+async function startRec() {
+  const mime = recMime();
+  if (!mime) { recInfo.textContent = 'Este navegador no soporta grabación'; return; }
+  const stream = cv.captureStream(30);
+  if (document.getElementById('chk-mic').checked) {
+    try {
+      rec.mic = await navigator.mediaDevices.getUserMedia({ audio: true });
+      for (const t of rec.mic.getAudioTracks()) stream.addTrack(t);
+      recInfo.textContent = '';
+    } catch (e) {
+      recInfo.textContent = 'Sin micrófono (grabando solo video)';
+      rec.mic = null;
+    }
+  }
+  rec.chunks = [];
+  rec.mr = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 6_000_000 });
+  rec.mr.ondataavailable = e => e.data.size && rec.chunks.push(e.data);
+  rec.mr.onstop = saveRec;
+  rec.mr.start(500);
+  rec.t0 = Date.now();
+  const loop = () => { render(); rec.raf = requestAnimationFrame(loop); };
+  rec.raf = requestAnimationFrame(loop);
+  rec.timer = setInterval(() => {
+    const s = Math.floor((Date.now() - rec.t0) / 1000);
+    btnRec.textContent = `■ Detener (${Math.floor(s/60)}:${String(s%60).padStart(2,'0')})`;
+  }, 500);
+  btnRec.textContent = '■ Detener (0:00)';
+  btnRec.classList.add('rec');
+}
+
+function stopRec() {
+  if (rec.mr && rec.mr.state !== 'inactive') rec.mr.stop();
+  cancelAnimationFrame(rec.raf);
+  clearInterval(rec.timer);
+  if (rec.mic) { rec.mic.getTracks().forEach(t => t.stop()); rec.mic = null; }
+  btnRec.textContent = '● Grabar video';
+  btnRec.classList.remove('rec');
+}
+
+function saveRec() {
+  const type = rec.mr.mimeType || 'video/webm';
+  const blob = new Blob(rec.chunks, { type });
+  const a = document.createElement('a');
+  a.download = 'pizarra-tribunapp.' + (type.includes('mp4') ? 'mp4' : 'webm');
+  a.href = URL.createObjectURL(blob);
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 30_000);
+  recInfo.textContent = `Video listo (${(blob.size / 1048576).toFixed(1)} MB)`;
+  rec.mr = null;
+}
+
+btnRec.onclick = () => (rec.mr ? stopRec() : startRec());
 
 // ---------- equipos / bancos ----------
 const SLUGS = Object.keys(CLUBES_CONFIG).sort(
