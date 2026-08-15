@@ -67,12 +67,14 @@ def hashtag(slug, nombre_api=''):
 
 
 # ── candidatos: partidos nuestros cerca del kickoff ──────────────────────────
-def _cargar_partidos():
+def _cargar_partidos(incluir_terminados=False):
+    """Partidos nuestros (liga + copas) con su kickoff. Los terminados se saltean
+    salvo que los pida quien llama (la placa de FT justamente los necesita)."""
     out = []
     liga = json.loads((FIXDIR / 'liga.json').read_text(encoding='utf-8'))
     for p in liga:
         st = p.get('status') or {}
-        if st.get('finished') or not st.get('utcTime'):
+        if not st.get('utcTime') or (st.get('finished') and not incluir_terminados):
             continue
         out.append({
             'api_id': str(p['api_id']), 'utc': st['utcTime'], 'comp': 'liga',
@@ -85,7 +87,8 @@ def _cargar_partidos():
         copas = {}
     for key in ('libertadores', 'sudamericana'):
         for p in ((copas.get(key) or {}).get('partidos')) or []:
-            if p.get('short') in ('FT', 'AET', 'PEN') or not p.get('utcTime'):
+            if not p.get('utcTime') or (p.get('short') in ('FT', 'AET', 'PEN')
+                                        and not incluir_terminados):
                 continue
             out.append({
                 'api_id': str(p['api_id']), 'utc': p['utcTime'], 'comp': key,
