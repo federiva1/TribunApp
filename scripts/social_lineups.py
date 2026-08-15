@@ -1,9 +1,9 @@
 """Tweet automático de formaciones confirmadas (liga + copas).
 
-Flujo (workflow lineups-social.yml, cron cada 10 min):
-  1. --check: ¿hay algún partido nuestro con kickoff entre -15 y +25 min y sin
-     postear? Solo lee data/fixtures (sin API, sin dependencias). Si no hay,
-     el workflow corta ahí sin instalar Playwright ni gastar llamadas.
+Flujo (workflow lineups-social.yml, cron cada 5 min):
+  1. --check: ¿hay algún partido nuestro que arranca dentro de los próximos 32
+     min y sin postear? Solo lee data/fixtures (sin API, sin dependencias). Si
+     no hay, el workflow corta ahí sin instalar Playwright ni gastar llamadas.
   2. Sin --check: pide las alineaciones a api-sports (fixtures/lineups). Si los
      dos equipos tienen XI confirmado, genera una imagen por equipo (cancha
      vertical con kit chips + nombre, estilo TribunApp) y tuitea.
@@ -12,9 +12,11 @@ Flujo (workflow lineups-social.yml, cron cada 10 min):
      y marca el partido como posteado (dry) para no duplicar.
 
 Estado en data/social/lineups_posted.json (commiteado): {api_id: {...}}.
-La ventana [-25, +15] alrededor del kickoff hace que el tiro típico del cron
-caiga ~20 min antes del partido; si la API todavía no confirmó, reintenta en
-las corridas siguientes hasta 15 min después del kickoff.
+La ventana va de 32 min antes del kickoff hasta el kickoff: con el cron cada 5
+min hay ~6 intentos (30, 25, 20, 15, 10 y 5 min antes). El primero que encuentra
+los dos XI confirmados postea y deja el partido marcado, así los intentos que
+siguen lo saltean. Después del kickoff ya no se intenta: la gracia es que la
+gente vea las formaciones ANTES de que empiece.
 
 Test manual / sandbox:
   python scripts/social_lineups.py --test-fixture 12345 --test-lineups f.json
@@ -38,8 +40,8 @@ SOCIAL = ROOT / 'data' / 'social'
 PREVIEW = SOCIAL / 'preview'
 STATE = SOCIAL / 'lineups_posted.json'
 
-VENTANA_ANTES = 25   # min antes del kickoff en que empezamos a intentar
-VENTANA_DESPUES = 15  # min después del kickoff en que dejamos de intentar
+VENTANA_ANTES = 32   # min antes del kickoff en que empezamos a intentar
+VENTANA_DESPUES = 0  # cortamos en el kickoff: después ya no sirve postearlas
 
 sys.path.insert(0, str(ROOT / 'scripts'))
 from clubes_map import CLUBES  # noqa: E402
