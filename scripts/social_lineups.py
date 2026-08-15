@@ -141,10 +141,15 @@ def _apellido(nombre):
 
 
 # ── layout: grid api-sports → posiciones en cancha vertical ──────────────────
+# Ancho que ocupa una línea según cuántos jugadores tenga: una dupla de volantes
+# centrales va junta en el medio (34-66) y una línea de 4 se abre hasta los laterales.
+ANCHO_LINEA = {1: 0, 2: 32, 3: 56, 4: 76, 5: 84}
+
+
 def posiciones(startxi):
-    """grid "fila:col" (fila 1 = arquero, crece hacia el ataque; col 1 = derecha
-    del arquero). Cancha vertical con el arquero ABAJO, como las placas del app.
-    Sin grid (raro) → todos al medio en filas de a 4."""
+    """grid "fila:col" (fila 1 = arquero, crece hacia el ataque; col 1 = IZQUIERDA
+    mirando la cancha con el arquero abajo, que es como se dibuja la placa: el
+    lateral izquierdo queda a la izquierda). Sin grid (raro) → filas de a 4."""
     filas = {}
     sueltos = []
     for j in startxi:
@@ -158,9 +163,11 @@ def posiciones(startxi):
     for i, f in enumerate(nf):
         cols = sorted(filas[f], key=lambda t: t[0])
         y = 90 if f == 1 else 72 - (i - 1) * (58 / max(1, len(nf) - 2))
+        n = len(cols)
+        ancho = ANCHO_LINEA.get(n, 84)
         for k, (_, pl) in enumerate(cols):
-            x = 50 if len(cols) == 1 else 12 + k * (76 / (len(cols) - 1))
-            out.append((100 - x, y, pl))   # espejo: col 1 de api-sports = derecha
+            x = 50 if n == 1 else (50 - ancho / 2) + k * (ancho / (n - 1))
+            out.append((x, y, pl))
     for k, pl in enumerate(sueltos):
         out.append((15 + (k % 4) * 23, 50 - (k // 4) * 14, pl))
     return out
