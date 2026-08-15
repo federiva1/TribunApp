@@ -48,6 +48,10 @@ button.danger { border-color:rgba(255,90,90,.5); }
             font-family:'Bebas Neue'; font-size:12px; color:#fff;
             text-shadow:0 0 2px #000, 0 0 2px #000; border:1.5px solid rgba(255,255,255,.8); }
 .hint { padding:0 16px 18px; font-size:13px; color:#5d6479; }
+.fchip { min-width:30px; height:30px; border-radius:8px; padding:0 6px;
+         font-family:'Bebas Neue'; font-size:15px; }
+.fchip.on { background:#38bdf8; color:#06121f; border-color:#38bdf8; }
+button:disabled { opacity:.4; cursor:default; }
 </style>
 </head>
 <body>
@@ -79,6 +83,20 @@ button.danger { border-color:rgba(255,90,90,.5); }
   <button id="btn-undo">Deshacer dibujo</button>
   <button id="btn-clear" class="danger">Borrar dibujos</button>
   <button id="btn-reset" class="danger">Vaciar cancha</button>
+</div>
+
+<div class="bar">
+  <span class="lbl">ANIMACIÓN</span>
+  <button id="btn-frame">＋ Guardar foto</button>
+  <span id="frames" style="display:flex;gap:5px;"></span>
+  <button id="btn-play" disabled>▶ Reproducir</button>
+  <select id="sel-speed">
+    <option value="2200">Lenta</option>
+    <option value="1400" selected>Normal</option>
+    <option value="800">Rápida</option>
+  </select>
+  <button id="btn-frames-clear" class="danger">Borrar fotos</button>
+  <span class="lbl" id="anim-hint">Guardá una foto por cada momento de la jugada y reproducila (se puede grabar mientras).</span>
 </div>
 
 <div id="wrap"><canvas id="board"></canvas></div>
@@ -336,6 +354,90 @@ document.getElementById('btn-png').onclick = () => {
   a.href = cv.toDataURL('image/png');
   a.click();
 };
+
+// ---------- animación por fotogramas ----------
+// Cada "foto" es un snapshot de posiciones (jugadores + pelota). Reproducir
+// interpola entre fotos consecutivas con easing; los jugadores se matchean por
+// equipo+nombre, así uno que entra en la foto 3 aparece quieto hasta ahí.
+const anim = { frames: [], playing: false, raf: 0, sel: -1 };
+const btnPlay = document.getElementById('btn-play');
+const framesBox = document.getElementById('frames');
+
+function snapshot() {
+  return { players: state.players.map(p => ({ ...p })), ball: { ...state.ball } };
+}
+function applyFrame(f) {
+  state.players = f.players.map(p => ({ ...p }));
+  state.ball = { ...f.ball };
+  renderBenches(); render();
+}
+function renderFrames() {
+  framesBox.innerHTML = '';
+  anim.frames.forEach((f, i) => {
+    const b = document.createElement('button');
+    b.className = 'fchip' + (i === anim.sel ? ' on' : '');
+    b.textContent = i + 1;
+    b.title = 'Click: ver/editar esta foto · doble click: borrarla';
+    b.onclick = () => { anim.sel = i; applyFrame(f); renderFrames(); };
+    b.ondblclick = () => { anim.frames.splice(i, 1); anim.sel = -1; renderFrames(); };
+    framesBox.appendChild(b);
+  });
+  btnPlay.disabled = anim.frames.length < 2;
+}
+document.getElementById('btn-frame').onclick = () => {
+  anim.frames.push(snapshot());
+  anim.sel = anim.frames.length - 1;
+  renderFrames();
+};
+document.getElementById('btn-frames-clear').onclick = () => {
+  anim.frames = []; anim.sel = -1; renderFrames();
+};
+
+const ease = t => (t < .5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2) / 2);
+const pkey = p => p.team + '|' + p.name;
+
+function playAnim() {
+  if (anim.frames.length < 2) return;
+  anim.playing = true; anim.sel = -1;
+  renderFrames();
+  btnPlay.textContent = '■ Parar';
+  applyFrame(anim.frames[0]);
+  const dur = Number(document.getElementById('sel-speed').value);
+  const HOLD = 350;
+  let seg = 0, t0 = performance.now() + HOLD;
+
+  const step = now => {
+    if (!anim.playing) return;
+    const a = anim.frames[seg], b = anim.frames[seg + 1];
+    const t = Math.max(0, Math.min(1, (now - t0) / dur));
+    const e = ease(t);
+    const from = new Map(a.players.map(p => [pkey(p), p]));
+    const to = new Map(b.players.map(p => [pkey(p), p]));
+    state.players = [...new Set([...from.keys(), ...to.keys()])].map(k => {
+      const pa = from.get(k), pb = to.get(k);
+      const src = pa || pb, dst = pb || pa;
+      return { ...dst, x: src.x + (dst.x - src.x) * e, y: src.y + (dst.y - src.y) * e };
+    });
+    state.ball = { x: a.ball.x + (b.ball.x - a.ball.x) * e,
+                   y: a.ball.y + (b.ball.y - a.ball.y) * e };
+    render();
+    if (t >= 1) {
+      seg++;
+      if (seg >= anim.frames.length - 1) { stopAnim(true); return; }
+      t0 = now + HOLD;
+    }
+    anim.raf = requestAnimationFrame(step);
+  };
+  anim.raf = requestAnimationFrame(step);
+}
+function stopAnim(finished) {
+  anim.playing = false;
+  cancelAnimationFrame(anim.raf);
+  if (finished) applyFrame(anim.frames[anim.frames.length - 1]);
+  btnPlay.textContent = '▶ Reproducir';
+  renderFrames();
+}
+btnPlay.onclick = () => (anim.playing ? stopAnim(false) : playAnim());
 
 // ---------- grabación de video (canvas + micrófono) ----------
 // canvas.captureStream solo emite cuadros cuando el canvas se repinta, así que
