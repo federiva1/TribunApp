@@ -245,6 +245,15 @@ Workflows programados que quedan en `.github/workflows/`:
 - **`update-fixtures.yml`** — corre `fetch_fixtures.py` para mantener los JSON de fixtures al día.
 - **`liga-match-stats.yml`** — cada 3 h, genera `data/partidos/{id}.json` de los FT de la liga.
 - **`update-mundial-fixtures.yml`** / **`mundial-match-stats.yml`** — el pipeline del Mundial.
+- **`lineups-social.yml`** — cada 10 min con guard barato (`social_lineups.py --check`, solo lee
+  `data/fixtures`): si hay un partido nuestro (liga o copa) con kickoff entre −25 y +15 min sin
+  postear, pide `fixtures/lineups` a api-sports y, con los dos XI confirmados, genera una imagen
+  por equipo (cancha vertical estilo placa: kit chips de `js/kits.js`, nombres del plantel por
+  dorsal, escudo + formación) y tuitea desde @tribunAppFutbol. Sin los secrets
+  `X_API_KEY`/`X_API_SECRET`/`X_ACCESS_TOKEN`/`X_ACCESS_TOKEN_SECRET` corre en **modo ensayo**:
+  commitea las imágenes en `data/social/preview/` sin tuitear. Estado anti-duplicados en
+  `data/social/lineups_posted.json`. Test manual:
+  `python scripts/social_lineups.py --test-fixture {api_id} --test-lineups stub.json`.
 
 Usan `stefanzweifel/git-auto-commit-action@v5` con `[skip ci]` en el mensaje para evitar loops, y
 requieren el secret `API_SPORTS_KEY` en GitHub → Settings → Secrets.
