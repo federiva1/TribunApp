@@ -254,6 +254,12 @@ Workflows programados que quedan en `.github/workflows/`:
   commitea las imágenes en `data/social/preview/` sin tuitear. Estado anti-duplicados en
   `data/social/lineups_posted.json`. Test manual:
   `python scripts/social_lineups.py --test-fixture {api_id} --test-lineups stub.json`.
+- **`resultado-social.yml`** — cada 10 min, mismo esquema (`social_resultado.py --check`): si un
+  partido nuestro arrancó hace entre 100 y 300 min y no se posteó, pregunta el estado al endpoint
+  **por-id** de api-sports (marca FT al toque, a diferencia de los agregados) y, si terminó, genera
+  la placa "FINAL DEL PARTIDO" (logo, escudos + marcador, goleadores con minuto y escudo, estadio)
+  y tuitea invitando a puntuar. Estado en `data/social/resultados_posted.json`. Test manual sin API:
+  `python scripts/social_resultado.py --test-partido sanlorenzo-union` (lee `data/partidos/{id}.json`).
 
 Usan `stefanzweifel/git-auto-commit-action@v5` con `[skip ci]` en el mensaje para evitar loops, y
 requieren el secret `API_SPORTS_KEY` en GitHub → Settings → Secrets.
