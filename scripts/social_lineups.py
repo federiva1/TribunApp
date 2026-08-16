@@ -192,7 +192,11 @@ def _html_equipo(slug, nombre_api, formacion, startxi):
     jugadores = []
     for x, y, pl in posiciones(startxi):
         num = str(pl.get('number') or '')
-        nombre = plantel.get(num) or pl.get('name') or ''
+        # el plantel completa nombres abreviados ("L. Paredes"); si la fuente ya
+        # trae el nombre completo se respeta — con dorsales duplicados (dos #30)
+        # el lookup por número puede devolver al jugador equivocado.
+        api_nom = pl.get('name') or ''
+        nombre = (plantel.get(num) or api_nom) if '.' in api_nom else (api_nom or plantel.get(num) or '')
         jugadores.append({'x': x, 'y': y, 'num': num, 'nombre': _apellido(nombre)})
     ff = ''.join(
         "@font-face{font-family:'%s';font-weight:%s;src:url(%s) format('woff2');}"
