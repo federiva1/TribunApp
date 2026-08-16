@@ -114,7 +114,12 @@ def payload_desde_json(pid):
     for lado in ('local', 'visitante'):
         slug = p[lado]
         for g in (p.get('goles_detalle') or {}).get(lado) or []:
-            goles.append({'min': g.get('min'), 'jugador': g.get('jugador') or '', 'slug': slug})
+            nombre = g.get('jugador') or ''
+            if g.get('en_contra'):
+                nombre += ' (e/c)'
+            elif g.get('penal'):
+                nombre += ' (p)'
+            goles.append({'min': g.get('min'), 'jugador': nombre, 'slug': slug})
     goles.sort(key=lambda g: g['min'] if g['min'] is not None else 999)
     return {
         'api_id': str(p.get('api_id') or ''),
