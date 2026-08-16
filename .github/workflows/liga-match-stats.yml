@@ -10,6 +10,11 @@ on:
   schedule:
     - cron: '0 */3 * * *'   # cada 3 h: capta partidos a medida que terminan (+ delay FotMob)
   workflow_dispatch:
+    inputs:
+      force_date:
+        description: 'Reprocesar con --force los partidos de liga de esta fecha (YYYY-MM-DD)'
+        required: false
+        default: ''
 
 jobs:
   scrape:
@@ -25,7 +30,12 @@ jobs:
       - name: Scrapear partidos FT de la Liga
         env:
           API_SPORTS_KEY: ${{ secrets.API_SPORTS_KEY }}
-        run: python scripts/fetch_liga_partidos.py --torneo clausura
+        run: |
+          if [ -n "${{ inputs.force_date }}" ]; then
+            python scripts/fetch_liga_partidos.py --torneo clausura --force --date "${{ inputs.force_date }}"
+          else
+            python scripts/fetch_liga_partidos.py --torneo clausura
+          fi
 
       - name: Scrapear partidos FT de copa (clubes vivos, octavos en adelante)
         env:
