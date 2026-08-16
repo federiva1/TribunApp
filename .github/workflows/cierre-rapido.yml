@@ -1,0 +1,49 @@
+name: Cierre rápido de partidos
+
+# Cada 10 min con guard barato: solo sigue si hay un partido nuestro que
+# arrancó hace entre 100 y 210 min y todavía no figura terminado. Pregunta el
+# estado al endpoint POR-ID de api-sports (marca FT al instante, a diferencia
+# del agregado que arma liga.json y se atrasa) y, si terminó:
+#   - parchea liga.json (finished/FT + resultado)
+#   - genera data/partidos/{id}.json (jugadores) → abre el gate de puntajes
+#   - recalcula la tabla xG
+# Así los puntajes abren ~10-20 min después del final en vez de esperar los
+# crons de 2-3 h de update-fixtures / liga-match-stats.
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: cierre-rapido
+  cancel-in-progress: false
+
+jobs:
+  cierre:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # Guard sin dependencias: lee data/fixtures y corta si no hay candidatos.
+      - name: ¿Hay partidos por cerrar?
+        id: check
+        run: python scripts/cierre_rapido.py --check
+
+      - name: Cerrar partidos terminados
+        if: steps.check.outputs.hay == '1'
+        env:
+          API_SPORTS_KEY: ${{ secrets.API_SPORTS_KEY }}
+        run: python scripts/cierre_rapido.py
+
+      - name: Commit
+        if: steps.check.outputs.hay == '1'
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'chore: cierre rápido de partidos [skip ci]'
+          file_pattern: 'data/fixtures/*.json data/partidos/*.json data/tabla_xg.json'
