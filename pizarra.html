@@ -33,7 +33,7 @@ button.danger { border-color:rgba(255,90,90,.5); }
 .swatch { width:26px; height:26px; border-radius:50%; border:2px solid rgba(255,255,255,.25); padding:0; }
 .swatch.on { border-color:#fff; transform:scale(1.15); }
 #wrap { padding:0 16px 8px; }
-#board { display:block; width:100%; border-radius:12px; touch-action:none; cursor:crosshair; }
+#board { display:block; margin:0 auto; border-radius:12px; touch-action:none; cursor:crosshair; }
 .benches { display:flex; gap:14px; padding:4px 16px 16px; flex-wrap:wrap; }
 .bench { flex:1; min-width:320px; background:#10182e; border:1px solid rgba(255,255,255,.08);
          border-radius:12px; padding:10px; }
@@ -139,11 +139,18 @@ const state = {
 
 // ---------- canvas / DPR ----------
 function fit() {
-  const w = cv.parentElement.clientWidth;
-  const h = w * H / W;
+  // La cancha entra tanto por ancho como por alto: en una ventana ancha pero
+  // baja (compu de escritorio) el límite real es cuánto queda arriba/abajo
+  // del canvas (header + toolbar + banco), no el ancho del contenedor.
+  const maxW = cv.parentElement.clientWidth;
+  const top = cv.getBoundingClientRect().top || 0;
+  const maxH = Math.max(260, window.innerHeight - top - 16);
+  let w = maxW, h = w * H / W;
+  if (h > maxH) { h = maxH; w = h * W / H; }
   const dpr = window.devicePixelRatio || 1;
+  cv.style.width = w + 'px';
   cv.style.height = h + 'px';
-  cv.width = W * dpr / (W / w) ; // ancho visible * dpr
+  cv.width = w * dpr;
   cv.height = h * dpr;
   ctx.setTransform(cv.width / W, 0, 0, cv.height / H, 0, 0);
   render();
