@@ -139,6 +139,12 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 /* ---- Responsivo: en pantallas chicas ocultamos columnas secundarias ---- */
 @media (max-width: 480px) {
   .col-hide-sm { display: none !important; }
+  /* Además de ocultar la celda hay que sacar su PISTA de la grilla: si no, el
+     track de 78px de "Forma" queda reservado, aparece un hueco antes de Pts y
+     el nombre del equipo se aplasta (se veía "V.", "I..") */
+  .tabla-row.layout-actual {
+    grid-template-columns: 26px 26px 1fr 26px 24px 24px 24px 34px 34px !important;
+  }
 }
 </style>
 </head>
@@ -391,7 +397,7 @@ function renderTable() {
 
   // Encabezado
   const head = document.createElement('div');
-  head.className = 'tabla-row tabla-head';
+  head.className = 'tabla-row tabla-head layout-' + kind;
   head.style.gridTemplateColumns = layout.cols;
   if (kind === 'promedios') {
     head.innerHTML =
@@ -424,7 +430,7 @@ function renderTable() {
 
     // Las filas NO linkean a club.html: al scrollear la tabla se disparaban toques accidentales.
     const row = document.createElement('div');
-    row.className = 'tabla-row tabla-body-row' + (rank <= 3 ? ' top3' : '') + (relegPos ? ' releg' : '');
+    row.className = 'tabla-row tabla-body-row layout-' + kind + (rank <= 3 ? ' top3' : '') + (relegPos ? ' releg' : '');
     row.style.gridTemplateColumns = layout.cols;
 
     const rankEl = document.createElement('div'); rankEl.className = 'col-rank'; rankEl.textContent = rank;

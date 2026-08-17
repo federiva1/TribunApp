@@ -244,6 +244,13 @@ su propio gate por archivo (`data/estado_mundial.json`, ver más abajo).
 Workflows programados que quedan en `.github/workflows/`:
 - **`update-fixtures.yml`** — corre `fetch_fixtures.py` para mantener los JSON de fixtures al día.
 - **`liga-match-stats.yml`** — cada 3 h, genera `data/partidos/{id}.json` de los FT de la liga.
+- **`cierre-rapido.yml`** — cada 10 min con guard barato (`cierre_rapido.py --check`): si un
+  partido nuestro arrancó hace 100-210 min y sigue sin `finished`, pregunta al endpoint
+  **por-id** (marca FT al toque), parchea `liga.json` (resultado + FT, orientación validada
+  por id de equipo), genera `data/partidos/{id}.json` vía `fetch_liga_partidos --date` y
+  recalcula la tabla xG. El gate de puntajes abre ~10-20 min después del final, sin esperar
+  los crons de 2-3 h. Si el agregado todavía no lista el partido, la corrida siguiente lo
+  reintenta.
 - **`update-mundial-fixtures.yml`** / **`mundial-match-stats.yml`** — el pipeline del Mundial.
 - **`lineups-social.yml`** — cada 5 min con guard barato (`social_lineups.py --check`, solo lee
   `data/fixtures`): si hay un partido nuestro (liga o copa) que arranca dentro de los próximos
