@@ -305,7 +305,7 @@ const subs = { sr: null, on: false, texto: '', cues: [], t0: 0, ini: 0, hide: 0 
 function drawSubs() {
   if (!subs.texto) return;
   ctx.save();
-  ctx.font = "600 34px 'Barlow Condensed', system-ui, sans-serif";
+  ctx.font = "600 32px 'Barlow Condensed', system-ui, sans-serif";
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   const max = W - 300;
@@ -318,15 +318,17 @@ function drawSubs() {
   }
   if (cur) lineas.push(cur);
   while (lineas.length > 2) lineas.shift();      // sólo las 2 últimas líneas
-  const lh = 44, alto = lineas.length * lh + 22;
+  // Bien pegados al borde de abajo: así la caja cae casi entera sobre el margen
+  // de la cancha y no tapa a los jugadores.
+  const lh = 40, alto = lineas.length * lh + 18;
   const ancho = Math.max(...lineas.map(l => ctx.measureText(l).width)) + 56;
-  const x0 = (W - ancho) / 2, y0 = H - 30 - alto;
+  const x0 = (W - ancho) / 2, y0 = H - 8 - alto;
   ctx.fillStyle = 'rgba(6,10,20,.76)';
   ctx.beginPath();
   ctx.roundRect(x0, y0, ancho, alto, 14);
   ctx.fill();
   ctx.fillStyle = '#fff';
-  lineas.forEach((l, i) => ctx.fillText(l, W / 2, y0 + 11 + lh * (i + 0.5)));
+  lineas.forEach((l, i) => ctx.fillText(l, W / 2, y0 + 9 + lh * (i + 0.5)));
   ctx.restore();
 }
 
