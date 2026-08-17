@@ -63,6 +63,11 @@ button:disabled { opacity:.4; cursor:default; }
   <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:#8b93a7;cursor:pointer">
     <input type="checkbox" id="chk-mic" checked> con micrófono
   </label>
+  <button id="btn-mic-test" style="font-size:12px;padding:4px 9px">Probar mic</button>
+  <span id="mic-meter" title="nivel del micrófono"
+        style="width:70px;height:7px;border-radius:4px;background:#1c2434;overflow:hidden;display:inline-block">
+    <i id="mic-level" style="display:block;height:100%;width:0;background:#38bdf8;transition:width .06s linear"></i>
+  </span>
   <span id="rec-info" style="font-size:13px;color:#8b93a7"></span>
 </header>
 
@@ -449,34 +454,107 @@ btnPlay.onclick = () => (anim.playing ? stopAnim(false) : playAnim());
 // ---------- grabación de video (canvas + micrófono) ----------
 // canvas.captureStream solo emite cuadros cuando el canvas se repinta, así que
 // durante la grabación corre un loop de rAF que repinta siempre (30 fps reales).
-const rec = { mr: null, chunks: [], mic: null, raf: 0, t0: 0, timer: 0 };
+const rec = { mr: null, chunks: [], mic: null, ac: null, raf: 0, t0: 0, timer: 0, meter: 0 };
 const btnRec = document.getElementById('btn-rec');
 const recInfo = document.getElementById('rec-info');
+const micLevel = document.getElementById('mic-level');
 
+// El mime tiene que traer códec de audio SÍ o SÍ: con 'video/webm' pelado algunos
+// Chrome arman el archivo sin pista de audio aunque el stream la tenga.
 function recMime() {
   for (const m of ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus',
-                   'video/webm', 'video/mp4']) {
+                   'video/webm;codecs=opus', 'video/webm', 'video/mp4']) {
     if (window.MediaRecorder && MediaRecorder.isTypeSupported(m)) return m;
   }
   return '';
 }
 
+// El mic no se enchufa directo al stream del canvas: pasa por un AudioContext y
+// sale por un MediaStreamDestination. Así (a) la pista queda "viva" aunque el
+// canvas re-capture, (b) podemos medir el nivel para mostrar que entra audio y
+// (c) el resume() esquiva el autoplay policy, que deja el contexto suspendido y
+// graba silencio.
+async function openMic() {
+  const mic = await navigator.mediaDevices.getUserMedia({
+    audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: true }
+  });
+  const AC = window.AudioContext || window.webkitAudioContext;
+  const ac = new AC();
+  if (ac.state === 'suspended') await ac.resume();
+  const src = ac.createMediaStreamSource(mic);
+  const an = ac.createAnalyser();
+  an.fftSize = 512;
+  const dest = ac.createMediaStreamDestination();
+  src.connect(an);
+  src.connect(dest);
+  return { mic, ac, an, track: dest.stream.getAudioTracks()[0] };
+}
+
+function startMeter(an) {
+  const buf = new Uint8Array(an.fftSize);
+  const tick = () => {
+    an.getByteTimeDomainData(buf);
+    let peak = 0;
+    for (const v of buf) peak = Math.max(peak, Math.abs(v - 128));
+    micLevel.style.width = Math.min(100, (peak / 40) * 100) + '%';
+    rec.meter = requestAnimationFrame(tick);
+  };
+  rec.meter = requestAnimationFrame(tick);
+}
+
+function stopMeter() {
+  cancelAnimationFrame(rec.meter);
+  rec.meter = 0;
+  micLevel.style.width = '0';
+}
+
+// Prueba rápida: 6 s de medidor sin grabar, para confirmar que el navegador dio
+// permiso y que el micro elegido es el que uno cree.
+document.getElementById('btn-mic-test').onclick = async () => {
+  if (rec.meter) { stopMeter(); return; }
+  try {
+    const m = await openMic();
+    recInfo.textContent = 'Hablá: la barra se tiene que mover';
+    startMeter(m.an);
+    setTimeout(() => {
+      stopMeter();
+      m.mic.getTracks().forEach(t => t.stop());
+      m.ac.close();
+      recInfo.textContent = '';
+    }, 6000);
+  } catch (e) {
+    recInfo.textContent = e.name === 'NotAllowedError'
+      ? 'Permiso de micrófono denegado (candado de la barra → Micrófono → Permitir)'
+      : 'No se pudo abrir el micrófono: ' + e.name;
+  }
+};
+
 async function startRec() {
   const mime = recMime();
   if (!mime) { recInfo.textContent = 'Este navegador no soporta grabación'; return; }
-  const stream = cv.captureStream(30);
+  const canvasStream = cv.captureStream(30);
+  const tracks = canvasStream.getVideoTracks();
   if (document.getElementById('chk-mic').checked) {
     try {
-      rec.mic = await navigator.mediaDevices.getUserMedia({ audio: true });
-      for (const t of rec.mic.getAudioTracks()) stream.addTrack(t);
-      recInfo.textContent = '';
+      const m = await openMic();
+      rec.mic = m.mic;
+      rec.ac = m.ac;
+      tracks.push(m.track);
+      startMeter(m.an);
+      recInfo.textContent = 'Grabando con micrófono';
     } catch (e) {
-      recInfo.textContent = 'Sin micrófono (grabando solo video)';
+      recInfo.textContent = e.name === 'NotAllowedError'
+        ? 'Micrófono denegado — grabando solo video'
+        : 'Sin micrófono (' + e.name + ') — grabando solo video';
       rec.mic = null;
     }
   }
+  const stream = new MediaStream(tracks);
+  rec.hadAudio = stream.getAudioTracks().length > 0;
   rec.chunks = [];
-  rec.mr = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 6_000_000 });
+  rec.mr = new MediaRecorder(stream, {
+    mimeType: mime, videoBitsPerSecond: 6_000_000, audioBitsPerSecond: 128_000
+  });
   rec.mr.ondataavailable = e => e.data.size && rec.chunks.push(e.data);
   rec.mr.onstop = saveRec;
   rec.mr.start(500);
@@ -495,7 +573,9 @@ function stopRec() {
   if (rec.mr && rec.mr.state !== 'inactive') rec.mr.stop();
   cancelAnimationFrame(rec.raf);
   clearInterval(rec.timer);
+  stopMeter();
   if (rec.mic) { rec.mic.getTracks().forEach(t => t.stop()); rec.mic = null; }
+  if (rec.ac) { rec.ac.close(); rec.ac = null; }
   btnRec.textContent = '● Grabar video';
   btnRec.classList.remove('rec');
 }
@@ -508,7 +588,8 @@ function saveRec() {
   a.href = URL.createObjectURL(blob);
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 30_000);
-  recInfo.textContent = `Video listo (${(blob.size / 1048576).toFixed(1)} MB)`;
+  recInfo.textContent = `Video listo (${(blob.size / 1048576).toFixed(1)} MB)`
+    + (rec.hadAudio ? ' con audio' : ' sin audio');
   rec.mr = null;
 }
 
