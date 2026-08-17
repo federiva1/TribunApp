@@ -63,6 +63,9 @@ button:disabled { opacity:.4; cursor:default; }
   <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:#8b93a7;cursor:pointer">
     <input type="checkbox" id="chk-mic" checked> con micrófono
   </label>
+  <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:#8b93a7;cursor:pointer">
+    <input type="checkbox" id="chk-subs"> subtítulos
+  </label>
   <button id="btn-mic-test" style="font-size:12px;padding:4px 9px">Probar mic</button>
   <span id="mic-meter" title="nivel del micrófono"
         style="width:70px;height:7px;border-radius:4px;background:#1c2434;overflow:hidden;display:inline-block">
@@ -290,6 +293,108 @@ function render() {
   if (state.drawing) drawShape(state.drawing);
   for (const p of state.players) drawPlayer(p);
   drawBall();
+  drawSubs();
+}
+
+// ---------- subtítulos en vivo ----------
+// Se dibujan SOBRE el canvas, así quedan quemados en el video (X/Instagram no
+// leen archivos de subtítulos aparte). Igual se baja un .srt por si querés
+// editarlos después.
+const subs = { sr: null, on: false, texto: '', cues: [], t0: 0, ini: 0, hide: 0 };
+
+function drawSubs() {
+  if (!subs.texto) return;
+  ctx.save();
+  ctx.font = "600 34px 'Barlow Condensed', system-ui, sans-serif";
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const max = W - 300;
+  const lineas = [];
+  let cur = '';
+  for (const p of subs.texto.split(/\s+/)) {
+    const t = cur ? cur + ' ' + p : p;
+    if (cur && ctx.measureText(t).width > max) { lineas.push(cur); cur = p; }
+    else cur = t;
+  }
+  if (cur) lineas.push(cur);
+  while (lineas.length > 2) lineas.shift();      // sólo las 2 últimas líneas
+  const lh = 44, alto = lineas.length * lh + 22;
+  const ancho = Math.max(...lineas.map(l => ctx.measureText(l).width)) + 56;
+  const x0 = (W - ancho) / 2, y0 = H - 30 - alto;
+  ctx.fillStyle = 'rgba(6,10,20,.76)';
+  ctx.beginPath();
+  ctx.roundRect(x0, y0, ancho, alto, 14);
+  ctx.fill();
+  ctx.fillStyle = '#fff';
+  lineas.forEach((l, i) => ctx.fillText(l, W / 2, y0 + 11 + lh * (i + 0.5)));
+  ctx.restore();
+}
+
+function startSubs() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { recInfo.textContent += ' · sin subtítulos (navegador no soportado)'; return; }
+  const sr = new SR();
+  sr.lang = 'es-AR';
+  sr.continuous = true;
+  sr.interimResults = true;
+  sr.onresult = e => {
+    let parcial = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const r = e.results[i];
+      const txt = r[0].transcript.trim();
+      if (!txt) continue;
+      if (r.isFinal) {
+        const fin = (Date.now() - subs.t0) / 1000;
+        subs.cues.push({ a: subs.ini, b: fin, txt });
+        subs.ini = fin;
+        subs.texto = txt;
+        clearTimeout(subs.hide);
+        subs.hide = setTimeout(() => { subs.texto = ''; render(); }, 2500);
+      } else parcial += txt + ' ';
+    }
+    if (parcial) { clearTimeout(subs.hide); subs.texto = parcial.trim(); }
+    render();
+  };
+  // Chrome corta el reconocimiento solo cada tanto: mientras grabemos, reengancha.
+  sr.onend = () => { if (subs.on) { try { sr.start(); } catch (err) {} } };
+  sr.onerror = ev => {
+    if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') {
+      subs.on = false;
+      recInfo.textContent = 'Subtítulos sin permiso de micrófono';
+    }
+  };
+  subs.on = true;
+  subs.texto = '';
+  subs.cues = [];
+  subs.ini = 0;
+  subs.t0 = Date.now();
+  subs.sr = sr;
+  try { sr.start(); } catch (err) {}
+}
+
+function stopSubs() {
+  subs.on = false;
+  if (subs.sr) { try { subs.sr.stop(); } catch (err) {} subs.sr = null; }
+  clearTimeout(subs.hide);
+  subs.texto = '';
+}
+
+function _srtT(s) {
+  const p = (n, l = 2) => String(Math.floor(n)).padStart(l, '0');
+  return `${p(s / 3600)}:${p(s % 3600 / 60)}:${p(s % 60)},${p((s % 1) * 1000, 3)}`;
+}
+
+function bajarSrt() {
+  if (!subs.cues.length) return false;
+  const txt = subs.cues
+    .map((c, i) => `${i + 1}\n${_srtT(c.a)} --> ${_srtT(c.b)}\n${c.txt}\n`)
+    .join('\n');
+  const a = document.createElement('a');
+  a.download = 'pizarra-tribunapp.srt';
+  a.href = URL.createObjectURL(new Blob([txt], { type: 'text/plain;charset=utf-8' }));
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 30_000);
+  return true;
 }
 
 // ---------- interacción ----------
@@ -549,6 +654,7 @@ async function startRec() {
       rec.mic = null;
     }
   }
+  if (document.getElementById('chk-subs').checked) startSubs();
   const stream = new MediaStream(tracks);
   rec.hadAudio = stream.getAudioTracks().length > 0;
   rec.chunks = [];
@@ -574,6 +680,8 @@ function stopRec() {
   cancelAnimationFrame(rec.raf);
   clearInterval(rec.timer);
   stopMeter();
+  stopSubs();
+  render();
   if (rec.mic) { rec.mic.getTracks().forEach(t => t.stop()); rec.mic = null; }
   if (rec.ac) { rec.ac.close(); rec.ac = null; }
   btnRec.textContent = '● Grabar video';
@@ -588,8 +696,10 @@ function saveRec() {
   a.href = URL.createObjectURL(blob);
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 30_000);
+  const conSrt = bajarSrt();
   recInfo.textContent = `Video listo (${(blob.size / 1048576).toFixed(1)} MB)`
-    + (rec.hadAudio ? ' con audio' : ' sin audio');
+    + (rec.hadAudio ? ' con audio' : ' sin audio')
+    + (conSrt ? ` · ${subs.cues.length} subtítulos (.srt)` : '');
   rec.mr = null;
 }
 
