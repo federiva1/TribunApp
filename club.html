@@ -1132,6 +1132,8 @@ let SCORES_RIVAL = '', SCORES_MATCH_DATE = '', SCORES_FT = null, scoresMatchId =
 // Datos del partido para las placas para compartir (escudo del rival, marcador, nº de fecha).
 let RIVAL_SLUG = '', FECHA_NUM = null;
 let SCORES_RIVAL_SLUG = '', SCORES_MARCADOR = '', SCORES_FECHA_NUM = null;
+// Copa: el rival es extranjero y no tiene slug — la placa usa esta ruta local.
+let RIVAL_ESCUDO = '', SCORES_RIVAL_ESCUDO = '';
 // Formación real del partido (ej. '5-3-2'), de data/partidos/{id}.json.
 let SCORES_FORMACION = '';
 
@@ -1329,12 +1331,25 @@ const SHARE_W = 800, SHARE_H = 450, SHARE_GOLD = '#f2c200';
 // `let` a propósito, para poder barrer valores al comparar renders.
 let SHARE_CHIP = 46;
 
-function _shEscudo(slug, size) {
+function _shEscudoSrc(src, size) {
   const i = document.createElement('img');
-  i.src = `escudos/${slug}.png`;
+  i.src = src;
   i.style.cssText = `width:${size}px;height:${size}px;object-fit:contain;`;
   i.onerror = () => { i.style.opacity = '0.15'; };
   return i;
+}
+
+function _shEscudo(slug, size) {
+  return _shEscudoSrc(`escudos/${slug}.png`, size);
+}
+
+// Los rivales de copa son extranjeros: no tienen escudos/{slug}.png. El escudo
+// vive en escudos/copa/{id}.png (lo baja scripts/fetch_escudos_copa.py con el ID
+// de api-sports que ya trae la URL del logo en copas.json). Tiene que ser local:
+// html2canvas no puede exportar un canvas con imágenes de otro dominio.
+function _escudoCopaLocal(logoUrl) {
+  const m = /\/(\d+)\.png/.exec(logoUrl || '');
+  return m ? `escudos/copa/${m[1]}.png` : '';
 }
 
 // El kit se dibuja en un <canvas>, no con el background CSS de kits.js: html2canvas
@@ -1572,7 +1587,10 @@ function _shCanchaLineas(pitch) {
   });
 }
 
-// o = { titulo, marcador, rivalSlug, sub, pie, jugadores:[{num,name,val,sx,sy}], sup, dt }
+// o = { titulo, marcador, rivalSlug, rivalEscudo, sub, pie,
+//       jugadores:[{num,name,val,sx,sy}], sup, dt }
+// rivalEscudo es el fallback de copa: ruta local al escudo del rival extranjero,
+// que no tiene slug (ver _escudoCopaLocal).
 function _shCard(o) {
   const c = document.createElement('div');
   c.style.cssText = `position:fixed;left:-99999px;top:0;width:${SHARE_W}px;height:${SHARE_H}px;box-sizing:border-box;`
@@ -1592,6 +1610,7 @@ function _shCard(o) {
   sc.style.cssText = "font-family:'Bebas Neue',sans-serif;font-size:" + (o.marcador.length > 3 ? '26px' : '40px') + ";letter-spacing:2px;line-height:1;";
   sc.textContent = o.marcador; row.appendChild(sc);
   if (o.rivalSlug) row.appendChild(_shEscudo(o.rivalSlug, 44));
+  else if (o.rivalEscudo) row.appendChild(_shEscudoSrc(o.rivalEscudo, 44));
   top.appendChild(row);
   const t = document.createElement('div');
   t.style.cssText = "font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:1px;line-height:1.05;margin-top:18px;";
@@ -1950,6 +1969,7 @@ function _shOptsFormacion() {
     titulo: 'MI FORMACIÓN',
     marcador: conRival ? 'VS' : '',
     rivalSlug: conRival ? RIVAL_SLUG : '',
+    rivalEscudo: conRival ? RIVAL_ESCUDO : '',
     sub: (FECHA_NUM ? `Fecha ${FECHA_NUM} · ` : '') + (conRival ? `vs ${RIVAL}` : 'Próxima fecha'),
     pie: `${CLUB.nombreCorto} · armá la tuya`,
     jugadores: onPitch.map(j => _shRotar({ num: j.num, name: j.name, xPct: j.xPct, yPct: j.yPct })),
@@ -2417,6 +2437,7 @@ function _shOptsPuntajes(valorPorId, fmt, titulo, pie) {
     titulo,
     marcador: SCORES_MARCADOR || 'VS',
     rivalSlug: SCORES_RIVAL_SLUG,
+    rivalEscudo: SCORES_RIVAL_ESCUDO,
     sub: (SCORES_FECHA_NUM ? `Fecha ${SCORES_FECHA_NUM} · ` : '') + `vs ${SCORES_RIVAL}`,
     pie,
     jugadores: _shPosiciones(titulares),
@@ -3701,6 +3722,7 @@ async function resolveMatchContext() {
       const match = fixtures.find(f => f.goles === null);
       if (match) { RIVAL = match.rival; FECHA_ACTUAL = match.fecha; }
     }
+    await resolveCopaRivalEscudo();
     await resolveCopaScoresContext();
     applyGating();
     refreshMatchTags();
@@ -3715,6 +3737,22 @@ resolveMatchContext();
 // archivo sale del agregado de api-sports, que tarda en marcar FT (mismo lag que
 // obligó a reparar liga.json). Alcanza con kickoff pasado + que exista el archivo
 // del partido en data/partidos — que viene del endpoint por-id, sin lag.
+// Escudo del rival del PRÓXIMO partido de copa (el de la placa "Mi formación").
+// El fixture por-club solo guarda el nombre del rival, así que el logo sale de
+// copas.json: primer partido del club con kickoff futuro.
+async function resolveCopaRivalEscudo() {
+  const copas = await fetch(`data/fixtures/copas.json?t=${Date.now()}`).then(r => r.ok ? r.json() : null).catch(() => null);
+  const partidos = ((copas || {})[COPA] || {}).partidos || [];
+  const prox = partidos
+    .filter(p => (p.home.slug === CLUB_SLUG || p.away.slug === CLUB_SLUG) &&
+                 p.utcTime && new Date(p.utcTime) > new Date())
+    .sort((a, b) => (a.utcTime || '').localeCompare(b.utcTime || ''))[0];
+  if (!prox) return;
+  const opp = prox.home.slug === CLUB_SLUG ? prox.away : prox.home;
+  RIVAL_SLUG = opp.slug || '';
+  RIVAL_ESCUDO = opp.slug ? '' : _escudoCopaLocal(opp.logo);
+}
+
 async function resolveCopaScoresContext() {
   const copas = await fetch(`data/fixtures/copas.json?t=${Date.now()}`).then(r => r.ok ? r.json() : null).catch(() => null);
   const partidos = ((copas || {})[COPA] || {}).partidos || [];
@@ -3727,7 +3765,8 @@ async function resolveCopaScoresContext() {
   const isHome = u.home.slug === CLUB_SLUG;
   const opp = isHome ? u.away : u.home;
   SCORES_RIVAL = opp.name;
-  SCORES_RIVAL_SLUG = opp.slug || '';   // rival extranjero: sin slug → la placa omite su escudo
+  SCORES_RIVAL_SLUG = opp.slug || '';   // rival extranjero: sin slug → escudo local por ID
+  SCORES_RIVAL_ESCUDO = opp.slug ? '' : _escudoCopaLocal(opp.logo);
   SCORES_FECHA_NUM = null;              // copa: sin número de fecha (el sub de la placa lo omite)
   SCORES_MARCADOR = (u.home_score != null && u.away_score != null)
     ? (isHome ? `${u.home_score}-${u.away_score}` : `${u.away_score}-${u.home_score}`) : '';
