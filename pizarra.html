@@ -561,7 +561,7 @@ btnPlay.onclick = () => (anim.playing ? stopAnim(false) : playAnim());
 // ---------- grabación de video (canvas + micrófono) ----------
 // canvas.captureStream solo emite cuadros cuando el canvas se repinta, así que
 // durante la grabación corre un loop de rAF que repinta siempre (30 fps reales).
-const rec = { mr: null, chunks: [], mic: null, ac: null, raf: 0, t0: 0, timer: 0, meter: 0 };
+const rec = { mr: null, chunks: [], mic: null, ac: null, raf: 0, t0: 0, timer: 0, meter: 0, micError: '' };
 const btnRec = document.getElementById('btn-rec');
 const recInfo = document.getElementById('rec-info');
 const micLevel = document.getElementById('mic-level');
@@ -615,6 +615,36 @@ function stopMeter() {
   micLevel.style.width = '0';
 }
 
+// Diagnóstico de por qué no hay micrófono. La causa más traicionera no es el
+// permiso del usuario sino el header Permissions-Policy del deploy: si el HTML
+// llega con microphone=(), el navegador lo bloquea para todo el sitio y el
+// candado ni siquiera ofrece la opción (pasó con el vercel.json heredado de
+// producción — acá va microphone=(self)).
+function _micBloqueadoPorPolicy() {
+  try {
+    const pp = document.permissionsPolicy || document.featurePolicy;
+    if (pp && pp.allowsFeature) return !pp.allowsFeature('microphone');
+  } catch (e) {}
+  return false;
+}
+
+function _micErrorMsg(e) {
+  if (_micBloqueadoPorPolicy())
+    return 'el deploy bloquea el micrófono (header Permissions-Policy): hay que actualizar la rama y redeployar';
+  const n = (e && e.name) || '';
+  if (n === 'NotAllowedError' || n === 'SecurityError')
+    return 'micrófono bloqueado para este sitio: candado de la barra → Micrófono → Permitir, y recargá';
+  if (n === 'NotFoundError' || n === 'OverconstrainedError')
+    return 'Chrome no encuentra micrófono (¿está conectado y habilitado en el sistema?)';
+  if (n === 'NotReadableError')
+    return 'el micrófono está en uso por otro programa';
+  return 'no se pudo abrir el micrófono (' + (n || e) + ')';
+}
+
+// Si el deploy vino con el mic bloqueado, avisar apenas carga, antes de que el
+// usuario grabe 5 minutos al aire.
+if (_micBloqueadoPorPolicy()) recInfo.textContent = '⚠ ' + _micErrorMsg();
+
 // Prueba rápida: 6 s de medidor sin grabar, para confirmar que el navegador dio
 // permiso y que el micro elegido es el que uno cree.
 document.getElementById('btn-mic-test').onclick = async () => {
@@ -630,9 +660,7 @@ document.getElementById('btn-mic-test').onclick = async () => {
       recInfo.textContent = '';
     }, 6000);
   } catch (e) {
-    recInfo.textContent = e.name === 'NotAllowedError'
-      ? 'Permiso de micrófono denegado (candado de la barra → Micrófono → Permitir)'
-      : 'No se pudo abrir el micrófono: ' + e.name;
+    recInfo.textContent = '⚠ ' + _micErrorMsg(e);
   }
 };
 
@@ -646,13 +674,13 @@ async function startRec() {
       const m = await openMic();
       rec.mic = m.mic;
       rec.ac = m.ac;
+      rec.micError = '';
       tracks.push(m.track);
       startMeter(m.an);
       recInfo.textContent = 'Grabando con micrófono';
     } catch (e) {
-      recInfo.textContent = e.name === 'NotAllowedError'
-        ? 'Micrófono denegado — grabando solo video'
-        : 'Sin micrófono (' + e.name + ') — grabando solo video';
+      rec.micError = _micErrorMsg(e);
+      recInfo.textContent = '⚠ Grabando SOLO video — ' + rec.micError;
       rec.mic = null;
     }
   }
@@ -700,7 +728,7 @@ function saveRec() {
   setTimeout(() => URL.revokeObjectURL(a.href), 30_000);
   const conSrt = bajarSrt();
   recInfo.textContent = `Video listo (${(blob.size / 1048576).toFixed(1)} MB)`
-    + (rec.hadAudio ? ' con audio' : ' sin audio')
+    + (rec.hadAudio ? ' con audio' : ' SIN AUDIO' + (rec.micError ? ' — ' + rec.micError : ''))
     + (conSrt ? ` · ${subs.cues.length} subtítulos (.srt)` : '');
   rec.mr = null;
 }
