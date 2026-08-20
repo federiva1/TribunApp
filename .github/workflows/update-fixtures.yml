@@ -34,6 +34,11 @@ jobs:
           python scripts/fetch_liga_fixtures.py
           python scripts/fetch_copas_fixtures.py
 
+      # Escudos de los rivales extranjeros de copa: solo baja los que faltan, así
+      # al avanzar de ronda entran solos (las placas los necesitan locales).
+      - name: Escudos de rivales de copa
+        run: python scripts/fetch_escudos_copa.py
+
       # Tabla xG ("moral"): solo lee data/partidos, sin llamadas a APIs.
       - name: Tabla xG
         run: python scripts/build_tabla_xg.py
@@ -42,4 +47,4 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: 'chore: actualizar fixtures [skip ci]'
-          file_pattern: 'data/fixtures/*.json data/partidos/*.json data/tabla_xg.json'
+          file_pattern: 'data/fixtures/*.json data/partidos/*.json data/tabla_xg.json escudos/copa/*.png'

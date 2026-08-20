@@ -93,7 +93,7 @@
       {
         "api_id": "1547770",
         "utcTime": "2026-08-18T22:00:00+00:00",
-        "short": "NS",
+        "short": "PEN",
         "home": {
           "name": "Independ. Rivadavia",
           "slug": "independienterivadavia",
@@ -106,16 +106,16 @@
           "logo": "https://media.api-sports.io/football/teams/124.png",
           "arg": false
         },
-        "home_score": null,
-        "away_score": null,
-        "home_pen": null,
-        "away_pen": null,
-        "winner": null
+        "home_score": 1,
+        "away_score": 1,
+        "home_pen": 4,
+        "away_pen": 5,
+        "winner": "away"
       },
       {
         "api_id": "1547772",
         "utcTime": "2026-08-19T00:30:00+00:00",
-        "short": "NS",
+        "short": "FT",
         "home": {
           "name": "U. Catolica",
           "slug": null,
@@ -128,16 +128,16 @@
           "logo": null,
           "arg": true
         },
-        "home_score": null,
-        "away_score": null,
+        "home_score": 0,
+        "away_score": 3,
         "home_pen": null,
         "away_pen": null,
-        "winner": null
+        "winner": "away"
       },
       {
         "api_id": "1547766",
         "utcTime": "2026-08-19T22:00:00+00:00",
-        "short": "NS",
+        "short": "PEN",
         "home": {
           "name": "Coquimbo Unido",
           "slug": null,
@@ -150,11 +150,11 @@
           "logo": null,
           "arg": true
         },
-        "home_score": null,
-        "away_score": null,
-        "home_pen": null,
-        "away_pen": null,
-        "winner": null
+        "home_score": 0,
+        "away_score": 0,
+        "home_pen": 6,
+        "away_pen": 7,
+        "winner": "away"
       },
       {
         "api_id": "1547767",
@@ -181,12 +181,12 @@
     ]
   },
   "sudamericana": {
-    "ronda": "Octavos de Final",
+    "ronda": "Cuartos de Final",
     "partidos": [
       {
-        "api_id": "1607648",
-        "utcTime": "2026-08-11T22:00:00+00:00",
-        "short": "FT",
+        "api_id": "1629830",
+        "utcTime": "2026-09-09T20:00:00+00:00",
+        "short": "NS",
         "home": {
           "name": "Boca Juniors",
           "slug": "bocajuniors",
@@ -194,47 +194,25 @@
           "arg": true
         },
         "away": {
-          "name": "Deportivo Recoleta",
+          "name": "Sao Paulo",
           "slug": null,
-          "logo": "https://media.api-sports.io/football/teams/10476.png",
+          "logo": "https://media.api-sports.io/football/teams/126.png",
           "arg": false
         },
-        "home_score": 3,
-        "away_score": 1,
+        "home_score": null,
+        "away_score": null,
         "home_pen": null,
         "away_pen": null,
-        "winner": "home"
+        "winner": null
       },
       {
-        "api_id": "1606077",
-        "utcTime": "2026-08-12T22:00:00+00:00",
-        "short": "FT",
-        "home": {
-          "name": "Tigre",
-          "slug": "tigre",
-          "logo": null,
-          "arg": true
-        },
-        "away": {
-          "name": "Atletico Torque",
-          "slug": null,
-          "logo": "https://media.api-sports.io/football/teams/2365.png",
-          "arg": false
-        },
-        "home_score": 0,
-        "away_score": 1,
-        "home_pen": null,
-        "away_pen": null,
-        "winner": "away"
-      },
-      {
-        "api_id": "1607651",
-        "utcTime": "2026-08-18T22:00:00+00:00",
+        "api_id": "1629831",
+        "utcTime": "2026-09-16T20:00:00+00:00",
         "short": "NS",
         "home": {
-          "name": "Deportivo Recoleta",
+          "name": "Sao Paulo",
           "slug": null,
-          "logo": "https://media.api-sports.io/football/teams/10476.png",
+          "logo": "https://media.api-sports.io/football/teams/126.png",
           "arg": false
         },
         "away": {
@@ -242,72 +220,6 @@
           "slug": "bocajuniors",
           "logo": null,
           "arg": true
-        },
-        "home_score": null,
-        "away_score": null,
-        "home_pen": null,
-        "away_pen": null,
-        "winner": null
-      },
-      {
-        "api_id": "1607650",
-        "utcTime": "2026-08-20T00:30:00+00:00",
-        "short": "NS",
-        "home": {
-          "name": "Santa Fe",
-          "slug": null,
-          "logo": "https://media.api-sports.io/football/teams/1139.png",
-          "arg": false
-        },
-        "away": {
-          "name": "River Plate",
-          "slug": "riverplate",
-          "logo": null,
-          "arg": true
-        },
-        "home_score": null,
-        "away_score": null,
-        "home_pen": null,
-        "away_pen": null,
-        "winner": null
-      },
-      {
-        "api_id": "1606079",
-        "utcTime": "2026-08-20T00:30:00+00:00",
-        "short": "NS",
-        "home": {
-          "name": "Atletico Torque",
-          "slug": null,
-          "logo": "https://media.api-sports.io/football/teams/2365.png",
-          "arg": false
-        },
-        "away": {
-          "name": "Tigre",
-          "slug": "tigre",
-          "logo": null,
-          "arg": true
-        },
-        "home_score": null,
-        "away_score": null,
-        "home_pen": null,
-        "away_pen": null,
-        "winner": null
-      },
-      {
-        "api_id": "1607652",
-        "utcTime": "2026-08-27T00:30:00+00:00",
-        "short": "NS",
-        "home": {
-          "name": "River Plate",
-          "slug": "riverplate",
-          "logo": null,
-          "arg": true
-        },
-        "away": {
-          "name": "Santa Fe",
-          "slug": null,
-          "logo": "https://media.api-sports.io/football/teams/1139.png",
-          "arg": false
         },
         "home_score": null,
         "away_score": null,

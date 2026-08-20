@@ -139,7 +139,33 @@ def _plantel_por_num(slug):
         d = json.loads((ROOT / 'data' / 'planteles' / f'{slug}.json').read_text(encoding='utf-8'))
     except (FileNotFoundError, TypeError):
         return {}
-    return {str(p.get('num') or ''): p['name'] for p in d if str(p.get('num') or '').strip()}
+    # Un dorsal puede estar repetido de verdad (Talleres tiene dos 13 y dos 32),
+    # así que guardamos TODOS los candidatos y después desambiguamos por apellido.
+    por_num = {}
+    for p in d:
+        num = str(p.get('num') or '').strip()
+        if num:
+            por_num.setdefault(num, []).append(p['name'])
+    return por_num
+
+
+def _sin_tildes(s):
+    return unicodedata.normalize('NFD', s or '').encode('ascii', 'ignore').decode().upper()
+
+
+def _elegir(cands, api_nom):
+    """De los jugadores que comparten dorsal, el que coincide con el nombre que
+    manda api-sports ("V. Fascendini" → Valentín Fascendini, no Juan Sforza)."""
+    if not cands:
+        return ''
+    if len(cands) == 1:
+        return cands[0]
+    tokens = [t for t in _sin_tildes(api_nom).replace('.', ' ').split() if len(t) > 2]
+    for c in cands:
+        partes = _sin_tildes(c).split()
+        if any(t in partes for t in tokens):
+            return c
+    return cands[0]
 
 
 def _apellido(nombre):
@@ -193,10 +219,11 @@ def _html_equipo(slug, nombre_api, formacion, startxi):
     for x, y, pl in posiciones(startxi):
         num = str(pl.get('number') or '')
         # el plantel completa nombres abreviados ("L. Paredes"); si la fuente ya
-        # trae el nombre completo se respeta — con dorsales duplicados (dos #30)
-        # el lookup por número puede devolver al jugador equivocado.
+        # trae el nombre completo se respeta. Con dorsales duplicados (Talleres
+        # tiene dos #13 y dos #32) el apellido de api-sports elige cuál es.
         api_nom = pl.get('name') or ''
-        nombre = (plantel.get(num) or api_nom) if '.' in api_nom else (api_nom or plantel.get(num) or '')
+        del_plantel = _elegir(plantel.get(num) or [], api_nom)
+        nombre = (del_plantel or api_nom) if '.' in api_nom else (api_nom or del_plantel)
         jugadores.append({'x': x, 'y': y, 'num': num, 'nombre': _apellido(nombre)})
     ff = ''.join(
         "@font-face{font-family:'%s';font-weight:%s;src:url(%s) format('woff2');}"
