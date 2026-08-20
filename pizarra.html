@@ -66,6 +66,12 @@ button:disabled { opacity:.4; cursor:default; }
   <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:#8b93a7;cursor:pointer">
     <input type="checkbox" id="chk-subs"> subtítulos
   </label>
+  <select id="sel-subs-pos" title="dónde van los subtítulos"
+          style="font-size:12px;background:#131a2b;color:#cfd6e4;border:1px solid #2a3550;border-radius:6px;padding:3px 5px">
+    <option value="abajo" selected>abajo</option>
+    <option value="costado">al costado</option>
+    <option value="encima">sobre la cancha</option>
+  </select>
   <button id="btn-mic-test" style="font-size:12px;padding:4px 9px">Probar mic</button>
   <span id="mic-meter" title="nivel del micrófono"
         style="width:70px;height:7px;border-radius:4px;background:#1c2434;overflow:hidden;display:inline-block">
@@ -146,6 +152,19 @@ const state = {
 };
 
 // ---------- canvas / DPR ----------
+// Zona reservada para los subtítulos, FUERA de la cancha (la cancha sigue siendo
+// 0..W × 0..H; el canvas lógico se agranda). Así el texto nunca tapa jugadores
+// y queda igual quemado en el video, que captura el canvas entero.
+const SUB_BAND = 120;    // franja inferior (layout "abajo")
+const SUB_SIDE = 340;    // columna lateral (layout "costado")
+
+function subsLayout() {
+  if (!document.getElementById('chk-subs').checked) return 'off';
+  return document.getElementById('sel-subs-pos').value;
+}
+function LW() { return W + (subsLayout() === 'costado' ? SUB_SIDE : 0); }
+function LH() { return H + (subsLayout() === 'abajo' ? SUB_BAND : 0); }
+
 function fit() {
   // La cancha entra tanto por ancho como por alto: en una ventana ancha pero
   // baja (compu de escritorio) el límite real es cuánto queda arriba/abajo
@@ -153,21 +172,21 @@ function fit() {
   const maxW = cv.parentElement.clientWidth;
   const top = cv.getBoundingClientRect().top || 0;
   const maxH = Math.max(260, window.innerHeight - top - 16);
-  let w = maxW, h = w * H / W;
-  if (h > maxH) { h = maxH; w = h * W / H; }
+  let w = maxW, h = w * LH() / LW();
+  if (h > maxH) { h = maxH; w = h * LW() / LH(); }
   const dpr = window.devicePixelRatio || 1;
   cv.style.width = w + 'px';
   cv.style.height = h + 'px';
   cv.width = w * dpr;
   cv.height = h * dpr;
-  ctx.setTransform(cv.width / W, 0, 0, cv.height / H, 0, 0);
+  ctx.setTransform(cv.width / LW(), 0, 0, cv.height / LH(), 0, 0);
   render();
 }
 window.addEventListener('resize', fit);
 
 function evPos(e) {
   const r = cv.getBoundingClientRect();
-  return { x: (e.clientX - r.left) / r.width * W, y: (e.clientY - r.top) / r.height * H };
+  return { x: (e.clientX - r.left) / r.width * LW(), y: (e.clientY - r.top) / r.height * LH() };
 }
 
 // ---------- cancha ----------
@@ -302,34 +321,84 @@ function render() {
 // editarlos después.
 const subs = { sr: null, on: false, texto: '', cues: [], t0: 0, ini: 0, hide: 0 };
 
-function drawSubs() {
-  if (!subs.texto) return;
-  ctx.save();
-  ctx.font = "600 32px 'Barlow Condensed', system-ui, sans-serif";
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  const max = W - 300;
+function _subsWrap(texto, maxW) {
   const lineas = [];
   let cur = '';
-  for (const p of subs.texto.split(/\s+/)) {
+  for (const p of texto.split(/\s+/)) {
     const t = cur ? cur + ' ' + p : p;
-    if (cur && ctx.measureText(t).width > max) { lineas.push(cur); cur = p; }
+    if (cur && ctx.measureText(t).width > maxW) { lineas.push(cur); cur = p; }
     else cur = t;
   }
   if (cur) lineas.push(cur);
-  while (lineas.length > 2) lineas.shift();      // sólo las 2 últimas líneas
-  // Bien pegados al borde de abajo: así la caja cae casi entera sobre el margen
-  // de la cancha y no tapa a los jugadores.
-  const lh = 40, alto = lineas.length * lh + 18;
-  const ancho = Math.max(...lineas.map(l => ctx.measureText(l).width)) + 56;
-  const x0 = (W - ancho) / 2, y0 = H - 8 - alto;
-  ctx.fillStyle = 'rgba(6,10,20,.76)';
-  ctx.beginPath();
-  ctx.roundRect(x0, y0, ancho, alto, 14);
-  ctx.fill();
-  ctx.fillStyle = '#fff';
-  lineas.forEach((l, i) => ctx.fillText(l, W / 2, y0 + 9 + lh * (i + 0.5)));
+  return lineas;
+}
+
+function drawSubs() {
+  const lay = subsLayout();
+  ctx.save();
+
+  // La zona reservada se pinta SIEMPRE que el layout esté activo (con o sin
+  // texto): es el margen que evita que el video "salte" cuando aparece habla.
+  if (lay === 'abajo') {
+    ctx.fillStyle = '#070b16';
+    ctx.fillRect(0, H, W, SUB_BAND);
+  } else if (lay === 'costado') {
+    ctx.fillStyle = '#070b16';
+    ctx.fillRect(W, 0, SUB_SIDE, H);
+  }
+
+  if (!subs.texto) { ctx.restore(); return; }
+
+  if (lay === 'abajo') {
+    // Franja debajo de la cancha: 2 líneas centradas.
+    ctx.font = "600 34px 'Barlow Condensed', system-ui, sans-serif";
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const lineas = _subsWrap(subs.texto, W - 200);
+    while (lineas.length > 2) lineas.shift();
+    const lh = 44, y0 = H + SUB_BAND / 2 - (lineas.length - 1) * lh / 2;
+    ctx.fillStyle = '#fff';
+    lineas.forEach((l, i) => ctx.fillText(l, W / 2, y0 + i * lh));
+  } else if (lay === 'costado') {
+    // Columna al costado: transcripción con lo último abajo, subiendo.
+    ctx.font = "600 30px 'Barlow Condensed', system-ui, sans-serif";
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+    const pad = 26, maxLineas = Math.floor((H - 2 * pad) / 40);
+    const lineas = _subsWrap(subs.texto, SUB_SIDE - 2 * pad);
+    while (lineas.length > maxLineas) lineas.shift();
+    const lh = 40, yBase = H - pad;
+    ctx.fillStyle = '#fff';
+    lineas.forEach((l, i) =>
+      ctx.fillText(l, W + pad, yBase - (lineas.length - 1 - i) * lh));
+  } else {
+    // Sobre la cancha (comportamiento original): cajita al borde inferior.
+    ctx.font = "600 32px 'Barlow Condensed', system-ui, sans-serif";
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const lineas = _subsWrap(subs.texto, W - 300);
+    while (lineas.length > 2) lineas.shift();
+    const lh = 40, alto = lineas.length * lh + 18;
+    const ancho = Math.max(...lineas.map(l => ctx.measureText(l).width)) + 56;
+    const x0 = (W - ancho) / 2, y0 = H - 8 - alto;
+    ctx.fillStyle = 'rgba(6,10,20,.76)';
+    ctx.beginPath();
+    ctx.roundRect(x0, y0, ancho, alto, 14);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    lineas.forEach((l, i) => ctx.fillText(l, W / 2, y0 + 9 + lh * (i + 0.5)));
+  }
   ctx.restore();
+}
+
+// Prender/apagar subtítulos o cambiar su posición redimensiona el canvas lógico
+// (fit lo recalcula). Durante la grabación quedan bloqueados: cambiar el tamaño
+// del canvas a mitad de captura corta/rompe el stream de video.
+document.getElementById('chk-subs').onchange = fit;
+document.getElementById('sel-subs-pos').onchange = fit;
+function _subsCtrlLock(lock) {
+  document.getElementById('chk-subs').disabled = lock;
+  document.getElementById('sel-subs-pos').disabled = lock;
 }
 
 function startSubs() {
@@ -685,6 +754,7 @@ async function startRec() {
     }
   }
   if (document.getElementById('chk-subs').checked) startSubs();
+  _subsCtrlLock(true);
   const stream = new MediaStream(tracks);
   rec.hadAudio = stream.getAudioTracks().length > 0;
   rec.chunks = [];
@@ -711,6 +781,7 @@ function stopRec() {
   clearInterval(rec.timer);
   stopMeter();
   stopSubs();
+  _subsCtrlLock(false);
   render();
   if (rec.mic) { rec.mic.getTracks().forEach(t => t.stop()); rec.mic = null; }
   if (rec.ac) { rec.ac.close(); rec.ac = null; }
