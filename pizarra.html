@@ -71,6 +71,7 @@ button:disabled { opacity:.4; cursor:default; }
         style="width:70px;height:7px;border-radius:4px;background:#1c2434;overflow:hidden;display:inline-block">
     <i id="mic-level" style="display:block;height:100%;width:0;background:#38bdf8;transition:width .06s linear"></i>
   </span>
+  <button id="btn-subs-edit" style="display:none;font-size:12px;padding:4px 9px;border-color:#38bdf8;color:#38bdf8">Editar subtítulos</button>
   <span id="rec-info" style="font-size:13px;color:#8b93a7"></span>
 </header>
 
@@ -705,6 +706,8 @@ async function startRec() {
   }
   if (document.getElementById('chk-subs').checked) startSubs();
   _subsCtrlLock(true);
+  btnSubsEdit.style.display = 'none';               // la edición es del video anterior
+  document.getElementById('subs-editor')?.remove();
   const stream = new MediaStream(tracks);
   rec.hadAudio = stream.getAudioTracks().length > 0;
   rec.chunks = [];
@@ -748,6 +751,11 @@ function saveRec() {
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 30_000);
   const conSrt = bajarSrt();
+  // Todo lo que hace falta para re-renderizar con subtítulos corregidos: el
+  // video, la geometría con la que se grabó y una copia de los cues.
+  rec.last = { blob, w: cv.width, h: cv.height, lw: LW(), lh: LH(),
+               banda: subsOn(), cues: subs.cues.map(c => ({ ...c })) };
+  btnSubsEdit.style.display = (rec.last.banda && rec.last.cues.length) ? '' : 'none';
   recInfo.textContent = `Video listo (${(blob.size / 1048576).toFixed(1)} MB)`
     + (rec.hadAudio ? ' con audio' : ' SIN AUDIO' + (rec.micError ? ' — ' + rec.micError : ''))
     + (conSrt ? ` · ${subs.cues.length} subtítulos (.srt)` : '');
@@ -755,6 +763,155 @@ function saveRec() {
 }
 
 btnRec.onclick = () => (rec.mr ? stopRec() : startRec());
+
+// ---------- editor de subtítulos post-grabación ----------
+// El reconocimiento a veces agarra mal una palabra y el texto ya quedó quemado
+// en el video. Como los subtítulos viven en una franja de color LISO abajo de la
+// cancha, se puede corregir sin master limpio: se reproduce el video grabado en
+// un canvas oculto, se repinta la franja entera y se dibujan los cues corregidos
+// según su tiempo, re-grabando video+audio. Tarda lo que dura el video.
+const btnSubsEdit = document.getElementById('btn-subs-edit');
+const _fmtMMSS = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+
+btnSubsEdit.onclick = () => {
+  const L = rec.last;
+  if (!L || !L.cues.length) return;
+  document.getElementById('subs-editor')?.remove();
+  const ov = document.createElement('div');
+  ov.id = 'subs-editor';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(4,7,14,.82);z-index:60;'
+    + 'display:flex;align-items:center;justify-content:center;';
+  const p = document.createElement('div');
+  p.style.cssText = 'background:#0d1424;border:1px solid #2a3550;border-radius:12px;'
+    + 'padding:18px 20px;max-width:660px;width:92%;max-height:82vh;display:flex;flex-direction:column;gap:10px;';
+  p.innerHTML = '<div style="font-size:15px;font-weight:600">Editar subtítulos</div>'
+    + '<div style="font-size:12.5px;color:#8b93a7">Corregí lo que el reconocimiento agarró mal '
+    + '(vaciá un renglón para borrarlo) y regenerá el video: la franja de abajo se vuelve a '
+    + 'dibujar con el texto corregido. La regeneración tarda lo que dura el video.</div>';
+  const list = document.createElement('div');
+  list.style.cssText = 'overflow:auto;display:flex;flex-direction:column;gap:6px;padding-right:4px;';
+  for (const c of L.cues) {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:8px;align-items:center;';
+    const t = document.createElement('span');
+    t.textContent = `${_fmtMMSS(c.a)}–${_fmtMMSS(c.b)}`;
+    t.style.cssText = 'font-size:12px;color:#8b93a7;flex:0 0 auto;';
+    const inp = document.createElement('input');
+    inp.value = c.txt;
+    inp.style.cssText = 'flex:1;background:#131a2b;color:#e8edf7;border:1px solid #2a3550;'
+      + 'border-radius:6px;padding:6px 8px;font-size:14px;';
+    inp.oninput = () => { c.txt = inp.value; };
+    row.append(t, inp);
+    list.appendChild(row);
+  }
+  p.appendChild(list);
+  const foot = document.createElement('div');
+  foot.style.cssText = 'display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;';
+  const bSrt = document.createElement('button');
+  bSrt.textContent = 'Bajar .srt corregido';
+  bSrt.onclick = () => {
+    const vivos = L.cues.filter(c => c.txt.trim());
+    const txt = vivos.map((c, i) => `${i + 1}\n${_srtT(c.a)} --> ${_srtT(c.b)}\n${c.txt.trim()}\n`).join('\n');
+    const a = document.createElement('a');
+    a.download = 'pizarra-tribunapp-corregido.srt';
+    a.href = URL.createObjectURL(new Blob([txt], { type: 'text/plain;charset=utf-8' }));
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 30_000);
+  };
+  const bGo = document.createElement('button');
+  bGo.textContent = 'Regenerar video';
+  bGo.style.cssText = 'border-color:#38bdf8;color:#38bdf8;';
+  bGo.onclick = () => regenVideo(bGo);
+  const bX = document.createElement('button');
+  bX.textContent = 'Cerrar';
+  bX.onclick = () => ov.remove();
+  foot.append(bSrt, bGo, bX);
+  p.appendChild(foot);
+  ov.appendChild(p);
+  document.body.appendChild(ov);
+};
+
+async function regenVideo(btn) {
+  const L = rec.last;
+  btn.disabled = true;
+  const video = document.createElement('video');
+  video.src = URL.createObjectURL(L.blob);
+  video.playsInline = true;
+  await new Promise((res, rej) => { video.onloadedmetadata = res; video.onerror = rej; });
+
+  const c2 = document.createElement('canvas');
+  c2.width = L.w;
+  c2.height = L.h;
+  const x2 = c2.getContext('2d');
+
+  // El audio sale del propio video vía MediaElementSource: al no conectarlo a
+  // ac.destination se re-graba sin sonar por los parlantes.
+  const ac = new AudioContext();
+  const asrc = ac.createMediaElementSource(video);
+  const dest = ac.createMediaStreamDestination();
+  asrc.connect(dest);
+  const stream = c2.captureStream(30);
+  for (const t of dest.stream.getAudioTracks()) stream.addTrack(t);
+
+  const chunks = [];
+  const mr = new MediaRecorder(stream, {
+    mimeType: recMime(), videoBitsPerSecond: 6_000_000, audioBitsPerSecond: 128_000,
+  });
+  mr.ondataavailable = e => e.data.size && chunks.push(e.data);
+  const fin = new Promise(res => { mr.onstop = res; });
+
+  let raf = 0;
+  const draw = () => {
+    x2.setTransform(1, 0, 0, 1, 0, 0);
+    x2.drawImage(video, 0, 0, L.w, L.h);
+    x2.setTransform(L.w / L.lw, 0, 0, L.h / L.lh, 0, 0);
+    x2.fillStyle = '#070b16';
+    x2.fillRect(0, H, W, SUB_BAND);
+    const t = video.currentTime;
+    const cue = L.cues.find(c => c.txt.trim() && t >= c.a && t <= c.b + 0.6);
+    if (cue) {
+      x2.font = "600 34px 'Barlow Condensed', system-ui, sans-serif";
+      x2.textAlign = 'center';
+      x2.textBaseline = 'middle';
+      const lineas = [];
+      let cur = '';
+      for (const w of cue.txt.trim().split(/\s+/)) {
+        const s = cur ? cur + ' ' + w : w;
+        if (cur && x2.measureText(s).width > W - 200) { lineas.push(cur); cur = w; }
+        else cur = s;
+      }
+      if (cur) lineas.push(cur);
+      while (lineas.length > 2) lineas.shift();
+      const lh = 44, y0 = H + SUB_BAND / 2 - (lineas.length - 1) * lh / 2;
+      x2.fillStyle = '#fff';
+      lineas.forEach((l, i) => x2.fillText(l, W / 2, y0 + i * lh));
+    }
+    if (!video.ended) raf = requestAnimationFrame(draw);
+  };
+  video.onended = () => {
+    cancelAnimationFrame(raf);
+    setTimeout(() => mr.state !== 'inactive' && mr.stop(), 300);
+  };
+
+  mr.start(500);
+  await video.play();
+  raf = requestAnimationFrame(draw);
+  const timer = setInterval(() => { btn.textContent = `Regenerando… ${_fmtMMSS(video.currentTime)}`; }, 500);
+  await fin;
+  clearInterval(timer);
+  cancelAnimationFrame(raf);
+  ac.close();
+  URL.revokeObjectURL(video.src);
+
+  const blob = new Blob(chunks, { type: mr.mimeType || 'video/webm' });
+  const a = document.createElement('a');
+  a.download = 'pizarra-tribunapp-corregido.' + ((mr.mimeType || '').includes('mp4') ? 'mp4' : 'webm');
+  a.href = URL.createObjectURL(blob);
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 30_000);
+  btn.textContent = `Listo ✓ (${(blob.size / 1048576).toFixed(1)} MB)`;
+  btn.disabled = false;
+}
 
 // ---------- equipos / bancos ----------
 const SLUGS = Object.keys(CLUBES_CONFIG).sort(
