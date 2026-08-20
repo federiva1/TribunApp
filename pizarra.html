@@ -772,10 +772,17 @@ async function loadIndex() {
     const idx = (await r.json()).filter(e => e.competicion && !e.competicion.toLowerCase().includes('mundial'));
     idx.sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
     const sel = document.getElementById('sel-match');
-    for (const e of idx.slice(0, 60)) {
+    // index.json trae los nombres de api-sports, sin tildes ("Lanus", "Velez"):
+    // cuando el equipo es nuestro se prefiere el nombreCorto de clubes.js, que es
+    // el que uno busca en la lista.
+    const lindo = (slug, fallback) =>
+      (typeof CLUBES_CONFIG !== 'undefined' && (CLUBES_CONFIG[slug] || {}).nombreCorto)
+      || fallback || slug;
+    for (const e of idx) {
       const o = document.createElement('option');
       o.value = e.id;
-      o.textContent = `${e.fecha} · ${e.local_nombre || e.local} ${e.goles_local}-${e.goles_visitante} ${e.visitante_nombre || e.visitante}`;
+      o.textContent = `${e.fecha} · ${lindo(e.local, e.local_nombre)} `
+        + `${e.goles_local}-${e.goles_visitante} ${lindo(e.visitante, e.visitante_nombre)}`;
       sel.appendChild(o);
     }
     sel.onchange = () => sel.value && loadMatch(sel.value);
