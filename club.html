@@ -2103,12 +2103,6 @@ function _renderEleccionBars(list, players) {
     const band = document.createElement('div');
     band.style.cssText = 'display:flex;gap:10px;padding:10px 0;'
       + (list.children.length ? 'border-top:1px solid rgba(255,255,255,0.14);' : '');
-    const lbl = document.createElement('div');
-    lbl.style.cssText = 'width:44px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;'
-      + 'font-family:"Bebas Neue",sans-serif;font-size:15px;letter-spacing:1px;'
-      + `color:${banda.min >= 50 ? 'var(--club-color)' : 'rgba(255,255,255,0.35)'};`;
-    lbl.textContent = banda.label;
-    band.appendChild(lbl);
 
     const rows = document.createElement('div');
     rows.style.cssText = 'flex:1;display:flex;flex-direction:column;gap:7px;min-width:0;';
