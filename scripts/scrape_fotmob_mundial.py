@@ -251,6 +251,85 @@ def enrich_players(players: list, ps_by_name: dict) -> list:
     return players
 
 
+# ── stats de EQUIPO desde FotMob (fallback de top_stats) ─────────────────────
+# api-sports a veces sirve /fixtures/statistics con un snapshot de los primeros
+# minutos aunque el partido esté FT (lag largo). FotMob trae las stats de equipo
+# completas en el mismo __NEXT_DATA__ del que ya sacamos los playerStats, así que
+# se puede reconstruir top_stats (mismo schema de data/partidos) sin otra fuente.
+# (key FotMob, label nuestro, tipo) — mismos labels que fetch_mundial_match.STAT_MAP.
+FOTMOB_TOP_STATS = [
+    ('BallPossesion',   'Posesion',             'posesion'),
+    ('expected_goals',  'xG',                   'numero'),
+    ('total_shots',     'Tiros totales',        'numero'),
+    ('ShotsOnTarget',   'Tiros al arco',        'numero'),
+    ('touches_opp_box', 'Toques en area rival', 'numero'),
+    ('corners',         'Corners',              'numero'),
+    ('fouls',           'Faltas',               'numero'),
+    ('yellow_cards',    'Tarjetas amarillas',   'numero'),
+    ('red_cards',       'Tarjetas rojas',       'numero'),
+]
+
+
+def _team_stats_flat(nd: dict) -> dict:
+    """{key: [home, away]} con las stats de equipo del partido (Periods → All)."""
+    content = ((nd.get('props') or {}).get('pageProps') or {}).get('content') or {}
+    per = ((content.get('stats') or {}).get('Periods') or {}).get('All') or {}
+    flat = {}
+    for grupo in per.get('stats') or []:
+        for s in grupo.get('stats') or []:
+            k, v = s.get('key'), s.get('stats')
+            if k and k not in flat and isinstance(v, list) and len(v) == 2:
+                flat[k] = v
+    return flat
+
+
+def fotmob_home_id(nd: dict):
+    """FotMob id del equipo que FotMob considera local (para orientar los arrays)."""
+    g = ((nd.get('props') or {}).get('pageProps') or {}).get('general') or {}
+    return (g.get('homeTeam') or {}).get('id')
+
+
+def team_stats_from_nd(nd: dict, home_es_local: bool = True) -> list | None:
+    """top_stats (schema data/partidos) desde las stats de equipo de FotMob.
+    home_es_local: si el home de FotMob coincide con nuestro `local` (chequear
+    con fotmob_home_id contra el fotmob_id del club)."""
+    flat = _team_stats_flat(nd)
+    if not flat:
+        return None
+    i_loc, i_vis = (0, 1) if home_es_local else (1, 0)
+
+    def num(x):
+        if x in (None, ''):
+            return None
+        try:
+            f = float(str(x))
+            return round(f, 2) if '.' in str(x) else int(f)
+        except (TypeError, ValueError):
+            return None
+
+    out = []
+    for key, label, tipo in FOTMOB_TOP_STATS:
+        if key not in flat:
+            continue
+        l, v = num(flat[key][i_loc]), num(flat[key][i_vis])
+        if l is None and v is None:
+            continue
+        out.append({'label': label, 'local': l, 'visitante': v,
+                    'tipo': tipo, 'local_val': l, 'visitante_val': v})
+
+    ap = flat.get('accurate_passes')   # formato "229 (71%)"
+    if ap:
+        def parse(s):
+            m = re.match(r'\s*(\d+)\s*\((\d+)%\)', str(s))
+            return (int(m.group(1)), int(m.group(2))) if m else (None, None)
+        (ln, lp), (vn, vp) = parse(ap[i_loc]), parse(ap[i_vis])
+        if ln is not None and vn is not None:
+            out.append({'label': 'Pases precisos',
+                        'local': f'{ln} ({lp}%)', 'visitante': f'{vn} ({vp}%)',
+                        'tipo': 'texto', 'local_val': lp, 'visitante_val': vp})
+    return out or None
+
+
 def _next_data_http(url: str) -> dict | None:
     """Descarga la página y extrae el JSON de <script id="__NEXT_DATA__">.
     FotMob hace SSR, así que playerStats/fixtures vienen embebidos en el HTML —
