@@ -233,7 +233,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
       <span class="header-pill-label">TribunApp</span>
     </a>
     <!-- Solo en la rama pizarra, para acceder con un clic desde el preview de Vercel -->
-    <a class="header-pill" href="pizarra.html" style="border-color:#38bdf8;color:#38bdf8" data-help="Pizarra táctica (en pruebas).">
+    <a class="header-pill" href="pizarra.html" style="display:none;border-color:#38bdf8;color:#38bdf8" data-help="Pizarra táctica (en pruebas).">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h6"/></svg>
       <span class="header-pill-label">Pizarra</span>
     </a>
@@ -405,6 +405,7 @@ renderGrid(ZONA_B, 'zonaB-grid');
   const strip = document.getElementById('live-strip');
   const cardsEl = document.getElementById('live-cards');
   if (!strip || !cardsEl) return;
+  return;  // PROMO: tira "EN JUEGO" desactivada momentáneamente (solo rama pizarra)
 
   // api_id → metadatos del partido (etiqueta + lados con slug/nombre/logo)
   const MATCHES = {};
