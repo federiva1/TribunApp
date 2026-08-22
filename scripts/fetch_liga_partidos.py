@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 import time
 from pathlib import Path
@@ -98,6 +99,22 @@ def competicion_de(round_str: str) -> str:
     if 'apertura' in r:
         return 'Apertura 2026'
     return round_str or 'Liga Profesional 2026'
+
+
+def _top_stats_incompletas(ts) -> bool:
+    """¿Las stats globales parecen un snapshot de los primeros minutos?
+    En 90' reales los pases precisos suman cientos; el snapshot con lag de
+    api-sports trae un puñado (caso real: "2 (67%) | 7 (88%)")."""
+    if not ts:
+        return True
+    for s in ts:
+        if s.get('label') == 'Pases precisos':
+            total = 0
+            for lado in ('local', 'visitante'):
+                m = re.match(r'\s*(\d+)', str(s.get(lado) or ''))
+                total += int(m.group(1)) if m else 0
+            return total < 150
+    return True   # sin entrada de pases: api-sports mandó statistics vacío/parcial
 
 
 def main() -> int:
@@ -186,6 +203,22 @@ def main() -> int:
             payload = json.loads(out_file.read_text(encoding='utf-8'))
             nd = sfm._fetch_next_data(url)
             payload = sfm._enrich_payload_from_nd(nd, payload)
+
+            # 4. Fallback de top_stats: api-sports a veces sirve las estadísticas
+            #    congeladas en los primeros minutos aunque el partido esté FT
+            #    (pasó con ERC-San Lorenzo F6: "2 vs 7 pases precisos"). Si las
+            #    stats parecen de un partido a medio jugar, se reconstruyen desde
+            #    las stats de equipo de FotMob que vienen en el mismo nd.
+            if _top_stats_incompletas(payload.get('top_stats')):
+                home_id = str(sfm.fotmob_home_id(nd) or '')
+                fid_loc = str((CLUBES.get(m['ls']) or {}).get('fotmob') or '')
+                fid_vis = str((CLUBES.get(m['vs']) or {}).get('fotmob') or '')
+                if home_id in (fid_loc, fid_vis):
+                    ts = sfm.team_stats_from_nd(nd, home_es_local=(home_id == fid_loc))
+                    if ts:
+                        payload['top_stats'] = ts
+                        print('   top_stats reemplazadas con FotMob (api-sports venía incompleto)')
+
             out_file.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
             print(f'   enriquecido ({url.split("#")[0]})')
             ok += 1
