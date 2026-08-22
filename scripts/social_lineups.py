@@ -169,8 +169,17 @@ def _elegir(cands, api_nom):
 
 
 def _apellido(nombre):
-    """Etiqueta corta: "Nicolás Gaitán" entero si entra; api-sports ya abrevia."""
-    return nombre if len(nombre) <= 22 else nombre.split()[-1]
+    """Etiqueta corta: "Nicolás Gaitán" entero si entra. Si no, inicial + resto
+    ("Bautista Barros Schelotto" → "B. Barros Schelotto"): cortar al último
+    apellido dejaba a los dos hermanos Barros Schelotto como "Schelotto"."""
+    if len(nombre) <= 22:
+        return nombre
+    partes = nombre.split()
+    corto = f'{partes[0][0]}. ' + ' '.join(partes[1:])
+    if len(corto) <= 22:
+        return corto
+    dos = ' '.join(partes[-2:])
+    return dos if len(dos) <= 22 else partes[-1]
 
 
 # ── layout: grid api-sports → posiciones en cancha vertical ──────────────────
