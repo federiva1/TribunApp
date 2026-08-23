@@ -4,9 +4,14 @@ Genera data/fixtures/copas.json con los partidos de la instancia ACTUAL de
 Copa Libertadores (league=13) y Copa Sudamericana (league=11) 2026 en los que
 juega un equipo argentino.
 
-- Solo fase de eliminación (knockout). Detecta automáticamente la ronda en curso
-  (la más avanzada con algún partido argentino sin terminar; si están todas
-  terminadas, la última con partidos argentinos).
+- Solo fase de eliminación (knockout). Incluye la serie ACTUAL de cada club
+  argentino (sus partidos de su ronda más avanzada). Las rondas pueden estar
+  solapadas — caso real: Boca ya con los Cuartos programados mientras River
+  tenía pendiente la revancha de la ronda anterior — así que NO se queda con
+  una sola ronda: conserva toda serie con partidos sin terminar, más las de la
+  ronda más avanzada. Un club eliminado en una ronda vieja (serie terminada y
+  ronda superada) queda afuera. `ronda` top-level = la más avanzada del set;
+  cada partido lleva además su `ronda` propia.
 - Rivales extranjeros: se usa el logo de api-sports (media.api-sports.io). Los
   argentinos usan el escudo local (escudos/{slug}.png), por eso guardamos slug.
 
@@ -57,7 +62,7 @@ def side(t):
         return {'name': t['name'], 'slug': SLUG[t['id']], 'logo': None, 'arg': True}
     return {'name': t['name'], 'slug': None, 'logo': t.get('logo'), 'arg': False}
 
-def build(f):
+def build(f, ronda=None):
     fix, teams, goals = f['fixture'], f['teams'], f['goals']
     score = f.get('score', {}) or {}
     pen = score.get('penalty') or {}
@@ -75,26 +80,54 @@ def build(f):
         'home_pen': pen.get('home'),
         'away_pen': pen.get('away'),
         'winner': winner,
+        'ronda': RONDA_ES.get(ronda, ronda),
     }
 
 def ronda_actual(fixtures):
-    """Rondas KO con partido argentino; devuelve la ronda en curso (o la última)."""
-    con_arg = {}
+    """Serie KO actual de cada club argentino, tolerando rondas solapadas.
+
+    Antes se quedaba con UNA sola ronda (la más avanzada con algún partido sin
+    terminar), lo que borraba del JSON a un club con la revancha de una ronda
+    anterior pendiente apenas otro club ya tenía la ronda siguiente programada
+    (caso real: Boca con Cuartos NS ⇒ desaparecía River, que aún debía la
+    vuelta vs Santa Fe). Ahora, por cada club argentino se toma su ronda más
+    avanzada y se incluye esa serie si tiene partidos sin terminar O si es la
+    ronda más avanzada de la copa (así los recién clasificados no desaparecen
+    entre que ganan y se cargan los cruces nuevos). Un club cuya última serie
+    está terminada en una ronda ya superada queda afuera (eliminado o ya
+    reflejado en la ronda siguiente).
+
+    Devuelve (ronda_mas_avanzada, [(ronda, fixture), ...]).
+    """
+    por_ronda = {}
     for f in fixtures:
         r = f['league']['round']
         if r not in KO_ORDER:
             continue
         if f['teams']['home']['id'] in ARG or f['teams']['away']['id'] in ARG:
-            con_arg.setdefault(r, []).append(f)
-    if not con_arg:
+            por_ronda.setdefault(r, []).append(f)
+    if not por_ronda:
         return None, []
-    # rondas ordenadas de más avanzada a menos
-    rondas = sorted(con_arg, key=lambda r: KO_ORDER.index(r), reverse=True)
-    # la más avanzada con algún partido no terminado; si todas terminadas, la más avanzada
-    for r in rondas:
-        if any(f['fixture']['status']['short'] not in STATUS_FIN for f in con_arg[r]):
-            return r, con_arg[r]
-    return rondas[0], con_arg[rondas[0]]
+    mas_avanzada = max(por_ronda, key=lambda r: KO_ORDER.index(r))
+
+    def _es_del(f, tid):
+        return f['teams']['home']['id'] == tid or f['teams']['away']['id'] == tid
+
+    clubes = {t['id'] for fs in por_ronda.values() for f in fs
+              for t in (f['teams']['home'], f['teams']['away']) if t['id'] in ARG}
+    elegidos = {}   # fixture_id -> (ronda, fixture)
+    for tid in clubes:
+        rondas_club = [r for r, fs in por_ronda.items() if any(_es_del(f, tid) for f in fs)]
+        r = max(rondas_club, key=lambda x: KO_ORDER.index(x))
+        serie = [f for f in por_ronda[r] if _es_del(f, tid)]
+        pendiente = any(f['fixture']['status']['short'] not in STATUS_FIN for f in serie)
+        if pendiente or r == mas_avanzada:
+            for f in serie:
+                elegidos[f['fixture']['id']] = (r, f)
+    if not elegidos:
+        return None, []
+    label = max({r for r, _ in elegidos.values()}, key=lambda r: KO_ORDER.index(r))
+    return label, list(elegidos.values())
 
 def main():
     out = {}
@@ -104,8 +137,8 @@ def main():
         ronda, partidos = ronda_actual(fx)
         if not ronda:
             print('  sin partidos argentinos en KO'); out[nombre] = {'ronda': None, 'partidos': []}; continue
-        partidos = sorted(partidos, key=lambda f: f['fixture']['date'])
-        out[nombre] = {'ronda': RONDA_ES.get(ronda, ronda), 'partidos': [build(f) for f in partidos]}
+        partidos = sorted(partidos, key=lambda rf: rf[1]['fixture']['date'])
+        out[nombre] = {'ronda': RONDA_ES.get(ronda, ronda), 'partidos': [build(f, r) for r, f in partidos]}
         print('  ronda: %s (%d partidos argentinos)' % (RONDA_ES.get(ronda, ronda), len(partidos)))
     OUT.write_text(json.dumps(out, indent=2, ensure_ascii=False), encoding='utf-8')
     print('  Guardado:', OUT)
