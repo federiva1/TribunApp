@@ -3903,16 +3903,6 @@ function applyGating() {
   const within24h = SCORES_FT ? (Date.now() - SCORES_FT.getTime()) < 24 * 3600 * 1000 : false;
   PUNTAJES_OPEN = override || (hasData && within24h);
   FORMACION_OPEN = fOverride || (!PUNTAJES_OPEN && !!(RIVAL && RIVAL !== 'Por definir'));
-  // PROMO (solo rama pizarra): para el video, Argentinos tiene formación Y puntajes
-  // abiertos A LA VEZ contra Lanús — en producción son excluyentes por diseño.
-  if (CLUB_SLUG === 'argentinosjuniors') {
-    RIVAL = 'Lanús';
-    RIVAL_SLUG = 'lanus';
-    FECHA_NUM = 6;
-    if (SCORES_MATCH_DATE) FECHA_ACTUAL = SCORES_MATCH_DATE;
-    FORMACION_OPEN = true;
-    PUNTAJES_OPEN = PUNTAJES_OPEN || scoresSquad.length > 0;
-  }
 }
 
 // Tags de rival: formación = próximo; puntajes = último jugado.
@@ -3930,9 +3920,7 @@ async function updateTilesGating() {
   const pSub = document.getElementById('tile-puntaje-sub');
   const badge = open => open ? ' <span style="color:#66bb6a;font-weight:600;">· Abierto</span>' : ' <span style="color:#777;">· Cerrado</span>';
   if (fSub) {
-    // PROMO (solo rama pizarra): el tile acompaña al override de applyGating.
-    if (CLUB_SLUG === 'argentinosjuniors') fSub.innerHTML = `Fecha 6 · vs Lanús${badge(FORMACION_OPEN)}`;
-    else if (proximo) { const l = _matchInfo(proximo); fSub.innerHTML = `Fecha ${l.fecha} · vs ${escapeHtml(l.rival)}${badge(FORMACION_OPEN)}`; }
+    if (proximo) { const l = _matchInfo(proximo); fSub.innerHTML = `Fecha ${l.fecha} · vs ${escapeHtml(l.rival)}${badge(FORMACION_OPEN)}`; }
     else fSub.textContent = 'Sin próximo partido';
   }
   if (pSub) {
