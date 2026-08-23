@@ -81,6 +81,7 @@ button:disabled { opacity:.4; cursor:default; }
         style="width:70px;height:7px;border-radius:4px;background:#1c2434;overflow:hidden;display:inline-block">
     <i id="mic-level" style="display:block;height:100%;width:0;background:#38bdf8;transition:width .06s linear"></i>
   </span>
+  <button id="btn-re-dl" style="display:none;font-size:12px;padding:4px 9px" title="Volver a descargar el último video grabado">⬇ Descargar de nuevo</button>
   <button id="btn-subs-edit" style="display:none;font-size:12px;padding:4px 9px;border-color:#38bdf8;color:#38bdf8">Editar subtítulos</button>
   <span id="rec-info" style="font-size:13px;color:#8b93a7"></span>
 </header>
@@ -421,11 +422,7 @@ function bajarSrt() {
   const txt = subs.cues
     .map((c, i) => `${i + 1}\n${_srtT(c.a)} --> ${_srtT(c.b)}\n${c.txt}\n`)
     .join('\n');
-  const a = document.createElement('a');
-  a.download = 'pizarra-tribunapp.srt';
-  a.href = URL.createObjectURL(new Blob([txt], { type: 'text/plain;charset=utf-8' }));
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(a.href), 30_000);
+  _bajarBlob(new Blob([txt], { type: 'text/plain;charset=utf-8' }), 'pizarra-tribunapp.srt');
   return true;
 }
 
@@ -591,7 +588,12 @@ btnPlay.onclick = () => (anim.playing ? stopAnim(false) : playAnim());
 // ---------- grabación de video (canvas + micrófono) ----------
 // canvas.captureStream solo emite cuadros cuando el canvas se repinta, así que
 // durante la grabación corre un loop de rAF que repinta siempre (30 fps reales).
-const rec = { mr: null, chunks: [], mic: null, ac: null, raf: 0, t0: 0, timer: 0, meter: 0, micError: '' };
+const rec = { mr: null, chunks: [], mic: null, ac: null, raf: 0, t0: 0, timer: 0, meter: 0, micError: '',
+              urls: [], lastName: '' };
+const btnReDl = document.getElementById('btn-re-dl');
+btnReDl.onclick = () => {
+  if (rec.last && rec.last.blob) _bajarBlob(rec.last.blob, rec.lastName || 'pizarra-tribunapp.webm');
+};
 const btnRec = document.getElementById('btn-rec');
 const recInfo = document.getElementById('rec-info');
 const micLevel = document.getElementById('mic-level');
@@ -717,6 +719,8 @@ async function startRec() {
   if (document.getElementById('chk-subs').checked) startSubs();
   _subsCtrlLock(true);
   btnSubsEdit.style.display = 'none';               // la edición es del video anterior
+  btnReDl.style.display = 'none';
+  _liberarUrls();
   document.getElementById('subs-editor')?.remove();
   const stream = new MediaStream(tracks);
   rec.hadAudio = stream.getAudioTracks().length > 0;
@@ -752,14 +756,37 @@ function stopRec() {
   btnRec.classList.remove('rec');
 }
 
+// Descarga un blob. Dos cuidados que importan en videos largos (4 min a 6 Mbps
+// son ~180 MB): el <a> tiene que estar EN EL DOM (Chrome ignora el click de un
+// nodo suelto cuando el blob es grande) y la object URL NO se puede revocar a
+// los pocos segundos — el navegador sigue escribiendo el archivo y revocarla
+// antes cancela la descarga en silencio. Se revoca recién al grabar de nuevo.
+function _bajarBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  rec.urls.push(url);               // se liberan todas juntas al grabar de nuevo
+  const a = document.createElement('a');
+  a.download = filename;
+  a.href = url;
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => a.remove(), 1000);
+}
+
+// Liberar las object URLs pendientes. Se llama SOLO al arrancar otra grabación:
+// para entonces cualquier descarga previa ya terminó de escribirse.
+function _liberarUrls() {
+  rec.urls.forEach(u => URL.revokeObjectURL(u));
+  rec.urls = [];
+}
+
 function saveRec() {
   const type = rec.mr.mimeType || 'video/webm';
   const blob = new Blob(rec.chunks, { type });
-  const a = document.createElement('a');
-  a.download = 'pizarra-tribunapp.' + (type.includes('mp4') ? 'mp4' : 'webm');
-  a.href = URL.createObjectURL(blob);
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(a.href), 30_000);
+  const nombre = 'pizarra-tribunapp.' + (type.includes('mp4') ? 'mp4' : 'webm');
+  _bajarBlob(blob, nombre);
+  rec.lastName = nombre;
+  btnReDl.style.display = '';        // red de seguridad: una grabación larga no se rehace
   const conSrt = bajarSrt();
   // Todo lo que hace falta para re-renderizar con subtítulos corregidos: el
   // video, la geometría con la que se grabó y una copia de los cues.
@@ -822,11 +849,7 @@ btnSubsEdit.onclick = () => {
   bSrt.onclick = () => {
     const vivos = L.cues.filter(c => c.txt.trim());
     const txt = vivos.map((c, i) => `${i + 1}\n${_srtT(c.a)} --> ${_srtT(c.b)}\n${c.txt.trim()}\n`).join('\n');
-    const a = document.createElement('a');
-    a.download = 'pizarra-tribunapp-corregido.srt';
-    a.href = URL.createObjectURL(new Blob([txt], { type: 'text/plain;charset=utf-8' }));
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(a.href), 30_000);
+    _bajarBlob(new Blob([txt], { type: 'text/plain;charset=utf-8' }), 'pizarra-tribunapp-corregido.srt');
   };
   const bGo = document.createElement('button');
   bGo.textContent = 'Regenerar video';
@@ -914,11 +937,7 @@ async function regenVideo(btn) {
   URL.revokeObjectURL(video.src);
 
   const blob = new Blob(chunks, { type: mr.mimeType || 'video/webm' });
-  const a = document.createElement('a');
-  a.download = 'pizarra-tribunapp-corregido.' + ((mr.mimeType || '').includes('mp4') ? 'mp4' : 'webm');
-  a.href = URL.createObjectURL(blob);
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(a.href), 30_000);
+  _bajarBlob(blob, 'pizarra-tribunapp-corregido.' + ((mr.mimeType || '').includes('mp4') ? 'mp4' : 'webm'));
   btn.textContent = `Listo ✓ (${(blob.size / 1048576).toFixed(1)} MB)`;
   btn.disabled = false;
 }
