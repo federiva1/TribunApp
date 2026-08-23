@@ -1619,9 +1619,13 @@ function _shCard(o) {
   s.textContent = o.sub || ''; top.appendChild(s);
   panel.appendChild(top);
   const bot = document.createElement('div');
-  bot.innerHTML = `<div style="font-size:14px;color:#8b93a7;margin-bottom:12px;">${escapeHtml(o.pie || '')}</div>`
-    + `<div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:${SHARE_GOLD};letter-spacing:1px;">TRIBUNAPP</div>`
-    + `<div style="font-size:13px;color:#5d6479;margin-top:2px;">tribunapp.com.ar</div>`;
+  // Pie de placa: el logo de la web (versión transparente de Logo.png). El texto
+  // de o.pie solo se dibuja si hay algo que decir (ej. "N hinchas votaron").
+  if (o.pie) bot.innerHTML = `<div style="font-size:14px;color:#8b93a7;margin-bottom:12px;">${escapeHtml(o.pie)}</div>`;
+  const logo = document.createElement('img');
+  logo.src = 'logo-share.png';
+  logo.style.cssText = 'width:100%;display:block;';
+  bot.appendChild(logo);
   panel.appendChild(bot); c.appendChild(panel);
 
   const der = document.createElement('div'); der.style.cssText = 'flex:1;display:flex;flex-direction:column;min-width:0;';
@@ -1971,7 +1975,7 @@ function _shOptsFormacion() {
     rivalSlug: conRival ? RIVAL_SLUG : '',
     rivalEscudo: conRival ? RIVAL_ESCUDO : '',
     sub: (FECHA_NUM ? `Fecha ${FECHA_NUM} · ` : '') + (conRival ? `vs ${RIVAL}` : 'Próxima fecha'),
-    pie: `${CLUB.nombreCorto} · armá la tuya`,
+    pie: '',
     jugadores: onPitch.map(j => _shRotar({ num: j.num, name: j.name, xPct: j.xPct, yPct: j.yPct })),
   };
 }
@@ -2471,14 +2475,14 @@ function _shOptsPuntajes(valorPorId, fmt, titulo, pie) {
 
 function _shOptsMis() {
   const mapa = {}; Object.entries(userScores).forEach(([k, v]) => mapa[String(k)] = v);
-  return _shOptsPuntajes(mapa, v => String(v), 'MIS PUNTAJES', CLUB.nombreCorto);
+  return _shOptsPuntajes(mapa, v => String(v), 'MIS PUNTAJES', '');
 }
 
 async function downloadMyScores(btn) {
   btn = btn || document.getElementById('download-my-scores-btn');
   const mapa = {}; Object.entries(userScores).forEach(([k, v]) => mapa[String(k)] = v);
   await _shFlujo(btn, btn.dataset.solo === '1' ? '⬇ Descargar imagen' : '𝕏 Compartir en X',
-    _shOptsPuntajes(mapa, v => String(v), 'MIS PUNTAJES', CLUB.nombreCorto),
+    _shOptsPuntajes(mapa, v => String(v), 'MIS PUNTAJES', ''),
     `mis-puntajes-${CLUB_SLUG}.png`,
     `Mis puntajes de ${CLUB.nombreCorto} vs ${SCORES_RIVAL}`,
     'mis');
