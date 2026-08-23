@@ -1994,31 +1994,7 @@ function _shAgendarFormacion() {
   _shTimerForm = setTimeout(() => _shPregenerar('formacion', _shOptsFormacion()), 700);
 }
 document.getElementById('download-pitch-btn').addEventListener('click', function () { _shFormacion(this, '𝕏'); });
-
-// PRUEBA (solo rama pizarra): el botón ⬇ vuelve al output VIEJO — captura
-// vertical de la cancha con html2canvas y marca de agua — para comparar contra
-// la placa apaisada nueva (que sigue en el botón 𝕏). En producción ambos usan
-// la placa nueva vía _shFormacion.
-document.getElementById('save-pitch-btn').addEventListener('click', async function () {
-  if (onPitch.length !== 11) return;
-  const btn = this, txt = btn.textContent;
-  btn.textContent = 'Generando...';
-  try {
-    await new Promise(r => setTimeout(r, 100));
-    const canvas = await html2canvas(pitch, { backgroundColor: '#2d7a3a', scale: 2, useCORS: true, logging: false });
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = 'rgba(255,255,255,0.4)';
-    ctx.font = `bold ${Math.round(canvas.width * 0.04)}px sans-serif`;
-    ctx.textAlign = 'right';
-    ctx.fillText(`Mi formación ${CLUB.nombreCorto}`, canvas.width - 12, canvas.height - 12);
-    const link = document.createElement('a');
-    link.download = `formacion-${CLUB_SLUG}.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-    showToast('¡Descargada! (formato viejo, a comparar)');
-  } catch (e) { showToast('No se pudo generar.'); }
-  finally { btn.textContent = txt; }
-});
+document.getElementById('save-pitch-btn').addEventListener('click', function () { _shFormacion(this, '⬇'); });
 
 // ---- Enviar a encuesta ----
 document.getElementById('confirm-btn').addEventListener('click', async () => {
