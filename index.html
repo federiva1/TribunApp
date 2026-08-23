@@ -195,6 +195,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .copa-card .escudo-img { width: 44px; height: 44px; }
 .copa-card .equipo-nombre { font-size: 13px; color: rgba(255,255,255,0.9); }
 .copa-rival { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; color: rgba(255,255,255,0.4); text-align: center; }
+.copa-ronda-mini { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.45); text-align: center; }
 .copa-result { font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 1px; color: var(--gold); }
 .copa-empty { text-align: center; padding: 22px 8px; color: rgba(255,255,255,0.3); font-family: 'Barlow Condensed', sans-serif; letter-spacing: 1px; grid-column: 1 / -1; }
 .escudo-img { width: 42px; height: 42px; object-fit: contain; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5)); }
@@ -349,6 +350,7 @@ function copaInfoEquipos(copa) {
     const argIsHome = p.home.slug === arg.slug;
     const riv = argIsHome ? p.away : p.home;
     const it = info[arg.slug] || { rival: riv.name, resultados: [] };
+    if (p.ronda) it.ronda = p.ronda;
     if (p.home_score != null && p.away_score != null) {
       const gf = argIsHome ? p.home_score : p.away_score;
       const gc = argIsHome ? p.away_score : p.home_score;
@@ -360,7 +362,12 @@ function copaInfoEquipos(copa) {
 }
 function renderCopaGrid(copaObj, cls, gridId, rondaId) {
   copaObj = copaObj || {};
-  document.getElementById(rondaId).textContent = copaObj.ronda || '';
+  // Con rondas solapadas (un club ya en la siguiente, otro debiendo la revancha
+  // de la anterior) el header no puede nombrar una sola: queda vacío y cada
+  // card muestra la ronda de SU serie.
+  const rondas = [...new Set((copaObj.partidos || []).map(p => p.ronda || copaObj.ronda).filter(Boolean))];
+  const mixtas = rondas.length > 1;
+  document.getElementById(rondaId).textContent = mixtas ? '' : (copaObj.ronda || '');
   const grid = document.getElementById(gridId);
   grid.innerHTML = '';
   const slugs = [...new Set((copaObj.partidos || []).map(p => p.home.slug || p.away.slug).filter(Boolean))];
@@ -369,6 +376,7 @@ function renderCopaGrid(copaObj, cls, gridId, rondaId) {
   slugs.sort((a, b) => nombreCorto(a).localeCompare(nombreCorto(b), 'es')).forEach(slug => {
     const nombre = nombreCorto(slug);
     const i = info[slug] || {};
+    const ronda = (mixtas && (i.ronda || copaObj.ronda)) ? `<div class="copa-ronda-mini">${i.ronda || copaObj.ronda}</div>` : '';
     const rival = i.rival ? `<div class="copa-rival">vs ${i.rival}</div>` : '';
     const res = (i.resultados && i.resultados.length) ? `<div class="copa-result">${i.resultados.join('  ·  ')}</div>` : '';
     const a = document.createElement('a');
@@ -376,7 +384,7 @@ function renderCopaGrid(copaObj, cls, gridId, rondaId) {
     a.href = `club.html?c=${slug}&copa=${cls === 'lib' ? 'libertadores' : 'sudamericana'}`;
     a.innerHTML =
       `<img class="escudo-img" src="escudos/${slug}.png" alt="${nombre}" onerror="this.style.opacity=0.3">` +
-      `<div class="equipo-nombre">${nombre}</div>${rival}${res}`;
+      `<div class="equipo-nombre">${nombre}</div>${ronda}${rival}${res}`;
     grid.appendChild(a);
   });
 }
