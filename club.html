@@ -2080,34 +2080,57 @@ async function showResults() {
     data.forEach(row => { (row.jugadores || []).forEach(j => { if (!counts[j.num]) { const sq = squad.find(s => s.num === j.num); counts[j.num] = { num: j.num, name: j.name, fid: j.fid || sq?.fid || 0, count: 0 }; } counts[j.num].count++; }); });
     const players = Object.values(counts).map(p => ({ ...p, pct: Math.round((p.count / total) * 100) })).sort((a, b) => b.pct - a.pct);
     totalEl.textContent = `${total} formación${total !== 1 ? 'es' : ''} enviada${total !== 1 ? 's' : ''}`;
-    list.innerHTML = '';
-    const tiers = [
-      { cls: 'tier-s', min: 80, max: 100, label: 'Titular'  },
-      { cls: 'tier-a', min: 60, max: 79,  label: 'Probable' },
-      { cls: 'tier-b', min: 40, max: 59,  label: 'En duda'  },
-      { cls: 'tier-c', min: 20, max: 39,  label: 'Suplente' },
-      { cls: 'tier-d', min: 0,  max: 19,  label: 'Reserva'  }
-    ];
-    tiers.forEach(tier => {
-      const inTier = players.filter(p => p.pct >= tier.min && p.pct <= tier.max);
-      if (!inTier.length) return;
-      const row = document.createElement('div'); row.className = `tier-row ${tier.cls}`;
-      const label = document.createElement('div'); label.className = 'tier-label';
-      label.innerHTML = `<div class="tier-label-name">${tier.label}</div>`
-        + `<div class="tier-label-rango">${tier.min}-${tier.max}%</div>`;
-      row.appendChild(label);
-      const pDiv = document.createElement('div'); pDiv.className = 'tier-players';
-      inTier.forEach(p => {
-        const wrap = document.createElement('div'); wrap.className = 'tier-player';
-        wrap.appendChild(kitChip(CLUB_SLUG, p.num, 36));
-        const info = document.createElement('div'); info.style.cssText = 'display:flex;flex-direction:column;gap:1px;';
-        const name = document.createElement('div'); name.className = 'tier-player-name'; name.textContent = p.name;
-        const pct = document.createElement('div'); pct.style.cssText = 'font-size:10px;color:#fff;font-family:"Bebas Neue",sans-serif;'; pct.textContent = p.pct + '%';
-        info.appendChild(name); info.appendChild(pct); wrap.appendChild(info); pDiv.appendChild(wrap);
-      });
-      row.appendChild(pDiv); list.appendChild(row);
-    });
+    _renderEleccionBars(list, players);
   } catch(e) { list.innerHTML = '<div style="text-align:center;color:#666;padding:20px;font-size:13px;">Error al cargar resultados.</div>'; }
+}
+
+// % de elección como barras horizontales (una fila por jugador: chip + nombre +
+// barra proporcional + %), agrupadas por bandas de corte (+75 / +50 / +25 / resto)
+// separadas solo por un divisor. Reemplaza al viejo tier list de chips.
+function _renderEleccionBars(list, players) {
+  list.innerHTML = '';
+  const bandas = [
+    { label: '+75%', min: 75 },
+    { label: '+50%', min: 50 },
+    { label: '+25%', min: 25 },
+    { label: '-25%', min: 0 },
+  ];
+  bandas.forEach((banda, bi) => {
+    const max = bi === 0 ? 101 : bandas[bi - 1].min;
+    const grupo = players.filter(p => p.pct >= banda.min && p.pct < max);
+    if (!grupo.length) return;
+
+    const band = document.createElement('div');
+    band.style.cssText = 'display:flex;gap:10px;padding:10px 0;'
+      + (list.children.length ? 'border-top:1px solid rgba(255,255,255,0.14);' : '');
+
+    const rows = document.createElement('div');
+    rows.style.cssText = 'flex:1;display:flex;flex-direction:column;gap:7px;min-width:0;';
+    grupo.forEach(p => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:8px;';
+      row.appendChild(kitChip(CLUB_SLUG, p.num, 30));
+      const nm = document.createElement('div');
+      nm.style.cssText = 'width:86px;flex:0 0 auto;font-size:11px;color:#ccc;'
+        + 'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+      nm.textContent = p.name;
+      row.appendChild(nm);
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'flex:1;display:flex;align-items:center;gap:7px;min-width:0;';
+      const bar = document.createElement('div');
+      bar.style.cssText = `width:${Math.max(p.pct, 3)}%;height:14px;border-radius:7px;`
+        + 'background:linear-gradient(90deg, var(--club-color), color-mix(in srgb, var(--club-color) 55%, #fff));'
+        + 'box-shadow:0 1px 4px rgba(0,0,0,0.4);flex:0 1 auto;transition:width .5s ease;';
+      const pct = document.createElement('div');
+      pct.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:14px;letter-spacing:0.5px;color:#fff;flex:0 0 auto;';
+      pct.textContent = p.pct + '%';
+      wrap.appendChild(bar); wrap.appendChild(pct);
+      row.appendChild(wrap);
+      rows.appendChild(row);
+    });
+    band.appendChild(rows);
+    list.appendChild(band);
+  });
 }
 
 // ---- Feed ----
