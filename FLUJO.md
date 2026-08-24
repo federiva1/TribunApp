@@ -27,6 +27,13 @@ Después se repite el ciclo para la siguiente fecha.
 
 Todos commitean con `[skip ci]` para evitar loops.
 
+**Regla ante error/demora de api-sports**: si la API sirve stats congeladas de los
+primeros minutos con el partido ya FT (le pasa a `/fixtures/statistics`), el pipeline
+las repone solo desde las stats de equipo de FotMob (`_top_stats_incompletas` +
+`team_stats_from_nd` en `fetch_liga_partidos.py`). No parchear a mano: reprocesar el
+día con el `workflow_dispatch` de `liga-match-stats.yml` (input `force_date`) y el
+fallback tapa el agujero. api-sports queda como fuente primaria cuando viene completa.
+
 ### Manual (por ahora)
 
 | Script | Cuándo se corre | Notas |

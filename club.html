@@ -1619,9 +1619,13 @@ function _shCard(o) {
   s.textContent = o.sub || ''; top.appendChild(s);
   panel.appendChild(top);
   const bot = document.createElement('div');
-  bot.innerHTML = `<div style="font-size:14px;color:#8b93a7;margin-bottom:12px;">${escapeHtml(o.pie || '')}</div>`
-    + `<div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:${SHARE_GOLD};letter-spacing:1px;">TRIBUNAPP</div>`
-    + `<div style="font-size:13px;color:#5d6479;margin-top:2px;">tribunapp.com.ar</div>`;
+  // Pie de placa: el logo de la web (versión transparente de Logo.png). El texto
+  // de o.pie solo se dibuja si hay algo que decir (ej. "N hinchas votaron").
+  if (o.pie) bot.innerHTML = `<div style="font-size:14px;color:#8b93a7;margin-bottom:12px;">${escapeHtml(o.pie)}</div>`;
+  const logo = document.createElement('img');
+  logo.src = 'logo-share.png';
+  logo.style.cssText = 'width:100%;display:block;';
+  bot.appendChild(logo);
   panel.appendChild(bot); c.appendChild(panel);
 
   const der = document.createElement('div'); der.style.cssText = 'flex:1;display:flex;flex-direction:column;min-width:0;';
@@ -1692,7 +1696,7 @@ async function _shPregenerar(key, opts) {
 // Comparte un blob YA generado. Primera instrucción = navigator.share, sin awaits
 // antes, para no perder el gesto.
 function _shCompartirBlob(blob, filename, texto, soloDescargar) {
-  const txt = texto + ' https://tribunapp.com.ar';
+  const txt = texto;   // solo el mensaje: sin link ni llamados a votar (se sintió invasivo)
   if (!soloDescargar && _esCelular() && navigator.share) {
     try {
       const file = new File([blob], filename, { type: 'image/png' });
@@ -1971,7 +1975,7 @@ function _shOptsFormacion() {
     rivalSlug: conRival ? RIVAL_SLUG : '',
     rivalEscudo: conRival ? RIVAL_ESCUDO : '',
     sub: (FECHA_NUM ? `Fecha ${FECHA_NUM} · ` : '') + (conRival ? `vs ${RIVAL}` : 'Próxima fecha'),
-    pie: `${CLUB.nombreCorto} · armá la tuya`,
+    pie: '',
     jugadores: onPitch.map(j => _shRotar({ num: j.num, name: j.name, xPct: j.xPct, yPct: j.yPct })),
   };
 }
@@ -1979,7 +1983,7 @@ async function _shFormacion(btn, label) {
   if (onPitch.length !== 11) return;
   const conRival = RIVAL && RIVAL !== 'Por definir';
   await _shFlujo(btn, label, _shOptsFormacion(), `mi-formacion-${CLUB_SLUG}.png`,
-     `Mi 11 de ${CLUB.nombreCorto}${conRival ? ' para el partido vs ' + RIVAL : ''}. Armá el tuyo 👇`,
+     `Mi 11 de ${CLUB.nombreCorto}${conRival ? ' para el partido vs ' + RIVAL : ''}`,
      'formacion');
   updateCounter();
 }
@@ -2085,8 +2089,8 @@ async function showResults() {
 }
 
 // % de elección como barras horizontales (una fila por jugador: chip + nombre +
-// barra proporcional + %), agrupadas en bandas con divisor: +75% / +50% / +25% /
-// resto. Reemplaza al viejo tier list de chips.
+// barra proporcional + %), agrupadas por bandas de corte (+75 / +50 / +25 / resto)
+// separadas solo por un divisor. Reemplaza al viejo tier list de chips.
 function _renderEleccionBars(list, players) {
   list.innerHTML = '';
   const bandas = [
@@ -2471,16 +2475,16 @@ function _shOptsPuntajes(valorPorId, fmt, titulo, pie) {
 
 function _shOptsMis() {
   const mapa = {}; Object.entries(userScores).forEach(([k, v]) => mapa[String(k)] = v);
-  return _shOptsPuntajes(mapa, v => String(v), 'MIS PUNTAJES', CLUB.nombreCorto);
+  return _shOptsPuntajes(mapa, v => String(v), 'MIS PUNTAJES', '');
 }
 
 async function downloadMyScores(btn) {
   btn = btn || document.getElementById('download-my-scores-btn');
   const mapa = {}; Object.entries(userScores).forEach(([k, v]) => mapa[String(k)] = v);
   await _shFlujo(btn, btn.dataset.solo === '1' ? '⬇ Descargar imagen' : '𝕏 Compartir en X',
-    _shOptsPuntajes(mapa, v => String(v), 'MIS PUNTAJES', CLUB.nombreCorto),
+    _shOptsPuntajes(mapa, v => String(v), 'MIS PUNTAJES', ''),
     `mis-puntajes-${CLUB_SLUG}.png`,
-    `Mis puntajes de ${CLUB.nombreCorto} vs ${SCORES_RIVAL}. ¿Coincidís? Puntuá vos 👇`,
+    `Mis puntajes de ${CLUB.nombreCorto} vs ${SCORES_RIVAL}`,
     'mis');
 }
 
@@ -2491,7 +2495,7 @@ async function _shPuntajesGlobales(btn) {
     _shOptsPuntajes(_scoresGlobalAvg, v => v.toFixed(1), 'PUNTAJES DE LA GENTE',
                     `${votos} hincha${votos !== 1 ? 's' : ''} ${votos !== 1 ? 'votaron' : 'votó'}`),
     `puntajes-${CLUB_SLUG}.png`,
-    `Así puntuó la gente a ${CLUB.nombreCorto} vs ${SCORES_RIVAL} (${votos} votos). Puntuá vos 👇`,
+    `Así puntuó la gente a ${CLUB.nombreCorto} vs ${SCORES_RIVAL} (${votos} votos)`,
     'globales');
 }
 document.getElementById('download-scores-results-btn').addEventListener('click', function () { _shPuntajesGlobales(this); });
@@ -3891,10 +3895,12 @@ async function resolveScoresContext(ultimo) {
   } catch(e) {}
 }
 
-// Gate: 24 hs de puntajes desde el FT; si no, formación abierta. Para probar hay
-// dos overrides por URL, independientes entre sí: ?testpuntajes=1 fuerza los
-// puntajes y ?testformacion=1 fuerza la formación (sirve durante la ventana de
-// puntajes, que es justo cuando la formación queda cerrada).
+// Gate: puntajes 24 hs desde el FT. La formación está SIEMPRE abierta mientras
+// haya próximo rival (conviven con los puntajes durante la ventana post-partido;
+// el voto va al próximo partido, que ya es el de la fecha siguiente porque
+// cierre-rapido actualiza liga.json antes de abrir los puntajes). Se cierra solo
+// sin próximo partido (fin de torneo / rival por definir). Override de prueba:
+// ?testpuntajes=1 fuerza los puntajes; ?testformacion=1 fuerza la formación.
 function applyGating() {
   const qs = new URLSearchParams(location.search);
   const override  = qs.get('testpuntajes')  === '1';
@@ -3902,9 +3908,10 @@ function applyGating() {
   const hasData = scoresSquad.length > 0;
   const within24h = SCORES_FT ? (Date.now() - SCORES_FT.getTime()) < 24 * 3600 * 1000 : false;
   PUNTAJES_OPEN = override || (hasData && within24h);
-  FORMACION_OPEN = fOverride || (!PUNTAJES_OPEN && !!(RIVAL && RIVAL !== 'Por definir'));
+  FORMACION_OPEN = fOverride || !!(RIVAL && RIVAL !== 'Por definir');
   // PROMO (solo rama pizarra): para el video, Argentinos tiene formación Y puntajes
-  // abiertos A LA VEZ contra Lanús — en producción son excluyentes por diseño.
+  // abiertos A LA VEZ contra Lanús — con el gate nuevo la formación ya queda
+  // abierta sola; se conserva el forzado de rival/puntajes hasta cerrar el video.
   if (CLUB_SLUG === 'argentinosjuniors') {
     RIVAL = 'Lanús';
     RIVAL_SLUG = 'lanus';

@@ -66,6 +66,80 @@ def _nombre(slug, fallback):
     return (NOM.get(slug) or fallback or '').upper()
 
 
+def _html_uno(m, fecha, titulo):
+    """Placa de UN partido: escudos grandes centrados + hora, en vez de la
+    tarjeta chica de la lista (con un solo cruce quedaba flotando en el vacío)."""
+    d = datetime.strptime(fecha, '%Y-%m-%d')
+    sub = f'{DIAS[d.weekday()]} {d.day} DE {MESES[d.month - 1]}'
+    torneo = (f"TORNEO LOCAL · FECHA {m['fecha_num']}" if m.get('fecha_num')
+              else {'libertadores': 'COPA LIBERTADORES',
+                    'sudamericana': 'COPA SUDAMERICANA'}.get(m['comp'], 'TORNEO LOCAL'))
+
+    ff = ''.join(
+        "@font-face{font-family:'%s';font-weight:%s;src:url(%s) format('woff2');}"
+        % (fam, w, _b64(ROOT / 'fonts' / f, 'font/woff2'))
+        for fam, w, f in (("Bebas Neue", 400, 'bebas-neue-latin-400-normal.woff2'),
+                          ("Barlow Condensed", 400, 'barlow-condensed-latin-400-normal.woff2'),
+                          ("Barlow Condensed", 600, 'barlow-condensed-latin-600-normal.woff2')))
+
+    def esc(slug):
+        p = ROOT / 'escudos' / f'{slug}.png'
+        return (f'<img class="esc" src="{_b64(p, "image/png")}">'
+                if slug and p.exists() else '<div class="esc"></div>')
+
+    return """<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+%s
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:760px;height:950px;font-family:'Barlow Condensed',sans-serif;color:#fff;
+  position:relative;overflow:hidden;background:#080c17;}
+.bg{position:absolute;inset:0;
+  background:radial-gradient(120%% 62%% at 50%% 118%%, rgba(56,140,220,.30) 0%%, rgba(20,44,86,.16) 42%%, transparent 70%%),
+             radial-gradient(90%% 55%% at 50%% -10%%, rgba(28,58,110,.30), transparent 62%%),
+             linear-gradient(180deg,#080c17 0%%,#0a1122 55%%,#070b16 100%%);}
+.glow{position:absolute;left:0;right:0;bottom:0;height:38%%;
+  background:repeating-linear-gradient(90deg, rgba(120,180,255,.05) 0 3px, transparent 3px 9px);
+  -webkit-mask-image:linear-gradient(0deg,rgba(0,0,0,.85),transparent);}
+.wrap{position:relative;height:100%%;padding:30px 34px 26px;display:flex;flex-direction:column}
+.logo{height:38px;width:auto;align-self:flex-start}
+.tit-box{text-align:center;margin:26px 0 0}
+.torneo{font-family:'Bebas Neue';font-size:19px;letter-spacing:5px;color:#38bdf8;margin-bottom:5px}
+.tit{font-family:'Bebas Neue';font-size:44px;letter-spacing:9px;line-height:1}
+.sub{font-family:'Bebas Neue';font-size:20px;letter-spacing:4px;color:#8b93a7;margin-top:7px}
+.hero{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:34px}
+.cruce{display:flex;align-items:center;justify-content:center;gap:48px}
+.eq{display:flex;flex-direction:column;align-items:center;gap:18px;width:250px}
+.esc{width:170px;height:170px;object-fit:contain;
+     filter:drop-shadow(0 10px 26px rgba(0,0,0,.6))}
+.eq span{font-family:'Bebas Neue';font-size:34px;letter-spacing:3px;text-align:center}
+.vs{font-family:'Bebas Neue';font-size:40px;letter-spacing:3px;color:#5d6479}
+.hora{font-family:'Bebas Neue';font-size:56px;letter-spacing:6px;color:#38bdf8}
+.pie{text-align:center;font-family:'Bebas Neue';font-size:19px;letter-spacing:3px;color:#e8edf7;margin-top:6px}
+.pie b{color:#38bdf8;font-weight:400}
+</style></head><body>
+<div class="bg"></div><div class="glow"></div>
+<div class="wrap">
+  <img class="logo" src="%s">
+  <div class="tit-box">
+    <div class="torneo">%s</div>
+    <div class="tit">%s</div>
+    <div class="sub">%s</div>
+  </div>
+  <div class="hero">
+    <div class="cruce">
+      <div class="eq">%s<span>%s</span></div>
+      <div class="vs">VS</div>
+      <div class="eq">%s<span>%s</span></div>
+    </div>
+    <div class="hora">%s HS</div>
+  </div>
+  <div class="pie">SEGUILOS Y PUNTUÁ A LOS JUGADORES EN <b>TRIBUNAPP.COM.AR</b></div>
+</div></body></html>""" % (
+        ff, _logo_datauri(), torneo, titulo, sub,
+        esc(m['home']), _nombre(m['home'], m['home_name']),
+        esc(m['away']), _nombre(m['away'], m['away_name']),
+        m['ko'].strftime('%H:%M'))
+
+
 def _html(partidos, fecha, titulo):
     d = datetime.strptime(fecha, '%Y-%m-%d')
     sub = f'{DIAS[d.weekday()]} {d.day} DE {MESES[d.month - 1]}'
@@ -157,10 +231,12 @@ def generar(partidos, fecha, titulo, outdir):
     exe = os.environ.get('PLAYWRIGHT_CHROMIUM') or None
     Path(outdir).mkdir(parents=True, exist_ok=True)
     path = Path(outdir) / f'fecha-{fecha}.png'
+    html = (_html_uno(partidos[0], fecha, titulo) if len(partidos) == 1
+            else _html(partidos, fecha, titulo))
     with sync_playwright() as pw:
         b = pw.chromium.launch(executable_path=exe) if exe else pw.chromium.launch()
         pg = b.new_page(viewport={'width': 760, 'height': 950}, device_scale_factor=2)
-        pg.set_content(_html(partidos, fecha, titulo))
+        pg.set_content(html)
         pg.wait_for_timeout(700)
         pg.screenshot(path=str(path))
         b.close()
