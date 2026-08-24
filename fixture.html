@@ -115,6 +115,21 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .copa-subtab.sud.active { color: #fff; background: rgba(230,81,0,0.25); border-color: rgba(255,167,38,0.6); }
 
 /* ===== ACORDEÓN DE FECHA ===== */
+/* vista por hoja: flechas ← FECHA N → + botón "Ver todas" */
+.fecha-nav { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; }
+.fecha-nav-arrow { width: 34px; height: 34px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; cursor: pointer;
+  color: rgba(255,255,255,0.75); font-size: 15px; transition: color .15s, border-color .15s, background .15s; }
+.fecha-nav-arrow:hover:not(:disabled) { color: #fff; border-color: var(--celeste, #4fc3f7); background: rgba(79,195,247,0.08); }
+.fecha-nav-arrow:disabled { opacity: 0.25; cursor: default; }
+.fecha-nav-tit { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+.fechas-vista-btn { padding: 7px 12px; flex-shrink: 0; background: none; border: 1px dashed rgba(255,255,255,0.16); border-radius: 10px;
+  cursor: pointer; font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+  color: rgba(255,255,255,0.45); transition: color .15s, border-color .15s; margin-bottom: 0; }
+.fechas-vista-btn:hover { color: rgba(255,255,255,0.8); border-color: rgba(255,255,255,0.32); }
+#partidos-wrap > .fechas-vista-btn { margin-bottom: 12px; }
+.fechas-sig-hdr { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: rgba(255,255,255,0.32); margin: 18px 0 8px; }
 .fecha-acc { margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; overflow: hidden; background: rgba(255,255,255,0.02); }
 .fecha-head { width: 100%; display: flex; align-items: center; gap: 10px; padding: 12px 16px; cursor: pointer; background: none; border: none; text-align: left; transition: background 0.15s; }
 .fecha-head:hover { background: rgba(255,255,255,0.03); }
@@ -266,6 +281,8 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 
 <script src="js/clubes.js"></script>
 <script src="js/club-colors.js"></script>
+<script src="js/kits.js"></script>
+<script src="js/ficha-cancha.js"></script>
 <script src="js/match-live.js"></script>
 <script>
 const DIAS_ES  = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
@@ -284,6 +301,8 @@ let copaActiva = 'libertadores';
   }
 }
 let teamFilter = '';           // slug o ''
+let fechaSel = null;           // "hoja" de fecha seleccionada con las flechas (null = la actual)
+let verTodas = false;          // true = fixture completo en acordeones (vista clásica)
 
 const FASES = [{ key: 'clausura', label: 'Clausura' }, { key: 'copas', label: 'Copas' }];
 
@@ -483,16 +502,18 @@ function renderClausura() {
   const proxNoFin = partidos.filter(p => !p.status.finished)
     .sort((a, b) => (a.status.utcTime||'').localeCompare(b.status.utcTime||''))[0];
   const fechaActual = proxNoFin ? proxNoFin.fecha : fechas[fechas.length - 1];
-  fechas.forEach(n => {
+  const estadoDe = n => {
     const ms = porFecha[n];
     const fin = ms.filter(m => m.status.finished).length;
     const live = ms.some(m => EN_CURSO.has(m.status.short));
-    let estado, cls;
-    if (fin === ms.length)    { estado = 'Finalizada'; cls = 'fin';  }
-    else if (live || fin > 0) { estado = 'En juego';   cls = 'live'; }
-    else                      { estado = 'Próxima';    cls = 'prox'; }
+    if (fin === ms.length)    return { estado: 'Finalizada', cls: 'fin' };
+    if (live || fin > 0)      return { estado: 'En juego',   cls: 'live' };
+    return { estado: 'Próxima', cls: 'prox' };
+  };
+  const mkAcc = (n, abierta) => {
+    const { estado, cls } = estadoDe(n);
     const acc = document.createElement('div');
-    acc.className = 'fecha-acc' + (n !== fechaActual ? ' colapsada' : '');
+    acc.className = 'fecha-acc' + (abierta ? '' : ' colapsada');
     const head = document.createElement('button');
     head.className = 'fecha-head';
     head.innerHTML = `<span class="fecha-num">FECHA ${n}</span><span class="fecha-estado ${cls}">${estado}</span><span class="fecha-chevron">▼</span>`;
@@ -500,11 +521,54 @@ function renderClausura() {
     acc.appendChild(head);
     const body = document.createElement('div');
     body.className = 'fecha-body';
-    ms.slice().sort((a, b) => (a.status.utcTime||'').localeCompare(b.status.utcTime||''))
+    porFecha[n].slice().sort((a, b) => (a.status.utcTime||'').localeCompare(b.status.utcTime||''))
       .forEach(p => body.appendChild(cardLiga(p)));
     acc.appendChild(body);
-    wrap.appendChild(acc);
-  });
+    return acc;
+  };
+
+  // Vista "todas": el fixture completo en acordeones (la clásica), con un botón
+  // para volver a la vista por hoja.
+  if (verTodas) {
+    const volver = document.createElement('button');
+    volver.className = 'fechas-vista-btn';
+    volver.textContent = '← Volver a la fecha actual';
+    volver.onclick = () => { verTodas = false; fechaSel = null; render(); };
+    wrap.appendChild(volver);
+    fechas.forEach(n => wrap.appendChild(mkAcc(n, n === fechaActual)));
+    return;
+  }
+
+  // Vista por hoja: una fecha por página. Al entrar, la fecha en juego abierta;
+  // las flechas pasan de hoja (← anterior / → siguiente) y las fechas POSTERIORES
+  // a la hoja quedan abajo como acordeones (se llega scrolleando, como siempre).
+  const sel = (fechaSel != null && fechas.includes(fechaSel)) ? fechaSel : fechaActual;
+  const idx = fechas.indexOf(sel);
+  const { estado, cls } = estadoDe(sel);
+  const nav = document.createElement('div');
+  nav.className = 'fecha-nav';
+  nav.innerHTML =
+    `<button class="fecha-nav-arrow" id="fn-prev" ${idx <= 0 ? 'disabled' : ''} aria-label="Fecha anterior">←</button>
+     <div class="fecha-nav-tit"><span class="fecha-num">FECHA ${sel}</span><span class="fecha-estado ${cls}">${estado}</span></div>
+     <button class="fecha-nav-arrow" id="fn-next" ${idx >= fechas.length - 1 ? 'disabled' : ''} aria-label="Fecha siguiente">→</button>
+     <button class="fechas-vista-btn" id="fn-todas">Ver todas</button>`;
+  nav.querySelector('#fn-prev').onclick = () => { fechaSel = fechas[idx - 1]; render(); };
+  nav.querySelector('#fn-next').onclick = () => { fechaSel = fechas[idx + 1]; render(); };
+  nav.querySelector('#fn-todas').onclick = () => { verTodas = true; render(); };
+  wrap.appendChild(nav);
+  const hoja = document.createElement('div');
+  hoja.className = 'lista-plana';
+  porFecha[sel].slice().sort((a, b) => (a.status.utcTime||'').localeCompare(b.status.utcTime||''))
+    .forEach(p => hoja.appendChild(cardLiga(p)));
+  wrap.appendChild(hoja);
+  const posteriores = fechas.filter(n => fechas.indexOf(n) > idx);
+  if (posteriores.length) {
+    const sep = document.createElement('div');
+    sep.className = 'fechas-sig-hdr';
+    sep.textContent = 'Próximas fechas';
+    wrap.appendChild(sep);
+    posteriores.forEach(n => wrap.appendChild(mkAcc(n, false)));
+  }
 }
 
 // ── COPAS ─────────────────────────────────────────────────────────────────
@@ -739,12 +803,16 @@ function _fichaGol(g) {
   const txt = (g.min != null ? g.min + "' " : '') + _fEsc(g.jugador) + (g.en_contra ? ' (e/c)' : '');
   return `<div class="ficha-gol">⚽ ${txt}</div>`;
 }
+// ── Ficha del partido: canchas estilo placa (js/ficha-cancha.js compartido con el
+// index). Si algún lineup viene sin grid confirmado, cae a la lista de siempre.
 function renderFichaHTML(data) {
   const p = data.partido;
   const nombres = {}; nombres[p.local] = p.local_nombre; nombres[p.visitante] = p.visitante_nombre;
   const gd = p.goles_detalle || {};
   const goles = (gd.local || []).concat(gd.visitante || []).sort((a, b) => (a.min || 0) - (b.min || 0));
   const golesHTML = goles.length ? `<div class="ficha-goles">${goles.map(_fichaGol).join('')}</div>` : '';
+  const cancha = fcCanchaHTML(data, { nomFn: (slug, nombre) => nomEquipo(slug, nombre) });
+  if (cancha) return golesHTML + cancha;
   const teams = [[p.local, data.jugadores[p.local] || []], [p.visitante, data.jugadores[p.visitante] || []]];
   const teamsHTML = teams.map(t => {
     const slug = t[0], jugs = t[1];
