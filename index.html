@@ -123,6 +123,12 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .live-card.open .live-card-toggle { transform: rotate(180deg); color: #2ad572; }
 .live-ficha { max-width: 620px; margin: 10px auto 0; padding: 12px 10px; border: 1px solid rgba(255,255,255,0.09);
   border-radius: 14px; background: rgba(255,255,255,0.02); }
+.live-ficha-tabs { display: flex; justify-content: center; gap: 6px; margin-bottom: 10px; }
+.live-ficha-tab { padding: 5px 14px; background: none; border: 1px solid rgba(255,255,255,0.14); border-radius: 999px;
+  cursor: pointer; font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+  color: rgba(255,255,255,0.5); transition: color .15s, border-color .15s, background .15s; }
+.live-ficha-tab:hover { color: #fff; }
+.live-ficha-tab.active { color: #2ad572; border-color: rgba(42,213,114,0.55); background: rgba(42,213,114,0.08); }
 @media (max-width: 520px) { .live-ficha { padding: 10px 6px; } }
 .live-ficha-loading { text-align: center; padding: 10px; font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 1px; color: rgba(255,255,255,0.3); }
 .live-card-goles { display: flex; justify-content: space-between; gap: 10px; font-family: 'Barlow Condensed', sans-serif; font-size: 11.5px; color: rgba(255,255,255,0.55); line-height: 1.45; }
@@ -426,21 +432,37 @@ renderGrid(ZONA_B, 'zonaB-grid');
   const fichaEl = document.getElementById('live-ficha');
   if (!strip || !cardsEl) return;
 
-  // ── formaciones desplegables (flechita en la card → fc-teams bajo la tira) ──
+  // ── ficha desplegable bajo la tira: tabs Formaciones | Estadísticas ──
   let fichaOpen = null;                       // api_id desplegado (o null)
+  let fichaTab = 'cancha';                    // 'cancha' | 'stats' (persiste entre partidos)
+  let fichaData = null;                       // último payload cargado (para cambiar de tab sin refetch)
   const fcNom = (slug, nombre) => (typeof CLUBES_CONFIG !== 'undefined' && CLUBES_CONFIG[slug])
     ? nombreCorto(slug) : (nombre || slug);
+  function pintarFicha() {
+    if (!fichaData) { fichaEl.innerHTML = '<div class="live-ficha-loading">Sin datos del partido todavía</div>'; return; }
+    const cuerpo = fichaTab === 'stats'
+      ? fcStatsHTML(fichaData, { nomFn: fcNom })
+      : (fcCanchaHTML(fichaData, { nomFn: fcNom, layout: 'horizontal' })
+         || '<div class="live-ficha-loading">Formaciones aún no confirmadas</div>');
+    fichaEl.innerHTML =
+      `<div class="live-ficha-tabs">
+         <button class="live-ficha-tab${fichaTab === 'cancha' ? ' active' : ''}" data-tab="cancha">Formaciones</button>
+         <button class="live-ficha-tab${fichaTab === 'stats' ? ' active' : ''}" data-tab="stats">Estadísticas</button>
+       </div>${cuerpo}`;
+    fichaEl.querySelectorAll('.live-ficha-tab').forEach(b =>
+      b.addEventListener('click', () => { fichaTab = b.dataset.tab; pintarFicha(); }));
+  }
   async function cargarFicha(fid, silencioso) {
-    if (!silencioso) fichaEl.innerHTML = '<div class="live-ficha-loading">Cargando formaciones…</div>';
+    if (!silencioso) fichaEl.innerHTML = '<div class="live-ficha-loading">Cargando…</div>';
     let built = null;
     try { built = await buildPayloadLive(fid); } catch (e) {}
     if (fichaOpen !== fid) return;            // se cerró/cambió mientras cargaba
-    const html = built && fcCanchaHTML(built.data, { nomFn: fcNom, layout: 'horizontal' });
-    fichaEl.innerHTML = html || '<div class="live-ficha-loading">Formaciones aún no confirmadas</div>';
+    fichaData = built ? built.data : null;
+    pintarFicha();
   }
   function toggleFicha(fid) {
-    if (fichaOpen === fid) { fichaOpen = null; fichaEl.hidden = true; fichaEl.innerHTML = ''; }
-    else { fichaOpen = fid; fichaEl.hidden = false; cargarFicha(fid, false); }
+    if (fichaOpen === fid) { fichaOpen = null; fichaData = null; fichaEl.hidden = true; fichaEl.innerHTML = ''; }
+    else { fichaOpen = fid; fichaData = null; fichaEl.hidden = false; cargarFicha(fid, false); }
     cardsEl.querySelectorAll('.live-card').forEach(c => c.classList.toggle('open', c.dataset.fid === fichaOpen));
   }
 
