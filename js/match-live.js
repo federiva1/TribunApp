@@ -64,6 +64,7 @@
         var pl = p.player || {}, pid = pl.id, isGk = (pl.pos === 'G'), ev = evInfo[pid] || {};
         outp.push({
           nombre: pl.name || '', id: pid, tipo: 'titular', portero: isGk, mvp: false,
+          grid: pl.grid || null,   // "fila:col" del lineup (fila 1 = arquero) — lo usa la cancha de la ficha
           num: String(pl.number || ''), min: ev.minSale || 90, min_in: null, min_sale: ev.minSale || null,
           goles: ev.goles || 0, asist: ev.asist || 0, amarilla: ev.amarilla || false, roja: ev.roja || false,
           top: null, ataque: null, defensa: null, duelos: null,
@@ -124,7 +125,13 @@
         // CLUBES_CONFIG y su slug derivado ("deportivorecoleta") no sirve de etiqueta.
         local_nombre: home.name || '', visitante_nombre: away.name || '',
         fecha: fecha, estadio: estadio, competicion: competicion, api_id: String(fixture.id),
-        goles_detalle: { local: golesLocal, visitante: golesVisit }
+        goles_detalle: { local: golesLocal, visitante: golesVisit },
+        formacion: (function () {
+          var f = {};
+          f[localSlug] = (luByTeam[homeId] || {}).formation || '';
+          f[visitSlug] = (luByTeam[awayId] || {}).formation || '';
+          return f;
+        })()
       },
       top_stats: topStats,
       jugadores: (function () { var o = {}; o[localSlug] = localJugs; o[visitSlug] = visitJugs; return o; })()
