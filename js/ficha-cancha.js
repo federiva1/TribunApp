@@ -38,7 +38,24 @@
     + '.fc-in{display:flex;flex-direction:column;gap:2px;margin-top:2px}'
     + ".fc-in-row{display:flex;align-items:center;gap:6px;font-family:'Barlow Condensed',sans-serif;font-size:12px;color:rgba(255,255,255,.88)}"
     + '.fc-in-row .fc-kit span{font-size:9px}'
-    + '.fc-in-nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}';
+    + '.fc-in-nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'
+    // layout horizontal: una sola cancha apaisada con los dos equipos enfrentados
+    + '.fc-h{max-width:640px;margin:0 auto}'
+    + '.fc-h-hdr{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px}'
+    + '.fc-h-hdr .fc-hdr{margin-bottom:0;min-width:0}'
+    + '.fc-h-hdr .fc-hdr.away{flex-direction:row-reverse}'
+    + '.fc-h-hdr .fc-hdr .fc-form{margin-left:0}'
+    + '.fc-pitch-h{position:relative;width:100%;aspect-ratio:16/9.6;border-radius:8px;overflow:hidden;'
+    +   'border:1px solid rgba(255,255,255,.08);'
+    +   'background:repeating-linear-gradient(90deg,rgba(255,255,255,.04) 0 12.5%,transparent 12.5% 25%),linear-gradient(160deg,#12492a,#0a2f1a)}'
+    + '.fc-pitch-h .fc-l-line{left:50%;top:0;bottom:0;right:auto;border-width:0 0 0 1.5px}'
+    + '.fc-pitch-h .fc-l-area-l{top:26%;bottom:26%;left:-2px;width:9%;border-left:none}'
+    + '.fc-pitch-h .fc-l-area-r{top:26%;bottom:26%;right:-2px;width:9%;border-right:none}'
+    + '.fc-pitch-h .fc-l-circle{width:14%}'
+    + '.fc-pitch-h .fc-spot{width:12%}'
+    + '.fc-pitch-h .fc-nm{font-size:9px;padding:1px 3px}'
+    + '.fc-h-in{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;align-items:start;margin-top:4px}'
+    + '@media (max-width:520px){.fc-pitch-h .fc-nm{font-size:8px;padding:0 2px}.fc-pitch-h .fc-spot{width:13%}}';
 
   function inject() {
     if (document.getElementById('fc-css')) return;
@@ -104,6 +121,52 @@
       + '<i class="fc-l fc-l-area-t"></i><i class="fc-l fc-l-area-b"></i>' + chips.join('') + '</div>' + ingresaron;
   }
 
+  // Chip de un titular en la cancha apaisada. lado: 'local' (arquero a la
+  // izquierda, ataca a la derecha) o 'visitante' (espejado). La col 1 del grid
+  // (izquierda de la placa vertical) queda arriba para el local y abajo para el
+  // visitante, así los mismos carriles reales quedan enfrentados.
+  function chipsHorizontales(slug, tit, lado) {
+    var rows = {};
+    tit.forEach(function (j) {
+      var m = /^(\d+):(\d+)$/.exec(j.grid || '');
+      if (!m) return;
+      (rows[+m[1]] = rows[+m[1]] || []).push({ j: j, c: +m[2] });
+    });
+    var filas = Object.keys(rows).map(Number).sort(function (a, b) { return a - b; });
+    var maxF = filas[filas.length - 1];
+    var chips = [];
+    filas.forEach(function (f) {
+      var arr = rows[f].sort(function (a, b) { return a.c - b.c; });
+      var prof = f === 1 ? 6 : (maxF > 2 ? 17 + (f - 2) * (28 / (maxF - 2)) : 30);   // % desde el arco propio
+      var x = lado === 'local' ? prof : 100 - prof;
+      arr.forEach(function (e, i) {
+        var frac = (i + 1) / (arr.length + 1);
+        var y = lado === 'local' ? frac * 100 : (1 - frac) * 100;
+        var j = e.j;
+        var sale = j.min_sale ? '<span class="fc-out">▼' + j.min_sale + "'</span>" : '';
+        var mk = marks(j);
+        chips.push('<div class="fc-spot" style="left:' + x + '%;top:' + y + '%">' + kitChip(slug, j.num, 24)
+          + '<span class="fc-nm"><i>' + esc(shortName(j.nombre)) + '</i>' + sale + '</span>'
+          + (mk ? '<span class="fc-mk">' + mk + '</span>' : '') + '</div>');
+      });
+    });
+    return chips.join('');
+  }
+
+  function ingresaronHTML(slug, sub) {
+    if (!sub.length) return '';
+    return '<div><div class="fc-subhdr">Ingresaron</div><div class="fc-in">' + sub.map(function (j) {
+      var mk = marks(j);
+      return '<div class="fc-in-row">' + kitChip(slug, j.num, 20)
+        + '<span class="fc-in-tag">▲ ' + (j.min_in ? j.min_in + "'" : '') + '</span>'
+        + '<span class="fc-in-nm">' + esc(j.nombre) + '</span>'
+        + (mk ? '<span class="fc-mk">' + mk + '</span>' : '') + '</div>';
+    }).join('') + '</div></div>';
+  }
+
+  // opts.layout: 'vertical' (default — una cancha por equipo, como las placas) |
+  // 'horizontal' (una sola cancha apaisada con los dos equipos enfrentados; ocupa
+  // mucho menos alto — la usa la tira EN JUEGO del index).
   window.fcCanchaHTML = function (data, opts) {
     inject();
     opts = opts || {};
@@ -116,14 +179,29 @@
       return t[1].filter(function (j) { return j.tipo === 'titular' && j.grid; }).length >= 7;
     });
     if (!ok) return null;
-    var html = teams.map(function (t) {
-      var slug = t[0], jugs = t[1];
-      var tit = jugs.filter(function (j) { return j.tipo === 'titular'; });
-      var sub = jugs.filter(function (j) { return j.tipo === 'suplente'; });
+    var hdrDe = function (t, extraCls) {
+      var slug = t[0];
       var form = formaciones[slug] ? '<span class="fc-form">' + esc(formaciones[slug]) + '</span>' : '';
-      var hdr = '<div class="fc-hdr"><img src="escudos/' + esc(slug) + '.png" alt="" onerror="this.style.display=\'none\'">'
+      return '<div class="fc-hdr' + (extraCls ? ' ' + extraCls : '') + '"><img src="escudos/' + esc(slug) + '.png" alt="" onerror="this.style.display=\'none\'">'
         + '<span class="fc-nom">' + esc(nomFn(slug, t[2])) + '</span>' + form + '</div>';
-      return '<div class="fc-team">' + hdr + pitchHTML(slug, tit, sub) + '</div>';
+    };
+    var titDe = function (t) { return t[1].filter(function (j) { return j.tipo === 'titular'; }); };
+    var subDe = function (t) { return t[1].filter(function (j) { return j.tipo === 'suplente'; }); };
+
+    if (opts.layout === 'horizontal') {
+      var cancha = '<div class="fc-pitch-h"><i class="fc-l fc-l-line"></i><i class="fc-l fc-l-circle"></i>'
+        + '<i class="fc-l fc-l-area-l"></i><i class="fc-l fc-l-area-r"></i>'
+        + chipsHorizontales(teams[0][0], titDe(teams[0]), 'local')
+        + chipsHorizontales(teams[1][0], titDe(teams[1]), 'visitante') + '</div>';
+      var ins = ingresaronHTML(teams[0][0], subDe(teams[0])) + ingresaronHTML(teams[1][0], subDe(teams[1]));
+      return '<div class="fc-h"><div class="fc-h-hdr">' + hdrDe(teams[0]) + hdrDe(teams[1], 'away') + '</div>'
+        + cancha + (ins ? '<div class="fc-h-in">' + ins + '</div>' : '') + '</div>';
+    }
+
+    var html = teams.map(function (t) {
+      var slug = t[0];
+      var body = pitchHTML(slug, titDe(t), subDe(t));
+      return '<div class="fc-team">' + hdrDe(t) + body + '</div>';
     }).join('');
     return '<div class="fc-teams">' + html + '</div>';
   };
