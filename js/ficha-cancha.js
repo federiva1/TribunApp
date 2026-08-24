@@ -103,7 +103,7 @@
         var j = e.j;
         var sale = j.min_sale ? '<span class="fc-out">▼' + j.min_sale + "'</span>" : '';
         var mk = marks(j);
-        chips.push('<div class="fc-spot" style="left:' + x + '%;top:' + y + '%">' + kitChip(slug, j.num, 28)
+        chips.push('<div class="fc-spot" title="' + esc(j.nombre) + '" style="left:' + x + '%;top:' + y + '%">' + kitChip(slug, j.num, 28)
           + '<span class="fc-nm"><i>' + esc(shortName(j.nombre)) + '</i>' + sale + '</span>'
           + (mk ? '<span class="fc-mk">' + mk + '</span>' : '') + '</div>');
       });
@@ -145,7 +145,7 @@
         var j = e.j;
         var sale = j.min_sale ? '<span class="fc-out">▼' + j.min_sale + "'</span>" : '';
         var mk = marks(j);
-        chips.push('<div class="fc-spot" style="left:' + x + '%;top:' + y + '%">' + kitChip(slug, j.num, 24)
+        chips.push('<div class="fc-spot" title="' + esc(j.nombre) + '" style="left:' + x + '%;top:' + y + '%">' + kitChip(slug, j.num, 24)
           + '<span class="fc-nm"><i>' + esc(shortName(j.nombre)) + '</i>' + sale + '</span>'
           + (mk ? '<span class="fc-mk">' + mk + '</span>' : '') + '</div>');
       });

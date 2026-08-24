@@ -114,11 +114,13 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .live-card.sud { background: rgba(230,81,0,0.07); border-color: rgba(255,167,38,0.4); }
 .live-card.sud:hover { background: rgba(230,81,0,0.13); border-color: rgba(255,167,38,0.65); }
 .live-card.sud .live-card-min { color: var(--sud-light); }
-/* flechita discreta que despliega las formaciones (ficha-cancha) bajo la tira */
-.live-ficha-btn { background: none; border: none; cursor: pointer; padding: 0 0 0 6px;
-  color: rgba(255,255,255,0.4); font-size: 10px; line-height: 1; transition: color .15s, transform .18s; }
-.live-ficha-btn:hover { color: #fff; }
-.live-ficha-btn.open { transform: rotate(180deg); color: #2ad572; }
+/* la card entera despliega las formaciones; la flechita centrada abajo es el
+   indicio de desplegable (rota al abrir) */
+.live-card { cursor: pointer; }
+.live-card-toggle { text-align: center; margin-top: 2px; color: rgba(255,255,255,0.35); font-size: 11px;
+  line-height: 1; transition: transform .18s, color .15s; }
+.live-card:hover .live-card-toggle { color: #fff; }
+.live-card.open .live-card-toggle { transform: rotate(180deg); color: #2ad572; }
 .live-ficha { max-width: 620px; margin: 10px auto 0; padding: 12px 10px; border: 1px solid rgba(255,255,255,0.09);
   border-radius: 14px; background: rgba(255,255,255,0.02); }
 @media (max-width: 520px) { .live-ficha { padding: 10px 6px; } }
@@ -444,7 +446,7 @@ renderGrid(ZONA_B, 'zonaB-grid');
   function toggleFicha(fid) {
     if (fichaOpen === fid) { fichaOpen = null; fichaEl.hidden = true; fichaEl.innerHTML = ''; }
     else { fichaOpen = fid; fichaEl.hidden = false; cargarFicha(fid, false); }
-    cardsEl.querySelectorAll('.live-ficha-btn').forEach(b => b.classList.toggle('open', b.dataset.fid === fichaOpen));
+    cardsEl.querySelectorAll('.live-card').forEach(c => c.classList.toggle('open', c.dataset.fid === fichaOpen));
   }
 
   // api_id → metadatos del partido (etiqueta + lados con slug/nombre/logo)
@@ -514,18 +516,21 @@ renderGrid(ZONA_B, 'zonaB-grid');
       const goles = (gH || gA)
         ? `<div class="live-card-goles"><div>${gH}</div><div class="gol-away">${gA}</div></div>` : '';
       const fid = String(r.fixture.id);
-      return `<a class="live-card${m.cls ? ' ' + m.cls : ''}" href="${m.href}">
-        <div class="live-card-meta"><span>${esc(m.etiqueta)}</span><span class="live-card-min">● ${esc(minTxt(r.fixture.status))}</span><button class="live-ficha-btn${fid === fichaOpen ? ' open' : ''}" data-fid="${fid}" title="Ver formaciones" aria-label="Ver formaciones">▼</button></div>
+      return `<div class="live-card${m.cls ? ' ' + m.cls : ''}${fid === fichaOpen ? ' open' : ''}" data-fid="${fid}" role="button" tabindex="0" aria-label="Ver formaciones">
+        <div class="live-card-meta"><span>${esc(m.etiqueta)}</span><span class="live-card-min">● ${esc(minTxt(r.fixture.status))}</span></div>
         <div class="live-card-fila">
           <div class="live-card-lado">${escudo(m.home)}<span class="nom">${esc(nom(m.home))}</span></div>
           <div class="live-card-score">${r.goals.home ?? 0} - ${r.goals.away ?? 0}</div>
           <div class="live-card-lado away"><span class="nom">${esc(nom(m.away))}</span>${escudo(m.away)}</div>
         </div>
         ${goles}
-      </a>`;
+        <div class="live-card-toggle">▾</div>
+      </div>`;
     }).join('');
-    cardsEl.querySelectorAll('.live-ficha-btn').forEach(b =>
-      b.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); toggleFicha(b.dataset.fid); }));
+    // Toda la card despliega/cierra las formaciones (ya no linkea al fixture:
+    // era redundante teniendo la ficha acá mismo).
+    cardsEl.querySelectorAll('.live-card').forEach(card =>
+      card.addEventListener('click', () => toggleFicha(card.dataset.fid)));
     // Ficha abierta: refrescarla con el poll (cambios/goles entran solos); si el
     // partido salió de la tira, se cierra.
     if (fichaOpen) {
