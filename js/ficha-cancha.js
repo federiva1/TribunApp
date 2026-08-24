@@ -55,7 +55,23 @@
     + '.fc-pitch-h .fc-spot{width:12%}'
     + '.fc-pitch-h .fc-nm{font-size:9px;padding:1px 3px}'
     + '.fc-h-in{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;align-items:start;margin-top:4px}'
-    + '@media (max-width:520px){.fc-pitch-h .fc-nm{font-size:8px;padding:0 2px}.fc-pitch-h .fc-spot{width:13%}}';
+    + '@media (max-width:520px){.fc-pitch-h .fc-nm{font-size:8px;padding:0 2px}.fc-pitch-h .fc-spot{width:13%}}'
+    // stats globales del partido (mismo look que el desplegable del fixture)
+    + '.fc-st{max-width:360px;margin:0 auto}'
+    + ".fc-st-hdr{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}"
+    + '.fc-st-hdr .fc-st-vs{color:rgba(255,255,255,.3);font-weight:400;font-size:11px;letter-spacing:1px}'
+    + '.fc-st-poss{margin-bottom:9px}'
+    + '.fc-st-poss-bar{display:flex;height:22px;border-radius:4px;overflow:hidden}'
+    + ".fc-st-poss-bar>div{display:flex;align-items:center;font-family:'Bebas Neue',sans-serif;font-size:13px;padding:0 7px;box-sizing:border-box}"
+    + '.fc-st-poss-bar>div:first-child{justify-content:flex-start}'
+    + '.fc-st-poss-bar>div:last-child{justify-content:flex-end}'
+    + ".fc-st-poss-lbl{text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.35);margin-top:3px}"
+    + '.fc-st-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.05)}'
+    + ".fc-st-val{font-family:'Bebas Neue',sans-serif;font-size:17px;line-height:1}"
+    + '.fc-st-row .fc-st-val:first-child{text-align:left}'
+    + '.fc-st-row .fc-st-val:last-child{text-align:right}'
+    + ".fc-st-lbl{font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:.4px;color:rgba(255,255,255,.55);padding:0 12px;white-space:nowrap}"
+    + ".fc-st-empty{text-align:center;padding:12px;font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:1px;color:rgba(255,255,255,.3)}";
 
   function inject() {
     if (document.getElementById('fc-css')) return;
@@ -163,6 +179,66 @@
         + (mk ? '<span class="fc-mk">' + mk + '</span>' : '') + '</div>';
     }).join('') + '</div></div>';
   }
+
+  // ── Stats globales del partido ──────────────────────────────────────────────
+  // Colores de identidad por club (js/club-colors.js): texto legible sobre fondo
+  // oscuro con accent; sobre la barra de posesión con textOn. En colisión de
+  // predominantes se usa el alt del visitante.
+  function _accent(hex) {
+    if (!/^#[0-9a-f]{6}$/i.test(hex)) return hex;
+    var r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+    var lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    if (lum >= 0.42) return hex;
+    var mix = function (v) { return Math.round(v + (255 - v) * 0.5); };
+    return '#' + [mix(r), mix(g), mix(b)].map(function (v) { return v.toString(16).padStart(2, '0'); }).join('');
+  }
+  function _textOn(hex) {
+    if (!/^#[0-9a-f]{6}$/i.test(hex)) return '#fff';
+    var r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+    return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.62 ? '#15202b' : '#ffffff';
+  }
+  function _colDist(h1, h2) {
+    var p = function (h) { return [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)]; };
+    var a = p(h1), b = p(h2);
+    return Math.sqrt(Math.pow(a[0] - b[0], 2) + Math.pow(a[1] - b[1], 2) + Math.pow(a[2] - b[2], 2));
+  }
+  function _matchColors(local, visit) {
+    var CC = window.CLUB_COLORS || {};
+    var cl = (CC[local] && CC[local].primary) || '#38bdf8';
+    var cv = (CC[visit] && CC[visit].primary) || '#fb923c';
+    if (_colDist(cl, cv) < 70) {
+      var altV = CC[visit] && CC[visit].alt;
+      if (altV && _colDist(cl, altV) >= 70) cv = altV;
+      else {
+        var altL = CC[local] && CC[local].alt;
+        if (altL && _colDist(cv, altL) >= 70) cl = altL;
+        else cv = '#fb923c';
+      }
+    }
+    return [cl, cv];
+  }
+  window.fcStatsHTML = function (data, opts) {
+    inject();
+    opts = opts || {};
+    var p = data.partido || {};
+    var nomFn = opts.nomFn || function (slug, nombre) { return nombre || slug; };
+    var cols = _matchColors(p.local, p.visitante), cl = cols[0], cv = cols[1];
+    var al = _accent(cl), av = _accent(cv);
+    var hdr = '<div class="fc-st-hdr"><span style="color:' + al + '">' + esc(nomFn(p.local, p.local_nombre))
+      + '</span><span class="fc-st-vs">vs</span><span style="color:' + av + '">' + esc(nomFn(p.visitante, p.visitante_nombre)) + '</span></div>';
+    var rows = (data.top_stats || []).map(function (s) {
+      if (s.tipo === 'posesion') {
+        return '<div class="fc-st-poss"><div class="fc-st-poss-bar">'
+          + '<div style="width:' + s.local_val + '%;background:' + cl + ';color:' + _textOn(cl) + '">' + esc(s.local) + '</div>'
+          + '<div style="width:' + s.visitante_val + '%;background:' + cv + ';color:' + _textOn(cv) + '">' + esc(s.visitante) + '</div>'
+          + '</div><div class="fc-st-poss-lbl">' + esc(s.label) + '</div></div>';
+      }
+      return '<div class="fc-st-row"><span class="fc-st-val" style="color:' + al + '">' + esc(s.local) + '</span>'
+        + '<span class="fc-st-lbl">' + esc(s.label) + '</span>'
+        + '<span class="fc-st-val" style="color:' + av + '">' + esc(s.visitante) + '</span></div>';
+    }).join('');
+    return '<div class="fc-st">' + hdr + (rows || '<div class="fc-st-empty">Sin estadísticas todavía</div>') + '</div>';
+  };
 
   // opts.layout: 'vertical' (default — una cancha por equipo, como las placas) |
   // 'horizontal' (una sola cancha apaisada con los dos equipos enfrentados; ocupa
