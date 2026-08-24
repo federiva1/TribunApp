@@ -114,6 +114,20 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .live-card.sud { background: rgba(230,81,0,0.07); border-color: rgba(255,167,38,0.4); }
 .live-card.sud:hover { background: rgba(230,81,0,0.13); border-color: rgba(255,167,38,0.65); }
 .live-card.sud .live-card-min { color: var(--sud-light); }
+/* flechita discreta que despliega las formaciones (ficha-cancha) bajo la tira */
+.live-ficha-btn { background: none; border: none; cursor: pointer; padding: 0 0 0 6px;
+  color: rgba(255,255,255,0.4); font-size: 10px; line-height: 1; transition: color .15s, transform .18s; }
+.live-ficha-btn:hover { color: #fff; }
+.live-ficha-btn.open { transform: rotate(180deg); color: #2ad572; }
+.live-ficha { max-width: 620px; margin: 10px auto 0; padding: 12px 10px; border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 14px; background: rgba(255,255,255,0.02); }
+.live-ficha .fc-teams { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 14px; }
+@media (max-width: 520px) {
+  .live-ficha { padding: 10px 6px; }
+  .live-ficha .fc-spot { width: 32%; }
+  .live-ficha .fc-nm { font-size: 9px; padding: 1px 3px; }
+}
+.live-ficha-loading { text-align: center; padding: 10px; font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 1px; color: rgba(255,255,255,0.3); }
 .live-card-goles { display: flex; justify-content: space-between; gap: 10px; font-family: 'Barlow Condensed', sans-serif; font-size: 11.5px; color: rgba(255,255,255,0.55); line-height: 1.45; }
 .live-card-goles > div { min-width: 0; }
 .live-card-goles .gol-away { text-align: right; }
@@ -250,6 +264,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
     <div id="live-strip" style="display:none;">
       <div class="live-strip-title"><span class="live-dot"></span>EN JUEGO</div>
       <div class="live-cards" id="live-cards"></div>
+      <div class="live-ficha" id="live-ficha" hidden></div>
     </div>
 
     <!-- toggle -->
@@ -301,6 +316,10 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 </main>
 
 <script src="js/clubes.js"></script>
+<script src="js/club-colors.js"></script>
+<script src="js/kits.js"></script>
+<script src="js/ficha-cancha.js"></script>
+<script src="js/match-live.js"></script>
 <script>
 // Zonas de la Liga Profesional (fijas para la temporada — Apertura y Clausura comparten división)
 const ZONA_A = ['estudiantes','bocajuniors','velezsarsfield','talleres','independiente','lanus','sanlorenzo','union','instituto','defensayjusticia','gimnasiamendoza','clubatleticoplatense','centralcordobadesantiago','newellsoldboys','deportivoriestra'];
@@ -412,7 +431,26 @@ renderGrid(ZONA_B, 'zonaB-grid');
 (async () => {
   const strip = document.getElementById('live-strip');
   const cardsEl = document.getElementById('live-cards');
+  const fichaEl = document.getElementById('live-ficha');
   if (!strip || !cardsEl) return;
+
+  // ── formaciones desplegables (flechita en la card → fc-teams bajo la tira) ──
+  let fichaOpen = null;                       // api_id desplegado (o null)
+  const fcNom = (slug, nombre) => (typeof CLUBES_CONFIG !== 'undefined' && CLUBES_CONFIG[slug])
+    ? nombreCorto(slug) : (nombre || slug);
+  async function cargarFicha(fid, silencioso) {
+    if (!silencioso) fichaEl.innerHTML = '<div class="live-ficha-loading">Cargando formaciones…</div>';
+    let built = null;
+    try { built = await buildPayloadLive(fid); } catch (e) {}
+    if (fichaOpen !== fid) return;            // se cerró/cambió mientras cargaba
+    const html = built && fcCanchaHTML(built.data, { nomFn: fcNom });
+    fichaEl.innerHTML = html || '<div class="live-ficha-loading">Formaciones aún no confirmadas</div>';
+  }
+  function toggleFicha(fid) {
+    if (fichaOpen === fid) { fichaOpen = null; fichaEl.hidden = true; fichaEl.innerHTML = ''; }
+    else { fichaOpen = fid; fichaEl.hidden = false; cargarFicha(fid, false); }
+    cardsEl.querySelectorAll('.live-ficha-btn').forEach(b => b.classList.toggle('open', b.dataset.fid === fichaOpen));
+  }
 
   // api_id → metadatos del partido (etiqueta + lados con slug/nombre/logo)
   const MATCHES = {};
@@ -480,8 +518,9 @@ renderGrid(ZONA_B, 'zonaB-grid');
       const gA = golesDe(r, r.teams && r.teams.away && r.teams.away.id);
       const goles = (gH || gA)
         ? `<div class="live-card-goles"><div>${gH}</div><div class="gol-away">${gA}</div></div>` : '';
+      const fid = String(r.fixture.id);
       return `<a class="live-card${m.cls ? ' ' + m.cls : ''}" href="${m.href}">
-        <div class="live-card-meta"><span>${esc(m.etiqueta)}</span><span class="live-card-min">● ${esc(minTxt(r.fixture.status))}</span></div>
+        <div class="live-card-meta"><span>${esc(m.etiqueta)}</span><span class="live-card-min">● ${esc(minTxt(r.fixture.status))}</span><button class="live-ficha-btn${fid === fichaOpen ? ' open' : ''}" data-fid="${fid}" title="Ver formaciones" aria-label="Ver formaciones">▼</button></div>
         <div class="live-card-fila">
           <div class="live-card-lado">${escudo(m.home)}<span class="nom">${esc(nom(m.home))}</span></div>
           <div class="live-card-score">${r.goals.home ?? 0} - ${r.goals.away ?? 0}</div>
@@ -490,6 +529,14 @@ renderGrid(ZONA_B, 'zonaB-grid');
         ${goles}
       </a>`;
     }).join('');
+    cardsEl.querySelectorAll('.live-ficha-btn').forEach(b =>
+      b.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); toggleFicha(b.dataset.fid); }));
+    // Ficha abierta: refrescarla con el poll (cambios/goles entran solos); si el
+    // partido salió de la tira, se cierra.
+    if (fichaOpen) {
+      if (vivos.some(r => String(r.fixture.id) === fichaOpen)) cargarFicha(fichaOpen, true);
+      else toggleFicha(fichaOpen);
+    }
     strip.style.display = '';
   }
   const tick = () => { if (!document.hidden) pollLive(); };

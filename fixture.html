@@ -115,6 +115,13 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .copa-subtab.sud.active { color: #fff; background: rgba(230,81,0,0.25); border-color: rgba(255,167,38,0.6); }
 
 /* ===== ACORDEÓN DE FECHA ===== */
+.fechas-prev-toggle { display: flex; align-items: center; gap: 7px; width: 100%; margin: 0 0 12px; padding: 7px 14px;
+  background: none; border: 1px dashed rgba(255,255,255,0.14); border-radius: 12px; cursor: pointer;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 1px; text-transform: uppercase;
+  color: rgba(255,255,255,0.42); transition: color .15s, border-color .15s; }
+.fechas-prev-toggle:hover { color: rgba(255,255,255,0.75); border-color: rgba(255,255,255,0.28); }
+.fechas-prev-toggle .fecha-chevron { font-size: 9px; transform: rotate(-90deg); transition: transform .18s; }
+.fechas-prev-toggle.open .fecha-chevron { transform: none; }
 .fecha-acc { margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; overflow: hidden; background: rgba(255,255,255,0.02); }
 .fecha-head { width: 100%; display: flex; align-items: center; gap: 10px; padding: 12px 16px; cursor: pointer; background: none; border: none; text-align: left; transition: background 0.15s; }
 .fecha-head:hover { background: rgba(255,255,255,0.03); }
@@ -192,33 +199,6 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   .ficha-pmarks { font-size: 10px; letter-spacing: 0; }
   .ficha-ptag { font-size: 9.5px; }
 }
-/* ── Ficha con cancha (formaciones estilo placa) ── */
-.ficha-teams.pitch { grid-template-columns: repeat(2, minmax(0, 260px)); gap: 10px 22px; align-items: start; }
-@media (max-width: 560px) { .ficha-teams.pitch { grid-template-columns: minmax(0, 300px); } }
-.fpitch { position: relative; width: 100%; aspect-ratio: 100/126; border-radius: 8px; overflow: hidden;
-  border: 1px solid rgba(255,255,255,0.08);
-  background: repeating-linear-gradient(0deg, rgba(255,255,255,0.04) 0 12.5%, transparent 12.5% 25%),
-              linear-gradient(160deg, #12492a, #0a2f1a); }
-.fpl { position: absolute; border: 1.5px solid rgba(255,255,255,0.16); pointer-events: none; }
-.fpl-line { left: 0; right: 0; top: 50%; border-width: 1.5px 0 0 0; }
-.fpl-circle { left: 50%; top: 50%; width: 24%; aspect-ratio: 1; transform: translate(-50%,-50%); border-radius: 50%; }
-.fpl-area-b { left: 24%; right: 24%; bottom: -2px; height: 13%; border-bottom: none; }
-.fpl-area-t { left: 24%; right: 24%; top: -2px; height: 13%; border-top: none; }
-.fp-spot { position: absolute; transform: translate(-50%,-50%); display: flex; flex-direction: column; align-items: center; gap: 1px; width: 25%; }
-.fp-kit { display: inline-flex; align-items: center; justify-content: center; border-radius: 50%;
-  border: 1.5px solid rgba(255,255,255,0.75); box-shadow: 0 2px 5px rgba(0,0,0,0.45); flex-shrink: 0; }
-.fp-kit span { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; color: #fff; line-height: 1; }
-.fp-nm { display: flex; align-items: center; gap: 3px; max-width: 100%; font-family: 'Barlow Condensed', sans-serif; font-size: 10px; line-height: 1.15;
-  color: #fff; background: rgba(10,16,28,0.72); border-radius: 6px; padding: 1px 5px; }
-.fp-nm-t { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: inherit; font-style: normal; }
-.fp-nm .ficha-out { flex-shrink: 0; }
-.fp-mk { font-size: 9px; line-height: 1; text-shadow: 0 1px 2px rgba(0,0,0,0.6); }
-.fp-in { display: flex; flex-direction: column; gap: 2px; margin-top: 2px; }
-.fp-in-row { display: flex; align-items: center; gap: 6px; font-family: 'Barlow Condensed', sans-serif; font-size: 12px; }
-.fp-in-row .fp-kit span { font-size: 9px; }
-.fp-in-nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: rgba(255,255,255,0.88); }
-.ficha-team-hdr .fp-form { margin-left: auto; font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 1px; color: rgba(255,255,255,0.42); }
-
 .ficha-team-hdr { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
 .ficha-team-hdr img { width: 17px; height: 17px; object-fit: contain; }
 .ficha-team-hdr span { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: rgba(255,255,255,0.7); }
@@ -294,6 +274,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 <script src="js/clubes.js"></script>
 <script src="js/club-colors.js"></script>
 <script src="js/kits.js"></script>
+<script src="js/ficha-cancha.js"></script>
 <script src="js/match-live.js"></script>
 <script>
 const DIAS_ES  = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
@@ -312,6 +293,7 @@ let copaActiva = 'libertadores';
   }
 }
 let teamFilter = '';           // slug o ''
+let _prevFechasOpen = false;   // toggle "Fechas anteriores" desplegado (sobrevive al poll)
 
 const FASES = [{ key: 'clausura', label: 'Clausura' }, { key: 'copas', label: 'Copas' }];
 
@@ -511,7 +493,7 @@ function renderClausura() {
   const proxNoFin = partidos.filter(p => !p.status.finished)
     .sort((a, b) => (a.status.utcTime||'').localeCompare(b.status.utcTime||''))[0];
   const fechaActual = proxNoFin ? proxNoFin.fecha : fechas[fechas.length - 1];
-  fechas.forEach(n => {
+  const mkAcc = n => {
     const ms = porFecha[n];
     const fin = ms.filter(m => m.status.finished).length;
     const live = ms.some(m => EN_CURSO.has(m.status.short));
@@ -531,8 +513,26 @@ function renderClausura() {
     ms.slice().sort((a, b) => (a.status.utcTime||'').localeCompare(b.status.utcTime||''))
       .forEach(p => body.appendChild(cardLiga(p)));
     acc.appendChild(body);
-    wrap.appendChild(acc);
-  });
+    return acc;
+  };
+  // Las fechas finalizadas anteriores a la actual van escondidas detrás de un
+  // toggle chico: al entrar se ve directo la fecha en juego, sin la pila de
+  // "Finalizada" arriba. El estado sobrevive al re-render del poll en vivo.
+  const previas = fechas.filter(n => n < fechaActual && porFecha[n].every(m => m.status.finished));
+  const resto = fechas.filter(n => !previas.includes(n));
+  if (previas.length) {
+    const tog = document.createElement('button');
+    tog.className = 'fechas-prev-toggle' + (_prevFechasOpen ? ' open' : '');
+    tog.innerHTML = `<span class="fecha-chevron">▼</span> Fechas anteriores (${previas[0]}–${previas[previas.length - 1]})`;
+    const cont = document.createElement('div');
+    cont.className = 'fechas-prev';
+    if (!_prevFechasOpen) cont.hidden = true;
+    previas.forEach(n => cont.appendChild(mkAcc(n)));
+    tog.onclick = () => { _prevFechasOpen = !_prevFechasOpen; cont.hidden = !_prevFechasOpen; tog.classList.toggle('open', _prevFechasOpen); };
+    wrap.appendChild(tog);
+    wrap.appendChild(cont);
+  }
+  resto.forEach(n => wrap.appendChild(mkAcc(n)));
 }
 
 // ── COPAS ─────────────────────────────────────────────────────────────────
@@ -767,87 +767,27 @@ function _fichaGol(g) {
   const txt = (g.min != null ? g.min + "' " : '') + _fEsc(g.jugador) + (g.en_contra ? ' (e/c)' : '');
   return `<div class="ficha-gol">⚽ ${txt}</div>`;
 }
-// ── Ficha con cancha: cada equipo como en las placas de formaciones ──────────
-function _fpMarks(j) {
-  const marks = [];
-  for (let i = 0; i < (j.goles || 0); i++) marks.push('⚽');
-  if (j.asist > 0) marks.push('🅰');
-  if (j.roja) marks.push('🟥'); else if (j.amarilla) marks.push('🟨');
-  return marks.join('');
-}
-function _fpKitChip(slug, num, size) {
-  const kit = clubKit(slug);
-  return `<span class="fp-kit" style="width:${size}px;height:${size}px;background:${kitBackground(kit, size)}">`
-    + `<span style="font-size:${Math.round(size * 0.44)}px;text-shadow:${NUM_OUTLINE}">${_fEsc(num || '')}</span></span>`;
-}
-function _fpNombre(n) {
-  n = String(n || '');
-  if (n.length <= 16) return n;
-  const parts = n.split(/\s+/);
-  return parts.length > 1 ? parts.slice(1).join(' ') : n;   // saca la inicial/primer nombre
-}
-// Cancha vertical por equipo desde el grid api-sports ("fila:col", fila 1 = arquero,
-// col 1 = izquierda — misma convención que las placas de social_lineups).
-function _fichaPitchHTML(slug, tit, sub) {
-  const rows = {};
-  tit.forEach(j => {
-    const m = /^(\d+):(\d+)$/.exec(j.grid || '');
-    if (!m) return;
-    (rows[+m[1]] = rows[+m[1]] || []).push({ j, c: +m[2] });
-  });
-  const filas = Object.keys(rows).map(Number).sort((a, b) => a - b);
-  const maxF = filas[filas.length - 1];
-  const chips = [];
-  filas.forEach(f => {
-    const arr = rows[f].sort((a, b) => a.c - b.c);
-    const y = f === 1 ? 89 : (maxF > 2 ? 73 - (f - 2) * (60 / (maxF - 2)) : 40);
-    arr.forEach((e, i) => {
-      const x = (i + 1) / (arr.length + 1) * 100;
-      const j = e.j;
-      const sale = j.min_sale ? `<span class="ficha-out">▼${j.min_sale}'</span>` : '';
-      const marks = _fpMarks(j);
-      chips.push(`<div class="fp-spot" style="left:${x}%;top:${y}%">${_fpKitChip(slug, j.num, 28)}`
-        + `<span class="fp-nm"><i class="fp-nm-t">${_fEsc(_fpNombre(j.nombre))}</i>${sale}</span>`
-        + (marks ? `<span class="fp-mk">${marks}</span>` : '') + `</div>`);
-    });
-  });
-  const ingresaron = sub.length
-    ? `<div class="ficha-subhdr">Ingresaron</div><div class="fp-in">` + sub.map(j => {
-        const marks = _fpMarks(j);
-        return `<div class="fp-in-row">${_fpKitChip(slug, j.num, 20)}`
-          + `<span class="ficha-in">▲ ${j.min_in ? j.min_in + "'" : ''}</span>`
-          + `<span class="fp-in-nm">${_fEsc(j.nombre)}</span>`
-          + (marks ? `<span class="ficha-pmarks">${marks}</span>` : '') + `</div>`;
-      }).join('') + `</div>`
-    : '';
-  return `<div class="fpitch"><i class="fpl fpl-line"></i><i class="fpl fpl-circle"></i>`
-    + `<i class="fpl fpl-area-t"></i><i class="fpl fpl-area-b"></i>${chips.join('')}</div>${ingresaron}`;
-}
+// ── Ficha del partido: canchas estilo placa (js/ficha-cancha.js compartido con el
+// index). Si algún lineup viene sin grid confirmado, cae a la lista de siempre.
 function renderFichaHTML(data) {
   const p = data.partido;
   const nombres = {}; nombres[p.local] = p.local_nombre; nombres[p.visitante] = p.visitante_nombre;
-  const formaciones = p.formacion || {};
   const gd = p.goles_detalle || {};
   const goles = (gd.local || []).concat(gd.visitante || []).sort((a, b) => (a.min || 0) - (b.min || 0));
   const golesHTML = goles.length ? `<div class="ficha-goles">${goles.map(_fichaGol).join('')}</div>` : '';
+  const cancha = fcCanchaHTML(data, { nomFn: (slug, nombre) => nomEquipo(slug, nombre) });
+  if (cancha) return golesHTML + cancha;
   const teams = [[p.local, data.jugadores[p.local] || []], [p.visitante, data.jugadores[p.visitante] || []]];
-  // Cancha si los dos equipos tienen grid confirmado; si no (lineup viejo/incompleto),
-  // se cae a la lista de siempre.
-  const conCancha = teams.every(t => t[1].filter(j => j.tipo === 'titular' && j.grid).length >= 7);
   const teamsHTML = teams.map(t => {
     const slug = t[0], jugs = t[1];
     const tit = jugs.filter(j => j.tipo === 'titular');
     const sub = jugs.filter(j => j.tipo === 'suplente');
-    const form = formaciones[slug] ? `<span class="fp-form">${_fEsc(formaciones[slug])}</span>` : '';
-    const hdr = `<div class="ficha-team-hdr"><img src="escudos/${_fEsc(slug)}.png" alt="" onerror="this.style.display='none'">`
-      + `<span>${_fEsc(nomEquipo(slug, nombres[slug]))}</span>${form}</div>`;
-    if (conCancha) return `<div class="ficha-team">${hdr}${_fichaPitchHTML(slug, tit, sub)}</div>`;
     let rows = tit.map(_fichaPlayerRow).join('');
     if (sub.length) rows += `<div class="ficha-subhdr">Ingresaron</div>` + sub.map(_fichaPlayerRow).join('');
     if (!rows) rows = `<div class="ficha-subhdr">Formación aún no confirmada</div>`;
-    return `<div class="ficha-team">${hdr}<div class="ficha-rows">${rows}</div></div>`;
+    return `<div class="ficha-team"><div class="ficha-team-hdr"><span>${_fEsc(nomEquipo(slug, nombres[slug]))}</span></div><div class="ficha-rows">${rows}</div></div>`;
   }).join('');
-  return golesHTML + `<div class="ficha-teams${conCancha ? ' pitch' : ''}">${teamsHTML}</div>`;
+  return golesHTML + `<div class="ficha-teams">${teamsHTML}</div>`;
 }
 
 function _logoFallback(img) {
