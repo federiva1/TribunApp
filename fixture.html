@@ -188,6 +188,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .ficha-btns .ficha-toggle + .ficha-toggle { border-left: 1px solid rgba(255,255,255,0.07); }
 .ficha-toggle { display: flex; align-items: center; justify-content: center; gap: 5px; flex: 1; min-width: 0; padding: 8px 6px; background: none; border: none; cursor: pointer; font-family: 'Barlow Condensed', sans-serif; font-size: 11.5px; letter-spacing: 0.5px; text-transform: uppercase; color: var(--celeste, #4fc3f7); transition: color .15s, box-shadow .15s; }
 .ficha-toggle:hover { color: #fff; }
+a.ficha-toggle { text-decoration: none; box-sizing: border-box; }
 .ficha-toggle.open { color: #fff; box-shadow: inset 0 -2px 0 var(--celeste, #4fc3f7); }
 .ficha-toggle svg { width: 13px; height: 13px; flex-shrink: 0; }
 .ficha-toggle .txt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -662,11 +663,17 @@ function cardLiga(p, etiqueta) {
   const started = fid && (enCurso || finLink || !!sid);
   const icoUsers = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
   const icoStats = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`;
-  // Dos pestañas en la misma línea; ambas despliegan INLINE abajo (ficha ↔ stats globales).
+  // Dos pestañas en la misma línea. La ficha despliega INLINE; las estadísticas:
+  // en vivo despliegan inline (api-sports), pero con el partido TERMINADO y su
+  // JSON procesado llevan a la pantalla completa del partido (tabla FotMob de
+  // los dos equipos + stats globales + jugadores).
+  const statsAccion = (finLink && sid)
+    ? `<a class="ficha-toggle" href="estadisticas.html?p=${sid}&tab=tabla">${icoStats}<span class="txt">Ver estadísticas del partido</span> <span class="ficha-caret">→</span></a>`
+    : `<button class="ficha-toggle" type="button" data-sec="stats">${icoStats}<span class="txt">Ver estadísticas del partido</span> <span class="ficha-caret">▾</span></button>`;
   const acciones = started
     ? `<div class="ficha-btns">
          <button class="ficha-toggle" type="button" data-sec="ficha">${icoUsers}<span class="txt">Ficha del partido</span> <span class="ficha-caret">▾</span></button>
-         <button class="ficha-toggle" type="button" data-sec="stats">${icoStats}<span class="txt">Ver estadísticas del partido</span> <span class="ficha-caret">▾</span></button>
+         ${statsAccion}
        </div>`
     : '';
   card.innerHTML =
@@ -675,7 +682,7 @@ function cardLiga(p, etiqueta) {
      ${started ? `<div class="partido-acciones">${acciones}<div class="ficha-panel" data-fid="${fid}" hidden></div></div>` : ''}`;
   if (started) {
     const cont = card.querySelector('.partido-acciones');
-    cont.querySelectorAll('.ficha-toggle').forEach(btn =>
+    cont.querySelectorAll('button.ficha-toggle').forEach(btn =>
       btn.addEventListener('click', () => toggleSection(cont, fid, btn.dataset.sec)));
   }
   return card;
@@ -817,10 +824,13 @@ function cardCopa(p, copaCls, leg) {
   const started = fid && (enCurso || finished || !!sid);
   const icoUsers = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
   const icoStats = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`;
+  const statsAccion = (finished && sid)
+    ? `<a class="ficha-toggle" href="estadisticas.html?p=${sid}&tab=tabla">${icoStats}<span class="txt">Ver estadísticas del partido</span> <span class="ficha-caret">→</span></a>`
+    : `<button class="ficha-toggle" type="button" data-sec="stats">${icoStats}<span class="txt">Ver estadísticas del partido</span> <span class="ficha-caret">▾</span></button>`;
   const acciones = started
     ? `<div class="ficha-btns">
          <button class="ficha-toggle" type="button" data-sec="ficha">${icoUsers}<span class="txt">Ficha del partido</span> <span class="ficha-caret">▾</span></button>
-         <button class="ficha-toggle" type="button" data-sec="stats">${icoStats}<span class="txt">Ver estadísticas del partido</span> <span class="ficha-caret">▾</span></button>
+         ${statsAccion}
        </div>`
     : '';
   card.innerHTML =
@@ -829,7 +839,7 @@ function cardCopa(p, copaCls, leg) {
      ${started ? `<div class="partido-acciones">${acciones}<div class="ficha-panel" data-fid="${fid}" hidden></div></div>` : ''}`;
   if (started) {
     const cont = card.querySelector('.partido-acciones');
-    cont.querySelectorAll('.ficha-toggle').forEach(btn =>
+    cont.querySelectorAll('button.ficha-toggle').forEach(btn =>
       btn.addEventListener('click', () => toggleSection(cont, fid, btn.dataset.sec)));
   }
   return card;
