@@ -12,6 +12,7 @@ Sale en data/social/preview/fecha-{YYYY-MM-DD}.png y no toca ningún estado:
 es una placa a demanda, no la genera ningún workflow.
 """
 import argparse
+import re
 import json
 import sys
 from datetime import datetime, timedelta, timezone
@@ -57,9 +58,17 @@ def partidos_del_dia(fecha):
                 continue
             out.append({'ko': ko, 'fecha_num': None, 'comp': key,
                         'home': p['home'].get('slug'), 'away': p['away'].get('slug'),
-                        'home_name': p['home']['name'], 'away_name': p['away']['name']})
+                        'home_name': p['home']['name'], 'away_name': p['away']['name'],
+                        'home_logo': p['home'].get('logo'), 'away_logo': p['away'].get('logo')})
     out.sort(key=lambda m: m['ko'])
     return out
+
+
+def _copa_esc(logo_url):
+    """Rival de copa sin slug: escudos/copa/{id}.png (lo baja fetch_escudos_copa)."""
+    m = re.search(r'/(\d+)\.png', logo_url or '')
+    p = ROOT / 'escudos' / 'copa' / f'{m.group(1)}.png' if m else None
+    return p if (p and p.exists()) else None
 
 
 def _nombre(slug, fallback):
@@ -82,10 +91,13 @@ def _html_uno(m, fecha, titulo):
                           ("Barlow Condensed", 400, 'barlow-condensed-latin-400-normal.woff2'),
                           ("Barlow Condensed", 600, 'barlow-condensed-latin-600-normal.woff2')))
 
-    def esc(slug):
+    def esc(slug, logo=None):
         p = ROOT / 'escudos' / f'{slug}.png'
-        return (f'<img class="esc" src="{_b64(p, "image/png")}">'
-                if slug and p.exists() else '<div class="esc"></div>')
+        if slug and p.exists():
+            return f'<img class="esc" src="{_b64(p, "image/png")}">'
+        cp = _copa_esc(logo)
+        return (f'<img class="esc" src="{_b64(cp, "image/png")}">'
+                if cp else '<div class="esc"></div>')
 
     return """<!DOCTYPE html><html><head><meta charset="utf-8"><style>
 %s
@@ -135,8 +147,8 @@ body{width:760px;height:950px;font-family:'Barlow Condensed',sans-serif;color:#f
   <div class="pie">SEGUILOS Y PUNTUÁ A LOS JUGADORES EN <b>TRIBUNAPP.COM.AR</b></div>
 </div></body></html>""" % (
         ff, _logo_datauri(), torneo, titulo, sub,
-        esc(m['home']), _nombre(m['home'], m['home_name']),
-        esc(m['away']), _nombre(m['away'], m['away_name']),
+        esc(m['home'], m.get('home_logo')), _nombre(m['home'], m['home_name']),
+        esc(m['away'], m.get('away_logo')), _nombre(m['away'], m['away_name']),
         m['ko'].strftime('%H:%M'))
 
 
@@ -153,10 +165,13 @@ def _html(partidos, fecha, titulo):
                           ("Barlow Condensed", 400, 'barlow-condensed-latin-400-normal.woff2'),
                           ("Barlow Condensed", 600, 'barlow-condensed-latin-600-normal.woff2')))
 
-    def esc(slug):
+    def esc(slug, logo=None):
         p = ROOT / 'escudos' / f'{slug}.png'
-        return (f'<img class="esc" src="{_b64(p, "image/png")}">'
-                if slug and p.exists() else '<div class="esc"></div>')
+        if slug and p.exists():
+            return f'<img class="esc" src="{_b64(p, "image/png")}">'
+        cp = _copa_esc(logo)
+        return (f'<img class="esc" src="{_b64(cp, "image/png")}">'
+                if cp else '<div class="esc"></div>')
 
     # con muchos partidos las tarjetas se achican para que entren todas
     n = max(1, len(partidos))
@@ -170,8 +185,8 @@ def _html(partidos, fecha, titulo):
         '<div class="eq izq">%s<span>%s</span></div>'
         '</div></div>'
         % (m['ko'].strftime('%H:%M'),
-           _nombre(m['home'], m['home_name']), esc(m['home']),
-           esc(m['away']), _nombre(m['away'], m['away_name']))
+           _nombre(m['home'], m['home_name']), esc(m['home'], m.get('home_logo')),
+           esc(m['away'], m.get('away_logo')), _nombre(m['away'], m['away_name']))
         for m in partidos)
 
     return """<!DOCTYPE html><html><head><meta charset="utf-8"><style>
