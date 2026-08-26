@@ -42,6 +42,9 @@ var KITS = {
   talleres:                 { type: 'stripesV', colors: ['#2a3566', '#ffffff'] },
   tigre:                    { type: 'bandV',    colors: ['#182a8a', '#d4232a'] },   // azul | rojo | azul
   velezsarsfield:           { type: 'svg', colors: ['#ffffff'], svg: "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M4 3 L50 78 L96 3 L70 3 L50 52 L30 3 Z' fill='%230c4f9e'/></svg>" },
+
+  // Rivales de copa (slug derivado del nombre api-sports, no están en CLUBES_CONFIG)
+  santafe:                  { type: 'svg', colors: ['#ffffff'], svg: "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='white'/><rect width='100' height='28' fill='%23d7182a'/><circle cx='70' cy='66' r='10' fill='%23d7182a'/></svg>" },   // Ind. Santa Fe: rojo arriba + puntito
 };
 
 // Kit del club; si no tiene uno definido, sólido con su color de escudo (club-colors.js).
