@@ -1449,7 +1449,13 @@ function _shChip(p, size) {
 
 function _shApellido(name) {
   const t = String(name || '').trim().split(/\s+/);
-  return t.length > 1 ? t[t.length - 1] : (t[0] || '');
+  if (t.length <= 1) return t[0] || '';
+  // El apellido arrastra sus partículas ("Di Lollo", "De la Cruz", "Van Dijk")
+  // en vez de quedar solo el último token ("Lollo").
+  const PART = new Set(['di', 'de', 'del', 'da', 'dal', 'la', 'le', 'san', 'van', 'von']);
+  let i = t.length - 1;
+  while (i > 1 && PART.has(t[i - 1].toLowerCase())) i--;
+  return t.slice(i).join(' ');
 }
 
 // Coordenadas de la cancha en apaisado. La cancha de "armá tu formación" es
