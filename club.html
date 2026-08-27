@@ -3811,6 +3811,12 @@ async function resolveCopaScoresContext() {
                                 compRe.test(e.competicion || '') && mismoDia(e));
     if (!entry) return;   // sin datos aún → applyGating deja los puntajes cerrados
     scoresMatchId = entry.id;
+    // match_date canónico = el día del archivo del partido (día UTC), que es el
+    // mismo que usa la formación (fixture por-club) y el matching de la sección
+    // ESTADÍSTICAS. El local AR de arriba era solo para buscar el archivo; si
+    // quedaba, los votos de puntajes caían un día antes que los de formación y
+    // Est. TribunApp mostraba el partido duplicado (caso real: River-Santa Fe).
+    if (entry.fecha) SCORES_MATCH_DATE = entry.fecha;
     const data = await fetch(`data/partidos/${entry.id}.json?t=${Date.now()}`).then(r => r.ok ? r.json() : null);
     // Marcador desde el archivo del partido, que viene del endpoint por-id: el de
     // copas.json sale del agregado y puede quedar viejo un rato tras el FT (caso
