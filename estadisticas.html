@@ -394,7 +394,8 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
     <div class="tabs">
       <div class="tab active" data-tab="stats">Estadísticas</div>
       <div class="tab" data-tab="tabla">Tabla</div>
-      <div class="tab" data-tab="jugadores">Jugadores</div>
+      <!-- Jugadores oculto por ahora (la Tabla lo reemplaza); sacar hidden para reactivarlo -->
+      <div class="tab" data-tab="jugadores" hidden>Jugadores</div>
     </div>
 
     <!-- TAB: ESTADÍSTICAS GLOBALES -->
@@ -847,9 +848,10 @@ async function init(){
     });
   });
 
-  // Deep-links: ?tab=jugadores (ficha en vivo) / ?tab=tabla (desde el fixture)
+  // Deep-links: ?tab=tabla (desde el fixture). El tab Jugadores está oculto por
+  // ahora, así que ?tab=jugadores (links viejos) cae a la Tabla.
   if(params.get('tab')==='jugadores' || params.get('tab')==='tabla'){
-    const jt = document.querySelector(`.tab[data-tab="${params.get('tab')}"]`);
+    const jt = document.querySelector('.tab[data-tab="tabla"]');
     if(jt) jt.click();
   }
 }
