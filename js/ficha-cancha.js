@@ -269,9 +269,15 @@
         + '<i class="fc-l fc-l-area-l"></i><i class="fc-l fc-l-area-r"></i>'
         + chipsHorizontales(teams[0][0], titDe(teams[0]), 'local')
         + chipsHorizontales(teams[1][0], titDe(teams[1]), 'visitante') + '</div>';
-      var ins = ingresaronHTML(teams[0][0], subDe(teams[0])) + ingresaronHTML(teams[1][0], subDe(teams[1]));
+      // Cada equipo conserva SU columna aunque el otro no tenga cambios (sin el
+      // placeholder, el bloque del visitante se corría a la columna del local).
+      var insL = ingresaronHTML(teams[0][0], subDe(teams[0]));
+      var insV = ingresaronHTML(teams[1][0], subDe(teams[1]));
+      var ins = (insL || insV)
+        ? '<div class="fc-h-in">' + (insL || '<div></div>') + (insV || '<div></div>') + '</div>'
+        : '';
       return '<div class="fc-h"><div class="fc-h-hdr">' + hdrDe(teams[0]) + hdrDe(teams[1], 'away') + '</div>'
-        + cancha + (ins ? '<div class="fc-h-in">' + ins + '</div>' : '') + '</div>';
+        + cancha + ins + '</div>';
     }
 
     var html = teams.map(function (t) {
