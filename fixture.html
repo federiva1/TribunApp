@@ -754,7 +754,7 @@ function renderFichaHTML(data) {
   const gd = p.goles_detalle || {};
   const goles = (gd.local || []).concat(gd.visitante || []).sort((a, b) => (a.min || 0) - (b.min || 0));
   const golesHTML = goles.length ? `<div class="ficha-goles">${goles.map(_fichaGol).join('')}</div>` : '';
-  const cancha = fcCanchaHTML(data, { nomFn: (slug, nombre) => nomEquipo(slug, nombre) });
+  const cancha = fcCanchaHTML(data, { nomFn: (slug, nombre) => nomEquipo(slug, nombre), layout: 'horizontal' });
   if (cancha) return golesHTML + cancha;
   const teams = [[p.local, data.jugadores[p.local] || []], [p.visitante, data.jugadores[p.visitante] || []]];
   const teamsHTML = teams.map(t => {
