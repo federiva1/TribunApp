@@ -58,6 +58,8 @@ const CLUBES_CONFIG = {
     squad: []
   },
   independiente: {
+    // De Irastorza (3): lesión grave → bloqueado en formación, al final del banco
+    injured: ['3'],
     id: 453, nombre: 'Independiente', nombreCorto: 'Independiente',
     color: '#e53935', colorSecundario: '#fff',
     colores: ['#e53935'],
