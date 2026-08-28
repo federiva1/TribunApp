@@ -228,6 +228,29 @@ def esc_placa(slug):
     return p if p.exists() else ROOT / 'escudos' / f'{slug}.png'
 
 
+def aplicar_fondo_tribuna(html):
+    """Fondo de tribuna (img/portada-estadio.jpg — portada de X sin el logo,
+    espejada) como banda detrás de los escudos, con fundido a liso arriba y
+    abajo. Se aplica post-render (sobre el HTML ya formateado) a las placas que
+    usan el layout .bg/.glow (PRÓXIMO PARTIDO y FINAL DEL PARTIDO). Si falta la
+    imagen, queda el gradiente original. Apaga la textura de rayas (.glow)."""
+    p = ROOT / 'img' / 'portada-estadio.jpg'
+    if not p.exists() or '.bg{' not in html:
+        return html
+    uri = _b64(p, 'image/jpeg')
+    viejo = html.split('.bg{')[1].split('}')[0]
+    html = html.replace('.bg{' + viejo + '}',
+        '.bg{position:absolute;inset:0;background:'
+        'linear-gradient(180deg,#080c17 0%,#080c17 33%,rgba(8,12,23,.45) 43%,'
+        'rgba(8,12,23,.42) 56%,#0a1122 66%,#0a1122 82%,#070b16 100%),'
+        'url(' + uri + ') center 350px / 100% auto no-repeat,'
+        'linear-gradient(180deg,#080c17 0%,#0a1122 55%,#070b16 100%)}')
+    if '.glow{' in html:
+        gl = html.split('.glow{')[1].split('}')[0]
+        html = html.replace('.glow{' + gl + '}', '.glow{display:none}')
+    return html
+
+
 def _html_equipo(slug, nombre_api, formacion, startxi):
     kits_js = (ROOT / 'js' / 'kits.js').read_text(encoding='utf-8')
     colors_js = (ROOT / 'js' / 'club-colors.js').read_text(encoding='utf-8')
