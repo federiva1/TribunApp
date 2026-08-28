@@ -37,7 +37,7 @@ VENTANA_HASTA = 300   # y hasta cuándo seguimos intentando
 
 sys.path.insert(0, str(ROOT / 'scripts'))
 from clubes_map import CLUBES  # noqa: E402
-from social_lineups import NOM, hashtag, _cargar_partidos, _b64  # noqa: E402
+from social_lineups import NOM, hashtag, _cargar_partidos, _b64, esc_placa  # noqa: E402
 
 FT = ('FT', 'AET', 'PEN')
 
@@ -128,6 +128,7 @@ def payload_desde_json(pid):
         'estadio': _limpiar_estadio(p.get('estadio')),
         'torneo': _etiqueta_torneo(p.get('competicion'), p.get('fecha_num'), p.get('ronda')),
         'goles': goles,
+        'pen': p.get('penales'),   # {'local': X, 'visitante': Y} si hubo tanda (eliminatorias de copa)
         'comp': 'libertadores' if 'libertadores' in (p.get('competicion') or '').lower()
                 else 'sudamericana' if 'sudamericana' in (p.get('competicion') or '').lower() else 'liga',
     }
@@ -232,7 +233,7 @@ def _html(pl):
                           ("Barlow Condensed", 600, 'barlow-condensed-latin-600-normal.woff2')))
 
     def esc_tag(slug, cls):
-        p = ROOT / 'escudos' / f'{slug}.png'
+        p = esc_placa(slug)
         return f'<img class="{cls}" src="{_b64(p, "image/png")}">' if slug and p.exists() else ''
 
     filas = ''.join(
@@ -241,6 +242,9 @@ def _html(pl):
         % (g['min'], BALL, (g['jugador'] or '').upper(), esc_tag(g['slug'], 'mini'))
         for g in pl['goles'])
     caja = f'<div class="goles">{filas}</div>' if filas else ''
+    pen = pl.get('pen') or {}
+    pen_html = (f'<div class="pen">PENALES {pen.get("local")} - {pen.get("visitante")}</div>'
+                if pen.get('local') is not None else '')
 
     return """<!DOCTYPE html><html><head><meta charset="utf-8"><style>
 %s
@@ -267,6 +271,7 @@ body{width:760px;height:950px;font-family:'Barlow Condensed',sans-serif;color:#f
 .num{font-family:'Bebas Neue';font-size:86px;line-height:1;margin-top:-34px}
 .slash{width:2px;height:104px;margin-top:-34px;transform:rotate(14deg);
   background:linear-gradient(180deg,transparent,#38bdf8,transparent)}
+.pen{font-family:'Bebas Neue';font-size:26px;letter-spacing:3px;color:#7fb3ff;text-align:center;margin-top:10px}
 .goles{margin-top:40px;display:flex;flex-direction:column;gap:8px;padding:14px 26px;
   border:1px solid rgba(255,255,255,.14);border-radius:16px;background:rgba(255,255,255,.035)}
 .gol{display:flex;align-items:center;gap:16px}
@@ -289,6 +294,7 @@ body{width:760px;height:950px;font-family:'Barlow Condensed',sans-serif;color:#f
       <div class="eq">%s<div class="nom">%s</div></div>
     </div>
     %s
+    %s
   </div>
   <div class="pie">%s<span>%s</span></div>
 </div></body></html>""" % (
@@ -296,7 +302,7 @@ body{width:760px;height:950px;font-family:'Barlow Condensed',sans-serif;color:#f
         esc_tag(pl['home']['slug'], 'esc'), _nombre(pl['home']['slug'], pl['home']['name']),
         pl['home']['goles'], pl['away']['goles'],
         esc_tag(pl['away']['slug'], 'esc'), _nombre(pl['away']['slug'], pl['away']['name']),
-        caja, ESTADIO_ICO, pl['estadio'])
+        pen_html, caja, ESTADIO_ICO, pl['estadio'])
 
 
 def generar_imagen(pl, outdir):
