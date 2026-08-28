@@ -101,6 +101,41 @@ def competicion_de(round_str: str) -> str:
     return round_str or 'Liga Profesional 2026'
 
 
+def _norm_nombre(s):
+    import unicodedata
+    s = unicodedata.normalize('NFD', str(s or '')).encode('ascii', 'ignore').decode().lower()
+    return ' '.join(s.split())
+
+
+def completar_nums_desde_plantel(payload):
+    """api-sports no trae el dorsal de los suplentes en el lineup (quedan num='');
+    se completa desde data/planteles/{slug}.json matcheando por nombre. Así los
+    'Ingresaron' de la ficha/Formaciones no quedan con el chip sin número."""
+    for slug, js in (payload.get('jugadores') or {}).items():
+        pth = ROOT / 'data' / 'planteles' / f'{slug}.json'
+        if not pth.exists():
+            continue
+        by = {}
+        for p in json.loads(pth.read_text(encoding='utf-8')):
+            if str(p.get('num') or '').strip():
+                by[_norm_nombre(p['name'])] = str(p['num'])
+        for j in js:
+            if j.get('tipo') == 'dt' or str(j.get('num') or '').strip():
+                continue
+            k = _norm_nombre(j.get('nombre'))
+            n = by.get(k)
+            if not n:
+                toks = k.split()
+                c = [v for nm, v in by.items() if toks and toks[-1] in nm.split()]
+                if len(c) != 1:
+                    c = [v for nm, v in by.items()
+                         if len(toks) > 1 and toks[0] in nm.split() and toks[-1] in nm.split()]
+                n = c[0] if len(c) == 1 else None
+            if n:
+                j['num'] = n
+    return payload
+
+
 def _top_stats_incompletas(ts) -> bool:
     """¿Las stats globales parecen un snapshot de los primeros minutos?
     En 90' reales los pases precisos suman cientos; el snapshot con lag de
@@ -219,6 +254,7 @@ def main() -> int:
                         payload['top_stats'] = ts
                         print('   top_stats reemplazadas con FotMob (api-sports venía incompleto)')
 
+            completar_nums_desde_plantel(payload)
             out_file.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
             print(f'   enriquecido ({url.split("#")[0]})')
             ok += 1
