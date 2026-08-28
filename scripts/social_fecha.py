@@ -240,6 +240,28 @@ body{width:760px;height:950px;font-family:'Barlow Condensed',sans-serif;color:#f
         _logo_datauri(), torneo, titulo, sub, filas)
 
 
+def _aplicar_fondo(html):
+    """Fondo de tribuna (img/portada-estadio.jpg — portada de X sin el logo, espejada)
+    como banda detrás de los escudos, con fundido a liso arriba y abajo. Se aplica
+    post-render sobre el HTML de ambas variantes; si falta la imagen, queda el
+    gradiente original. También apaga la textura de rayas de abajo (.glow)."""
+    p = ROOT / 'img' / 'portada-estadio.jpg'
+    if not p.exists() or '.bg{' not in html:
+        return html
+    uri = _b64(p, 'image/jpeg')
+    viejo = html.split('.bg{')[1].split('}')[0]
+    html = html.replace('.bg{' + viejo + '}',
+        '.bg{position:absolute;inset:0;background:'
+        'linear-gradient(180deg,#080c17 0%,#080c17 33%,rgba(8,12,23,.45) 43%,'
+        'rgba(8,12,23,.42) 56%,#0a1122 66%,#0a1122 82%,#070b16 100%),'
+        'url(' + uri + ') center 350px / 100% auto no-repeat,'
+        'linear-gradient(180deg,#080c17 0%,#0a1122 55%,#070b16 100%)}')
+    if '.glow{' in html:
+        gl = html.split('.glow{')[1].split('}')[0]
+        html = html.replace('.glow{' + gl + '}', '.glow{display:none}')
+    return html
+
+
 def generar(partidos, fecha, titulo, outdir):
     from playwright.sync_api import sync_playwright
     import os
@@ -248,6 +270,7 @@ def generar(partidos, fecha, titulo, outdir):
     path = Path(outdir) / f'fecha-{fecha}.png'
     html = (_html_uno(partidos[0], fecha, titulo) if len(partidos) == 1
             else _html(partidos, fecha, titulo))
+    html = _aplicar_fondo(html)
     with sync_playwright() as pw:
         b = pw.chromium.launch(executable_path=exe) if exe else pw.chromium.launch()
         pg = b.new_page(viewport={'width': 760, 'height': 950}, device_scale_factor=2)
