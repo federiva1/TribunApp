@@ -18,6 +18,8 @@ const CLUBES_CONFIG = {
     squad: []
   },
   bocajuniors: {
+    // Aranda (10): lesión grave → bloqueado en formación, al final del banco
+    injured: ['10'],
     id: 451, nombre: 'Boca Juniors', nombreCorto: 'Boca',
     color: '#003087', colorSecundario: '#f5c518',
     colores: ['#003087', '#f5c518'],
