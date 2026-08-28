@@ -220,6 +220,14 @@ def _b64(path, mime):
     return f'data:{mime};base64,' + base64.b64encode(Path(path).read_bytes()).decode()
 
 
+def esc_placa(slug):
+    """Escudo para las placas: si existe la versión con estrellas de campeón
+    (escudos/placas/{slug}.png — solo redes, la web sigue con escudos/) se usa
+    esa; si no, el escudo normal."""
+    p = ROOT / 'escudos' / 'placas' / f'{slug}.png'
+    return p if p.exists() else ROOT / 'escudos' / f'{slug}.png'
+
+
 def _html_equipo(slug, nombre_api, formacion, startxi):
     kits_js = (ROOT / 'js' / 'kits.js').read_text(encoding='utf-8')
     colors_js = (ROOT / 'js' / 'club-colors.js').read_text(encoding='utf-8')
@@ -241,7 +249,7 @@ def _html_equipo(slug, nombre_api, formacion, startxi):
                           ("Barlow Condensed", 400, 'barlow-condensed-latin-400-normal.woff2'),
                           ("Barlow Condensed", 600, 'barlow-condensed-latin-600-normal.woff2')))
     titulo = NOM.get(slug) or nombre_api
-    esc = ROOT / 'escudos' / f'{slug}.png'
+    esc = esc_placa(slug)
     esc_tag = (f'<img class="esc" src="{_b64(esc, "image/png")}">'
                if slug and esc.exists() else '')
     return """<!DOCTYPE html><html><head><meta charset="utf-8"><style>

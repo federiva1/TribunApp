@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parent.parent
 PREVIEW = ROOT / 'data' / 'social' / 'preview'
 
 sys.path.insert(0, str(ROOT / 'scripts'))
-from social_lineups import NOM, _b64                      # noqa: E402
+from social_lineups import NOM, _b64, esc_placa           # noqa: E402
 from social_resultado import _logo_datauri, ESTADIO_ICO   # noqa: E402
 
 AR = timezone(timedelta(hours=-3))
@@ -92,7 +92,7 @@ def _html_uno(m, fecha, titulo):
                           ("Barlow Condensed", 600, 'barlow-condensed-latin-600-normal.woff2')))
 
     def esc(slug, logo=None):
-        p = ROOT / 'escudos' / f'{slug}.png'
+        p = esc_placa(slug)
         if slug and p.exists():
             return f'<img class="esc" src="{_b64(p, "image/png")}">'
         cp = _copa_esc(logo)
@@ -166,7 +166,7 @@ def _html(partidos, fecha, titulo):
                           ("Barlow Condensed", 600, 'barlow-condensed-latin-600-normal.woff2')))
 
     def esc(slug, logo=None):
-        p = ROOT / 'escudos' / f'{slug}.png'
+        p = esc_placa(slug)
         if slug and p.exists():
             return f'<img class="esc" src="{_b64(p, "image/png")}">'
         cp = _copa_esc(logo)

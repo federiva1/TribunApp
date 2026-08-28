@@ -37,7 +37,7 @@ VENTANA_HASTA = 300   # y hasta cuándo seguimos intentando
 
 sys.path.insert(0, str(ROOT / 'scripts'))
 from clubes_map import CLUBES  # noqa: E402
-from social_lineups import NOM, hashtag, _cargar_partidos, _b64  # noqa: E402
+from social_lineups import NOM, hashtag, _cargar_partidos, _b64, esc_placa  # noqa: E402
 
 FT = ('FT', 'AET', 'PEN')
 
@@ -233,7 +233,7 @@ def _html(pl):
                           ("Barlow Condensed", 600, 'barlow-condensed-latin-600-normal.woff2')))
 
     def esc_tag(slug, cls):
-        p = ROOT / 'escudos' / f'{slug}.png'
+        p = esc_placa(slug)
         return f'<img class="{cls}" src="{_b64(p, "image/png")}">' if slug and p.exists() else ''
 
     filas = ''.join(
