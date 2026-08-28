@@ -1912,16 +1912,27 @@ async function downloadFormacionResultados(el) {
 // ── Equipos de la gente: formaciones individuales con likes ──────────────────
 function getFeedLikes() { try { return JSON.parse(localStorage.getItem('mundial26_feed_likes') || '{}'); } catch(e) { return {}; } }
 function saveFeedLikes(o) { try { localStorage.setItem('mundial26_feed_likes', JSON.stringify(o)); } catch(e) {} }
+// Like por RPC (toggle_formacion_like): conteo server-side, uno por dispositivo.
+// La anon key ya no puede escribir `likes` con un valor libre.
 async function toggleFeedLike(rowId, curLikes) {
-  const liked = getFeedLikes(); const was = !!liked[rowId]; let nl = curLikes;
-  if (was) { delete liked[rowId]; nl = Math.max(0, nl - 1); } else { liked[rowId] = true; nl++; }
+  const liked = getFeedLikes(); const was = !!liked[rowId];
+  let nl = was ? Math.max(0, curLikes - 1) : curLikes + 1;   // optimista
+  if (was) delete liked[rowId]; else liked[rowId] = true;
   saveFeedLikes(liked);
   try {
-    await fetch(`${SUPABASE_URL}/rest/v1/formaciones?id=eq.${rowId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ likes: nl })
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/toggle_formacion_like`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
+      body: JSON.stringify({ p_formacion_id: rowId, p_device_id: getDeviceId() })
     });
+    if (res.ok) {
+      const r = (await res.json())[0];
+      if (r && typeof r.likes === 'number') {
+        nl = r.likes;
+        if (r.liked) liked[rowId] = true; else delete liked[rowId];
+        saveFeedLikes(liked);
+      }
+    }
   } catch(e) {}
   return { likes: nl, isLiked: !!liked[rowId] };
 }
