@@ -141,6 +141,14 @@
   // izquierda, ataca a la derecha) o 'visitante' (espejado). La col 1 del grid
   // (izquierda de la placa vertical) queda arriba para el local y abajo para el
   // visitante, así los mismos carriles reales quedan enfrentados.
+  function spotH(slug, j, x, y) {
+    var sale = j.min_sale ? '<span class="fc-out">▼' + j.min_sale + "'</span>" : '';
+    var mk = marks(j);
+    return '<div class="fc-spot" title="' + esc(j.nombre) + '" style="left:' + x + '%;top:' + y + '%">' + kitChip(slug, j.num, 24)
+      + '<span class="fc-nm"><i>' + esc(shortName(j.nombre)) + '</i>' + sale + '</span>'
+      + (mk ? '<span class="fc-mk">' + mk + '</span>' : '') + '</div>';
+  }
+
   function chipsHorizontales(slug, tit, lado) {
     var rows = {};
     tit.forEach(function (j) {
@@ -149,6 +157,16 @@
       (rows[+m[1]] = rows[+m[1]] || []).push({ j: j, c: +m[2] });
     });
     var filas = Object.keys(rows).map(Number).sort(function (a, b) { return a - b; });
+    // Sin grid (partidos terminados de data/partidos): posición REAL de FotMob
+    // (j.pos, % sobre cancha apaisada con el arquero a la izquierda, por equipo).
+    // Cada equipo se comprime en su mitad; el visitante se rota 180°.
+    if (!filas.length) {
+      return tit.filter(function (j) { return j.pos; }).map(function (j) {
+        var x = lado === 'local' ? 2.5 + j.pos.x * 0.465 : 97.5 - j.pos.x * 0.465;
+        var y = lado === 'local' ? j.pos.y : 100 - j.pos.y;
+        return spotH(slug, j, x, Math.max(8, Math.min(92, y)));
+      }).join('');
+    }
     var maxF = filas[filas.length - 1];
     var chips = [];
     filas.forEach(function (f) {
@@ -158,12 +176,7 @@
       arr.forEach(function (e, i) {
         var frac = (i + 1) / (arr.length + 1);
         var y = lado === 'local' ? frac * 100 : (1 - frac) * 100;
-        var j = e.j;
-        var sale = j.min_sale ? '<span class="fc-out">▼' + j.min_sale + "'</span>" : '';
-        var mk = marks(j);
-        chips.push('<div class="fc-spot" title="' + esc(j.nombre) + '" style="left:' + x + '%;top:' + y + '%">' + kitChip(slug, j.num, 24)
-          + '<span class="fc-nm"><i>' + esc(shortName(j.nombre)) + '</i>' + sale + '</span>'
-          + (mk ? '<span class="fc-mk">' + mk + '</span>' : '') + '</div>');
+        chips.push(spotH(slug, e.j, x, y));
       });
     });
     return chips.join('');
@@ -252,7 +265,7 @@
     var teams = [[p.local, (data.jugadores || {})[p.local] || [], p.local_nombre],
                  [p.visitante, (data.jugadores || {})[p.visitante] || [], p.visitante_nombre]];
     var ok = teams.every(function (t) {
-      return t[1].filter(function (j) { return j.tipo === 'titular' && j.grid; }).length >= 7;
+      return t[1].filter(function (j) { return j.tipo === 'titular' && (j.grid || j.pos); }).length >= 7;
     });
     if (!ok) return null;
     var hdrDe = function (t, extraCls) {
