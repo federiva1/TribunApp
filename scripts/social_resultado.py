@@ -37,7 +37,7 @@ VENTANA_HASTA = 300   # y hasta cuándo seguimos intentando
 
 sys.path.insert(0, str(ROOT / 'scripts'))
 from clubes_map import CLUBES  # noqa: E402
-from social_lineups import NOM, hashtag, _cargar_partidos, _b64, esc_placa  # noqa: E402
+from social_lineups import NOM, hashtag, _cargar_partidos, _b64, esc_placa, aplicar_fondo_tribuna  # noqa: E402
 
 FT = ('FT', 'AET', 'PEN')
 
@@ -312,7 +312,7 @@ def generar_imagen(pl, outdir):
     with sync_playwright() as pw:
         b = pw.chromium.launch(executable_path=exe) if exe else pw.chromium.launch()
         pg = b.new_page(viewport={'width': 760, 'height': 950}, device_scale_factor=2)
-        pg.set_content(_html(pl))
+        pg.set_content(aplicar_fondo_tribuna(_html(pl)))
         pg.wait_for_timeout(700)
         pg.screenshot(path=str(path))
         b.close()
