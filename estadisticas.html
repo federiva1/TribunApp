@@ -393,6 +393,7 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
 
     <div class="tabs">
       <div class="tab active" data-tab="stats">Estadísticas</div>
+      <div class="tab" data-tab="forma" hidden>Formaciones</div>
       <div class="tab" data-tab="tabla">Tabla</div>
       <!-- Jugadores oculto por ahora (la Tabla lo reemplaza); sacar hidden para reactivarlo -->
       <div class="tab" data-tab="jugadores" hidden>Jugadores</div>
@@ -401,6 +402,11 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
     <!-- TAB: ESTADÍSTICAS GLOBALES -->
     <div class="section active" id="tab-stats">
       <div id="stats-container"></div>
+    </div>
+
+    <!-- TAB: FORMACIONES (cancha apaisada con los dos XI, posición real FotMob) -->
+    <div class="section" id="tab-forma">
+      <div id="forma-container"></div>
     </div>
 
     <!-- TAB: TABLA (jugadores de ambos equipos intercalados, estilo FotMob) -->
@@ -431,6 +437,7 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
 <script src="js/clubes.js"></script>
 <script src="js/club-colors.js"></script>
 <script src="js/kits.js"></script>
+<script src="js/ficha-cancha.js"></script>
 <script src="js/match-live.js"></script>
 <script>
 const params  = new URLSearchParams(location.search);
@@ -833,6 +840,24 @@ async function init(){
   if(fromSlug && fromSlug===p.visitante){
     btnV.click();
   }
+
+  // Formaciones: cancha apaisada con los dos XI enfrentados (posición real de
+  // FotMob en los partidos terminados, grid api-sports en vivo). El tab solo
+  // aparece si hay datos suficientes (fcCanchaHTML devuelve null si no).
+  try {
+    const fdata = {
+      partido: p,
+      jugadores: {
+        [p.local]:     jugsLocal.filter(j => j.tipo === 'titular' || (j.tipo === 'suplente' && j.min > 0)),
+        [p.visitante]: jugsVisit.filter(j => j.tipo === 'titular' || (j.tipo === 'suplente' && j.min > 0)),
+      },
+    };
+    const fHtml = fcCanchaHTML(fdata, { nomFn: (slug, nom) => nb(slug) || nom, layout: 'horizontal' });
+    if (fHtml) {
+      document.getElementById('forma-container').innerHTML = fHtml;
+      document.querySelector('.tab[data-tab="forma"]').hidden = false;
+    }
+  } catch (e) {}
 
   // Main tabs
   _mt.data = data;   // la Tabla se arma lazy al abrir el tab
