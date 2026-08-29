@@ -1652,15 +1652,15 @@ function _shCard(o) {
     pitch.appendChild(cell);
   });
   if (o.soloCancha) {
-    // Logo de TribunApp sobre el verde (abajo izquierda), con un velo oscuro para
+    // Logo de TribunApp sobre el verde (arriba izquierda), con un velo oscuro para
     // que se lea siempre. Reemplaza al panel lateral como firma de la imagen.
     const scrim = document.createElement('div');
-    scrim.style.cssText = 'position:absolute;left:0;right:0;bottom:0;height:120px;z-index:1;'
-      + 'background:linear-gradient(0deg,rgba(5,10,20,.72),transparent);';
+    scrim.style.cssText = 'position:absolute;left:0;right:0;top:0;height:110px;z-index:1;'
+      + 'background:linear-gradient(180deg,rgba(5,10,20,.72),transparent);';
     pitch.appendChild(scrim);
     const lg = document.createElement('img');
     lg.src = 'logo-share.png';
-    lg.style.cssText = 'position:absolute;left:26px;bottom:20px;width:190px;z-index:2;'
+    lg.style.cssText = 'position:absolute;left:26px;top:20px;width:190px;z-index:2;'
       + 'filter:drop-shadow(0 2px 8px rgba(0,0,0,.8));';
     pitch.appendChild(lg);
   }
