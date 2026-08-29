@@ -1603,6 +1603,9 @@ function _shCard(o) {
     + `overflow:hidden;color:#fff;font-family:'Barlow Condensed',sans-serif;display:flex;`
     + `background:linear-gradient(120deg,#0d1730,#070b16);`;
 
+  // soloCancha (formación): sin panel lateral — la cancha ocupa todo el ancho y
+  // el logo va sobre el verde (abajo). Así la imagen no queda atada a un rival.
+  if (!o.soloCancha) {
   const panel = document.createElement('div');
   // Panel angosto a propósito: todo lo que se le saca de ancho se lo gana la cancha.
   // El contenido del encabezado (escudo + marcador + escudo) queda al límite, así que
@@ -1633,6 +1636,7 @@ function _shCard(o) {
   logo.style.cssText = 'width:100%;display:block;';
   bot.appendChild(logo);
   panel.appendChild(bot); c.appendChild(panel);
+  }
 
   const der = document.createElement('div'); der.style.cssText = 'flex:1;display:flex;flex-direction:column;min-width:0;';
   const pitch = document.createElement('div');
@@ -1647,6 +1651,19 @@ function _shCard(o) {
     cell.style.transform = 'translate(-50%,-50%)';
     pitch.appendChild(cell);
   });
+  if (o.soloCancha) {
+    // Logo de TribunApp sobre el verde (abajo izquierda), con un velo oscuro para
+    // que se lea siempre. Reemplaza al panel lateral como firma de la imagen.
+    const scrim = document.createElement('div');
+    scrim.style.cssText = 'position:absolute;left:0;right:0;bottom:0;height:120px;z-index:1;'
+      + 'background:linear-gradient(0deg,rgba(5,10,20,.72),transparent);';
+    pitch.appendChild(scrim);
+    const lg = document.createElement('img');
+    lg.src = 'logo-share.png';
+    lg.style.cssText = 'position:absolute;left:26px;bottom:20px;width:190px;z-index:2;'
+      + 'filter:drop-shadow(0 2px 8px rgba(0,0,0,.8));';
+    pitch.appendChild(lg);
+  }
   der.appendChild(pitch);
   if (o.sup || o.dt) der.appendChild(_shBanco(o.sup || [], o.dt));
   c.appendChild(der);
@@ -1974,14 +1991,13 @@ initSquad();
 // Usa la placa T1 (apaisada) con los jugadores en la posición donde el usuario
 // los dejó en la cancha, rotada 90° para que entre en 16:9.
 function _shOptsFormacion() {
-  const conRival = RIVAL && RIVAL !== 'Por definir';
+  // soloCancha: la formación se baja SIN el panel lateral (sin "MI FORMACIÓN"
+  // ni escudos/rival), así la imagen es reutilizable y no queda atada a un rival.
+  // La cancha ocupa todo el ancho y el logo va sobre el verde.
   return {
+    soloCancha: true,
     titulo: 'MI FORMACIÓN',
-    marcador: conRival ? 'VS' : '',
-    rivalSlug: conRival ? RIVAL_SLUG : '',
-    rivalEscudo: conRival ? RIVAL_ESCUDO : '',
-    sub: (FECHA_NUM ? `Fecha ${FECHA_NUM} · ` : '') + (conRival ? `vs ${RIVAL}` : 'Próxima fecha'),
-    pie: '',
+    marcador: '',
     jugadores: onPitch.map(j => _shRotar({ num: j.num, name: j.name, xPct: j.xPct, yPct: j.yPct })),
   };
 }
