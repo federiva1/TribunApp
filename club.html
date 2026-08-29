@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+<!-- Con las URLs amigables (/boca/sudamericana) la página se sirve desde un path
+     de 2 niveles: sin base, los recursos relativos (js/, data/, escudos/)
+     resolverían a /boca/js/... y romperían. Solo en el dominio con rewrites
+     (Vercel); en GitHub Pages no, porque ahí el sitio puede colgar de un subpath. -->
+<script>
+  if (/(^|\.)tribunapp\.com\.ar$|\.vercel\.app$|^localhost$|^127\.0\.0\.1$/.test(location.hostname)) document.write('<base href="/">');
+</script>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-0DN9D9L127"></script>
 <script>
@@ -839,14 +846,14 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
         <div class="club-tile-desc">Calificá a cada jugador del partido</div>
       </div>
     </div>
-    <div class="club-tile tile-estadisticas" onclick="location.href='equipo.html?c='+encodeURIComponent(new URLSearchParams(location.search).get('c')||'')+'&s=estadisticas&from=club'">
+    <div class="club-tile tile-estadisticas" onclick="location.href='equipo.html?c='+encodeURIComponent(typeof CLUB_SLUG!=='undefined'?CLUB_SLUG:'')+'&s=estadisticas&from=club'">
       <div class="club-tile-photo"></div>
       <div class="club-tile-body">
         <div class="club-tile-title">ESTADÍSTICAS</div>
         <div class="club-tile-desc">Rendimiento del equipo fecha por fecha</div>
       </div>
     </div>
-    <div class="club-tile tile-tribunapp" onclick="location.href='tribunapp-equipo.html?c='+encodeURIComponent(new URLSearchParams(location.search).get('c')||'')+'&from=club'">
+    <div class="club-tile tile-tribunapp" onclick="location.href='tribunapp-equipo.html?c='+encodeURIComponent(typeof CLUB_SLUG!=='undefined'?CLUB_SLUG:'')+'&from=club'">
       <div class="club-tile-photo"></div>
       <div class="club-tile-body">
         <div class="club-tile-title">EST. TRIBUNAPP</div>
@@ -1081,10 +1088,48 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 // ---- Leer club desde URL ----
 const params = new URLSearchParams(window.location.search);
 // Sanitizar params de usuario: el slug se usa en URLs de Supabase y paths de fetch.
-const CLUB_SLUG = (params.get('c') || '').replace(/[^a-z0-9]/gi, '').toLowerCase();
-const _copaRaw  = (params.get('copa') || '').toLowerCase();
+// URLs amigables (/river, /boca/sudamericana): el rewrite de Vercel sirve este
+// archivo pero el ?c= del destino NO llega al navegador (location.search queda
+// vacío), así que el slug también se resuelve desde el path. El mapa es el
+// espejo de los rewrites de vercel.json.
+const URL_ALIAS = {
+  river: 'riverplate', boca: 'bocajuniors', racing: 'racingclub',
+  independiente: 'independiente', sanlorenzo: 'sanlorenzo', huracan: 'huracan',
+  velez: 'velezsarsfield', argentinos: 'argentinosjuniors',
+  platense: 'clubatleticoplatense', tigre: 'tigre', lanus: 'lanus',
+  banfield: 'banfield', union: 'union', sarmiento: 'sarmiento',
+  belgrano: 'belgrano', instituto: 'instituto', talleres: 'talleres',
+  newells: 'newellsoldboys', central: 'rosariocentral',
+  centralcordoba: 'centralcordobadesantiago', estudiantes: 'estudiantes',
+  gimnasia: 'gimnasialp', gimnasiamendoza: 'gimnasiamendoza',
+  riestra: 'deportivoriestra', barracas: 'barracascentral',
+  aldosivi: 'aldosivi', atleticotucuman: 'atleticotucuman',
+  defensa: 'defensayjusticia', indrivadavia: 'independienterivadavia',
+  erc: 'estudiantesderiocuarto',
+};
+const _pathSegs = location.pathname.split('/').filter(Boolean);
+const _pathSlug = URL_ALIAS[(_pathSegs[0] || '').toLowerCase()] || '';
+const _pathCopa = (_pathSegs[1] || '').toLowerCase();
+const CLUB_SLUG = ((params.get('c') || '').replace(/[^a-z0-9]/gi, '').toLowerCase()) || _pathSlug;
+const _copaRaw  = ((params.get('copa') || '').toLowerCase()) || _pathCopa;
 const COPA      = (_copaRaw === 'libertadores' || _copaRaw === 'sudamericana') ? _copaRaw : '';
 const CLUB = CLUBES_CONFIG[CLUB_SLUG];
+
+// Nomenclatura única: si se entró por la URL vieja (club.html?c=...) en el
+// dominio con rewrites (Vercel), la barra se reescribe a la amigable. En el
+// mirror de GitHub Pages no (ahí /river no existe y recargar daría 404).
+(function () {
+  if (!CLUB || _pathSlug) return;
+  const host = location.hostname;
+  if (host !== 'tribunapp.com.ar' && !host.endsWith('.tribunapp.com.ar') && !host.endsWith('.vercel.app')) return;
+  const alias = Object.keys(URL_ALIAS).find(a => URL_ALIAS[a] === CLUB_SLUG);
+  if (!alias) return;
+  // conservar los params extra (?testpuntajes=1, etc.) — solo c/copa van al path
+  const rest = new URLSearchParams(location.search);
+  rest.delete('c'); rest.delete('copa');
+  const q = rest.toString();
+  try { history.replaceState(null, '', '/' + alias + (COPA ? '/' + COPA : '') + (q ? '?' + q : '')); } catch (e) {}
+})();
 
 function escapeHtml(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, c => (
