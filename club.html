@@ -1611,12 +1611,14 @@ function _shCard(o) {
     + `justify-content:space-between;background:rgba(0,0,0,.4);border-right:3px solid ${SHARE_GOLD};box-sizing:border-box;`;
   const top = document.createElement('div');
   const row = document.createElement('div'); row.style.cssText = 'display:flex;align-items:center;gap:8px;';
-  row.appendChild(_shEscudo(CLUB_SLUG, 44));
+  // .sh-badge → los normaliza _shNormalizarEscudos (misma área para los dos, sin
+  // importar que un crest sea más ancho que otro).
+  const _e1 = _shEscudo(CLUB_SLUG, 44); _e1.className = 'sh-badge'; row.appendChild(_e1);
   const sc = document.createElement('div');
   sc.style.cssText = "font-family:'Bebas Neue',sans-serif;font-size:" + (o.marcador.length > 3 ? '26px' : '40px') + ";letter-spacing:2px;line-height:1;";
   sc.textContent = o.marcador; row.appendChild(sc);
-  if (o.rivalSlug) row.appendChild(_shEscudo(o.rivalSlug, 44));
-  else if (o.rivalEscudo) row.appendChild(_shEscudoSrc(o.rivalEscudo, 44));
+  const _e2 = o.rivalSlug ? _shEscudo(o.rivalSlug, 44) : (o.rivalEscudo ? _shEscudoSrc(o.rivalEscudo, 44) : null);
+  if (_e2) { _e2.className = 'sh-badge'; row.appendChild(_e2); }
   top.appendChild(row);
   const t = document.createElement('div');
   t.style.cssText = "font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:1px;line-height:1.05;margin-top:18px;";
@@ -1653,12 +1655,50 @@ function _shCard(o) {
   return c;
 }
 
+// Caja del contenido no-transparente de una imagen (para recortar el margen).
+function _shInkBBox(img) {
+  const w = img.naturalWidth, h = img.naturalHeight;
+  const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+  const ctx = cv.getContext('2d'); ctx.drawImage(img, 0, 0);
+  let data; try { data = ctx.getImageData(0, 0, w, h).data; } catch (e) { return { x: 0, y: 0, w, h }; }
+  let x0 = w, y0 = h, x1 = -1, y1 = -1;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    if (data[(y * w + x) * 4 + 3] > 20) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  }
+  return x1 < 0 ? { x: 0, y: 0, w, h } : { x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1 };
+}
+
+// Iguala el TAMAÑO de los escudos del panel por ÁREA: todos los escudos llenan
+// el 100% de su alto, así que a igual altura un crest ancho (River) se ve más
+// grande que uno angosto (Banfield). Recorta el margen real de cada uno y los
+// escala para que ocupen la misma superficie (el más ancho queda un poco más
+// bajo). Se corre tras cargar las imágenes; reemplaza el <img> por un <canvas>.
+function _shNormalizarEscudos(el, size) {
+  const badges = [...el.querySelectorAll('img.sh-badge')].filter(i => i.naturalWidth);
+  if (badges.length < 2) return;
+  const info = badges.map(img => { const bb = _shInkBBox(img); return { img, bb, aspect: bb.w / bb.h }; });
+  const refAspect = Math.min(...info.map(i => i.aspect));   // el más angosto llena el alto
+  const A = refAspect * size * size;                        // área objetivo común
+  info.forEach(({ img, bb, aspect }) => {
+    let hh = Math.sqrt(A / aspect), ww = aspect * hh;
+    if (hh > size) { hh = size; ww = aspect * size; }
+    if (ww > size) { ww = size; hh = ww / aspect; }
+    const cv = document.createElement('canvas');
+    cv.width = Math.round(ww * 2); cv.height = Math.round(hh * 2);
+    cv.getContext('2d').drawImage(img, bb.x, bb.y, bb.w, bb.h, 0, 0, cv.width, cv.height);
+    cv.style.cssText = `width:${ww}px;height:${hh}px;`;
+    cv.className = 'sh-badge';
+    img.replaceWith(cv);
+  });
+}
+
 async function _shCanvas(o) {
   const el = _shCard(o);
   document.body.appendChild(el);
   try {
     const imgs = [...el.querySelectorAll('img')];
     await Promise.all(imgs.map(i => i.complete ? null : new Promise(r => { i.onload = r; i.onerror = r; })));
+    _shNormalizarEscudos(el, 44);   // igualar escudos del panel por área (tras cargar)
     if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch (e) {} }
     await new Promise(r => setTimeout(r, 120));
     // Tope de tiempo: si una hoja de estilos externa queda colgada, html2canvas
