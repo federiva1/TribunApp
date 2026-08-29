@@ -1,16 +1,166 @@
 {
   "rewrites": [
-    { "source": "/api/apisports/:path*", "destination": "/api/apisports" }
+    {
+      "source": "/api/apisports/:path*",
+      "destination": "/api/apisports"
+    },
+    {
+      "source": "/:alias(river|River)",
+      "destination": "/club.html?c=riverplate"
+    },
+    {
+      "source": "/:alias(boca|Boca)",
+      "destination": "/club.html?c=bocajuniors"
+    },
+    {
+      "source": "/:alias(racing|Racing)",
+      "destination": "/club.html?c=racingclub"
+    },
+    {
+      "source": "/:alias(independiente|Independiente)",
+      "destination": "/club.html?c=independiente"
+    },
+    {
+      "source": "/:alias(sanlorenzo|Sanlorenzo)",
+      "destination": "/club.html?c=sanlorenzo"
+    },
+    {
+      "source": "/:alias(huracan|Huracan)",
+      "destination": "/club.html?c=huracan"
+    },
+    {
+      "source": "/:alias(velez|Velez)",
+      "destination": "/club.html?c=velezsarsfield"
+    },
+    {
+      "source": "/:alias(argentinos|Argentinos)",
+      "destination": "/club.html?c=argentinosjuniors"
+    },
+    {
+      "source": "/:alias(platense|Platense)",
+      "destination": "/club.html?c=clubatleticoplatense"
+    },
+    {
+      "source": "/:alias(tigre|Tigre)",
+      "destination": "/club.html?c=tigre"
+    },
+    {
+      "source": "/:alias(lanus|Lanus)",
+      "destination": "/club.html?c=lanus"
+    },
+    {
+      "source": "/:alias(banfield|Banfield)",
+      "destination": "/club.html?c=banfield"
+    },
+    {
+      "source": "/:alias(union|Union)",
+      "destination": "/club.html?c=union"
+    },
+    {
+      "source": "/:alias(sarmiento|Sarmiento)",
+      "destination": "/club.html?c=sarmiento"
+    },
+    {
+      "source": "/:alias(belgrano|Belgrano)",
+      "destination": "/club.html?c=belgrano"
+    },
+    {
+      "source": "/:alias(instituto|Instituto)",
+      "destination": "/club.html?c=instituto"
+    },
+    {
+      "source": "/:alias(talleres|Talleres)",
+      "destination": "/club.html?c=talleres"
+    },
+    {
+      "source": "/:alias(newells|Newells)",
+      "destination": "/club.html?c=newellsoldboys"
+    },
+    {
+      "source": "/:alias(central|Central)",
+      "destination": "/club.html?c=rosariocentral"
+    },
+    {
+      "source": "/:alias(centralcordoba|Centralcordoba)",
+      "destination": "/club.html?c=centralcordobadesantiago"
+    },
+    {
+      "source": "/:alias(estudiantes|Estudiantes)",
+      "destination": "/club.html?c=estudiantes"
+    },
+    {
+      "source": "/:alias(gimnasia|Gimnasia)",
+      "destination": "/club.html?c=gimnasialp"
+    },
+    {
+      "source": "/:alias(gimnasiamendoza|Gimnasiamendoza)",
+      "destination": "/club.html?c=gimnasiamendoza"
+    },
+    {
+      "source": "/:alias(riestra|Riestra)",
+      "destination": "/club.html?c=deportivoriestra"
+    },
+    {
+      "source": "/:alias(barracas|Barracas)",
+      "destination": "/club.html?c=barracascentral"
+    },
+    {
+      "source": "/:alias(aldosivi|Aldosivi)",
+      "destination": "/club.html?c=aldosivi"
+    },
+    {
+      "source": "/:alias(atleticotucuman|Atleticotucuman)",
+      "destination": "/club.html?c=atleticotucuman"
+    },
+    {
+      "source": "/:alias(defensa|Defensa)",
+      "destination": "/club.html?c=defensayjusticia"
+    },
+    {
+      "source": "/:alias(indrivadavia|Indrivadavia)",
+      "destination": "/club.html?c=independienterivadavia"
+    },
+    {
+      "source": "/:alias(erc|Erc)",
+      "destination": "/club.html?c=estudiantesderiocuarto"
+    },
+    {
+      "source": "/:alias(boca|Boca)/:copa(sudamericana|Sudamericana)",
+      "destination": "/club.html?c=bocajuniors&copa=sudamericana"
+    },
+    {
+      "source": "/:alias(platense|Platense)/:copa(libertadores|Libertadores)",
+      "destination": "/club.html?c=clubatleticoplatense&copa=libertadores"
+    },
+    {
+      "source": "/:alias(estudiantes|Estudiantes)/:copa(libertadores|Libertadores)",
+      "destination": "/club.html?c=estudiantes&copa=libertadores"
+    }
   ],
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" },
-        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        },
         {
           "key": "Content-Security-Policy",
           "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://html2canvas.hertzen.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.supabase.co https://www.google-analytics.com https://cdn.jsdelivr.net; frame-ancestors 'none'"
