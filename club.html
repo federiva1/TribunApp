@@ -2147,11 +2147,29 @@ function _renderEleccionBars(list, players) {
 document.getElementById('ver-feed-btn').addEventListener('click', openFeed);
 document.getElementById('back-feed-btn').addEventListener('click', () => { document.getElementById('feed-screen').style.display = 'none'; });
 
+// El like va por RPC (toggle_formacion_like): el conteo lo lleva el server, uno
+// por dispositivo. La anon key ya no puede escribir `likes` con un valor libre.
+// localStorage queda solo como pista de UI, sincronizada con lo que devuelve el server.
 async function toggleLike(rowId, curLikes) {
-  const liked = getFeedLikes(); const wasLiked = !!liked[rowId]; let nl = curLikes;
-  if (wasLiked) { delete liked[rowId]; nl = Math.max(0, nl - 1); } else { liked[rowId] = true; nl++; }
+  const liked = getFeedLikes(); const wasLiked = !!liked[rowId];
+  let nl = wasLiked ? Math.max(0, curLikes - 1) : curLikes + 1;   // optimista
+  if (wasLiked) delete liked[rowId]; else liked[rowId] = true;
   saveFeedLikes(liked);
-  try { await fetch(`${SUPABASE_URL}/rest/v1/formaciones?id=eq.${rowId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' }, body: JSON.stringify({ likes: nl }) }); } catch(e) {}
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/toggle_formacion_like`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
+      body: JSON.stringify({ p_formacion_id: rowId, p_device_id: getDeviceId() })
+    });
+    if (res.ok) {
+      const r = (await res.json())[0];
+      if (r && typeof r.likes === 'number') {
+        nl = r.likes;
+        if (r.liked) liked[rowId] = true; else delete liked[rowId];
+        saveFeedLikes(liked);
+      }
+    }
+  } catch(e) {}
   return { likes: nl, isLiked: !!liked[rowId] };
 }
 

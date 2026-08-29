@@ -17,7 +17,10 @@
         "position": "midfielders"
       }
     ],
-    "quitar": []
+    "quitar": [],
+    "numeros": {
+      "Nicolás Orsini": "34"
+    }
   },
   "riverplate": {
     "agregar": [
@@ -85,29 +88,57 @@
         "position": "defenders"
       }
     ],
-    "quitar": []
+    "quitar": [],
+    "numeros": {
+      "Kevin Pagliaroli": "59",
+      "Agustín Rognoni": "65",
+      "Alex Aguado": "62",
+      "Tobías Ganduglia": "56",
+      "Román Ruiz": "64",
+      "Luis Díaz": "23"
+    }
   },
   "bocajuniors": {
     "agregar": [],
     "quitar": [
       "Agustín Marchesín"
-    ]
+    ],
+    "numeros": {
+      "Tomás Aranda": "10",
+      "Camilo Rey Domenech": "23",
+      "Dylan Gorosito": "24",
+      "Leonel Flores": "19",
+      "Enner Valencia": "13"
+    }
   },
   "independiente": {
     "agregar": [],
-    "quitar": [],
+    "quitar": [
+      "Gabriel Ávalos"
+    ],
     "numeros": {
       "Lautaro Millán": "14",
-      "Maximiliano Meza": "8"
+      "Maximiliano Meza": "8",
+      "Lucas Lavagnino": "",
+      "Juan Miguel Arrayago": "35"
     }
   },
   "talleres": {
     "agregar": [],
     "quitar": [
-      "Alex Vigo"
+      "Alex Vigo",
+      "Ronaldo Martínez"
     ],
     "numeros": {
-      "Bruno Barticciotto": "99"
+      "Bruno Barticciotto": "99",
+      "Franco Cristaldo": "19",
+      "Timoteo Chamorro": "2",
+      "Agustín Álvarez": "9",
+      "Lucio Ferrari": "",
+      "Juan Sforza": "",
+      "José Palomino": "",
+      "Ezequiel Unsain": "32",
+      "Valentín Fascendini": "13"
     }
   },
   "argentinosjuniors": {
@@ -165,7 +196,11 @@
       "Federico Laurelli": "17",
       "Sebastián Moyano": "",
       "Federico Gino": "",
-      "Martín García": "8"
+      "Martín García": "8",
+      "Franco Leys": "",
+      "Lucas Rodríguez": "",
+      "Joaquín Pombo": "32",
+      "Andrés Chávez": "18"
     }
   },
   "banfield": {
@@ -174,7 +209,8 @@
       "Tiziano Perrotta"
     ],
     "numeros": {
-      "Santiago Daniele": "2"
+      "Santiago Daniele": "2",
+      "Renzo Malanca": "37"
     }
   },
   "defensayjusticia": {
@@ -189,7 +225,9 @@
     ],
     "quitar": [],
     "numeros": {
-      "Nicolás Palavecino": ""
+      "Nicolás Palavecino": "",
+      "Tiziano Perrotta": "11",
+      "Éver Banega": ""
     }
   },
   "sanlorenzo": {
@@ -213,12 +251,14 @@
       }
     ],
     "quitar": [
-      "David Romero"
+      "David Romero",
+      "Sebastián Sánchez"
     ],
     "numeros": {
       "Lautaro Morales": "26",
       "Tomás Sultani": "",
-      "Elías Cabrera": ""
+      "Elías Cabrera": "",
+      "Nicolás Dubersarsky": "16"
     }
   },
   "estudiantes": {
@@ -232,21 +272,26 @@
       }
     ],
     "quitar": [
-      "Mauro Méndez"
+      "Mauro Méndez",
+      "Alexis Manyoma"
     ]
   },
   "racingclub": {
     "agregar": [],
     "quitar": [
       "Baltasar Rodriguez"
-    ]
+    ],
+    "numeros": {
+      "Gastón Lodico": "20",
+      "Leonel Pérez": "33"
+    }
   },
   "sarmiento": {
     "agregar": [],
     "quitar": [],
     "numeros": {
       "Mauricio Martínez": "16",
-      "Elián Giménez": "15"
+      "Elián Giménez": "23"
     }
   },
   "huracan": {
@@ -267,42 +312,59 @@
         "position": "defenders"
       }
     ],
-    "quitar": []
+    "quitar": [],
+    "numeros": {
+      "Leonardo Sequeira": "28"
+    }
   },
   "newellsoldboys": {
     "numeros": {
-      "Lucas Carrizo": "16"
+      "Lucas Carrizo": "16",
+      "Mateo García": "18"
     }
   },
-  "numeros": {
-    "defensayjusticia": {
-      "Tiziano Perrotta": "11"
-    },
-    "racingclub": {
-      "Gastón Lodico": "20",
-      "Leonel Pérez": "33"
-    },
-    "centralcordobadesantiago": {
-      "Leonardo Sequeira": "28"
-    },
-    "talleres": {
-      "Franco Cristaldo": "19",
-      "Timoteo Chamorro": "2",
-      "Agustín Álvarez": "9"
-    },
-    "bocajuniors": {
-      "Tomás Aranda": "10",
-      "Camilo Rey Domenech": "23",
-      "Dylan Gorosito": "24",
-      "Leonel Flores": "19",
-      "Enner Valencia": "13"
-    },
-    "union": {
+  "union": {
+    "numeros": {
       "Emilio Giaccone": "8",
       "Mauro Luna Diale": "11"
-    },
-    "sarmiento": {
-      "Elián Giménez": "23"
+    }
+  },
+  "belgrano": {
+    "numeros": {
+      "Agustin Bono": "58"
+    }
+  },
+  "atleticotucuman": {
+    "quitar": [
+      "Javier Dominguez"
+    ]
+  },
+  "velezsarsfield": {
+    "quitar": [
+      "Maximiliano Porcel"
+    ],
+    "agregar": [
+      {
+        "num": "",
+        "name": "Ronaldo Martínez",
+        "fid": 659738,
+        "nationality": "PAR",
+        "position": "attackers"
+      }
+    ]
+  },
+  "clubatleticoplatense": {
+    "numeros": {
+      "Agustín Maglione": "",
+      "Nicolás Retamar": "43",
+      "Juan Pablo Cozzani": "30",
+      "Lucas Testa": ""
+    }
+  },
+  "estudiantesderiocuarto": {
+    "numeros": {
+      "Mauro Molina": "",
+      "Agustín Quiroga": "29"
     }
   }
 }
