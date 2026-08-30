@@ -650,12 +650,35 @@ async function init() {
     return;
   }
 
-  // Agrupar por partido (match_date + rival)
+  // Mapa partido -> número de fecha (round) desde liga.json. Se carga ANTES de
+  // agrupar porque la fecha del fixture es la que canoniza la clave (ver abajo).
+  var fixturesJson = [];
+  try { fixturesJson = await fetch('data/fixtures/liga.json?v=' + Date.now()).then(function(r){ return r.json(); }); } catch(e) {}
+
+  // Fecha canónica del partido del club más cercana a `date` (±2 días). El
+  // match_date guardado puede no coincidir entre filas del MISMO partido: sale
+  // del fixture al momento de votar, así que una reprogramación deja votos
+  // viejos con la fecha anterior (caso real: Lanús-Argentinos, puntajes 23/8 y
+  // formaciones 24/8 → el selector mostraba "Lanús" dos veces). Anclar a la
+  // fecha del fixture los agrupa en un solo partido.
+  function fechaCanonica(date) {
+    if (!date) return '';
+    var mejor = null, mejorD = 3;
+    (fixturesJson || []).forEach(function(p) {
+      if (!(p.home && p.away && (p.home.slug === slug || p.away.slug === slug))) return;
+      var pDate = (p.status && p.status.utcTime) ? p.status.utcTime.slice(0, 10) : (p.date || '');
+      var d = _dDiff(pDate, date);
+      if (d <= 2 && d < mejorD) { mejorD = d; mejor = pDate; }
+    });
+    return mejor || date;
+  }
+
+  // Agrupar por partido (fecha canónica + rival)
   var matchesMap = {};
-  function keyOf(r) { return (r.match_date || '') + '||' + (r.rival || ''); }
+  function keyOf(r) { return fechaCanonica(r.match_date || '') + '||' + (r.rival || ''); }
   function ensure(r) {
     var k = keyOf(r);
-    if (!matchesMap[k]) matchesMap[k] = { key: k, date: r.match_date || '', rival: r.rival || '', forms: [], punts: [] };
+    if (!matchesMap[k]) matchesMap[k] = { key: k, date: fechaCanonica(r.match_date || ''), rival: r.rival || '', forms: [], punts: [] };
     return matchesMap[k];
   }
   allForms.forEach(function(r) { ensure(r).forms.push(r); });
@@ -667,10 +690,6 @@ async function init() {
     mainEl.innerHTML = '<div class="msg-center">Aún no hay votos para este equipo.</div>';
     return;
   }
-
-  // Mapa partido -> número de fecha (round) desde liga.json
-  var fixturesJson = [];
-  try { fixturesJson = await fetch('data/fixtures/liga.json?v=' + Date.now()).then(function(r){ return r.json(); }); } catch(e) {}
   // El club juega un partido por fecha → date + su slug identifican el partido.
   // Tolerante a ±1 día: el match_date de Supabase es la fecha local del voto y el
   // utcTime de liga.json es UTC (partidos nocturnos caen al día siguiente en UTC).
