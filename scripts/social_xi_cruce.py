@@ -24,6 +24,7 @@ from social_resultado import _logo_datauri                        # noqa: E402
 
 PREVIEW = ROOT / 'data' / 'social' / 'preview'
 ANCHO, ALTO = 1000, 760
+KIT_PX = 46          # diámetro del kit chip en la placa (en la web son 24)
 
 
 def _jugadores(slug, startxi):
@@ -82,8 +83,10 @@ body{width:%dpx;height:%dpx;font-family:'Barlow Condensed',sans-serif;color:#fff
 .fc-hdr .fc-form{font-size:18px !important}
 .fc-h-hdr{margin-bottom:10px !important}
 .fc-pitch-h{aspect-ratio:16/9.9 !important;border-radius:12px !important}
-.fc-pitch-h .fc-nm{font-size:14px !important;padding:2px 7px !important;border-radius:8px !important}
-.fc-pitch-h .fc-spot{gap:3px !important}
+.fc-pitch-h .fc-nm{font-size:17px !important;padding:2px 9px !important;border-radius:9px !important;
+                   font-weight:600}
+.fc-pitch-h .fc-spot{gap:5px !important;width:15%% !important}
+.fc-pitch-h .fc-kit{border-width:2.5px !important}
 .foot{text-align:right;font-size:13px;color:#5d6479;margin-top:12px}
 </style></head><body>
 <div class="top"><img class="logo" src="%s">%s</div>
@@ -93,13 +96,32 @@ body{width:%dpx;height:%dpx;font-family:'Barlow Condensed',sans-serif;color:#fff
 <script src="js/club-colors.js"></script>
 <script src="js/ficha-cancha.js"></script>
 <script>
-const DATA = %s, NOMBRES = %s;
+const DATA = %s, NOMBRES = %s, KIT_PX = %d;
 document.getElementById('ficha').innerHTML =
   fcCanchaHTML(DATA, { nomFn: (slug, nom) => NOMBRES[slug] || nom || slug, layout: 'horizontal' })
   || '<div style="color:#f88">Faltan posiciones (grid) en el XI</div>';
+// La ficha dibuja chips de 24px (medida del celular) y el patrón del kit se
+// genera para ESE tamaño, así que agrandarlos por CSS deformaría los bastones:
+// se regeneran con el tamaño de la placa. El lado sale de la mitad de la cancha.
+document.querySelectorAll('.fc-pitch-h .fc-spot').forEach(sp => {
+  const x = parseFloat(sp.style.left);
+  const esLocal = x < 50;
+  const slug = esLocal ? DATA.partido.local : DATA.partido.visitante;
+  // Con los chips grandes, las líneas más adelantadas de los dos equipos se
+  // tocaban en el círculo central: se comprime la profundidad hacia el arco
+  // propio para abrir el pasillo del medio.
+  const dist = esLocal ? x - 6 : 94 - x;
+  sp.style.left = (esLocal ? 8 + dist * 0.85 : 92 - dist * 0.85) + '%%';
+  const chip = sp.querySelector('.fc-kit');
+  if (!chip) return;
+  chip.style.width = chip.style.height = KIT_PX + 'px';
+  chip.style.background = kitBackground(clubKit(slug), KIT_PX);
+  const n = chip.querySelector('span');
+  if (n) n.style.fontSize = Math.round(KIT_PX * 0.44) + 'px';
+});
 </script></body></html>""" % (ff, ANCHO, ALTO, _logo_datauri(), sub,
                               json.dumps(payload, ensure_ascii=False),
-                              json.dumps(nombres, ensure_ascii=False))
+                              json.dumps(nombres, ensure_ascii=False), KIT_PX)
 
 
 def generar(local, visitante, subtitulo='', outdir=PREVIEW) -> Path:
