@@ -173,10 +173,16 @@ def _html(partidos, fecha, titulo):
         return (f'<img class="esc" src="{_b64(cp, "image/png")}">'
                 if cp else '<div class="esc"></div>')
 
-    # con muchos partidos las tarjetas se achican para que entren todas
+    # con muchos partidos las tarjetas se achican para que entren todas; con
+    # dos o tres se agrandan, si no quedan flotando en el medio de la placa.
     n = max(1, len(partidos))
-    alto = 132 if n <= 4 else (118 if n == 5 else 102)
-    escala = 1.0 if n <= 4 else (0.92 if n == 5 else 0.82)
+    if n <= 2:
+        alto, escala = 210, 1.35
+    elif n == 3:
+        alto, escala = 165, 1.15
+    else:
+        alto = 132 if n == 4 else (118 if n == 5 else 102)
+        escala = 1.0 if n == 4 else (0.92 if n == 5 else 0.82)
 
     filas = ''.join(
         '<div class="p"><div class="hora">%s</div><div class="cruce">'
