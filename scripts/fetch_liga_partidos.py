@@ -142,6 +142,10 @@ def _top_stats_incompletas(ts) -> bool:
     api-sports trae un puñado (caso real: "2 (67%) | 7 (88%)")."""
     if not ts:
         return True
+    # Sin xG no se puede calcular la tabla xG del torneo, y FotMob siempre lo
+    # trae (caso real: IndRiv-Racing F7, api-sports mandó las stats sin xG).
+    if not any(s.get('label') == 'xG' for s in ts):
+        return True
     for s in ts:
         if s.get('label') == 'Pases precisos':
             total = 0
@@ -150,6 +154,95 @@ def _top_stats_incompletas(ts) -> bool:
                 total += int(m.group(1)) if m else 0
             return total < 150
     return True   # sin entrada de pases: api-sports mandó statistics vacío/parcial
+
+
+def _faltan_titulares(payload, slugs) -> bool:
+    """¿Algún equipo se quedó sin XI? Pasa cuando api-sports nunca publica
+    /fixtures/lineups (caso real: IndRiv-Racing F7 — el payload quedó con los 4
+    suplentes que asomaron por los eventos de cambio y ningún titular)."""
+    for slug in slugs:
+        js = (payload.get('jugadores') or {}).get(slug) or []
+        if len([j for j in js if j.get('tipo') == 'titular']) < 11:
+            return True
+    return False
+
+
+def reconstruir_jugadores_desde_fotmob(nd, payload, ls, vs) -> bool:
+    """Arma los planteles del partido desde el lineup de FotMob.
+
+    Sin el lineup de api-sports el JSON queda sin jugadores, y de ahí salen el
+    gate de puntajes, la placa y las stats individuales. FotMob tiene el XI, el
+    banco y los minutos, así que se reconstruye con él (misma regla de siempre:
+    hueco de api-sports ⇒ lo tapa FotMob). Devuelve True si reconstruyó algo.
+    """
+    content = ((nd.get('props') or {}).get('pageProps') or {}).get('content') or {}
+    lu = content.get('lineup') or {}
+    if not lu:
+        return False
+    home_id = sfm.fotmob_home_id(nd)
+    fid_loc = (CLUBES.get(ls) or {}).get('fotmob')
+    fid_vis = (CLUBES.get(vs) or {}).get('fotmob')
+    if home_id not in (fid_loc, fid_vis):
+        return False                      # orientación no confiable: no tocar
+
+    # stats por jugador (minutos/goles/asistencias) indexadas por id de FotMob
+    ps = content.get('playerStats') or {}
+    flat_by_id = {}
+    for p in ps.values():
+        if p.get('id') is not None:
+            flat_by_id[p['id']] = (sfm.flatten_stats(p.get('stats', [])),
+                                   p.get('isGoalkeeper', False))
+
+    goles = payload.get('partido', {})
+    hecho = False
+    for side in ('homeTeam', 'awayTeam'):
+        t = lu.get(side) or {}
+        if not t.get('starters'):
+            continue
+        es_local = (t.get('id') == fid_loc) if fid_loc else (t.get('id') != fid_vis)
+        slug = ls if es_local else vs
+        recibidos = goles.get('goles_visitante' if es_local else 'goles_local') or 0
+
+        def armar(p, tipo):
+            flat, is_gk = flat_by_id.get(p.get('id'), ({}, False))
+            mins = sfm.to_int(flat.get('Minutes played'))
+            if tipo == 'suplente' and not mins:
+                return None               # suplentes que no ingresaron: fuera
+            h = p.get('horizontalLayout') or {}
+            pos = ({'x': round(h['x'] * 100, 1), 'y': round(h['y'] * 100, 1)}
+                   if tipo == 'titular' and h.get('x') is not None and h.get('y') is not None
+                   else None)
+            j = {
+                'nombre': p.get('name') or '', 'id': p.get('id'), 'tipo': tipo,
+                'portero': bool(is_gk), 'mvp': False,
+                'num': str(p.get('shirtNumber') or ''),
+                'min': mins, 'goles': sfm.to_int(flat.get('Goals')) or 0,
+                'asist': sfm.to_int(flat.get('Assists')) or 0,
+                'top': None, 'ataque': None, 'defensa': None, 'duelos': None,
+                'portero_stats': ({'paradas': None, 'goles_contra': recibidos,
+                                   'goles_evitados': None} if is_gk else None),
+            }
+            if pos:
+                j['pos'] = pos
+            return j
+
+        jugs = [j for j in (armar(p, 'titular') for p in t['starters']) if j]
+        jugs += [j for j in (armar(p, 'suplente') for p in (t.get('subs') or [])) if j]
+        coach = t.get('coach') or {}
+        nombre_dt = coach.get('name') if isinstance(coach, dict) else None
+        if isinstance(coach, list) and coach:
+            nombre_dt = (coach[0] or {}).get('name')
+        if nombre_dt:
+            jugs.append({'nombre': nombre_dt, 'id': None, 'tipo': 'dt', 'portero': False,
+                         'mvp': False, 'num': '', 'min': None, 'goles': 0, 'asist': 0,
+                         'top': None, 'ataque': None, 'defensa': None, 'duelos': None,
+                         'portero_stats': None})
+        if len([j for j in jugs if j['tipo'] == 'titular']) >= 11:
+            payload.setdefault('jugadores', {})[slug] = jugs
+            payload.setdefault('partido', {}).setdefault('formacion', {})[slug] = \
+                t.get('formation') or ''
+            hecho = True
+    return hecho
 
 
 def main() -> int:
@@ -237,6 +330,15 @@ def main() -> int:
             out_file = fmm.PARTIDOS_DIR / f"{m['oid']}.json"
             payload = json.loads(out_file.read_text(encoding='utf-8'))
             nd = sfm._fetch_next_data(url)
+
+            # 3b. Si api-sports nunca publicó los lineups, el payload viene sin
+            #     XI (de ahí salen puntajes, placa y stats individuales): se
+            #     reconstruyen los planteles desde el lineup de FotMob ANTES de
+            #     enriquecer, así el enrich tiene a quién pegarle las stats.
+            if _faltan_titulares(payload, (m['ls'], m['vs'])):
+                if reconstruir_jugadores_desde_fotmob(nd, payload, m['ls'], m['vs']):
+                    print('   planteles reconstruidos con FotMob (api-sports no dio lineups)')
+
             payload = sfm._enrich_payload_from_nd(nd, payload)
 
             # 4. Fallback de top_stats: api-sports a veces sirve las estadísticas
