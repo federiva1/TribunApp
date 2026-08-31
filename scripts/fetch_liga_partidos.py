@@ -136,26 +136,6 @@ def completar_nums_desde_plantel(payload):
     return payload
 
 
-def _top_stats_incompletas(ts) -> bool:
-    """¿Las stats globales parecen un snapshot de los primeros minutos?
-    En 90' reales los pases precisos suman cientos; el snapshot con lag de
-    api-sports trae un puñado (caso real: "2 (67%) | 7 (88%)")."""
-    if not ts:
-        return True
-    # Sin xG no se puede calcular la tabla xG del torneo, y FotMob siempre lo
-    # trae (caso real: IndRiv-Racing F7, api-sports mandó las stats sin xG).
-    if not any(s.get('label') == 'xG' for s in ts):
-        return True
-    for s in ts:
-        if s.get('label') == 'Pases precisos':
-            total = 0
-            for lado in ('local', 'visitante'):
-                m = re.match(r'\s*(\d+)', str(s.get(lado) or ''))
-                total += int(m.group(1)) if m else 0
-            return total < 150
-    return True   # sin entrada de pases: api-sports mandó statistics vacío/parcial
-
-
 def _faltan_titulares(payload, slugs) -> bool:
     """¿Algún equipo se quedó sin XI? Pasa cuando api-sports nunca publica
     /fixtures/lineups (caso real: IndRiv-Racing F7 — el payload quedó con los 4
@@ -380,20 +360,31 @@ def main() -> int:
 
             payload = sfm._enrich_payload_from_nd(nd, payload)
 
-            # 4. Fallback de top_stats: api-sports a veces sirve las estadísticas
-            #    congeladas en los primeros minutos aunque el partido esté FT
-            #    (pasó con ERC-San Lorenzo F6: "2 vs 7 pases precisos"). Si las
-            #    stats parecen de un partido a medio jugar, se reconstruyen desde
-            #    las stats de equipo de FotMob que vienen en el mismo nd.
-            if _top_stats_incompletas(payload.get('top_stats')):
-                home_id = str(sfm.fotmob_home_id(nd) or '')
-                fid_loc = str((CLUBES.get(m['ls']) or {}).get('fotmob') or '')
-                fid_vis = str((CLUBES.get(m['vs']) or {}).get('fotmob') or '')
-                if home_id in (fid_loc, fid_vis):
-                    ts = sfm.team_stats_from_nd(nd, home_es_local=(home_id == fid_loc))
-                    if ts:
-                        payload['top_stats'] = ts
-                        print('   top_stats reemplazadas con FotMob (api-sports venía incompleto)')
+            # 4. top_stats: SIEMPRE FotMob cuando están disponibles. api-sports
+            #    sirvió dos veces un snapshot congelado de mitad de partido que
+            #    pasaba el detector de "incompletas" (ERC-San Lorenzo F6: "2 vs 7
+            #    pases"; Boca-Lanús F7: xG 0.36-0.17 cuando el real era
+            #    1.16-0.91, con 8 tiros que eran 19). No hay forma barata de
+            #    distinguir un snapshot "creíble" de datos reales, y FotMob es la
+            #    misma fuente de las stats individuales → consistencia total
+            #    (la suma de xG por jugador cuadra con el xG del equipo).
+            #    api-sports queda solo como fallback si FotMob no trae stats.
+            home_id = str(sfm.fotmob_home_id(nd) or '')
+            fid_loc = str((CLUBES.get(m['ls']) or {}).get('fotmob') or '')
+            fid_vis = str((CLUBES.get(m['vs']) or {}).get('fotmob') or '')
+            if home_id in (fid_loc, fid_vis):
+                ts = sfm.team_stats_from_nd(nd, home_es_local=(home_id == fid_loc))
+                if ts:
+                    # Partidos viejos de FotMob pueden venir sin xG (caso real:
+                    # Instituto-Platense 30/7): se conserva el de api-sports para
+                    # no dejar al partido fuera de la tabla xG.
+                    if not any(s.get('label') == 'xG' for s in ts):
+                        prev = next((s for s in (payload.get('top_stats') or [])
+                                     if s.get('label') == 'xG'), None)
+                        if prev:
+                            ts.insert(1, prev)
+                    payload['top_stats'] = ts
+                    print('   top_stats desde FotMob')
 
             completar_nums_desde_plantel(payload)
             out_file.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
