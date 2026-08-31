@@ -1,0 +1,21 @@
+# Consulta puntual a api-sports desde Actions (donde vive el secret) para
+# diagnosticar respuestas en vivo — el resultado queda en el log del job.
+name: debug-apisports
+on:
+  workflow_dispatch:
+    inputs:
+      path:
+        description: 'Endpoint + query (ej: fixtures/lineups?fixture=1493101)'
+        required: true
+        type: string
+jobs:
+  query:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Query api-sports
+        env:
+          QPATH: ${{ inputs.path }}
+          API_SPORTS_KEY: ${{ secrets.API_SPORTS_KEY }}
+        run: |
+          curl -sS "https://v3.football.api-sports.io/$QPATH" \
+            -H "x-apisports-key: $API_SPORTS_KEY" | python3 -m json.tool
