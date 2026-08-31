@@ -201,6 +201,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 </main>
 
 <script src="js/clubes.js"></script>
+<script src="js/standings-fix.js"></script>
 <script src="js/ui-help.js"></script>
 <script>
 const LEAGUE = 128;
@@ -334,8 +335,11 @@ function toRow(e) {
 //   - Anual          = suma de todas las competencias del año (Apertura + Clausura).
 //   - Promedios      = coeficiente pts/PJ sobre las últimas 3 temporadas (descenso).
 async function loadAll() {
-  const s2026 = await fetchSeason(2026);
+  let s2026 = await fetchSeason(2026);
   if (!s2026.length) throw new Error('sin datos 2026');
+  // /standings se actualiza con lag: se completan los FT que la API aún no
+  // cuenta con los resultados de liga.json (zonas, anual y promedios salen de acá).
+  if (typeof sfCorregirConLiga === 'function') s2026 = await sfCorregirConLiga(s2026);
 
   // ── Torneo en curso ──
   const parsed = s2026.map(g => ({ meta: parseGroup(g[0] && g[0].group), teams: g }));
