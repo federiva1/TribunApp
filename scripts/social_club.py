@@ -74,8 +74,6 @@ body{width:760px;height:950px;font-family:'Barlow Condensed',sans-serif;color:#f
      filter:drop-shadow(0 14px 34px rgba(0,0,0,.65))}
 .nom{font-family:'Bebas Neue';font-size:64px;letter-spacing:5px;line-height:1;text-align:center;
      max-width:660px}
-.claim{font-family:'Bebas Neue';font-size:23px;letter-spacing:4px;color:#8b93a7;text-align:center;
-       line-height:1.35;max-width:600px}
 .url{font-family:'Bebas Neue';font-size:34px;letter-spacing:4px;color:#38bdf8;
      border:2px solid rgba(56,189,248,.45);border-radius:10px;padding:9px 26px 6px}
 </style></head><body>
@@ -85,7 +83,6 @@ body{width:760px;height:950px;font-family:'Barlow Condensed',sans-serif;color:#f
   <div class="hero">
     %s
     <div class="nom">%s</div>
-    <div class="claim">ARMÁ TU FORMACIÓN IDEAL Y PUNTUÁ<br>A LOS JUGADORES FECHA A FECHA</div>
     <div class="url">%s</div>
   </div>
 </div></body></html>""" % (ff, _logo_datauri(), escudo, nombre, url)
