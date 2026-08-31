@@ -72,6 +72,54 @@ async function resolveMatchUrl(fotmobId, date) {
   return null;
 }
 
+// Réplica JS de team_stats_from_nd (scripts/scrape_fotmob_mundial.py): top_stats
+// del schema data/partidos desde las stats de equipo del partido (Periods → All).
+const FOTMOB_TOP_STATS = [
+  ['BallPossesion', 'Posesion', 'posesion'],
+  ['expected_goals', 'xG', 'numero'],
+  ['total_shots', 'Tiros totales', 'numero'],
+  ['ShotsOnTarget', 'Tiros al arco', 'numero'],
+  ['touches_opp_box', 'Toques en area rival', 'numero'],
+  ['corners', 'Corners', 'numero'],
+  ['fouls', 'Faltas', 'numero'],
+  ['yellow_cards', 'Tarjetas amarillas', 'numero'],
+  ['red_cards', 'Tarjetas rojas', 'numero'],
+];
+
+function topStatsDe(content, homeEsLocal) {
+  const per = (((content.stats || {}).Periods || {}).All) || {};
+  const flat = {};
+  for (const grupo of per.stats || []) {
+    for (const s of grupo.stats || []) {
+      if (s.key && !(s.key in flat) && Array.isArray(s.stats) && s.stats.length === 2) flat[s.key] = s.stats;
+    }
+  }
+  if (!Object.keys(flat).length) return null;
+  const iLoc = homeEsLocal ? 0 : 1, iVis = homeEsLocal ? 1 : 0;
+  const num = (x) => {
+    if (x == null || x === '') return null;
+    const f = parseFloat(String(x));
+    return isNaN(f) ? null : (String(x).indexOf('.') >= 0 ? Math.round(f * 100) / 100 : f);
+  };
+  const out = [];
+  for (const [key, label, tipo] of FOTMOB_TOP_STATS) {
+    if (!(key in flat)) continue;
+    const l = num(flat[key][iLoc]), v = num(flat[key][iVis]);
+    if (l == null && v == null) continue;
+    out.push({ label, local: l, visitante: v, tipo, local_val: l, visitante_val: v });
+  }
+  const ap = flat.accurate_passes;   // formato "229 (71%)"
+  if (ap) {
+    const parse = (s) => { const m = /^\s*(\d+)\s*\((\d+)%\)/.exec(String(s)); return m ? [+m[1], +m[2]] : [null, null]; };
+    const [ln, lp] = parse(ap[iLoc]), [vn, vp] = parse(ap[iVis]);
+    if (ln != null && vn != null) {
+      out.push({ label: 'Pases precisos', local: ln + ' (' + lp + '%)', visitante: vn + ' (' + vp + '%)',
+                 tipo: 'texto', local_val: lp, visitante_val: vp });
+    }
+  }
+  return out.length ? out : null;
+}
+
 function equipoDe(team) {
   const starters = team.starters || [];
   if (starters.length < 7) return null;
@@ -107,9 +155,20 @@ export default async function handler(req) {
   if (!matchUrl) return json({ lineup: null, motivo: 'partido no encontrado' }, 200, 'public, max-age=60');
 
   const nd = await nextData(matchUrl);
-  let lu;
-  try { lu = nd.props.pageProps.content.lineup; } catch (e) { lu = null; }
-  if (!lu) return json({ lineup: null, motivo: 'sin lineup todavía' }, 200, 'public, max-age=60');
+  let content;
+  try { content = nd.props.pageProps.content || {}; } catch (e) { content = {}; }
+  const lu = content.lineup;
+
+  // Stats de equipo, orientadas para que `local` = el slug del param `home`.
+  let generalHomeId = null;
+  try { generalHomeId = nd.props.pageProps.general.homeTeam.id; } catch (e) {}
+  const homeEsLocal = FOTMOB_IDS[home]
+    ? generalHomeId === FOTMOB_IDS[home]
+    : generalHomeId !== FOTMOB_IDS[away];
+  let topStats = null;
+  try { topStats = topStatsDe(content, homeEsLocal); } catch (e) {}
+
+  if (!lu) return json({ lineup: null, top_stats: topStats, motivo: 'sin lineup todavía' }, 200, 'public, max-age=60');
 
   // Lado FotMob → slug nuestro, matcheando por team id (sin confiar en que el
   // "home" de FotMob coincida con el de api-sports).
@@ -123,7 +182,7 @@ export default async function handler(req) {
     const eq = t.starters ? equipoDe(t) : null;
     if (slug && eq) out[slug] = eq;
   }
-  if (!Object.keys(out).length) return json({ lineup: null, motivo: 'sin titulares' }, 200, 'public, max-age=60');
-  // Una vez confirmadas, las alineaciones no cambian → cache más larga.
-  return json({ lineup: out }, 200, 'public, max-age=300');
+  if (!Object.keys(out).length) return json({ lineup: null, top_stats: topStats, motivo: 'sin titulares' }, 200, 'public, max-age=60');
+  // Las stats cambian durante el partido → cache corta aunque el lineup ya esté.
+  return json({ lineup: out, top_stats: topStats }, 200, 'public, max-age=60');
 }
