@@ -138,6 +138,80 @@
     };
   }
 
+  // ── Fallback FotMob (vía /api/fotmob) cuando api-sports no publica lineups ──
+  // Caso real: IndRiv-Racing F7 del Clausura, fixtures/lineups devolvía response:[]
+  // con el partido en juego, mientras FotMob tenía los dos XI. Regla asentada:
+  // demora/hueco de api-sports ⇒ FotMob tapa el agujero. api-sports sigue siendo
+  // la fuente primaria — esto solo actúa si faltan titulares o posiciones.
+  function _fmMatchNombre(abrev, lista) {
+    // "S. Sosa" (api-sports) vs "Santiago Sosa" (FotMob): mismo último token +
+    // primer token igual o inicial coincidente. Devuelve el jugador o null.
+    var a = norm(abrev).replace(/\./g, '').split(/\s+/).filter(Boolean);
+    if (!a.length) return null;
+    var hits = lista.filter(function (j) {
+      var n = norm(j.nombre).split(/\s+/).filter(Boolean);
+      if (!n.length || n[n.length - 1] !== a[a.length - 1]) return false;
+      return a.length < 2 || n[0] === a[0] || (a[0].length === 1 && n[0].charAt(0) === a[0]);
+    });
+    return hits.length === 1 ? hits[0] : null;
+  }
+  function _fmAplicar(data, slug, info, esLocal) {
+    if (!info || !(info.titulares || []).length) return;
+    var jug = data.jugadores[slug] || (data.jugadores[slug] = []);
+    var tit = jug.filter(function (j) { return j.tipo === 'titular'; });
+    if (tit.length >= 7) {
+      // api-sports trajo el XI pero sin grid: solo completar posiciones.
+      var porNum = {}, lista = info.titulares.filter(function (t) { return t.pos; });
+      lista.forEach(function (t) { if (t.num) porNum[t.num] = t.pos; });
+      tit.forEach(function (j) {
+        if (j.grid || j.pos) return;
+        var xy = porNum[String(j.num || '')] || (function () {
+          var m = _fmMatchNombre(j.nombre, lista); return m && m.pos;
+        })();
+        if (xy) j.pos = xy;
+      });
+    } else {
+      // Sin XI de api-sports: se arma entero desde FotMob. Goles/asistencias se
+      // marcan cruzando con goles_detalle (que sí viene, de fixtures/events).
+      var goles = (data.partido.goles_detalle || {})[esLocal ? 'local' : 'visitante'] || [];
+      var golesRecibidos = esLocal ? data.partido.goles_visitante : data.partido.goles_local;
+      var nuevos = info.titulares.map(function (t) {
+        return {
+          nombre: t.nombre, id: null, tipo: 'titular', portero: !!t.portero, mvp: false,
+          pos: t.pos || null, num: t.num || '', min: 90, min_in: null, min_sale: null,
+          goles: 0, asist: 0, amarilla: false, roja: false,
+          top: null, ataque: null, defensa: null, duelos: null,
+          portero_stats: t.portero ? { paradas: null, goles_contra: golesRecibidos || 0, goles_evitados: null } : null
+        };
+      });
+      goles.forEach(function (g) {
+        if (g.en_contra) return;
+        var j = _fmMatchNombre(g.jugador || '', nuevos); if (j) j.goles++;
+        if (g.asist) { var a = _fmMatchNombre(g.asist, nuevos); if (a) a.asist++; }
+      });
+      data.jugadores[slug] = nuevos.concat(jug.filter(function (j) { return j.tipo !== 'titular'; }));
+    }
+    if (info.formacion && !data.partido.formacion[slug]) data.partido.formacion[slug] = info.formacion;
+  }
+  async function _fmFallback(data, fx, lineups) {
+    var byTeam = {};
+    (lineups || []).forEach(function (lu) { byTeam[lu.team.id] = lu; });
+    function falta(tid) {
+      var xi = ((byTeam[tid] || {}).startXI) || [];
+      if (xi.length < 7) return true;
+      return xi.filter(function (p) { return p.player && p.player.grid; }).length < 7;
+    }
+    if (!falta(fx.teams.home.id) && !falta(fx.teams.away.id)) return;
+    var p = data.partido;
+    var res = await fetch('/api/fotmob?home=' + encodeURIComponent(p.local) +
+      '&away=' + encodeURIComponent(p.visitante) + '&date=' + encodeURIComponent(p.fecha));
+    if (!res.ok) return;
+    var fm = ((await res.json()) || {}).lineup;
+    if (!fm) return;
+    _fmAplicar(data, p.local, fm[p.local], true);
+    _fmAplicar(data, p.visitante, fm[p.visitante], false);
+  }
+
   // Fetchea api-sports y devuelve { data, short, elapsed } (o null si falla / no existe).
   async function buildPayloadLive(apiId) {
     var base = '/api/apisports/', opt = { cache: 'no-store' };
@@ -153,7 +227,9 @@
     var lineups = res[1].ok ? (((await res[1].json()).response) || []) : [];
     var events = res[2].ok ? (((await res[2].json()).response) || []) : [];
     var stats = res[3].ok ? (((await res[3].json()).response) || []) : [];
-    return { data: transformLive(fx, lineups, events, stats), short: fx.fixture.status.short, elapsed: fx.fixture.status.elapsed };
+    var data = transformLive(fx, lineups, events, stats);
+    try { await _fmFallback(data, fx, lineups); } catch (e) { /* FotMob caído ≠ ficha rota */ }
+    return { data: data, short: fx.fixture.status.short, elapsed: fx.fixture.status.elapsed };
   }
 
   window.buildPayloadLive = buildPayloadLive;
