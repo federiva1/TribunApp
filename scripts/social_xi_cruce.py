@@ -23,7 +23,7 @@ from social_lineups import NOM, _b64, _elegir, _plantel_por_num   # noqa: E402
 from social_resultado import _logo_datauri                        # noqa: E402
 
 PREVIEW = ROOT / 'data' / 'social' / 'preview'
-ANCHO, ALTO = 1000, 760
+ANCHO, ALTO = 1000, 706   # alto ajustado al contenido: casi sin aire abajo
 KIT_PX = 46          # diámetro del kit chip en la placa (en la web son 24)
 
 
@@ -69,9 +69,9 @@ def _html(local, visitante, subtitulo=''):
 %s
 *{margin:0;padding:0;box-sizing:border-box}
 body{width:%dpx;height:%dpx;font-family:'Barlow Condensed',sans-serif;color:#fff;
-     background:linear-gradient(150deg,#10182e,#0a0f1e);padding:26px 30px 20px;
+     background:linear-gradient(150deg,#10182e,#0a0f1e);padding:20px 30px 14px;
      display:flex;flex-direction:column}
-.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .logo{height:34px;width:auto}
 .sub{font-family:'Bebas Neue';font-size:19px;letter-spacing:4px;color:#38bdf8}
 #ficha{flex:1;display:flex;align-items:center}
@@ -87,11 +87,9 @@ body{width:%dpx;height:%dpx;font-family:'Barlow Condensed',sans-serif;color:#fff
                    font-weight:600}
 .fc-pitch-h .fc-spot{gap:5px !important;width:15%% !important}
 .fc-pitch-h .fc-kit{border-width:2.5px !important}
-.foot{text-align:right;font-size:13px;color:#5d6479;margin-top:12px}
 </style></head><body>
 <div class="top"><img class="logo" src="%s">%s</div>
 <div id="ficha"></div>
-<div class="foot">tribunapp.com.ar</div>
 <script src="js/kits.js"></script>
 <script src="js/club-colors.js"></script>
 <script src="js/ficha-cancha.js"></script>
