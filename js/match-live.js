@@ -155,7 +155,7 @@
     });
     return hits.length === 1 ? hits[0] : null;
   }
-  function _fmAplicar(data, slug, info, esLocal) {
+  function _fmAplicar(data, slug, info, esLocal, ev) {
     if (!info || !(info.titulares || []).length) return;
     var jug = data.jugadores[slug] || (data.jugadores[slug] = []);
     var tit = jug.filter(function (j) { return j.tipo === 'titular'; });
@@ -189,11 +189,21 @@
         var j = _fmMatchNombre(g.jugador || '', nuevos); if (j) j.goles++;
         if (g.asist) { var a = _fmMatchNombre(g.asist, nuevos); if (a) a.asist++; }
       });
+      // Tarjetas y salidas de los titulares, cruzadas por nombre con los eventos
+      // (el XI de FotMob no tiene los ids de api-sports).
+      ((ev || {}).cards || []).forEach(function (c) {
+        var j = _fmMatchNombre(c.nombre, nuevos);
+        if (j) { if (c.roja) j.roja = true; else j.amarilla = true; }
+      });
+      ((ev || {}).salidas || []).forEach(function (s) {
+        var j = _fmMatchNombre(s.nombre, nuevos);
+        if (j) { j.min_sale = s.min; j.min = s.min || j.min; }
+      });
       data.jugadores[slug] = nuevos.concat(jug.filter(function (j) { return j.tipo !== 'titular'; }));
     }
     if (info.formacion && !data.partido.formacion[slug]) data.partido.formacion[slug] = info.formacion;
   }
-  async function _fmFallback(data, fx, lineups) {
+  async function _fmFallback(data, fx, lineups, events) {
     var byTeam = {};
     (lineups || []).forEach(function (lu) { byTeam[lu.team.id] = lu; });
     function falta(tid) {
@@ -208,8 +218,18 @@
     if (!res.ok) return;
     var fm = ((await res.json()) || {}).lineup;
     if (!fm) return;
-    _fmAplicar(data, p.local, fm[p.local], true);
-    _fmAplicar(data, p.visitante, fm[p.visitante], false);
+    function evSide(tid) {
+      var cards = [], salidas = [];
+      (events || []).forEach(function (ev) {
+        if (!ev.team || ev.team.id !== tid || !ev.player || !ev.player.name) return;
+        var min = toInt(ev.time && ev.time.elapsed);
+        if (ev.type === 'Card') cards.push({ nombre: ev.player.name, roja: (ev.detail || '').indexOf('Red') >= 0, min: min });
+        else if (ev.type === 'subst') salidas.push({ nombre: ev.player.name, min: min });
+      });
+      return { cards: cards, salidas: salidas };
+    }
+    _fmAplicar(data, p.local, fm[p.local], true, evSide(fx.teams.home.id));
+    _fmAplicar(data, p.visitante, fm[p.visitante], false, evSide(fx.teams.away.id));
   }
 
   // Fetchea api-sports y devuelve { data, short, elapsed } (o null si falla / no existe).
@@ -228,7 +248,7 @@
     var events = res[2].ok ? (((await res[2].json()).response) || []) : [];
     var stats = res[3].ok ? (((await res[3].json()).response) || []) : [];
     var data = transformLive(fx, lineups, events, stats);
-    try { await _fmFallback(data, fx, lineups); } catch (e) { /* FotMob caído ≠ ficha rota */ }
+    try { await _fmFallback(data, fx, lineups, events); } catch (e) { /* FotMob caído ≠ ficha rota */ }
     return { data: data, short: fx.fixture.status.short, elapsed: fx.fixture.status.elapsed };
   }
 
