@@ -89,7 +89,13 @@ def already_enriched(out_id: str) -> bool:
     except Exception:
         return False
     jugs = [j for jj in d.get('jugadores', {}).values() for j in jj if j.get('tipo') != 'dt']
-    return any(j.get('top') is not None for j in jugs)
+    if not any(j.get('top') is not None for j in jugs):
+        return False
+    # Partidos escritos antes de la política "top_stats siempre FotMob" (o por
+    # un camino que no la aplicó) no llevan el flag de procedencia → el cron los
+    # reprocesa para re-derivar las stats. 'apisports' también cuenta como
+    # procesado: significa que FotMob no tenía stats de equipo y ya se intentó.
+    return d.get('top_stats_fuente') in ('fotmob', 'apisports')
 
 
 def competicion_de(round_str: str) -> str:
@@ -384,7 +390,9 @@ def main() -> int:
                         if prev:
                             ts.insert(1, prev)
                     payload['top_stats'] = ts
+                    payload['top_stats_fuente'] = 'fotmob'
                     print('   top_stats desde FotMob')
+            payload.setdefault('top_stats_fuente', 'apisports')
 
             completar_nums_desde_plantel(payload)
             out_file.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')

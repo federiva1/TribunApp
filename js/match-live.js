@@ -203,23 +203,18 @@
     }
     if (info.formacion && !data.partido.formacion[slug]) data.partido.formacion[slug] = info.formacion;
   }
-  async function _fmFallback(data, fx, lineups, events) {
-    var byTeam = {};
-    (lineups || []).forEach(function (lu) { byTeam[lu.team.id] = lu; });
-    function falta(tid) {
-      var xi = ((byTeam[tid] || {}).startXI) || [];
-      if (xi.length < 7) return true;
-      return xi.filter(function (p) { return p.player && p.player.grid; }).length < 7;
-    }
-    var faltanStats = !(data.top_stats || []).length;
-    if (!falta(fx.teams.home.id) && !falta(fx.teams.away.id) && !faltanStats) return;
+  async function _fmFallback(data, fx, events) {
+    // Stats globales EN VIVO: FotMob primario SIEMPRE, no solo cuando api-sports
+    // viene vacío — la auditoría de la F7 mostró que api-sports sirve snapshots
+    // congelados de mitad de partido indistinguibles de datos reales (Boca-Lanús
+    // FT con xG 0.36 cuando el real era 1.16). Misma política que el pipeline
+    // post-partido: api-sports queda de fallback si FotMob no tiene el partido.
     var p = data.partido;
     var res = await fetch('/api/fotmob?home=' + encodeURIComponent(p.local) +
       '&away=' + encodeURIComponent(p.visitante) + '&date=' + encodeURIComponent(p.fecha));
     if (!res.ok) return;
     var body = (await res.json()) || {};
-    // Stats globales: api-sports primero; si no trajo nada, las de FotMob.
-    if (faltanStats && (body.top_stats || []).length) data.top_stats = body.top_stats;
+    if ((body.top_stats || []).length) data.top_stats = body.top_stats;
     var fm = body.lineup;
     if (!fm) return;
     function evSide(tid) {
@@ -252,7 +247,7 @@
     var events = res[2].ok ? (((await res[2].json()).response) || []) : [];
     var stats = res[3].ok ? (((await res[3].json()).response) || []) : [];
     var data = transformLive(fx, lineups, events, stats);
-    try { await _fmFallback(data, fx, lineups, events); } catch (e) { /* FotMob caído ≠ ficha rota */ }
+    try { await _fmFallback(data, fx, events); } catch (e) { /* FotMob caído ≠ ficha rota */ }
     return { data: data, short: fx.fixture.status.short, elapsed: fx.fixture.status.elapsed };
   }
 
