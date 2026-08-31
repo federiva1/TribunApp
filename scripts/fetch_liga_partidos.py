@@ -238,11 +238,50 @@ def reconstruir_jugadores_desde_fotmob(nd, payload, ls, vs) -> bool:
                          'top': None, 'ataque': None, 'defensa': None, 'duelos': None,
                          'portero_stats': None})
         if len([j for j in jugs if j['tipo'] == 'titular']) >= 11:
+            _sincronizar_goles(jugs, goles.get('goles_detalle', {}).get(
+                'local' if es_local else 'visitante') or [])
             payload.setdefault('jugadores', {})[slug] = jugs
             payload.setdefault('partido', {}).setdefault('formacion', {})[slug] = \
                 t.get('formation') or ''
             hecho = True
     return hecho
+
+
+def _match_por_nombre(nombre, jugs):
+    """"M. Pellegrini" (api-sports) ↔ "Matías Pellegrini" (FotMob): mismo último
+    token y primer token igual o inicial. Solo vale si identifica a uno solo."""
+    a = _norm_nombre(str(nombre).replace('.', ' ')).split()
+    if not a:
+        return None
+    cand = []
+    for j in jugs:
+        n = _norm_nombre(j.get('nombre')).split()
+        if not n or n[-1] != a[-1]:
+            continue
+        if len(a) < 2 or n[0] == a[0] or (len(a[0]) == 1 and n[0].startswith(a[0])):
+            cand.append(j)
+    return cand[0] if len(cand) == 1 else None
+
+
+def _sincronizar_goles(jugs, detalle):
+    """Los playerStats de FotMob a veces no acreditan un gol que su propio
+    timeline sí registra (caso real: Pellegrini en Riestra-Vélez F7, events lo
+    daba 76' y playerStats 0). `goles_detalle` es la fuente verificada — si la
+    suma no coincide, manda el detalle."""
+    reales = [g for g in detalle if not g.get('en_contra')]
+    if sum(j.get('goles') or 0 for j in jugs) == len(reales):
+        return
+    for j in jugs:
+        j['goles'] = 0
+        j['asist'] = 0
+    for g in reales:
+        j = _match_por_nombre(g.get('jugador') or '', jugs)
+        if j:
+            j['goles'] = (j.get('goles') or 0) + 1
+        if g.get('asist'):
+            a = _match_por_nombre(g['asist'], jugs)
+            if a:
+                a['asist'] = (a.get('asist') or 0) + 1
 
 
 def main() -> int:
