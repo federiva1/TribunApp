@@ -211,12 +211,16 @@
       if (xi.length < 7) return true;
       return xi.filter(function (p) { return p.player && p.player.grid; }).length < 7;
     }
-    if (!falta(fx.teams.home.id) && !falta(fx.teams.away.id)) return;
+    var faltanStats = !(data.top_stats || []).length;
+    if (!falta(fx.teams.home.id) && !falta(fx.teams.away.id) && !faltanStats) return;
     var p = data.partido;
     var res = await fetch('/api/fotmob?home=' + encodeURIComponent(p.local) +
       '&away=' + encodeURIComponent(p.visitante) + '&date=' + encodeURIComponent(p.fecha));
     if (!res.ok) return;
-    var fm = ((await res.json()) || {}).lineup;
+    var body = (await res.json()) || {};
+    // Stats globales: api-sports primero; si no trajo nada, las de FotMob.
+    if (faltanStats && (body.top_stats || []).length) data.top_stats = body.top_stats;
+    var fm = body.lineup;
     if (!fm) return;
     function evSide(tid) {
       var cards = [], salidas = [];
