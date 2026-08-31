@@ -174,6 +174,41 @@ Para los scripts Python hay un equivalente: `scripts/clubes_map.py` (slug → `{
 ### fixture.html — ficha + stats inline por partido
 Cada card de partido que arrancó tiene **dos pestañas en la misma línea** que despliegan INLINE (comparten un `.ficha-panel`): **① "Ficha del partido"** (jugadores: titulares + "Ingresaron" con `▲min`, salidas `▼min`, goles arriba) y **② "Ver estadísticas del partido"** (stats globales: posesión con barra por color de club + xG/tiros/córners/pases). Estado en `_secOpen[fid]`, payload cacheado en `_fichaCache[fid]`, y `render()` reabre la sección activa con `_restoreSections()` (el poll en vivo de 60s no la cierra). `estadisticas.html` es la página completa (global + individual); `loadMatchData()` decide fuente (en curso/sin JSON → api-sports; terminado con JSON → FotMob). **Bug fix**: `actualizarEnVivo` cierra los partidos que figuran EN_CURSO pero ya salieron de `live=all` (traen su estado final por `fixtures?id=`), así no quedan "jugándose" para siempre.
 
+### Fallback FotMob EN VIVO (`api/fotmob.js` + `js/match-live.js`)
+
+Regla de oro extendida: api-sports es la fuente primaria en vivo, pero cuando **no trae nada**
+lo tapa FotMob (caso real: IndRiv-Racing F7, `fixtures/lineups` y `fixtures/statistics`
+devolvían `response: []` con el partido en pleno 2T, y la ficha del index quedaba en
+"Formaciones aún no confirmadas").
+
+- **`api/fotmob.js`** (edge, mismo control de origen que el proxy de api-sports) —
+  `GET /api/fotmob?home={slug}&away={slug}&date=YYYY-MM-DD` saca del `__NEXT_DATA__` de la
+  página del partido en FotMob el `lineup` (formación + titulares con dorsal y `pos`, el
+  `horizontalLayout` × 100) y las `top_stats` (réplica JS de `team_stats_from_nd`, orientadas
+  con `general.homeTeam.id`). Hace falta el passthrough porque el navegador no llega a FotMob
+  por CORS. `FOTMOB_IDS` es copia del mapa de `scripts/clubes_map.py` (mantener a mano).
+- **`js/match-live.js`** — tras `transformLive`, si a algún equipo le faltan titulares (o ≥7
+  sin `grid`) o si `top_stats` quedó vacío, pide `/api/fotmob` y completa: arma el XI, o solo
+  rellena las `pos`, y toma las stats. Goles, asistencias, tarjetas y ▼min se cruzan **por
+  nombre** contra `goles_detalle`/`fixtures/events` (el XI de FotMob no tiene ids api-sports).
+  Si FotMob falla, la ficha queda como antes.
+
+### Posiciones con lag (`js/standings-fix.js`)
+
+`/standings` se actualiza tarde (tras IndRiv 3-1 Racing seguía dando 6 PJ / 8 pts horas
+después). `sfCorregirConLiga(groups)` completa cada fila con los partidos FT que la API aún
+no contabilizó — los toma de `liga.json` por diferencia de PJ, reordena y recomputa rank y
+forma. Lo usan `tablas.html` (zonas, anual y promedios salen del mismo standings) e
+`index.html` (grilla de posiciones). Cuando la API se pone al día no hay diferencia de PJ y
+no toca nada, así que es idempotente y no hace falta desactivarlo.
+
+### `debug-apisports.yml`
+
+Workflow `workflow_dispatch` para consultar api-sports en vivo desde Actions (donde vive la
+key): inputs `path` (ej. `fixtures/lineups?fixture=1493101`) y `jq` (ej.
+`.response[0].fixture.status`). La respuesta queda en el log del job — **usar siempre el
+filtro jq**, los JSON completos no entran en el log legible.
+
 ### Proxy api-sports — cache (`api/apisports.js`)
 El proxy pone `Cache-Control: no-store` a las queries de **fixtures en vivo** (`live`, `id` o `fixture` en la query) para que el CDN de Vercel no sirva datos viejos; el resto (standings/teams/players/listados) cachea 60s. Verificar con `curl -D -`: live = `no-store` + `X-Vercel-Cache: MISS`. **Lag de api-sports**: al terminar un partido el endpoint por-`id` marca FT al toque, pero los agregados (`league=`/`team=`) tardan — se los vio devolviendo `"1H 0-0"` más de 10 min después del final, en cuatro fechas seguidas. Como `liga.json` sale del agregado, el gate de puntajes no abría. **Ya está resuelto**: `fetch_liga_fixtures.reparar_estados()` completa esos partidos con lo que haya en `data/partidos/{id}.json` (que viene del endpoint por-`id`). Solo corrige hacia "terminado", nunca pisa un partido que la API ya da por finalizado, y valida que los slugs de local y visitante coincidan antes de aplicar. Ya no hace falta parchear `liga.json` a mano.
 
@@ -272,6 +307,39 @@ Workflows programados que quedan en `.github/workflows/`:
 
 Usan `stefanzweifel/git-auto-commit-action@v5` con `[skip ci]` en el mensaje para evitar loops, y
 requieren el secret `API_SPORTS_KEY` en GitHub → Settings → Secrets.
+
+### Placas a demanda (no las corre ningún workflow)
+
+Además de las automáticas, hay tres generadores que se corren a mano. Todos comparten la
+identidad de `social_lineups` (escudos con estrellas de `esc_placa`, kit chips, fuentes
+embebidas) y escriben en `data/social/preview/` (que **no se commitea**: tras generar,
+`rm -rf data/social && git checkout -- data/social`).
+
+- **`social_fecha.py`** — PRÓXIMO PARTIDO / PARTIDOS DE HOY. Con un solo partido usa el
+  layout de escudos grandes (`_html_uno`); con varios, la lista de tarjetas, que se
+  **agrandan con 2-3 partidos** (el layout base está calibrado para 4-6). Fondo de tribuna.
+- **`social_club.py`** — placa individual de un club: escudo grande, nombre y la URL corta
+  (`tribunapp.com.ar/boca`), que sale de los rewrites de `vercel.json` para no duplicar el
+  mapeo de alias. `python scripts/social_club.py boca river` (slug o alias) o `--all`.
+- **`social_xi_cruce.py`** — **formato preferido para las formaciones**: los 22 en una sola
+  cancha apaisada. No dibuja su propia cancha: arma el payload del schema `data/partidos` y
+  llama a **`fcCanchaHTML` de `js/ficha-cancha.js`**, el mismo módulo que la ficha del index,
+  así la placa y la web se ven igual y hay un solo dibujo que mantener. El HTML se abre con
+  `file://` desde la raíz del repo para que resuelvan `js/` y `escudos/`.
+  `python scripts/social_xi_cruce.py --lineups partido.json --sub "Fecha 7 · 19:00"`, donde
+  el JSON es `[{slug, nombre, formacion, startXI}, ...]` (local, visitante) con `startXI` en
+  formato api-sports (`grid` "fila:col").
+  Detalles que NO hay que romper: los kit chips se **regeneran** a `KIT_PX` (46) con
+  `kitBackground` — agrandar los de 24px por CSS deforma bastones y franjas; la profundidad
+  de cada equipo se comprime hacia su arco (`8 + dist*0.85`) para que las líneas adelantadas
+  no se toquen en el círculo central; sin pie de página (la marca ya está en el logo) y el
+  alto (706) está atado al contenido para no dejar banda muerta abajo.
+
+**Convención de las listas de formación** (vale para las tres): las listas de texto se leen
+**de derecha a izquierda** (el primero listado va a la columna más alta), mientras que los
+diagramas de cancha se copian tal cual. Mejor aún: si FotMob ya publicó las alineaciones,
+sacar de ahí las posiciones (`horizontalLayout`, `y` bajo = izquierda del equipo) en vez de
+deducir carriles — evita espejar laterales.
 
 ### copas.html
 Hardcoded arrays `LIBERTADORES_SLUGS` and `SUDAMERICANA_SLUGS` define Argentine participants. Groups fetched live from api-sports (Libertadores: `league=13`, Sudamericana: `league=11`).
@@ -426,6 +494,18 @@ python scripts/fetch_liga_partidos.py --date 2026-07-26
 python scripts/fetch_liga_partidos.py --limit 3       # probar
 ```
 Resuelve la URL de FotMob por `fotmob_id` del club (los 30 están en `scripts/clubes_map.py`, sacados de la tabla FotMob de la liga). El id de salida es `{local_slug}-{visitante_slug}` con los slugs de `js/clubes.js` (ojo: Argentinos = `argentinosjuniors`, no `argentinos`). Automatizado por el workflow **`.github/workflows/liga-match-stats.yml`** (cada 3h; se auto-repara si FotMob todavía no tenía `playerStats`; su `workflow_dispatch` acepta `force_date=YYYY-MM-DD` para reprocesar un día con `--force`). El enrich mapea local/visitante por **fotmob_id** (robusto para clubes; evita bugs de grafía como "Newell's").
+
+**Sin lineups de api-sports ⇒ el plantel del partido se reconstruye con FotMob.** Si la API
+nunca publica `/fixtures/lineups`, el JSON queda sin XI (solo los suplentes que asoman por los
+eventos de cambio) y de ahí salen el gate de puntajes, la placa y las stats individuales.
+`reconstruir_jugadores_desde_fotmob()` (en `fetch_liga_partidos.py`) arma titulares —con `pos`
+y formación—, suplentes que ingresaron y DT desde el `lineup` de FotMob, con minutos/goles/
+asistencias de `playerStats`; corre **antes** del enrich y solo si `_faltan_titulares()`.
+Ojo: los `playerStats` de FotMob a veces no acreditan un gol que su propio timeline sí
+registra (Pellegrini en Riestra-Vélez F7: events 76', playerStats 0), así que
+`_sincronizar_goles()` reconcilia contra `goles_detalle` cuando la suma no coincide.
+`_top_stats_incompletas()` además dispara **si falta el xG** (sin él el partido no entra en la
+tabla xG y FotMob siempre lo trae).
 
 **Regla asentada — error o demora de api-sports ⇒ FotMob tapa el agujero.** api-sports puede servir `/fixtures/statistics` congelado en los primeros minutos aunque el partido esté FT, y un reproceso con `--force` no alcanza porque la API sigue devolviendo lo mismo (caso real: ERC-San Lorenzo F6 del Clausura quedó con "2 vs 7 pases precisos"; Aldosivi-Unión del mismo día vino bien). El pipeline lo maneja solo: tras el enrich, `_top_stats_incompletas()` (en `fetch_liga_partidos.py`) detecta el snapshot — pases precisos sumando **< 150**, o sin entrada de pases — y reemplaza las `top_stats` con `sfm.team_stats_from_nd()`, que las reconstruye desde las stats de equipo del mismo `__NEXT_DATA__` de FotMob ya descargado para los playerStats (orientación local/visitante validada con `fotmob_home_id()` contra el `fotmob_id` del club). api-sports sigue siendo la fuente primaria: si sus stats están completas, no se tocan. El mismo criterio vale para cualquier dato que la API demore: preferir el camino FotMob que ya tenemos (cf. `reparar_estados()` para los estados de `liga.json`) antes que parches manuales o esperar el cron siguiente.
 
