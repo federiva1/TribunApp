@@ -354,11 +354,11 @@ async function init() {
   $main.innerHTML = `
     <div class="comp">${ESC(compLbl)}</div>
     <div class="estado-partido">${ESC(subHdr)}</div>
-    <div class="score">
+    ${estado === 'pre' ? '' : `<div class="score">
       <div class="team"><img src="${ESC(escudo(m.home))}" alt="" onerror="this.style.opacity=0.15"><span class="nom">${ESC(nomL)}</span></div>
       <div class="res">${jugado ? `${hs} - ${as}` : 'VS'}</div>
       <div class="team"><img src="${ESC(escudo(m.away))}" alt="" onerror="this.style.opacity=0.15"><span class="nom">${ESC(nomV)}</span></div>
-    </div>
+    </div>`}
     ${estadio}
     <div class="pregunta">${pregunta}</div>
     <div class="sub">${sub}</div>
