@@ -98,8 +98,8 @@ python scripts/fetch_fixtures.py --copas  # only copa files
 
 # Tabla xG ("tabla moral") → data/tabla_xg.json. Resultado de cada partido = parte
 # entera del xG de cada equipo (0.98 vs 0.57 = 0-0; 0.98 vs 1.02 = 0-1). Solo lee
-# data/partidos (sin APIs); la corren update-fixtures.yml y liga-match-stats.yml,
-# y la consume el tab "Tabla xG" de tablas.html.
+# data/partidos (sin APIs); la corre cierre_rapido.py al cerrar cada partido (y a mano
+# tras reprocesos), y la consume el tab "Tabla xG" de tablas.html.
 python scripts/build_tabla_xg.py
 
 # === Stats por partido (genéricos, post-partido) ===
@@ -378,7 +378,7 @@ sacar de ahí las posiciones (`horizontalLayout`, `y` bajo = izquierda del equip
 deducir carriles — evita espejar laterales.
 
 ### index.html — home del fútbol argentino
-Title "TribunApp — Fútbol Argentino". Header con pills Fixture / Tablas / Estadísticas / TribunApp (el mismo header, con el logo a 72px, se repite a mano en todas las páginas). Cuerpo: **tira en vivo** (`#live-strip` / `#live-cards` / `#live-ficha`: partidos nuestros en curso vía `js/match-live.js` + `js/partido-card.js`, ficha con `js/ficha-cancha.js`), toggle **LOCAL / COPAS** (`#vista-local` = grilla de posiciones corregida con `js/standings-fix.js`; `#vista-copas` = ronda y cruces de Libertadores/Sudamericana desde `data/fixtures/copas.json`). El bracket del Mundial ya no está acá.
+Title "TribunApp — Fútbol Argentino". Header con pills Fixture / Tablas / Estadísticas / TribunApp (el mismo header, con el logo a 72px, se repite a mano en todas las páginas). Cuerpo: **tira en vivo** (`#live-strip` / `#live-cards` / `#live-ficha`: partidos nuestros en curso vía `js/match-live.js`, ficha con `js/ficha-cancha.js`; `js/partido-card.js` ya no lo carga ninguna página), toggle **LOCAL / COPAS** (`#vista-local` = grilla de posiciones corregida con `js/standings-fix.js`; `#vista-copas` = ronda y cruces de Libertadores/Sudamericana desde `data/fixtures/copas.json`). El bracket del Mundial ya no está acá.
 
 ### tablas.html
 Tabs **Torneo actual** (zonas A/B), **Anual**, **Promedios** y **Tabla xG** (`data/tabla_xg.json`, generada por `build_tabla_xg.py`: resultado = parte entera del xG de cada equipo). Zonas/anual/promedios salen de un solo `standings` corregido por `sfCorregirConLiga`. El promedio usa `PROMEDIO_HIST` **hardcodeado** (puntos/PJ de temporadas anteriores) — recalcular en 2027.
