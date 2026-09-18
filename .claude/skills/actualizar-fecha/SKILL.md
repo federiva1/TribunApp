@@ -75,6 +75,24 @@ curl -s -o /dev/null -w "%{http_code}\n" https://www.tribunapp.com.ar/puntuar/{a
 Si a los 3-4 minutos no apareció, mirar el deploy: `gh api repos/federiva1/TribunApp/deployments?per_page=3`
 (o el panel de Vercel). Reportar el fallo al usuario; no "arreglarlo" publicando por CLI.
 
+## Desde una sesión en la nube (claude.ai/code, celular)
+La sesión en la nube **no pushea a `master`**: el proxy de GitHub solo deja pushear a la rama
+de trabajo de la sesión (`claude/…`). Publicar desde ahí es lo mismo que fueron los PR #1–#135:
+```bash
+python scripts/check_datos.py origin/master          # mismo freno
+git add -A && git commit -m "data: cierre …"
+git push origin HEAD                                  # rama claude/… → Preview de Vercel
+# PR a master + squash-merge  ← esto PUBLICA. Con "cerrá X"/"publicá" el merge está pedido.
+```
+Entorno de la nube (lo configura Fede en claude.ai/code → ícono de nube → engranaje):
+- **Red**: *Custom* + "include default list", con `v3.football.api-sports.io`, `www.fotmob.com`
+  y `www.tribunapp.com.ar`. Con el default (*Trusted*) los scripts dan 403 `host_not_allowed`.
+- **Key de api-sports**: como *API credential* (header `x-apisports-key`, sin prefijo, sitio
+  `v3.football.api-sports.io`) + variable `API_SPORTS_VIA_PROXY=1`. La key no entra a la
+  sesión: la agrega el proxy. Alternativa simple: variable `API_SPORTS_KEY=…` (queda legible
+  dentro de la sesión). `scripts/apikey.py` soporta las dos.
+- Si un script devuelve `errors: {token: …}` o listas vacías, es la key/el proxy, no la API.
+
 ## Volver atrás
 ```bash
 git revert <sha> && git push origin master   # publica el estado anterior, deja historial
