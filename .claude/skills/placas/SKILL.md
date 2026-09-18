@@ -10,11 +10,13 @@ Tres momentos, tres scripts. **Ninguno publica nada**: todos escriben en
 `data/social/preview/`, que está en `.gitignore` y `.vercelignore`. El tweet lo
 hace Fede a mano — el proyecto no tiene credenciales de X cargadas.
 
-Todo se corre desde la **carpeta de producción**, nunca desde el repo git:
+Todo se corre desde la **raíz del repo** (desde el 2026-09-18 el repo es la fuente de
+verdad; la carpeta `tribunapp-deploy` quedó como respaldo congelado). La API key sale de la
+variable de entorno `API_SPORTS_KEY` o de `scripts/.apikey` — `scripts/apikey.py` resuelve
+las dos, no hace falta exportarla a mano:
 
 ```bash
-cd "C:/Users/feder/OneDrive/Escritorio/tribunapp-deploy/tribunappdeploy"
-export API_SPORTS_KEY="$(tr -d '\r\n' < "C:/Users/feder/OneDrive/Escritorio/TribunApp/scripts/.apikey")"
+git pull --rebase origin master      # datos al día antes de generar
 ```
 
 Al terminar cada placa, **mandásela al usuario con SendUserFile** (`display: render`).

@@ -10,25 +10,31 @@ TribunApp is a static fan engagement SPA for all 30 clubs of the Argentine Liga 
 
 ## Dónde vive el código y cómo se publica (LEER PRIMERO)
 
-Hay **dos carpetas** y no son equivalentes:
+**El repo de GitHub (`federiva1/TribunApp`, rama `master`) es la fuente de verdad, y publicar = push a `master`.** Vercel está conectado al repo: cada commit en `master` sale a www.tribunapp.com.ar en ~1 min, y cada push a otra rama genera un **preview** protegido con login. Funciona igual desde la compu de Fede y desde una sesión en la nube (por eso se eligió: se puede cerrar un partido desde el celular).
 
-- **`C:\Users\feder\OneDrive\Escritorio\tribunapp-deploy\tribunappdeploy`** — la **carpeta de producción**. Es la fuente de verdad: acá se editan los archivos, se corren los scripts y se publica con `vercel --prod --yes`. Tiene un git **local** (sin remote) que sirve solo como snapshot para volver atrás (`git commit` después de cada publicación).
-- **`C:\Users\feder\OneDrive\Escritorio\TribunApp`** — el repo git original (donde vive este `CLAUDE.md` y `.claude/skills`). Su `master` local quedó **muy atrasado** (384 commits detrás de `origin/master` al 18/9, con cambios sin commitear): no usarlo como referencia del código; para eso está la rama de sync o la carpeta de producción. **Nunca** correr `vercel --prod` desde acá: pisaría la web con código viejo y subiría `scripts/.apikey`.
+Reglas:
+- **Lo que se pushea, sale.** Antes de commitear datos: `python scripts/check_datos.py` (falla si un fixture achica, si `liga.json` pierde finalizados, si se borra una ficha o si un JSON quedó roto). Si falla, no se commitea.
+- **Datos → directo a `master`. Código → rama + PR**, así el preview de Vercel se mira antes de mergear.
+- **Arrancar con `git pull --rebase origin master`**; nunca `--force` a `master`.
+- **`.vercelignore` decide qué NO se publica** (`CLAUDE.md`, `FLUJO.md`, `.claude/`…). Verificado en un deploy desde git el 2026-09-18: `/CLAUDE.md` → 404. Si se agrega un archivo interno nuevo en la raíz, sumarlo ahí.
+- **La API key nunca va a un commit**: variable de entorno `API_SPORTS_KEY` (nube) o `scripts/.apikey` (compu, gitignored).
+- **Todo lo que escriba en el remoto se confirma con el usuario antes**, salvo los commits de datos que pida explícitamente ("cerrá X", "publicá"). Mergear un PR, tocar Actions o la config de Vercel: siempre con OK.
 
-**GitHub: cuenta recuperada el 2026-09-18, con Actions APAGADO a propósito.** La cuenta `federiva1` estuvo suspendida del ~2026-08-31 al 2026-09-18 (la última corrida de un workflow y el último commit del `master` remoto son del 31/8). Causa más probable: los cinco workflows con cron (5 y 10 min) sumaban **~600 corridas por día** de scraping + auto-commit de JSON, sin compilar ni deployar nada. Al volver:
-- **Actions está deshabilitado en el repo** (*Settings → Actions → Disable actions*; verificar con `gh api repos/federiva1/TribunApp/actions/permissions`). Eso congela también el deploy de GitHub Pages (es un workflow), que quedó en la versión del 31/8; producción sale de Vercel, así que no afecta.
-- Los cinco workflows quedaron con el **`schedule:` comentado** y solo `workflow_dispatch`. **No reactivar los crons como estaban**: si alguna vez vuelven, que sea con intervalos largos y decisión explícita del usuario.
-- Todo lo que abajo dice "lo hace el workflow X" se sigue haciendo **a mano** con las skills. Vercel no depende de GitHub (`sourceless`, CLI autenticado).
-- `gh` (GitHub CLI) está instalado en `C:\Program Files\GitHub CLI\gh.exe` y logueado como `federiva1` (scopes `repo`, `workflow`). **Todo lo que escriba en el remoto (push, PR, tocar Actions) se confirma con el usuario antes.**
-- El trabajo hecho durante la suspensión se volcó al repo en la rama `sync/produccion-2026-09-18`. Mientras esa rama no esté mergeada en `master`, la carpeta de producción sigue siendo la fuente de verdad.
+**Un solo camino a producción.** La carpeta `C:\Users\feder\OneDrive\Escritorio\tribunapp-deploy\tribunappdeploy` fue la fuente de verdad durante la suspensión de la cuenta (~31/8 → 18/9/2026), publicando con `vercel --prod`. **Quedó como respaldo congelado: no publicar más desde ahí.** Con dos caminos gana el último que corre, y un merge con datos más viejos hace retroceder la web. No borrarla (es de Fede).
 
-Skills del proyecto (en `.claude/skills/` del repo, se invocan con `/nombre`):
-- **`/actualizar-fecha`** — el circuito completo: `cierre_rapido.py` (cierra un partido: FT en `liga.json` + `data/partidos/{id}.json` + tabla xG + imprime el link `/puntuar/...`), refresco de fixtures, `vercel deploy --dry` → `vercel --prod --yes` → commit local → `curl` de verificación. Reglas: la API key va por env var (`API_SPORTS_KEY` leída de `Escritorio\TribunApp\scripts\.apikey`), nunca escrita en la carpeta de producción; si un diff achica `liga.json` o borra `data/partidos/`, parar.
-- **`/placas`** — placas para redes (previa, formaciones confirmadas = `social_xi_cruce.py`, final del partido). Escriben en `data/social/preview/` y no publican nada.
+**GitHub: cuenta recuperada el 2026-09-18, con Actions APAGADO a propósito.** Soporte respondió que un sistema automático de detección de abuso marcó la cuenta y que la revisión manual levantó la restricción; no dijeron qué la disparó. Lo más anómalo que tenía: cinco workflows con cron (5 y 10 min) que sumaban **~600 corridas por día** de scraping + auto-commit de JSON. Por eso:
+- **Actions está deshabilitado en el repo** (*Settings → Actions*; verificar con `gh api repos/federiva1/TribunApp/actions/permissions`). Congela también GitHub Pages (es un workflow), que quedó en la versión del 31/8; producción sale de Vercel.
+- Los cinco workflows tienen el **`schedule:` comentado** y solo `workflow_dispatch`. **No reactivar los crons como estaban** para "automatizar": es decisión explícita de Fede, y con intervalos largos.
+- Todo lo que abajo dice "lo hace el workflow X" se hace **a mano** con las skills.
+- `gh` (GitHub CLI) está instalado en `C:\Program Files\GitHub CLI\gh.exe`, logueado como `federiva1` (scopes `repo`, `workflow`).
+
+Skills del proyecto (en `.claude/skills/`, se invocan con `/nombre`):
+- **`/actualizar-fecha`** — el circuito completo: `cierre_rapido.py` (cierra un partido: FT en `liga.json` + `data/partidos/{id}.json` + tabla xG + imprime el link `/puntuar/...`), refresco de fixtures, `check_datos.py` → commit → `git push origin master` → verificación por `curl`.
+- **`/placas`** — placas para redes (previa, formaciones confirmadas = `social_xi_cruce.py`, final del partido). Escriben en `data/social/preview/` (gitignored) y no publican nada.
 - **`/actualizar-planteles`** — planteles de los 30 clubes desde FotMob + backfill de dorsales; respeta `data/planteles_overrides.json`.
 - **`/exportar-datos`** — CSV de partidos/equipos/jugadores.
 
-Para previsualizar la carpeta de producción en el navegador de la app: config `prod` en `.claude/launch.json` del repo (`python -m http.server 3031 --directory <carpeta de producción>`). El proxy `/api/apisports` solo existe en producción (en local da 404, el código cae en catch). Las URLs amigables (`/river`, `/puntuar/newells-velez`) son rewrites de Vercel y **no funcionan en el server local** — probar con `club.html?c=…` / `puntuar.html?p=…`, y en producción por `curl`.
+Para previsualizar en el navegador de la app: `python -m http.server` sobre la raíz del repo (config `sitio` en `.claude/launch.json`, puerto 3031). El proxy `/api/apisports` solo existe en Vercel (en local da 404, el código cae en catch). Las URLs amigables (`/river`, `/puntuar/newells-velez`) son rewrites de Vercel y **no funcionan en el server local** — probar con `club.html?c=…` / `puntuar.html?p=…`.
 
 ## No Build / No Tests
 
@@ -63,7 +69,8 @@ python scripts/extract_club_colors.py                  # todos (edita OVERRIDES 
 # Update rivalActual for each club in js/clubes.js (reads next fixtures from API)
 python scripts/fetch_proximos_partidos.py
 
-# === Circuito manual de una fecha (skill /actualizar-fecha) — desde la carpeta de producción ===
+# === Circuito manual de una fecha (skill /actualizar-fecha) — desde la raíz del repo ===
+python scripts/check_datos.py                    # OBLIGATORIO antes de commitear datos (exit 1 = se pierde algo)
 python scripts/cierre_rapido.py --check          # ¿hay partidos que arrancaron hace 100-210 min? (sin API)
 python scripts/cierre_rapido.py                  # FT en liga.json + data/partidos/{id}.json + tabla xG + link /puntuar/…
 python scripts/fetch_liga_partidos.py --torneo clausura --date YYYY-MM-DD   # pasadas las 3,5 h del kickoff (cierre_rapido ya no lo toma)
@@ -493,7 +500,7 @@ Fetched by `equipo.html` on load (with `?v=${Date.now()}` cache bust). Controls 
 - `FLUJO.md` documenta el ciclo de vida completo de una fecha y el plan de automatización.
 - **Nombres de jugadores en `data/partidos/*.json` vienen de FotMob tal cual** y a veces están mal escritos (caso real: "Thiago Silveor" por Silvero, Vélez #32). No hay override de nombres en los scrapers (sí para DTs, `data/dt_overrides.json`): un reproceso con `--force` reintroduce el error. Corregir a mano en las fichas afectadas.
 - **Bajas/altas de plantel** se hacen en `data/planteles/{slug}.json` **y** en `data/planteles_overrides.json` (`quitar`/`agregar`/`numeros`), si no el próximo refresco desde FotMob las deshace.
-- Cada publicación lleva su snapshot: `git commit` en el git local de la carpeta de producción, mensaje `data: …` o `<página>: …`.
+- Cada publicación es un commit en `master` (mensaje `data: …` para datos, `<página>: …` para código). Volver atrás: `git revert <sha>` + push, o *Instant Rollback* en Vercel.
 
 ## Mundial 2026 — Automatización Post-Partido
 

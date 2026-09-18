@@ -8,14 +8,14 @@ allowed-tools: Bash(python scripts/exportar_datos.py*), Bash(cd*), Read, SendUse
 
 ## Cómo se corre
 
-Desde la **carpeta de producción** (ver [[deploy-dos-carpetas]] — el repo git está atrasado):
+Desde la **raíz del repo** (desde el 2026-09-18 el repo es la fuente de verdad; hacer
+`git pull --rebase origin master` antes para exportar datos al día):
 
 ```bash
-cd "C:/Users/feder/OneDrive/Escritorio/tribunapp-deploy/tribunappdeploy"
 python scripts/exportar_datos.py --zip
 ```
 
-- `--out <ruta>` para elegir carpeta (default `export/` dentro de la carpeta de producción).
+- `--out <ruta>` para elegir carpeta (default `export/` en la raíz del repo; está en `.gitignore`).
 - `--zip` arma además el `.zip` para mandárselo al usuario con `SendUserFile`.
 - No necesita API key ni red: lee solo archivos locales.
 - `export/` está en `.gitignore` y `.vercelignore`, así que no ensucia el repo ni el deploy.

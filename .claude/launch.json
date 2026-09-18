@@ -4,13 +4,21 @@
     {
       "name": "mundial",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "3030"],
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "3030"
+      ],
       "port": 3030
     },
     {
-      "name": "prod",
+      "name": "sitio",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "3031", "--directory", "C:/Users/feder/OneDrive/Escritorio/tribunapp-deploy/tribunappdeploy"],
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "3031"
+      ],
       "port": 3031
     }
   ]
