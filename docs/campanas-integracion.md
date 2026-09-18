@@ -15,6 +15,11 @@ con selector de colección, carga diferida y progreso separado. Catálogo, cober
 fuentes y límites: `campanas-historicas.md`. Las otras propuestas del documento
 `campanas-objetivos.md` siguen siendo objetivos editoriales, no datos publicados.
 
+La portada conserva la presentación «¿Cuánto sabés de fútbol argentino?», los 30
+escudos, el filtro por equipo y los tres retos del Apertura 2026 con acceso directo.
+Debajo aparece la biblioteca de campañas históricas con sus mismas opciones. Volver
+desde una campaña recupera esa portada y el equipo elegido para el torneo.
+
 ## Arquitectura
 
 - `campanas.html`: página estática con navegación nativa. `/campanas` tiene rewrite.

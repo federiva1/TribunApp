@@ -59,10 +59,11 @@
     return `<img class="${className}" src="${escape(src)}" alt="${escape(name)}" width="40" height="46">`;
   };
   function showLibrary() {
-    round = null;
+    return loadCollection("apertura-2026");
+  }
+  function historicalLibrary() {
     const clubs = [...new Map(catalog.map(item => [item.clubSlug, item.club])).entries()];
-    app.innerHTML = `<div class="section-bar"><span class="eyebrow">CAMPAÑAS · EL FÚTBOL SE JUEGA DE MEMORIA</span></div><h1 class="display">Elegí qué historia jugar</h1><p class="muted">Un torneo completo o dos campañas inolvidables de tu club. Los mismos tres retos, con progreso independiente por campaña.</p><section class="coming"><div><h2>Apertura 2026</h2><p class="muted">Los 255 partidos de los 30 clubes.</p></div><button class="primary" data-collection="apertura-2026">Jugar el torneo →</button></section><section aria-label="Campañas históricas"><div class="club-picker"><div><h2>Campañas históricas</h2><p class="muted">24 campañas · 12 clubes</p></div><label>Club <select id="history-club"><option value="all">Todos los clubes</option>${clubs.map(([slug,name])=>`<option value="${escape(slug)}">${escape(name)}</option>`).join("")}</select></label></div><div class="archive-grid">${catalog.map(item=>`<article class="archive-card historical-card" data-club="${escape(item.clubSlug)}">${crest(item.clubSlug,item.club)}<h2>${escape(item.title)}</h2><p>${escape(item.achievement)}</p><p class="muted">${item.matchCount} partidos · Formación: ${item.coverage.formation} · Goleadores: ${item.coverage.scorers} · Resultado: ${item.coverage.result}</p><button class="primary" data-collection="${escape(item.id)}">Elegir retos →</button></article>`).join("")}</div><p class="local-note">Las fichas conservan su fuente. Los retos sin datos suficientes y los encuentros suspendidos no se habilitan; los 0–0 no participan en goleadores.</p></section>`;
-    focusMain();
+    return `<section class="historical-library" aria-label="Campañas históricas"><div class="club-picker"><div><span class="eyebrow">OTRAS HISTORIAS PARA VOLVER A JUGAR</span><h2>Campañas históricas</h2><p class="muted">24 campañas · 12 clubes. Elegí una época de tu equipo y jugá los mismos tres retos.</p></div><label>Club <select id="history-club"><option value="all">Todos los clubes</option>${clubs.map(([slug,name])=>`<option value="${escape(slug)}">${escape(name)}</option>`).join("")}</select></label></div><div class="archive-grid">${catalog.map(item=>`<article class="archive-card historical-card" data-club="${escape(item.clubSlug)}">${crest(item.clubSlug,item.club)}<h2>${escape(item.title)}</h2><p>${escape(item.achievement)}</p><p class="muted">${item.matchCount} partidos · Formación: ${item.coverage.formation} · Goleadores: ${item.coverage.scorers} · Resultado: ${item.coverage.result}</p><button class="primary" data-collection="${escape(item.id)}">Elegir retos →</button></article>`).join("")}</div><p class="local-note">Cada campaña guarda su propio progreso. Los retos sin datos suficientes y los encuentros suspendidos no se habilitan; los 0–0 no participan en goleadores.</p></section>`;
   }
   async function loadCollection(id) {
     if (loadingCollection) return;
@@ -83,7 +84,8 @@
       const url = new URL(location.href);url.searchParams.set("collection",data.id);history.replaceState(null,"",url);
       showHome();focusMain();
     } catch(error) {
-      showLibrary();
+      if (!data) throw error;
+      showHome();
       const notice = document.createElement("p");notice.className="notice bad";notice.setAttribute("role","alert");notice.textContent="No pudimos cargar esa campaña. Volvé a intentarlo; tu progreso está guardado.";app.prepend(notice);
     } finally { loadingCollection=false; }
   }
@@ -113,9 +115,10 @@
   }
   function showHome() {
     round = null;
-    app.innerHTML = `<div class="section-bar"><button class="back" data-action="library">← Elegir campaña</button><button class="archive-button" data-action="archive">Mi archivo <span aria-hidden="true">↗</span></button></div>
-      <section class="hero"><div><span class="eyebrow">VOLVÉ A JUGAR LA HISTORIA</span><h1>${escape(data.title)}</h1><p>${escape(data.description)}</p><div class="hero-tags"><span class="tag">${data.matches.length} PARTIDOS</span><span class="tag">3 FORMAS DE JUGAR</span></div></div><div class="crest-wall" aria-label="Clubes de la campaña">${teams.filter(team=>!data.clubSlug||team.slug===data.clubSlug).map((team) => crest(team.slug, team.name)).join("")}</div></section>
-      <section aria-label="Elegir desafío"><div class="club-picker"><div><h2>Elegí tu desafío</h2><p class="muted">${data.clubSlug ? escape(data.club) : "Seguí a tu club o jugá con todos."}</p></div>${data.clubSlug ? "" : `<label><span class="eyebrow" style="display:block;margin-bottom:6px">EQUIPO</span><select id="club-select" aria-label="Equipo"> <option value="all">Todos los equipos</option>${teams.map((team) => `<option value="${escape(team.slug)}" ${scope === team.slug ? "selected" : ""}>${escape(team.name)}</option>`).join("")}</select></label>`}</div>
+    const tournament = !data.clubSlug;
+    app.innerHTML = `<div class="section-bar">${tournament ? '<span class="eyebrow">CAMPAÑAS · EL ARCHIVO DE LA TRIBUNA</span>' : '<button class="back" data-action="library">← Volver a Campañas</button>'}<button class="archive-button" data-action="archive">Mi archivo <span aria-hidden="true">↗</span></button></div>
+      <section class="hero"><div><span class="eyebrow">${tournament ? "EL FÚTBOL SE JUEGA DE MEMORIA" : "VOLVÉ A JUGAR LA HISTORIA"}</span><h1>${tournament ? "¿Cuánto sabés<br>de <span>fútbol argentino?</span>" : escape(data.title)}</h1><p>${tournament ? "Los nombres, los goles, esos resultados que no se olvidan. Volvé a jugar el Apertura 2026: poné a prueba tu memoria con tu equipo o recorré todo el torneo." : escape(data.description)}</p><div class="hero-tags"><span class="tag">${data.matches.length} PARTIDOS</span>${tournament ? `<span class="tag">${teams.length} CLUBES</span>` : ""}<span class="tag">3 FORMAS DE JUGAR</span></div></div><div class="crest-wall" aria-label="${tournament ? "Los 30 clubes del torneo" : "Clubes de la campaña"}">${teams.filter(team=>tournament||team.slug===data.clubSlug).map((team) => crest(team.slug, team.name)).join("")}</div></section>
+      <section aria-label="Elegir desafío"><div class="club-picker"><div>${tournament ? '<span class="eyebrow">APERTURA 2026 · TORNEO COMPLETO</span>' : ""}<h2>${tournament ? "¿Qué reto querés jugar?" : "Elegí tu desafío"}</h2><p class="muted">${data.clubSlug ? escape(data.club) : "Seguí a tu club o jugá con todos."}</p></div>${data.clubSlug ? "" : `<label><span class="eyebrow" style="display:block;margin-bottom:6px">EQUIPO</span><select id="club-select" aria-label="Equipo"> <option value="all">Todos los equipos</option>${teams.map((team) => `<option value="${escape(team.slug)}" ${scope === team.slug ? "selected" : ""}>${escape(team.name)}</option>`).join("")}</select></label>`}</div>
       <div class="mode-grid">${Object.entries(modes)
         .map(([mode, info]) => {
           const total = C.eligible(data.matches, scope, mode).length,
@@ -125,7 +128,7 @@
         .join("")}</div></section>
       <p class="local-note"><span aria-hidden="true">◉</span><span>Jugá sin registrarte. Tu progreso queda en este navegador. Si cambiás de dispositivo o borrás sus datos, empezás de nuevo.</span></p>
       ${records().length ? `<div class="summary-strip"><span><b>${records().length}</b> desafíos completados</span><span><b>${bestTotal()}</b> puntos · suma de tus mejores marcas</span></div>` : ""}
-      ${data.clubSlug ? `<details class="coming"><summary>Ver recorrido y disponibilidad</summary><div>${data.matches.map(match=>`<p>${escape(match.date)} · ${escape(match.home)} — ${escape(match.away)} · ${Object.entries(modes).filter(([mode])=>C.eligible([match],"all",mode).length).map(([,info])=>info.title).join(" / ") || "Pendiente de revisión"}</p>`).join("")}</div></details>` : ""}`;
+      ${data.clubSlug ? `<details class="coming"><summary>Ver recorrido y disponibilidad</summary><div>${data.matches.map(match=>`<p>${escape(match.date)} · ${escape(match.home)} — ${escape(match.away)} · ${Object.entries(modes).filter(([mode])=>C.eligible([match],"all",mode).length).map(([,info])=>info.title).join(" / ") || "Pendiente de revisión"}</p>`).join("")}</div></details>` : historicalLibrary()}`;
   }
   function start(mode, matchId) {
     const options = C.eligible(data.matches, scope, mode);
@@ -451,7 +454,7 @@
     if (!Array.isArray(catalog)) throw new Error("Catálogo inválido");
     const requested = new URLSearchParams(location.search).get("collection");
     if (requested && (requested === "apertura-2026" || catalog.some(item=>item.id===requested))) await loadCollection(requested);
-    else showLibrary();
+    else await showLibrary();
   } catch (error) {
     app.innerHTML =
       '<div class="empty-state"><h1>No pudimos abrir las planillas</h1><p class="muted">Revisá tu conexión e intentá de nuevo. Tu progreso guardado sigue en este navegador.</p><button class="primary" id="retry-load">Volver a intentar</button></div>';
