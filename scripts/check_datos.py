@@ -41,6 +41,13 @@ def en_base(base: str, rel: str):
 
 
 def main() -> int:
+    # En Windows, con la salida por pipe, stdout es cp1252 y los '→'/'✗' tiran
+    # UnicodeEncodeError: el chequeo se caía (exit 1) sin haber encontrado nada.
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding='utf-8', errors='replace')
+        except Exception:
+            pass
     base = sys.argv[1] if len(sys.argv) > 1 else 'HEAD'
     problemas: list[str] = []
     avisos: list[str] = []

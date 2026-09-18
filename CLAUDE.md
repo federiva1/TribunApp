@@ -15,9 +15,10 @@ TribunApp is a static fan engagement SPA for all 30 clubs of the Argentine Liga 
 Reglas:
 - **Lo que se pushea, sale.** Antes de commitear datos: `python scripts/check_datos.py` (falla si un fixture achica, si `liga.json` pierde finalizados, si se borra una ficha o si un JSON quedó roto). Si falla, no se commitea.
 - **Datos → directo a `master`. Código → rama + PR**, así el preview de Vercel se mira antes de mergear.
+- **Desde una sesión en la nube no se puede pushear a `master`** (el proxy de GitHub solo acepta la rama `claude/…` de la sesión): ahí publicar = PR + squash-merge, como los PR #1–#135. El entorno necesita red *Custom* (`v3.football.api-sports.io`, `www.fotmob.com`, `www.tribunapp.com.ar`) y la key como *API credential* + `API_SPORTS_VIA_PROXY=1` (o la variable `API_SPORTS_KEY`). Detalle en la skill `/actualizar-fecha`.
 - **Arrancar con `git pull --rebase origin master`**; nunca `--force` a `master`.
 - **`.vercelignore` decide qué NO se publica** (`CLAUDE.md`, `FLUJO.md`, `.claude/`…). Verificado en un deploy desde git el 2026-09-18: `/CLAUDE.md` → 404. Si se agrega un archivo interno nuevo en la raíz, sumarlo ahí.
-- **La API key nunca va a un commit**: variable de entorno `API_SPORTS_KEY` (nube) o `scripts/.apikey` (compu, gitignored).
+- **La API key nunca va a un commit**: `scripts/.apikey` en la compu (gitignored); en la nube, *API credential* del entorno (la inyecta el proxy, `API_SPORTS_VIA_PROXY=1`) o variable `API_SPORTS_KEY`. Los scripts arman el header con `apikey.api_headers()`, nunca a mano.
 - **Todo lo que escriba en el remoto se confirma con el usuario antes**, salvo los commits de datos que pida explícitamente ("cerrá X", "publicá"). Mergear un PR, tocar Actions o la config de Vercel: siempre con OK.
 
 **Un solo camino a producción.** La carpeta `C:\Users\feder\OneDrive\Escritorio\tribunapp-deploy\tribunappdeploy` fue la fuente de verdad durante la suspensión de la cuenta (~31/8 → 18/9/2026), publicando con `vercel --prod`. **Quedó como respaldo congelado: no publicar más desde ahí.** Con dos caminos gana el último que corre, y un merge con datos más viejos hace retroceder la web. No borrarla (es de Fede).

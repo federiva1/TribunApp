@@ -8,7 +8,7 @@ from pathlib import Path
 ROOT = Path(__file__).parent.parent
 OUT  = ROOT / 'data' / 'estado_torneo.json'
 
-from apikey import API_KEY
+from apikey import api_headers
 LEAGUE  = 1
 SEASON  = 2026
 
@@ -27,7 +27,7 @@ TEAM_SLUG = {
 
 def get(path):
     url = f'https://v3.football.api-sports.io{path}'
-    req = urllib.request.Request(url, headers={'x-apisports-key': API_KEY})
+    req = urllib.request.Request(url, headers=api_headers())
     with urllib.request.urlopen(req, timeout=15) as r:
         return json.loads(r.read())
 

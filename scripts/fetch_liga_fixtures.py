@@ -18,7 +18,7 @@ ROOT = Path(__file__).parent.parent
 OUT  = ROOT / 'data' / 'fixtures' / 'liga.json'
 LEAGUE, SEASON = 128, 2026
 
-from apikey import get_api_key
+from apikey import get_api_key, api_headers
 API_KEY = get_api_key()   # env API_SPORTS_KEY o scripts/.apikey (gitignored); nunca hardcodeada
 
 # id api-sports -> slug, parseado de js/clubes.js (única fuente de verdad de los 30 clubes)
@@ -40,7 +40,7 @@ STATUS_MAP = {
 
 def get(path):
     req = urllib.request.Request(f'https://v3.football.api-sports.io{path}',
-                                 headers={'x-apisports-key': API_KEY})
+                                 headers=api_headers())
     with urllib.request.urlopen(req, timeout=25) as r:
         return json.loads(r.read())
 
