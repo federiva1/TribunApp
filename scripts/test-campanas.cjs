@@ -11,7 +11,52 @@ test('normalization accepts accents, case, whitespace and explicit aliases witho
   assert(!core.acceptedAnswer('', ''));
 });
 test('formation hint penalties match the prototype', () => {
-  assert.deepEqual([undefined, 0, 1, 2, 9].map(core.pointsForPlayer), [3, 2, 1, 0, 0]);
+  assert.deepEqual([undefined, 0, 1, 2, 9].map(level => core.pointsForPlayer(level)), [3, 2, 1, 0, 0]);
+});
+
+test('revealing two letters or half a short surname gives no points', () => {
+  assert.equal(core.pointsForPlayer(undefined, 'Cortés', false), 3);
+  assert.equal(core.pointsForPlayer(0, 'Cortés', false), 2);
+  assert.equal(core.pointsForPlayer(1, 'Cortés', false), 1);
+  assert.equal(core.pointsForPlayer(2, 'Cortés', false), 0);
+  assert.equal(core.pointsForPlayer(1, 'Li', false), 0);
+  assert.equal(core.pointsForPlayer(0, 'Cortés', true), 2);
+  assert.equal(core.pointsForPlayer(1, 'Cortés', true), 1);
+  assert.equal(core.pointsForPlayer(2, 'Cortés', true), 0);
+});
+
+test('every scorer hint removes new non-scorers and the last leaves exactly the authors', () => {
+  for (const match of core.eligible(collection.matches, 'all', 'scorers')) {
+    const eliminated = new Set();
+    const actual = new Set(core.actualScorers(match));
+    for (let used = 0; used < 3; used++) {
+      const removed = core.scorerHintPlan(match, eliminated, used);
+      const wrongRemaining = core.scorerCandidates(match).filter(p => !actual.has(p.id) && !eliminated.has(p.id));
+      if (wrongRemaining.length) assert(removed.length > 0, match.id);
+      for (const id of removed) {
+        assert(!actual.has(id), match.id);
+        assert(!eliminated.has(id), match.id);
+        eliminated.add(id);
+      }
+    }
+    assert.deepEqual(new Set(core.scorerCandidates(match).filter(p => !eliminated.has(p.id)).map(p => p.id)), actual);
+    assert.deepEqual(core.scorerHintPlan(match, eliminated, 2), []);
+    assert.deepEqual(core.scorerHintPlan(match, new Set(), 3), []);
+  }
+});
+
+test('archive pending modes honor zero and negative scores and scorer eligibility', () => {
+  const match = core.eligible(collection.matches, 'all', 'scorers')[0];
+  const values = new Map();
+  const store = progress.open({ getItem: key => values.get(key), setItem: (key, value) => values.set(key, value) }, error => { throw error; });
+  store.save(collection.id, match.id, 'scorers', 0, collection.version);
+  assert.deepEqual(core.pendingModes(match, store.list()), ['formation', 'result']);
+  store.save(collection.id, match.id, 'result', -5, collection.version);
+  assert.deepEqual(core.pendingModes(match, store.list()), ['formation']);
+  store.save(collection.id, match.id, 'formation', 0, collection.version);
+  assert.deepEqual(core.pendingModes(match, store.list()), []);
+  const zero = collection.matches.find(m => !m.scorers.length);
+  assert.deepEqual(core.pendingModes(zero, []), ['formation', 'result']);
 });
 test('collection retains all matches, clubs, sources, complete starters and unique IDs', () => {
   assert.equal(collection.matches.length, 255);

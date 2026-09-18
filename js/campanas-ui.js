@@ -128,13 +128,23 @@
   }
   const playerKey = (side, index) => `${side}-${index}`;
   const playerName = (player) => player.accepted_answers?.[0] || player.name;
+  const hiddenNumber = (player) => round.hideNumbers && player.n != null && player.n !== "";
+  const pending = (match) => C.pendingModes(match, records());
+  function pendingButtons(match) {
+    const available = pending(match);
+    return available.length
+      ? `<p class="muted">Otros retos pendientes de este partido:</p><div class="pending-challenges">${available.map((mode) => `<button class="secondary" data-replay="${escape(match.id)}" data-replay-mode="${mode}">${modes[mode].title} →</button>`).join("")}</div>`
+      : '<p class="muted">Ya completaste todos los retos disponibles de este partido.</p>';
+  }
   function playerRow(player, side, index) {
     const key = playerKey(side, index),
       solved = round.solved.has(key),
       level = round.hints[key];
     player = { ...player, name: playerName(player) };
-    const number = round.hideNumbers && level === undefined ? "—" : (player.n ?? "—");
-    return `<li class="player-row ${solved ? "solved" : ""}" data-player="${key}"><span class="shirt-number">${escape(number)}</span>${solved || round.mode !== "formation" ? `<span class="player-name">${escape(player.name)}</span>${solved ? '<span class="solved-mark">✓</span>' : ""}` : `<form data-player-form="${key}"><div class="entry-wrap"><label class="sr-only" for="guess-${key}">Apellido del jugador ${index + 1} de ${escape(side === "home" ? round.match.home : round.match.away)}</label><input id="guess-${key}" name="answer" placeholder="Apellido del jugador" autocomplete="off" autocapitalize="words" spellcheck="false" required><span class="letter-hint">${level === undefined ? "" : escape(mask(player.name, Math.max(0, level - (round.hideNumbers ? 1 : 0))))}</span></div><button class="check-answer" aria-label="Comprobar jugador ${index + 1}" title="Comprobar">✓</button></form><button class="player-hint" data-hint="${key}" title="Pedir una pista para este jugador" aria-label="Pista para jugador ${index + 1}">?</button>`}</li>`;
+    const number = hiddenNumber(player) && level === undefined && !solved ? "—" : (player.n ?? "—");
+    const letterHint = level === undefined || (hiddenNumber(player) && level === 0)
+      ? "" : mask(player.name, Math.max(0, level - (hiddenNumber(player) ? 1 : 0)));
+    return `<li class="player-row ${solved ? "solved" : ""}" data-player="${key}"><span class="shirt-number">${escape(number)}</span>${solved || round.mode !== "formation" ? `<span class="player-name">${escape(player.name)}</span>${solved ? '<span class="solved-mark">✓</span>' : ""}` : `<form data-player-form="${key}"><div class="entry-wrap ${letterHint ? "has-hint" : ""}"><label class="sr-only" for="guess-${key}">Apellido del jugador ${index + 1} de ${escape(side === "home" ? round.match.home : round.match.away)}</label>${letterHint ? `<span class="letter-hint" id="hint-${key}">${escape(letterHint)}</span>` : ""}<input id="guess-${key}" name="answer" placeholder="${letterHint ? "Escribí tu respuesta" : "Apellido del jugador"}" ${letterHint ? `aria-describedby="hint-${key}"` : ""} autocomplete="off" autocapitalize="words" spellcheck="false" required></div><button class="check-answer" aria-label="Comprobar jugador ${index + 1}" title="Comprobar">✓</button></form><button class="player-hint" data-hint="${key}" title="Pedir una pista para este jugador" aria-label="Pista para jugador ${index + 1}">?</button>`}</li>`;
   }
   function mask(name, count) {
     const letters = [...name],
@@ -194,7 +204,7 @@
       : null;
     const rules =
       round.mode === "formation"
-        ? `Completá los 22 apellidos. Sin ayuda: 3 puntos; con las primeras ayudas: 2 o 1; después: 0. ${round.hideNumbers ? "Desde tu tercer partido con este club, los dorsales están ocultos." : "Tocá ? al lado de un jugador para pedir una pista."}`
+        ? `Completá los 22 apellidos. Sin ayuda: 3 puntos; primera ayuda: 2; segunda: 1; desde la tercera: 0. También vale 0 si se revelan dos letras o la mitad del apellido. Equivocarte no resta. ${round.hideNumbers ? "Desde tu tercer partido con este club, la primera pista revela el dorsal, si está disponible." : "Tocá ? al lado de un jugador para pedir una pista."}`
         : round.mode === "scorers"
           ? "Tocá un jugador una vez por cada gol. Podés quitar goles con −. Acertar suma 20 puntos; con ayudas: 14, 8 o 0. Un error resta 5."
           : "Ingresá el marcador al final del partido (incluye alargue, no la tanda de penales). Acertar suma 20 puntos; un error resta 5.";
@@ -203,9 +213,9 @@
       <p class="rules-strip">${rules}</p>
       ${round.mode === "result" && !round.completed ? `<form id="result-form" class="result-form"><label>${escape(match.home)}<input name="home" type="number" inputmode="numeric" min="0" max="99" step="1" required aria-label="Goles de ${escape(match.home)}"></label><span aria-hidden="true">—</span><label>${escape(match.away)}<input name="away" type="number" inputmode="numeric" min="0" max="99" step="1" required aria-label="Goles de ${escape(match.away)}"></label><button class="primary">Confirmar resultado</button></form>` : ""}
       <p class="notice ${tone}" id="game-message" role="status" aria-live="polite">${escape(message || (round.mode === "formation" ? `${round.solved.size} / 22 apellidos encontrados` : round.mode === "scorers" ? `${round.selected.length} / ${match.scorers.length} goles elegidos` : "La formación te puede ayudar a recordar."))}</p>
-      ${round.completed ? `<section class="completion"><h2>${round.mode === "formation" ? "Planilla completa" : round.correct ? "¡Lo tenías guardado!" : "Uno más para la memoria"}</h2><p>Terminaste con <strong>${round.points} puntos</strong>. ${round.saved?.bestScore > round.points ? `Tu mejor marca: ${round.saved.bestScore} puntos.` : "Tu mejor marca quedó en el archivo."} Podés repetir este desafío; conservamos tu mejor puntaje.</p><div class="goal-summary">${match.scorers.length ? `Goleadores: ${escape(match.scorers.join(", "))}.` : "El partido terminó sin goles."}</div><button class="primary" data-action="next" style="margin-top:18px">Siguiente partido →</button></section>` : ""}
+      ${round.completed ? `<section class="completion"><h2>${round.mode === "formation" ? "Planilla completa" : round.correct ? "¡Lo tenías guardado!" : "Uno más para la memoria"}</h2><p>Terminaste con <strong>${round.points} puntos</strong>. ${round.saved?.bestScore > round.points ? `Tu mejor marca: ${round.saved.bestScore} puntos.` : "Tu marca quedó en el archivo, incluso si sumaste 0 puntos."}</p>${round.mode === "scorers" ? `<div class="goal-summary">Goleadores: ${escape(match.scorers.join(", "))}.</div>` : ""}${pendingButtons(match)}<button class="primary" data-action="next" style="margin-top:18px">Siguiente partido →</button></section>` : ""}
       <div class="sheets">${sheet("home")}${sheet("away")}</div>
-      <div class="game-actions">${round.mode === "scorers" && !round.completed ? `<button class="secondary" data-action="scorer-hint" ${round.scorerHints >= 3 ? "disabled" : ""}>? Ayuda (${round.scorerHints}/3)</button><button class="primary" data-action="confirm-scorers" ${round.selected.length !== match.scorers.length ? "disabled" : ""}>Confirmar goleadores</button>` : `<span class="muted">${round.mode === "formation" ? `${round.solved.size} / 22 apellidos` : "Apertura 2026"}</span>`}<button class="secondary" data-action="next">${round.completed ? "Siguiente partido →" : "Saltar partido →"}</button></div>`;
+      <div class="game-actions">${round.mode === "scorers" && !round.completed ? `<button class="secondary" data-action="scorer-hint" ${C.scorerHintPlan(match, round.eliminated, round.scorerHints).length ? "" : "disabled"}>? Ayuda (${round.scorerHints}/3)</button><span class="muted">Acertar ahora: ${C.scoreScorers(C.actualScorers(match), match, round.scorerHints).score} puntos</span><button class="primary" data-action="confirm-scorers" ${round.selected.length !== match.scorers.length ? "disabled" : ""}>Confirmar goleadores</button>` : `<span class="muted">${round.mode === "formation" ? `${round.solved.size} / 22 apellidos` : "Apertura 2026"}</span>`}<button class="secondary" data-action="next">${round.completed ? "Siguiente partido →" : "Saltar partido →"}</button></div>`;
     for (const [id, value] of Object.entries(drafts)) {
       const input = document.getElementById(id);
       if (input) input.value = value;
@@ -238,59 +248,28 @@
       level = round.hints[key] === undefined ? 0 : round.hints[key] + 1;
     round.hints[key] = level;
     const letterCount = [...player.name].filter((letter) => /[\p{L}\p{N}]/u.test(letter)).length;
-    if (level >= letterCount + (round.hideNumbers ? 1 : 0)) {
+    if (level >= letterCount + (hiddenNumber(player) ? 1 : 0)) {
       round.solved.add(key);
       if (round.solved.size === 22) complete(true);
       renderRound(`${player.name} quedó revelado. No suma puntos.`, "");
     } else
       renderRound(
-        round.hideNumbers && level === 0
+        hiddenNumber(player) && level === 0
           ? `Revelamos el dorsal ${player.n}.`
-          : `Pista para el dorsal ${player.n}. Este apellido ahora vale ${C.pointsForPlayer(level)} puntos.`,
+          : `Pista para este jugador. Este apellido ahora vale ${C.pointsForPlayer(level, player.name, hiddenNumber(player))} puntos.`,
         "",
       );
   }
   function scorerHint() {
     if (round.completed || round.scorerHints >= 3) return;
+    const removed = C.scorerHintPlan(round.match, round.eliminated, round.scorerHints);
+    if (!removed.length) return;
     round.scorerHints++;
-    const actual = C.actualScorers(round.match),
-      candidates = C.scorerCandidates(round.match);
-    const wrong = candidates.filter(
-      (player) =>
-        !actual.includes(player.id) &&
-        !round.selected.includes(player.id) &&
-        !round.eliminated.has(player.id),
-    );
-    if (round.scorerHints < 3) {
-      const home = wrong.filter((player) => player.team === round.match.home),
-        away = wrong.filter((player) => player.team === round.match.away),
-        balanced = [];
-      while (home.length || away.length) {
-        if (home.length) balanced.push(home.shift());
-        if (away.length) balanced.push(away.shift());
-      }
-      const remove =
-        round.scorerHints === 1
-          ? Math.ceil(wrong.length / 2)
-          : Math.max(
-              0,
-              candidates.length - round.eliminated.size - Math.max(6, new Set(actual).size),
-            );
-      balanced.slice(0, remove).forEach((player) => round.eliminated.add(player.id));
-      renderRound(
-        round.scorerHints === 1
-          ? "Descartamos aproximadamente la mitad de los que no convirtieron."
-          : "Quedan menos candidatos. Los que ya elegiste siguen visibles.",
-      );
-    } else {
-      const counts = [round.match.home, round.match.away].map(
-        (team) =>
-          `${team}: ${actual.filter((id) => candidates.find((player) => player.id === id)?.team === team).length}`,
-      );
-      renderRound(
-        `Goles por equipo — ${counts.join(" · ")}. Con esta ayuda, acertar ya no suma puntos.`,
-      );
-    }
+    removed.forEach((id) => round.eliminated.add(id));
+    if (!C.scorerHintPlan(round.match, round.eliminated, 0).length) round.scorerHints = 3;
+    const previous = round.selected.length;
+    round.selected = round.selected.filter((id) => !round.eliminated.has(id));
+    renderRound(`${round.scorerHints === 3 ? "Quedan únicamente los goleadores; indicá cuántos goles hizo cada uno. Acertar ya no suma puntos." : `Descartamos ${removed.length} jugadores que no convirtieron.`}${previous !== round.selected.length ? " Quitamos las selecciones de esos jugadores." : ""}`);
   }
   function showArchive() {
     round = null;
@@ -299,10 +278,11 @@
       .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
     app.innerHTML = `<div class="section-bar"><button class="back" data-action="home">← Volver a Campañas</button><span class="eyebrow">TU MEMORIA TIENE HISTORIA</span></div><h1 class="display" style="font-size:44px">Mi archivo</h1><p class="muted">${escape(scopeName())} · ${entries.length} desafíos completados. Guardados en este navegador.</p>${
       entries.length
-        ? `<div class="archive-grid">${entries
+        ? `<div class="archive-grid">${entries.filter((entry, index) => entries.findIndex((item) => item.matchId === entry.matchId) === index)
             .map((entry) => {
               const match = data.matches.find((item) => item.id === entry.matchId);
-              return `<article class="archive-card"><span class="eyebrow">${modes[entry.mode].title}</span><div class="archive-score">${crest(match.homeSlug, match.home)}<b>${escape(match.score)}</b>${crest(match.awaySlug, match.away)}</div><h2>${escape(match.home)} — ${escape(match.away)}</h2><p>${escape(match.date)}<br>Mejor marca: <strong>${entry.bestScore} pts</strong> · ${entry.attempts} ${entry.attempts === 1 ? "intento" : "intentos"}</p><button class="secondary" data-replay="${escape(match.id)}" data-replay-mode="${entry.mode}">Volver a jugar →</button></article>`;
+              const completed = entries.filter((item) => item.matchId === match.id);
+              return `<article class="archive-card"><span class="eyebrow">${completed.length} RETOS COMPLETADOS</span><div class="archive-score">${crest(match.homeSlug, match.home)}<b>${escape(match.score)}</b>${crest(match.awaySlug, match.away)}</div><h2>${escape(match.home)} — ${escape(match.away)}</h2><p>${escape(match.date)}</p>${completed.map((item) => `<p>✓ ${modes[item.mode].title}: <strong>${item.bestScore} pts</strong></p>`).join("")}${pendingButtons(match)}${pending(match).length ? "" : `<button class="secondary" data-replay="${escape(match.id)}" data-replay-mode="${entry.mode}">Repetir ${modes[entry.mode].title.toLowerCase()} →</button>`}</article>`;
             })
             .join("")}</div>`
         : '<div class="empty-state"><h2>Tu primera planilla te espera</h2><p class="muted">Completá un desafío y encontralo acá.</p><button class="primary" data-action="home">Elegir un desafío →</button></div>'
@@ -347,6 +327,7 @@
     if (
       button.dataset.goal &&
       !round.completed &&
+      !round.eliminated.has(button.dataset.goal) &&
       round.selected.length < round.match.scorers.length
     ) {
       round.selected.push(button.dataset.goal);
@@ -407,7 +388,7 @@
       );
       const nextKey =
         pendingKeys[pendingKeys.indexOf(key) + 1] || pendingKeys.find((item) => item !== key);
-      const points = C.pointsForPlayer(round.hints[key]);
+      const points = C.pointsForPlayer(round.hints[key], playerName(player), hiddenNumber(player));
       round.points += points;
       round.solved.add(key);
       if (round.solved.size === 22) complete(true);

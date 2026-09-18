@@ -24,8 +24,34 @@
       })
     );
   }
-  function pointsForPlayer(level) {
+  function pointsForPlayer(level, name, hideNumber) {
+    var revealed = Math.max(0, (level ?? 0) - (hideNumber ? 1 : 0));
+    var letters = [...(name || "")].filter(function (letter) { return /[\p{L}\p{N}]/u.test(letter); }).length;
+    if (name && (revealed >= 2 || (letters && revealed >= Math.ceil(letters / 2)))) return 0;
     return level === undefined ? 3 : [2, 1][level] || 0;
+  }
+  function pendingModes(match, entries) {
+    return ["formation", "scorers", "result"].filter(function (mode) {
+      return eligible([match], "all", mode).length && !entries.some(function (entry) {
+        return entry.matchId === match.id && entry.mode === mode;
+      });
+    });
+  }
+  function scorerHintPlan(match, eliminated, used) {
+    if (used >= 3) return [];
+    var actual = new Set(actualScorers(match));
+    var wrong = scorerCandidates(match).filter(function (p) {
+      return !actual.has(p.id) && !eliminated.has(p.id);
+    });
+    var home = wrong.filter(function (p) { return p.team === match.home; });
+    var away = wrong.filter(function (p) { return p.team === match.away; });
+    var balanced = [];
+    while (home.length || away.length) {
+      if (home.length) balanced.push(home.shift());
+      if (away.length) balanced.push(away.shift());
+    }
+    var count = used === 2 ? wrong.length : Math.max(1, Math.min(wrong.length - 1, Math.ceil(wrong.length / 2)));
+    return balanced.slice(0, count).map(function (p) { return p.id; });
   }
   function scorerCandidates(match) {
     var seen = new Set();
@@ -108,6 +134,8 @@
     normalize: normalize,
     acceptedAnswer: acceptedAnswer,
     pointsForPlayer: pointsForPlayer,
+    pendingModes: pendingModes,
+    scorerHintPlan: scorerHintPlan,
     scorerCandidates: scorerCandidates,
     actualScorers: actualScorers,
     scoreScorers: scoreScorers,

@@ -70,6 +70,25 @@ del dorsal mediante pista. Revisar de nuevo luego de cambios funcionales.
 
 ## Antes de integrar a producción
 
+### Revisión de ayudas y archivo (18/09/2026)
+
+Las letras se muestran dentro del mismo recuadro del campo de respuesta y permanecen
+visibles al escribir. Cada jugador vale 3 puntos sin ayuda, 2 tras la primera, 1 tras
+la segunda y 0 desde la tercera; revelar dos letras o la mitad de un apellido corto
+también anula los puntos. Una revelación completa resuelve automáticamente sin sumar.
+Si falta el dorsal, la primera pista pasa directamente a la longitud del apellido.
+
+Las ayudas de goleadores siempre eliminan candidatos nuevos; la última deja sólo
+autores reales y vale 0 puntos. Las selecciones de jugadores descartados se retiran
+con un aviso; las ayudas sin candidatos para eliminar se deshabilitan sin penalizar.
+Se indica cuánto vale acertar antes de confirmar. Los errores siguen restando 5.
+
+El archivo agrupa por partido y ofrece modos pendientes, incluso cuando el reto
+anterior terminó con 0 o puntaje negativo. Al completar también se ofrecen esos
+modos; el reto adicional guarda su propia marca. Sólo cuando no quedan pendientes
+se ofrece repetir explícitamente. Formación y resultado no revelan los goleadores
+en su cierre para permitir intentar el reto pendiente.
+
 Revisar el diseño con Fede, resolver observaciones de juego y realizar el control
 adicional solicitado con Cloud. El push a `campanas` puede generar un preview de
 Vercel; producción sigue en `master`. Merge y publicación definitiva requieren el

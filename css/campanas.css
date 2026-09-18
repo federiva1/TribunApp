@@ -568,15 +568,35 @@ h3,
   font-size: 12px;
 }
 .letter-hint {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--celeste);
   display: block;
   letter-spacing: 1px;
-  margin-top: 3px;
+  padding: 8px 9px 0;
+  overflow-wrap: anywhere;
 }
 .entry-wrap {
   flex: 1;
   min-width: 0;
+}
+.entry-wrap.has-hint {
+  border: 1px solid #ffffff14;
+  border-radius: 5px;
+  background: #0d0d1a;
+}
+.entry-wrap.has-hint:focus-within {
+  outline: 2px solid var(--celeste);
+  outline-offset: 2px;
+}
+.entry-wrap.has-hint input {
+  border: 0;
+  background: transparent;
+}
+.pending-challenges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
 }
 .sub-heading {
   padding: 14px 18px 8px;
