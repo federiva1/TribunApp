@@ -33,7 +33,9 @@
   --dark:  #0d0d1a;
   --dark2: #13131f;
   --acento: #1565c0;
-  --acento-light: #42a5f5;
+  --acento-light: #42a5f5;   /* el color, aclarado para LEER sobre el fondo oscuro */
+  --acento-fondo: #1565c0;   /* el color como FONDO de chips/botones */
+  --acento-texto: #fff;      /* el texto que va ENCIMA de --acento-fondo */
   --gold: #f5c518;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -183,17 +185,17 @@ html.deep-stats #estadisticas-screen { display: block; }
 .eqt-chiprow { display:flex; gap:6px; overflow-x:auto; padding-bottom:5px; scrollbar-width:none; align-items:center; }
 .eqt-chiprow::-webkit-scrollbar { display:none; }
 .eqt-fecha-tog { flex:0 0 auto; padding:7px 12px; border-radius:16px; cursor:pointer; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); font-family:'Barlow Condensed',sans-serif; font-size:11px; letter-spacing:.5px; color:rgba(255,255,255,0.55); white-space:nowrap; transition:all .15s; user-select:none; }
-.eqt-fecha-tog.active { background:var(--acento); border-color:var(--acento); color:#fff; }
+.eqt-fecha-tog.active { background:var(--acento-fondo); border-color:var(--acento-fondo); color:var(--acento-texto); }
 .eqt-fecha-tog.todas { border-style:dashed; }
 .eqt-comp-tog { flex:0 0 auto; padding:8px 18px; border-radius:18px; cursor:pointer; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.12); font-family:'Barlow Condensed',sans-serif; font-size:13px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,0.6); white-space:nowrap; transition:all .15s; user-select:none; }
-.eqt-comp-tog.active { background:var(--acento); border-color:var(--acento); color:#fff; }
+.eqt-comp-tog.active { background:var(--acento-fondo); border-color:var(--acento-fondo); color:var(--acento-texto); }
 .eqt-col-chip { flex:0 0 auto; padding:5px 10px; border-radius:14px; cursor:pointer; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); font-family:'Barlow Condensed',sans-serif; font-size:10px; letter-spacing:1px; color:#fff; white-space:nowrap; transition:all .15s; user-select:none; text-transform:uppercase; }
 .eqt-col-chip.off { background:transparent; color:rgba(255,255,255,0.28); border-color:rgba(255,255,255,0.06); }
 /* Chips de BLOQUE (grupo entero): prenden/apagan toda la sección. */
-.eqt-grp-chip { flex:0 0 auto; padding:6px 13px; border-radius:14px; cursor:pointer; background:var(--acento); border:1px solid var(--acento); font-family:'Barlow Condensed',sans-serif; font-size:11px; letter-spacing:1px; color:#fff; white-space:nowrap; transition:all .15s; user-select:none; text-transform:uppercase; font-weight:700; }
+.eqt-grp-chip { flex:0 0 auto; padding:6px 13px; border-radius:14px; cursor:pointer; background:var(--acento-fondo); border:1px solid var(--acento-fondo); font-family:'Barlow Condensed',sans-serif; font-size:11px; letter-spacing:1px; color:var(--acento-texto); white-space:nowrap; transition:all .15s; user-select:none; text-transform:uppercase; font-weight:700; }
 .eqt-grp-chip.off { background:transparent; color:rgba(255,255,255,0.45); border-color:rgba(255,255,255,0.18); }
 /* Encabezados de bloque en la tabla (fila superior del thead). */
-.eqt-table tr.eqt-grp-row th.eqt-grp-hdr { text-align:center; font-size:9px; letter-spacing:1.5px; color:var(--acento); text-transform:uppercase; font-weight:700; cursor:default; padding:5px 8px; border-bottom:1px solid rgba(255,255,255,0.14); }
+.eqt-table tr.eqt-grp-row th.eqt-grp-hdr { text-align:center; font-size:9px; letter-spacing:1.5px; color:var(--acento-light); text-transform:uppercase; font-weight:700; cursor:default; padding:5px 8px; border-bottom:1px solid rgba(255,255,255,0.14); }
 .eqt-table tr.eqt-grp-row th.eqt-grp-none { color:transparent; }
 .eqt-pchip { flex:0 0 auto; display:flex; align-items:center; gap:6px; padding:3px 11px 3px 3px; border-radius:18px; cursor:pointer; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); transition:all .15s; user-select:none; }
 .eqt-pchip .pch-av { width:22px; height:22px; border-radius:50%; object-fit:cover; background:var(--acento); flex:0 0 auto; }
@@ -202,12 +204,12 @@ html.deep-stats #estadisticas-screen { display: block; }
 .eqt-mini-btn { flex:0 0 auto; padding:4px 9px; border-radius:12px; cursor:pointer; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.14); font-family:'Barlow Condensed',sans-serif; font-size:10px; letter-spacing:1px; color:rgba(255,255,255,0.6); text-transform:uppercase; user-select:none; }
 .eqt-export-bar { display:flex; justify-content:flex-end; margin:4px 0 2px; }
 .eqt-export-btn { font-family:'Barlow Condensed',sans-serif; font-size:12px; letter-spacing:0.5px; background:rgba(255,255,255,0.06); color:#dff0ff; border:1px solid rgba(255,255,255,0.18); border-radius:8px; padding:6px 13px; cursor:pointer; transition:all 0.15s; }
-.eqt-export-btn:hover { background:var(--acento); border-color:var(--acento); color:#fff; }
+.eqt-export-btn:hover { background:var(--acento-fondo); border-color:var(--acento-fondo); color:var(--acento-texto); }
 .eqt-export-btn:disabled { opacity:0.5; cursor:default; }
 .eqt-table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; margin-top:4px; }
 .eqt-table { width:max-content; border-collapse:collapse; font-family:'Barlow Condensed',sans-serif; font-size:12px; }
 .eqt-table th { font-size:9px; letter-spacing:1px; color:rgba(255,255,255,0.4); text-transform:uppercase; text-align:right; padding:8px 12px; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.1); white-space:nowrap; user-select:none; min-width:58px; }
-.eqt-table th.sorted { color:var(--acento); }
+.eqt-table th.sorted { color:var(--acento-light); }
 .eqt-table th.sorted::after { content:' ▾'; }
 .eqt-table th.sorted.asc::after { content:' ▴'; }
 .eqt-table td { padding:8px 12px; text-align:right; color:#fff; font-weight:600; border-bottom:1px solid rgba(255,255,255,0.04); white-space:nowrap; min-width:58px; }
@@ -218,6 +220,9 @@ html.deep-stats #estadisticas-screen { display: block; }
 /* Mobile: la columna Jugador NO queda fija al scrollear lateralmente (scrollea con el resto). */
 @media (max-width: 720px) {
   .eqt-table th.name-col, .eqt-table td.name-col { position:static; box-shadow:none; }
+  /* El export a Excel queda solo para la web: en el celular el archivo no tiene
+     con qué abrirse y el botón ocupa lugar en una pantalla ya angosta. */
+  .eqt-export-bar { display:none; }
 }
 .eqt-name-cell { display:flex; align-items:center; gap:8px; }
 .eqt-name-cell img { width:26px; height:26px; border-radius:50%; object-fit:cover; background:rgba(255,255,255,0.06); flex:0 0 auto; }
@@ -225,8 +230,8 @@ html.deep-stats #estadisticas-screen { display: block; }
 /* Tilde por jugador: tildado = activo (arriba), destildado = atenuado (abajo). */
 .eqt-tick { width:18px; height:18px; border-radius:50%; border:2px solid var(--acento); background:transparent; cursor:pointer; flex:0 0 auto; display:flex; align-items:center; justify-content:center; box-sizing:border-box; transition:all .12s; }
 .eqt-tick::after { content:'✓'; font-size:11px; line-height:1; color:transparent; }
-.eqt-tick.on { background:var(--acento); }
-.eqt-tick.on::after { color:#fff; }
+.eqt-tick.on { background:var(--acento-fondo); border-color:var(--acento-fondo); }
+.eqt-tick.on::after { color:var(--acento-texto); }
 .eqt-tick.off { border-color:rgba(255,255,255,0.28); }
 /* Sin resaltado de fila activa. Destildada: sin números (se ocultan en JS), nombre atenuado. */
 .eqt-table tbody tr.eqt-dimmed .kit-chip { opacity:.4; }
@@ -362,10 +367,10 @@ html.deep-stats #estadisticas-screen { display: block; }
   transition: background 0.3s;
 }
 .player-bubble img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: none; }
-.player-bubble .fallback-num { font-family: 'Bebas Neue', sans-serif; font-size: var(--pfs, 16px); color: #fff; }
+.player-bubble .fallback-num { font-family: 'Bebas Neue', sans-serif; font-size: var(--pfs, 16px); color: var(--acento-texto); }
 .player-numtag {
-  font-size: var(--ntfs, 10px); color: #fff; font-weight: 500;
-  background: var(--acento); border: 1.5px solid #fff;
+  font-size: var(--ntfs, 10px); color: var(--acento-texto); font-weight: 500;
+  background: var(--acento-fondo); border: 1.5px solid #fff;
   border-radius: 8px; padding: 1px 5px; margin-top: 2px;
   line-height: 1.3; white-space: nowrap;
 }
@@ -381,7 +386,7 @@ html.deep-stats #estadisticas-screen { display: block; }
 /* ===== BOTONES ===== */
 .btn-primary {
   font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 1px;
-  background: var(--acento); color: #fff; border: none;
+  background: var(--acento-fondo); color: var(--acento-texto); border: none;
   border-radius: 8px; padding: 10px 0; cursor: pointer; width: 100%;
 }
 .btn-secondary {
@@ -466,7 +471,7 @@ html.deep-stats #estadisticas-screen { display: block; }
   flex-shrink: 0; border: 2px solid rgba(255,255,255,0.15);
 }
 .score-avatar-wrap img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: none; }
-.score-avatar-wrap .av-fb { font-family: 'Bebas Neue', sans-serif; font-size: 13px; color: #fff; }
+.score-avatar-wrap .av-fb { font-family: 'Bebas Neue', sans-serif; font-size: 13px; color: var(--acento-texto); }
 .score-player-info { flex: 1; min-width: 80px; }
 .score-player-num { font-size: 11px; color: var(--acento-light); font-weight: 500; }
 .score-player-name { font-size: 13px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -478,11 +483,11 @@ html.deep-stats #estadisticas-screen { display: block; }
   transition: all 0.15s; display: flex; align-items: center; justify-content: center;
 }
 .score-btn:hover { border-color: var(--acento-light); color: #fff; }
-.score-btn.selected { background: var(--acento); border-color: var(--acento); color: #fff; }
+.score-btn.selected { background: var(--acento-fondo); border-color: var(--acento-fondo); color: var(--acento-texto); }
 
 #scores-confirm-btn {
   font-family: 'Bebas Neue', sans-serif; font-size: 17px; letter-spacing: 1px;
-  background: var(--acento); color: #fff; border: none;
+  background: var(--acento-fondo); color: var(--acento-texto); border: none;
   border-radius: 8px; padding: 13px; cursor: pointer; width: 100%;
   margin-top: 16px; opacity: 0.3; transition: opacity 0.3s;
 }
@@ -521,7 +526,7 @@ html.deep-stats #estadisticas-screen { display: block; }
 /* suplentes bench */
 .mp-bench-title { font-family:'Barlow Condensed',sans-serif; font-size:11px; letter-spacing:2px; color:rgba(255,255,255,0.3); text-transform:uppercase; margin:10px 0 6px; }
 .mp-bench-row { display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.03); border-radius:8px; padding:7px 10px; margin-bottom:5px; border:1px solid rgba(255,255,255,0.06); }
-.mp-bench-av { width:30px; height:30px; border-radius:50%; background:var(--acento); display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue',sans-serif; font-size:11px; color:#fff; overflow:hidden; position:relative; flex-shrink:0; }
+.mp-bench-av { width:30px; height:30px; border-radius:50%; background:var(--acento-fondo); display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue',sans-serif; font-size:11px; color:var(--acento-texto); overflow:hidden; position:relative; flex-shrink:0; }
 .mp-bench-av img { width:100%; height:100%; object-fit:cover; object-position:top; position:absolute; display:none; }
 .mp-bench-name { flex:1; font-size:13px; color:#fff; }
 .mp-bench-score { font-size:16px; font-weight:600; }
@@ -535,7 +540,7 @@ html.deep-stats #estadisticas-screen { display: block; }
 .mp-podio-card.silver { border-color:rgba(255,255,255,0.2); }
 .mp-podio-rank { position:absolute; top:6px; left:7px; font-size:12px; }
 .mp-podio-star { position:absolute; top:5px; right:7px; font-size:12px; color:#EF9F27; }
-.mp-podio-av { width:40px; height:40px; border-radius:50%; background:var(--acento); display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue',sans-serif; font-size:13px; color:#fff; overflow:hidden; position:relative; border:2px solid rgba(255,255,255,0.15); }
+.mp-podio-av { width:40px; height:40px; border-radius:50%; background:var(--acento-fondo); display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue',sans-serif; font-size:13px; color:var(--acento-texto); overflow:hidden; position:relative; border:2px solid rgba(255,255,255,0.15); }
 .mp-podio-av.sm { width:32px; height:32px; font-size:11px; }
 .mp-podio-av img { width:100%; height:100%; object-fit:cover; object-position:top; position:absolute; display:none; }
 .mp-podio-name { font-size:11px; color:rgba(255,255,255,0.6); text-align:center; line-height:1.2; }
@@ -1015,7 +1020,7 @@ html.deep-stats #estadisticas-screen { display: block; }
     <div style="font-size:12px;color:rgba(255,255,255,0.4);">Titulares: <b id="count2" style="color:var(--acento-light);font-size:15px;">0</b>/11</div>
     <div style="display:flex;gap:6px;">
       <button id="download-pitch-btn" style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:9px 14px;cursor:not-allowed;opacity:0.3;transition:opacity 0.3s;" disabled>Descargar</button>
-      <button id="confirm-btn" style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;background:var(--acento);color:#fff;border:none;border-radius:8px;padding:9px 14px;cursor:not-allowed;opacity:0.3;transition:opacity 0.3s;" disabled>Enviar</button>
+      <button id="confirm-btn" style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;background:var(--acento-fondo);color:var(--acento-texto);border:none;border-radius:8px;padding:9px 14px;cursor:not-allowed;opacity:0.3;transition:opacity 0.3s;" disabled>Enviar</button>
     </div>
   </div>
   <div style="margin-top:6px;">
@@ -1318,6 +1323,58 @@ try { if (typeof _SUPABASE_URL !== 'undefined') { SUPABASE_URL = _SUPABASE_URL; 
 // ============================================================
 // COLORES POR SELECCIÓN
 // ============================================================
+// ── Contraste del color del club (los 3 colores derivados) ───────────────────
+// El color del club se usa de dos maneras opuestas y ninguna sirve para los 30:
+// como FONDO de chips/botones con texto blanco encima (el amarillo de Rosario
+// Central y Defensa y Justicia da 1.63 de contraste: ilegible) y como TEXTO
+// sobre el fondo oscuro de la página (el azul de Boca da 1.63 y el negro de
+// Racing 1.11: invisible). En vez de una lista de excepciones por club se
+// derivan las variantes del propio color, así un club nuevo o un cambio de
+// color quedan legibles solos. Referencia: contraste WCAG, mínimo AA 4.5.
+const CT_MIN = 4.5;
+const CT_FONDO = '#0d0d1a';   // --dark, el fondo de la página
+const CT_NEGRO = '#14140f';
+function _ctRgb(h) { h = String(h).trim().replace('#',''); if (h.length === 3) h = h.split('').map(c => c+c).join(''); return [0,2,4].map(i => parseInt(h.slice(i,i+2),16)); }
+function _ctHex(c) { return '#' + c.map(v => Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join(''); }
+function _ctLum(hex) {
+  const c = _ctRgb(hex).map(v => { v /= 255; return v <= 0.04045 ? v/12.92 : Math.pow((v+0.055)/1.055, 2.4); });
+  return 0.2126*c[0] + 0.7152*c[1] + 0.0722*c[2];
+}
+function ctRatio(a, b) { const la = _ctLum(a), lb = _ctLum(b); return (Math.max(la,lb)+0.05) / (Math.min(la,lb)+0.05); }
+function _ctMezcla(col, hacia, t) { const c = _ctRgb(col), h = _ctRgb(hacia); return _ctHex(c.map((v,i) => v + (h[i]-v)*t)); }
+// Texto sobre el color: blanco salvo que el negro sea CLARAMENTE mejor (amarillos).
+// El umbral evita dar vuelta los rojos, donde los dos andan parecido (4.23 vs 4.12)
+// y el blanco es lo esperable.
+function ctTextoSobre(col) { return ctRatio(col, CT_NEGRO) > ctRatio(col, '#ffffff') * 1.3 ? CT_NEGRO : '#ffffff'; }
+// El color como FONDO de un chip. Dos condiciones, en orden:
+//  1. que el chip se despegue del fondo de la página — si no, un chip activo de
+//     Racing o Central Córdoba (#1a1a1a sobre #0d0d1a, 1.11) no se distingue de
+//     uno apagado, aunque su texto se lea;
+//  2. que el texto se lea encima — los rojos pasan de #e53935 a #dc3733,
+//     imperceptible, y ahí el blanco ya llega al mínimo.
+const CT_SEP = 2.2;   // separación mínima chip ↔ fondo de la página
+function ctFondo(col) {
+  let f = col;
+  if (ctRatio(f, CT_FONDO) < CT_SEP) {
+    for (let i = 1; i <= 20; i++) { const m = _ctMezcla(col, '#ffffff', i*0.05); if (ctRatio(m, CT_FONDO) >= CT_SEP) { f = m; break; } }
+  }
+  const t = ctTextoSobre(f);
+  if (ctRatio(f, t) < CT_MIN) {
+    const hacia = t === '#ffffff' ? '#000000' : '#ffffff';
+    for (let i = 1; i <= 20; i++) {
+      const m = _ctMezcla(f, hacia, i*0.02);
+      if (ctRatio(m, t) >= CT_MIN && ctRatio(m, CT_FONDO) >= CT_SEP) return m;
+    }
+  }
+  return f;
+}
+// El color como TEXTO sobre el fondo oscuro: se aclara hasta que se lea.
+function ctLight(col) {
+  if (ctRatio(col, CT_FONDO) >= CT_MIN) return col;
+  for (let i = 1; i <= 10; i++) { const m = _ctMezcla(col, '#ffffff', i*0.1); if (ctRatio(m, CT_FONDO) >= CT_MIN) return m; }
+  return '#e8e8f0';
+}
+
 const COLORES_EQUIPO = {
   argentina:            '#75aadb', // celeste
   france:               '#002395', // azul marino
@@ -2585,8 +2642,11 @@ async function init() {
     // Aplicar color del equipo al CSS (config de clubes / fallback)
     colorEquipo = COLORES_EQUIPO[slug] || _cfg.color || '#1565c0';
     document.documentElement.style.setProperty('--acento', colorEquipo);
-    // Calcular versión más clara para textos
-    document.documentElement.style.setProperty('--acento-light', colorEquipo);
+    // Variantes legibles derivadas del color (ver ctTextoSobre/ctFondo/ctLight).
+    const _ctBg = ctFondo(colorEquipo);
+    document.documentElement.style.setProperty('--acento-fondo', _ctBg);
+    document.documentElement.style.setProperty('--acento-texto', ctTextoSobre(_ctBg));
+    document.documentElement.style.setProperty('--acento-light', ctLight(colorEquipo));
     document.getElementById('plantel-sub').textContent = `${_jugs.length} jugadores convocados`;
     document.getElementById('stats-sub').textContent = nombreEquipo;
     const _statsEsc = document.getElementById('stats-escudo');
