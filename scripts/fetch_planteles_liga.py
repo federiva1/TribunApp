@@ -19,6 +19,15 @@ import sys
 import time
 from pathlib import Path
 
+# La consola de Windows usa cp1252: sin esto, un print con "→" o "✗" corta el
+# script a mitad de camino (pasó al cerrar Est. Río Cuarto - Sarmiento el 4/9).
+# En los runners de CI la salida ya es UTF-8, así que allá no cambia nada.
+try:
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+except (AttributeError, ValueError):   # stdout redirigido a algo sin reconfigure
+    pass
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import scraper_planteles as sp
 import backfill_plantel_nums as backfill

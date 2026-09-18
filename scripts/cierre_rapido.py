@@ -30,6 +30,15 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+# La consola de Windows usa cp1252: sin esto, un print con "→" o "✗" corta el
+# script a mitad de camino (pasó al cerrar Est. Río Cuarto - Sarmiento el 4/9).
+# En los runners de CI la salida ya es UTF-8, así que allá no cambia nada.
+try:
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+except (AttributeError, ValueError):   # stdout redirigido a algo sin reconfigure
+    pass
+
 ROOT = Path(__file__).resolve().parent.parent
 FIXDIR = ROOT / 'data' / 'fixtures'
 
@@ -39,6 +48,7 @@ HASTA_MIN = 210   # después de esto lo agarran los crons normales igual
 FT = ('FT', 'AET', 'PEN')
 
 sys.path.insert(0, str(ROOT / 'scripts'))
+from clubes_map import puntuar_url  # link compartible de la landing de puntajes
 
 
 def _cargar():
@@ -151,12 +161,14 @@ def main():
                 cerrados_liga = True
                 fechas.add(dia)
                 print(f'{tag}: FT {e["home_score"]}-{e["away_score"]} → liga.json actualizado')
+                print(f'  link para compartir: {puntuar_url(e["home"]["slug"], e["away"]["slug"])}')
         else:
             # el gate de copa no mira copas.json (usa el archivo del partido);
             # alcanza con disparar la generación del archivo
             hay_copa = True
             fechas.add(dia)
             print(f'{tag}: FT → se genera el archivo de copa')
+            print(f'  link para compartir: {puntuar_url(e["home"].get("slug") or e["home"]["name"], e["away"].get("slug") or e["away"]["name"])}')
 
     if cerrados_liga:
         (FIXDIR / 'liga.json').write_text(

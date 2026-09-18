@@ -1,0 +1,1517 @@
+{
+  "partido": {
+    "local": "sarmiento",
+    "visitante": "belgrano",
+    "local_nombre": "Sarmiento Junin",
+    "visitante_nombre": "Belgrano Cordoba",
+    "goles_local": 1,
+    "goles_visitante": 1,
+    "fecha": "2026-09-13",
+    "fecha_num": 9,
+    "ronda": null,
+    "estadio": "Estadio Eva Peron, Junin",
+    "competicion": "Clausura 2026",
+    "api_id": "1493134",
+    "goles_detalle": {
+      "local": [
+        {
+          "min": 33,
+          "jugador": "Junior Marabel",
+          "asist": null
+        }
+      ],
+      "visitante": [
+        {
+          "min": 90,
+          "jugador": "Lucas Passerini",
+          "asist": null
+        }
+      ]
+    },
+    "formacion": {
+      "sarmiento": "4-4-2",
+      "belgrano": "4-2-3-1"
+    }
+  },
+  "top_stats": [
+    {
+      "label": "Posesion",
+      "local": 25,
+      "visitante": 75,
+      "tipo": "posesion",
+      "local_val": 25,
+      "visitante_val": 75
+    },
+    {
+      "label": "xG",
+      "local": 1.53,
+      "visitante": 2.18,
+      "tipo": "numero",
+      "local_val": 1.53,
+      "visitante_val": 2.18
+    },
+    {
+      "label": "Tiros totales",
+      "local": 9,
+      "visitante": 17,
+      "tipo": "numero",
+      "local_val": 9,
+      "visitante_val": 17
+    },
+    {
+      "label": "Tiros al arco",
+      "local": 4,
+      "visitante": 7,
+      "tipo": "numero",
+      "local_val": 4,
+      "visitante_val": 7
+    },
+    {
+      "label": "Toques en area rival",
+      "local": 16,
+      "visitante": 40,
+      "tipo": "numero",
+      "local_val": 16,
+      "visitante_val": 40
+    },
+    {
+      "label": "Corners",
+      "local": 3,
+      "visitante": 7,
+      "tipo": "numero",
+      "local_val": 3,
+      "visitante_val": 7
+    },
+    {
+      "label": "Faltas",
+      "local": 13,
+      "visitante": 10,
+      "tipo": "numero",
+      "local_val": 13,
+      "visitante_val": 10
+    },
+    {
+      "label": "Tarjetas amarillas",
+      "local": 4,
+      "visitante": 1,
+      "tipo": "numero",
+      "local_val": 4,
+      "visitante_val": 1
+    },
+    {
+      "label": "Tarjetas rojas",
+      "local": 0,
+      "visitante": 0,
+      "tipo": "numero",
+      "local_val": 0,
+      "visitante_val": 0
+    },
+    {
+      "label": "Pases precisos",
+      "local": "115 (58%)",
+      "visitante": "485 (86%)",
+      "tipo": "texto",
+      "local_val": 58,
+      "visitante_val": 86
+    }
+  ],
+  "jugadores": {
+    "sarmiento": [
+      {
+        "nombre": "T. Ayala",
+        "id": 426454,
+        "tipo": "titular",
+        "portero": true,
+        "mvp": true,
+        "num": "12",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "acc_defensivas": 1,
+          "pases_precisos": 17
+        },
+        "ataque": {
+          "toques": 40,
+          "pases_ultimo_tercio": 10,
+          "tiros_largos": 17
+        },
+        "defensa": {
+          "acc_defensivas": 1,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 8,
+          "despejes": 1
+        },
+        "duelos": {
+          "ganados": 1,
+          "aereos": 1,
+          "faltas": 0
+        },
+        "portero_stats": {
+          "paradas": 6,
+          "goles_contra": 1,
+          "goles_evitados": 1.65
+        },
+        "pos": {
+          "x": 10.0,
+          "y": 50.0
+        }
+      },
+      {
+        "nombre": "S. Salle",
+        "id": 403297,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "8",
+        "min": 80,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": true,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 4,
+          "pases_precisos": 4
+        },
+        "ataque": {
+          "toques": 32,
+          "toques_area": 0,
+          "regates": 0,
+          "pases_ultimo_tercio": 5,
+          "tiros_largos": 1,
+          "perdida_balon": 1
+        },
+        "defensa": {
+          "acc_defensivas": 4,
+          "entradas": 2,
+          "interceptaciones": 0,
+          "recuperaciones": 2,
+          "despejes": 2,
+          "regateado": 1
+        },
+        "duelos": {
+          "ganados": 3,
+          "perdidos": 7,
+          "terrestres": 3,
+          "aereos": 0,
+          "faltas": 2,
+          "faltas_recibidas": 1
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 35.7,
+          "y": 87.5
+        }
+      },
+      {
+        "nombre": "R. Orihuela",
+        "id": 195506,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "44",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 1,
+          "acc_defensivas": 11,
+          "pases_precisos": 5
+        },
+        "ataque": {
+          "toques": 26,
+          "toques_area": 0,
+          "pases_ultimo_tercio": 2,
+          "tiros_largos": 2,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 11,
+          "entradas": 4,
+          "interceptaciones": 1,
+          "recuperaciones": 2,
+          "despejes": 4,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 4,
+          "perdidos": 1,
+          "terrestres": 4,
+          "aereos": 0,
+          "faltas": 0
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 35.7,
+          "y": 62.5
+        }
+      },
+      {
+        "nombre": "J. Insaurralde",
+        "id": 11417,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "2",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": true,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 7,
+          "pases_precisos": 12
+        },
+        "ataque": {
+          "toques": 31,
+          "toques_area": 1,
+          "pases_ultimo_tercio": 7,
+          "tiros_largos": 4,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 7,
+          "entradas": 2,
+          "interceptaciones": 1,
+          "recuperaciones": 3,
+          "despejes": 3,
+          "regateado": 3
+        },
+        "duelos": {
+          "ganados": 5,
+          "perdidos": 6,
+          "terrestres": 2,
+          "aereos": 3,
+          "faltas": 1
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 35.7,
+          "y": 37.5
+        }
+      },
+      {
+        "nombre": "N. Pasquini",
+        "id": 6213,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "77",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 1,
+          "grandes_oport": 1,
+          "acc_defensivas": 4,
+          "pases_precisos": 5
+        },
+        "ataque": {
+          "toques": 24,
+          "toques_area": 0,
+          "regates": 0,
+          "pases_ultimo_tercio": 4,
+          "tiros_largos": 1,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 4,
+          "entradas": 3,
+          "interceptaciones": 0,
+          "recuperaciones": 3,
+          "despejes": 1,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 4,
+          "perdidos": 2,
+          "terrestres": 3,
+          "aereos": 1,
+          "faltas": 0
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 35.7,
+          "y": 12.5
+        }
+      },
+      {
+        "nombre": "J. Contrera",
+        "id": 354678,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "19",
+        "min": 68,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 1,
+          "acc_defensivas": 8,
+          "pases_precisos": 6
+        },
+        "ataque": {
+          "toques": 25,
+          "toques_area": 0,
+          "pases_ultimo_tercio": 3,
+          "tiros_largos": 1,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 8,
+          "entradas": 4,
+          "interceptaciones": 1,
+          "recuperaciones": 4,
+          "despejes": 3,
+          "regateado": 1
+        },
+        "duelos": {
+          "ganados": 6,
+          "perdidos": 4,
+          "terrestres": 5,
+          "aereos": 1,
+          "faltas": 0,
+          "faltas_recibidas": 1
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 61.3,
+          "y": 87.5
+        }
+      },
+      {
+        "nombre": "C. Zabala",
+        "id": 5682,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "15",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 1,
+          "acc_defensivas": 10,
+          "pases_precisos": 17
+        },
+        "ataque": {
+          "toques": 41,
+          "toques_area": 1,
+          "regates": 1,
+          "pases_ultimo_tercio": 5,
+          "tiros_largos": 3,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 10,
+          "entradas": 7,
+          "interceptaciones": 2,
+          "recuperaciones": 9,
+          "despejes": 1,
+          "regateado": 1
+        },
+        "duelos": {
+          "ganados": 9,
+          "perdidos": 2,
+          "terrestres": 9,
+          "aereos": 0,
+          "faltas": 1,
+          "faltas_recibidas": 1
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 61.3,
+          "y": 37.5
+        }
+      },
+      {
+        "nombre": "Mauricio Leonel Martínez",
+        "id": 5918,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "16",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": true,
+        "roja": false,
+        "top": {
+          "tiros_totales": 2,
+          "disparos_puerta": 0,
+          "oport_creadas": 0,
+          "acc_defensivas": 7,
+          "pases_precisos": 13
+        },
+        "ataque": {
+          "toques": 45,
+          "toques_area": 0,
+          "regates": 3,
+          "pases_ultimo_tercio": 3,
+          "tiros_largos": 5,
+          "perdida_balon": 1
+        },
+        "defensa": {
+          "acc_defensivas": 7,
+          "entradas": 2,
+          "interceptaciones": 1,
+          "recuperaciones": 6,
+          "despejes": 4,
+          "bloqueos": 1,
+          "regateado": 1
+        },
+        "duelos": {
+          "ganados": 8,
+          "perdidos": 5,
+          "terrestres": 7,
+          "aereos": 1,
+          "faltas": 0,
+          "faltas_recibidas": 2
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 61.3,
+          "y": 62.5
+        }
+      },
+      {
+        "nombre": "J. Mavilla",
+        "id": 422464,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "21",
+        "min": 80,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "tiros_totales": 1,
+          "disparos_puerta": 1,
+          "oport_creadas": 1,
+          "acc_defensivas": 2,
+          "pases_precisos": 10
+        },
+        "ataque": {
+          "toques": 30,
+          "toques_area": 3,
+          "regates": 2,
+          "pases_ultimo_tercio": 3,
+          "tiros_largos": 0,
+          "perdida_balon": 1
+        },
+        "defensa": {
+          "acc_defensivas": 2,
+          "entradas": 1,
+          "interceptaciones": 1,
+          "recuperaciones": 4,
+          "despejes": 0,
+          "regateado": 1
+        },
+        "duelos": {
+          "ganados": 4,
+          "perdidos": 3,
+          "terrestres": 4,
+          "aereos": 0,
+          "faltas": 0,
+          "faltas_recibidas": 1
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 61.3,
+          "y": 12.5
+        }
+      },
+      {
+        "nombre": "J. Marabel",
+        "id": 70638,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "27",
+        "min": 80,
+        "goles": 1,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "tiros_totales": 2,
+          "disparos_puerta": 2,
+          "oport_creadas": 1,
+          "grandes_oport": 1,
+          "acc_defensivas": 3,
+          "pases_precisos": 8
+        },
+        "ataque": {
+          "toques": 32,
+          "toques_area": 2,
+          "regates": 0,
+          "pases_ultimo_tercio": 4,
+          "perdida_balon": 3
+        },
+        "defensa": {
+          "acc_defensivas": 3,
+          "entradas": 1,
+          "interceptaciones": 0,
+          "recuperaciones": 1,
+          "despejes": 1,
+          "regateado": 1
+        },
+        "duelos": {
+          "ganados": 5,
+          "perdidos": 10,
+          "terrestres": 2,
+          "aereos": 3,
+          "faltas": 2,
+          "faltas_recibidas": 1
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 87.0,
+          "y": 70.0
+        }
+      },
+      {
+        "nombre": "J. Herrera",
+        "id": 59355,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "24",
+        "min": 57,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "tiros_totales": 2,
+          "disparos_puerta": 1,
+          "oport_creadas": 0,
+          "acc_defensivas": 4,
+          "pases_precisos": 4
+        },
+        "ataque": {
+          "toques": 19,
+          "toques_area": 5,
+          "regates": 0,
+          "perdida_balon": 1
+        },
+        "defensa": {
+          "acc_defensivas": 4,
+          "entradas": 2,
+          "interceptaciones": 0,
+          "recuperaciones": 3,
+          "despejes": 2,
+          "regateado": 1
+        },
+        "duelos": {
+          "ganados": 2,
+          "perdidos": 6,
+          "terrestres": 2,
+          "aereos": 0,
+          "faltas": 1
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 87.0,
+          "y": 30.0
+        }
+      },
+      {
+        "nombre": "D. Churín",
+        "id": 70568,
+        "tipo": "suplente",
+        "portero": false,
+        "mvp": false,
+        "num": "9",
+        "min": 33,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": true,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 3,
+          "pases_precisos": 7
+        },
+        "ataque": {
+          "toques": 21,
+          "toques_area": 2,
+          "regates": 0,
+          "pases_ultimo_tercio": 2,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 3,
+          "entradas": 2,
+          "interceptaciones": 0,
+          "recuperaciones": 2,
+          "despejes": 1,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 7,
+          "perdidos": 5,
+          "terrestres": 3,
+          "aereos": 4,
+          "faltas": 3,
+          "faltas_recibidas": 1
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "G. Arturia",
+        "id": 310717,
+        "tipo": "suplente",
+        "portero": false,
+        "mvp": false,
+        "num": "6",
+        "min": 22,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "tiros_totales": 1,
+          "disparos_puerta": 0,
+          "oport_creadas": 0,
+          "acc_defensivas": 3,
+          "pases_precisos": 0
+        },
+        "ataque": {
+          "toques": 4,
+          "toques_area": 1,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 3,
+          "entradas": 0,
+          "interceptaciones": 1,
+          "recuperaciones": 0,
+          "despejes": 2,
+          "regateado": 3
+        },
+        "duelos": {
+          "perdidos": 3,
+          "terrestres": 0,
+          "aereos": 0,
+          "faltas": 0
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "T. Santamaría",
+        "id": 354786,
+        "tipo": "suplente",
+        "portero": false,
+        "mvp": false,
+        "num": "29",
+        "min": 10,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 1,
+          "pases_precisos": 0
+        },
+        "ataque": {
+          "toques": 1,
+          "toques_area": 0,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 1,
+          "entradas": 0,
+          "interceptaciones": 1,
+          "recuperaciones": 0,
+          "despejes": 0,
+          "regateado": 0
+        },
+        "duelos": {
+          "aereos": 0,
+          "faltas": 0
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "E. Giménez",
+        "id": 506482,
+        "tipo": "suplente",
+        "portero": false,
+        "mvp": false,
+        "num": "23",
+        "min": 10,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": null,
+        "ataque": null,
+        "defensa": null,
+        "duelos": null,
+        "portero_stats": null
+      },
+      {
+        "nombre": "G. González",
+        "id": 6119,
+        "tipo": "suplente",
+        "portero": false,
+        "mvp": false,
+        "num": "11",
+        "min": 10,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "tiros_totales": 1,
+          "disparos_puerta": 0,
+          "oport_creadas": 0,
+          "acc_defensivas": 0,
+          "pases_precisos": 6
+        },
+        "ataque": {
+          "toques": 10,
+          "toques_area": 1,
+          "regates": 0,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 0,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 0,
+          "despejes": 0,
+          "bloqueos": 1,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 1,
+          "perdidos": 2,
+          "terrestres": 0,
+          "aereos": 1,
+          "faltas": 2
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Facundo Sava",
+        "id": 0,
+        "tipo": "dt",
+        "portero": false,
+        "mvp": false,
+        "num": "",
+        "min": null,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": null,
+        "ataque": null,
+        "defensa": null,
+        "duelos": null,
+        "portero_stats": null
+      }
+    ],
+    "belgrano": [
+      {
+        "nombre": "T. Cardozo",
+        "id": 51591,
+        "tipo": "titular",
+        "portero": true,
+        "mvp": false,
+        "num": "25",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "acc_defensivas": 0,
+          "pases_precisos": 20
+        },
+        "ataque": {
+          "toques": 32,
+          "pases_ultimo_tercio": 7,
+          "tiros_largos": 8
+        },
+        "defensa": {
+          "acc_defensivas": 0,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 7,
+          "despejes": 0
+        },
+        "duelos": {
+          "faltas": 0
+        },
+        "portero_stats": {
+          "paradas": 3,
+          "goles_contra": 1,
+          "goles_evitados": 1.17
+        },
+        "pos": {
+          "x": 10.0,
+          "y": 50.0
+        }
+      },
+      {
+        "nombre": "Alcides Benítez",
+        "id": 354681,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "26",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 8,
+          "pases_precisos": 40
+        },
+        "ataque": {
+          "toques": 75,
+          "toques_area": 1,
+          "regates": 2,
+          "pases_ultimo_tercio": 8,
+          "tiros_largos": 2,
+          "perdida_balon": 1
+        },
+        "defensa": {
+          "acc_defensivas": 8,
+          "entradas": 2,
+          "interceptaciones": 2,
+          "recuperaciones": 1,
+          "despejes": 3,
+          "regateado": 1
+        },
+        "duelos": {
+          "ganados": 6,
+          "perdidos": 4,
+          "terrestres": 5,
+          "aereos": 1,
+          "faltas": 0,
+          "faltas_recibidas": 1
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 29.2,
+          "y": 87.5
+        }
+      },
+      {
+        "nombre": "L. Morales",
+        "id": 5822,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "14",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 7,
+          "pases_precisos": 51
+        },
+        "ataque": {
+          "toques": 68,
+          "toques_area": 0,
+          "pases_ultimo_tercio": 17,
+          "tiros_largos": 3,
+          "perdida_balon": 1
+        },
+        "defensa": {
+          "acc_defensivas": 7,
+          "entradas": 0,
+          "interceptaciones": 2,
+          "recuperaciones": 2,
+          "despejes": 5,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 3,
+          "perdidos": 2,
+          "terrestres": 1,
+          "aereos": 2,
+          "faltas": 0,
+          "faltas_recibidas": 1
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 29.2,
+          "y": 62.5
+        }
+      },
+      {
+        "nombre": "Lisandro López",
+        "id": 5966,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "17",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 11,
+          "pases_precisos": 73
+        },
+        "ataque": {
+          "toques": 92,
+          "toques_area": 0,
+          "regates": 1,
+          "pases_ultimo_tercio": 14,
+          "tiros_largos": 2,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 11,
+          "entradas": 1,
+          "interceptaciones": 1,
+          "recuperaciones": 7,
+          "despejes": 9,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 4,
+          "perdidos": 5,
+          "terrestres": 2,
+          "aereos": 2,
+          "faltas": 0
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 29.2,
+          "y": 37.5
+        }
+      },
+      {
+        "nombre": "F. Ricca",
+        "id": 46820,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "16",
+        "min": 64,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 6,
+          "pases_precisos": 21
+        },
+        "ataque": {
+          "toques": 48,
+          "toques_area": 2,
+          "regates": 2,
+          "pases_ultimo_tercio": 3,
+          "tiros_largos": 0,
+          "perdida_balon": 3
+        },
+        "defensa": {
+          "acc_defensivas": 6,
+          "entradas": 4,
+          "interceptaciones": 0,
+          "recuperaciones": 2,
+          "despejes": 2,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 8,
+          "perdidos": 5,
+          "terrestres": 7,
+          "aereos": 1,
+          "faltas": 0,
+          "faltas_recibidas": 1
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 29.2,
+          "y": 12.5
+        }
+      },
+      {
+        "nombre": "F. Vázquez",
+        "id": 2057,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "20",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "tiros_totales": 2,
+          "disparos_puerta": 1,
+          "oport_creadas": 1,
+          "acc_defensivas": 5,
+          "pases_precisos": 64
+        },
+        "ataque": {
+          "toques": 102,
+          "toques_area": 2,
+          "regates": 1,
+          "pases_ultimo_tercio": 17,
+          "tiros_largos": 7,
+          "perdida_balon": 1
+        },
+        "defensa": {
+          "acc_defensivas": 5,
+          "entradas": 3,
+          "interceptaciones": 1,
+          "recuperaciones": 14,
+          "despejes": 1,
+          "bloqueos": 1,
+          "regateado": 1
+        },
+        "duelos": {
+          "ganados": 11,
+          "perdidos": 5,
+          "terrestres": 10,
+          "aereos": 1,
+          "faltas": 0,
+          "faltas_recibidas": 6
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 48.5,
+          "y": 70.0
+        }
+      },
+      {
+        "nombre": "S. Longo",
+        "id": 126740,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "5",
+        "min": 64,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 3,
+          "pases_precisos": 53
+        },
+        "ataque": {
+          "toques": 66,
+          "toques_area": 0,
+          "pases_ultimo_tercio": 5,
+          "tiros_largos": 1,
+          "perdida_balon": 2
+        },
+        "defensa": {
+          "acc_defensivas": 3,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 3,
+          "despejes": 3,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 1,
+          "perdidos": 5,
+          "terrestres": 0,
+          "aereos": 1,
+          "faltas": 2
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 48.5,
+          "y": 30.0
+        }
+      },
+      {
+        "nombre": "E. Rigoni",
+        "id": 1218,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "24",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "tiros_totales": 2,
+          "disparos_puerta": 1,
+          "oport_creadas": 2,
+          "acc_defensivas": 2,
+          "pases_precisos": 21
+        },
+        "ataque": {
+          "toques": 43,
+          "toques_area": 3,
+          "regates": 0,
+          "pases_ultimo_tercio": 2,
+          "tiros_largos": 3,
+          "perdida_balon": 1
+        },
+        "defensa": {
+          "acc_defensivas": 2,
+          "entradas": 1,
+          "interceptaciones": 0,
+          "recuperaciones": 5,
+          "despejes": 0,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 3,
+          "perdidos": 5,
+          "terrestres": 2,
+          "aereos": 1,
+          "faltas": 1,
+          "faltas_recibidas": 1
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 67.8,
+          "y": 83.7
+        }
+      },
+      {
+        "nombre": "L. Zelarayán",
+        "id": 35528,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "10",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "tiros_totales": 4,
+          "disparos_puerta": 2,
+          "oport_creadas": 2,
+          "grandes_oport": 1,
+          "acc_defensivas": 3,
+          "pases_precisos": 50
+        },
+        "ataque": {
+          "toques": 89,
+          "toques_area": 8,
+          "regates": 5,
+          "pases_ultimo_tercio": 13,
+          "tiros_largos": 2,
+          "perdida_balon": 1
+        },
+        "defensa": {
+          "acc_defensivas": 3,
+          "entradas": 3,
+          "interceptaciones": 0,
+          "recuperaciones": 1,
+          "despejes": 0,
+          "bloqueos": 1,
+          "regateado": 1
+        },
+        "duelos": {
+          "ganados": 8,
+          "perdidos": 6,
+          "terrestres": 8,
+          "aereos": 0,
+          "faltas": 1
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 67.8,
+          "y": 50.0
+        }
+      },
+      {
+        "nombre": "R. Hernandes",
+        "id": 646880,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "8",
+        "min": 72,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "tiros_totales": 1,
+          "disparos_puerta": 0,
+          "oport_creadas": 1,
+          "acc_defensivas": 4,
+          "pases_precisos": 40
+        },
+        "ataque": {
+          "toques": 62,
+          "toques_area": 4,
+          "regates": 0,
+          "pases_ultimo_tercio": 4,
+          "tiros_largos": 2,
+          "perdida_balon": 3
+        },
+        "defensa": {
+          "acc_defensivas": 4,
+          "entradas": 3,
+          "interceptaciones": 1,
+          "recuperaciones": 4,
+          "despejes": 0,
+          "bloqueos": 1,
+          "regateado": 1
+        },
+        "duelos": {
+          "ganados": 4,
+          "perdidos": 8,
+          "terrestres": 3,
+          "aereos": 1,
+          "faltas": 2
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 67.8,
+          "y": 16.3
+        }
+      },
+      {
+        "nombre": "N. Fernández",
+        "id": 5952,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "22",
+        "min": 84,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": true,
+        "roja": false,
+        "top": {
+          "tiros_totales": 4,
+          "disparos_puerta": 1,
+          "oport_creadas": 1,
+          "acc_defensivas": 0,
+          "pases_precisos": 32
+        },
+        "ataque": {
+          "toques": 45,
+          "toques_area": 6,
+          "regates": 1,
+          "pases_ultimo_tercio": 1,
+          "tiros_largos": 4,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 0,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 1,
+          "despejes": 0,
+          "bloqueos": 1,
+          "regateado": 1
+        },
+        "duelos": {
+          "ganados": 3,
+          "perdidos": 3,
+          "terrestres": 2,
+          "aereos": 1,
+          "faltas": 2,
+          "faltas_recibidas": 1
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 87.0,
+          "y": 50.0
+        }
+      },
+      {
+        "nombre": "L. Passerini",
+        "id": 11621,
+        "tipo": "suplente",
+        "portero": false,
+        "mvp": false,
+        "num": "9",
+        "min": 26,
+        "goles": 1,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "tiros_totales": 3,
+          "disparos_puerta": 2,
+          "oport_creadas": 0,
+          "acc_defensivas": 0,
+          "pases_precisos": 5
+        },
+        "ataque": {
+          "toques": 19,
+          "toques_area": 8,
+          "regates": 1,
+          "tiros_largos": 1,
+          "perdida_balon": 3
+        },
+        "defensa": {
+          "acc_defensivas": 0,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 0,
+          "despejes": 0,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 2,
+          "perdidos": 5,
+          "terrestres": 1,
+          "aereos": 1,
+          "faltas": 0
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "A. Spörle",
+        "id": 6371,
+        "tipo": "suplente",
+        "portero": false,
+        "mvp": false,
+        "num": "3",
+        "min": 26,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 1,
+          "acc_defensivas": 1,
+          "pases_precisos": 2
+        },
+        "ataque": {
+          "toques": 10,
+          "toques_area": 1,
+          "perdida_balon": 1
+        },
+        "defensa": {
+          "acc_defensivas": 1,
+          "entradas": 1,
+          "interceptaciones": 0,
+          "recuperaciones": 1,
+          "despejes": 0,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 1,
+          "perdidos": 2,
+          "terrestres": 1,
+          "aereos": 0,
+          "faltas": 1
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "F. González",
+        "id": 6714,
+        "tipo": "suplente",
+        "portero": false,
+        "mvp": false,
+        "num": "11",
+        "min": 18,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": null,
+        "ataque": null,
+        "defensa": null,
+        "duelos": null,
+        "portero_stats": null
+      },
+      {
+        "nombre": "L. Gutierrez",
+        "id": 463825,
+        "tipo": "suplente",
+        "portero": false,
+        "mvp": false,
+        "num": "37",
+        "min": 6,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "tiros_totales": 1,
+          "disparos_puerta": 0,
+          "oport_creadas": 1,
+          "grandes_oport": 1,
+          "acc_defensivas": 0,
+          "pases_precisos": 2
+        },
+        "ataque": {
+          "toques": 4,
+          "toques_area": 3,
+          "regates": 0,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 0,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 0,
+          "despejes": 0,
+          "regateado": 1
+        },
+        "duelos": {
+          "ganados": 2,
+          "perdidos": 2,
+          "terrestres": 0,
+          "aereos": 2,
+          "faltas": 0
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "R. Zielinski",
+        "id": 843,
+        "tipo": "dt",
+        "portero": false,
+        "mvp": false,
+        "num": "",
+        "min": null,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": null,
+        "ataque": null,
+        "defensa": null,
+        "duelos": null,
+        "portero_stats": null
+      }
+    ]
+  },
+  "top_stats_fuente": "fotmob"
+}

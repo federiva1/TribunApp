@@ -3,6 +3,8 @@
 
 const CLUBES_CONFIG = {
   velezsarsfield: {
+    // Mammana (2): lesión → bloqueado en formación, al final del banco
+    injured: ['2'],
     id: 438, nombre: 'Vélez Sarsfield', nombreCorto: 'Vélez',
     color: '#003087', colorSecundario: '#fff',
     colores: ['#fff', '#003087'],
@@ -253,3 +255,23 @@ const NOMBRE_CORTO_T = {
   437:'Rosario C', 452:'Tigre', 2432:'Barracas C', 474:'Sarmiento', 445:'Huracán',
   434:'Gimnasia LP', 449:'Banfield', 455:'Atl. Tucumán', 463:'Aldosivi', 2424:'Est. Río Cuarto'
 };
+
+// URL amigable → slug (espejo de los rewrites de vercel.json). Lo usan club.html
+// (/river, /boca/sudamericana) y puntuar.html (/puntuar/newells-velez).
+var URL_ALIAS = {
+  river: 'riverplate', boca: 'bocajuniors', racing: 'racingclub',
+  independiente: 'independiente', sanlorenzo: 'sanlorenzo', huracan: 'huracan',
+  velez: 'velezsarsfield', argentinos: 'argentinosjuniors',
+  platense: 'clubatleticoplatense', tigre: 'tigre', lanus: 'lanus',
+  banfield: 'banfield', union: 'union', sarmiento: 'sarmiento',
+  belgrano: 'belgrano', instituto: 'instituto', talleres: 'talleres',
+  newells: 'newellsoldboys', central: 'rosariocentral',
+  centralcordoba: 'centralcordobadesantiago', estudiantes: 'estudiantes',
+  gimnasia: 'gimnasialp', gimnasiamendoza: 'gimnasiamendoza',
+  riestra: 'deportivoriestra', barracas: 'barracascentral',
+  aldosivi: 'aldosivi', atleticotucuman: 'atleticotucuman',
+  defensa: 'defensayjusticia', indrivadavia: 'independienterivadavia',
+  erc: 'estudiantesderiocuarto',
+};
+// slug → alias (para armar URLs amigables desde el código)
+var SLUG_ALIAS = Object.fromEntries(Object.entries(URL_ALIAS).map(([a, s]) => [s, a]));

@@ -9,37 +9,37 @@
     "fecha": "2026-08-30",
     "fecha_num": 7,
     "ronda": null,
-    "estadio": "Florencio Sola, Buenos Aires",
+    "estadio": "Estadio Florencio Solá, Lomas de Zamora",
     "competicion": "Clausura 2026",
     "api_id": "1493094",
     "goles_detalle": {
       "local": [
         {
           "min": 64,
-          "jugador": "B. Sepulveda",
+          "jugador": "Bruno Sepúlveda",
           "asist": null
         },
         {
           "min": 84,
-          "jugador": "B. Sepulveda",
-          "asist": "L. Pinero"
+          "jugador": "Bruno Sepúlveda",
+          "asist": "Lisandro Piñero"
         }
       ],
       "visitante": [
         {
           "min": 32,
-          "jugador": "S. Driussi",
-          "asist": "A. Correa"
+          "jugador": "Sebastián Driussi",
+          "asist": "Ángel Correa"
         },
         {
           "min": 41,
-          "jugador": "T. Almada",
+          "jugador": "Thiago Almada",
           "asist": null
         },
         {
           "min": 69,
-          "jugador": "A. Correa",
-          "asist": "T. Galvan"
+          "jugador": "Ángel Correa",
+          "asist": "Tomás Galván"
         }
       ]
     },
@@ -134,7 +134,7 @@
     "banfield": [
       {
         "nombre": "Diego Rodríguez",
-        "id": 5931,
+        "id": 186986,
         "tipo": "titular",
         "portero": true,
         "mvp": false,
@@ -142,8 +142,6 @@
         "min": 90,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "acc_defensivas": 1,
           "pases_precisos": 15
@@ -166,7 +164,7 @@
         "portero_stats": {
           "paradas": 4,
           "goles_contra": 3,
-          "goles_evitados": -0.26
+          "goles_evitados": -0.25
         },
         "pos": {
           "x": 10.0,
@@ -174,55 +172,8 @@
         }
       },
       {
-        "nombre": "Santiago López Garcia",
-        "id": 5359,
-        "tipo": "titular",
-        "portero": false,
-        "mvp": false,
-        "num": "24",
-        "min": 90,
-        "goles": 0,
-        "asist": 0,
-        "amarilla": false,
-        "roja": false,
-        "top": {
-          "oport_creadas": 0,
-          "acc_defensivas": 5,
-          "pases_precisos": 24
-        },
-        "ataque": {
-          "toques": 56,
-          "toques_area": 0,
-          "regates": 0,
-          "pases_ultimo_tercio": 6,
-          "tiros_largos": 1,
-          "perdida_balon": 0
-        },
-        "defensa": {
-          "acc_defensivas": 5,
-          "entradas": 0,
-          "interceptaciones": 2,
-          "recuperaciones": 8,
-          "despejes": 2,
-          "regateado": 0
-        },
-        "duelos": {
-          "ganados": 4,
-          "perdidos": 1,
-          "terrestres": 4,
-          "aereos": 0,
-          "faltas": 0,
-          "faltas_recibidas": 4
-        },
-        "portero_stats": null,
-        "pos": {
-          "x": 37.1,
-          "y": 89.0
-        }
-      },
-      {
         "nombre": "Renzo Malanca",
-        "id": 199187,
+        "id": 1336833,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -230,15 +181,13 @@
         "min": 90,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "oport_creadas": 0,
           "acc_defensivas": 8,
-          "pases_precisos": 15
+          "pases_precisos": 16
         },
         "ataque": {
-          "toques": 33,
+          "toques": 35,
           "toques_area": 0,
           "pases_ultimo_tercio": 5,
           "tiros_largos": 0,
@@ -254,6 +203,7 @@
         },
         "duelos": {
           "ganados": 3,
+          "perdidos": 1,
           "terrestres": 1,
           "aereos": 2,
           "faltas": 0
@@ -265,8 +215,55 @@
         }
       },
       {
+        "nombre": "Brandon Oviedo",
+        "id": 1695058,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "13",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "top": {
+          "tiros_totales": 1,
+          "disparos_puerta": 0,
+          "oport_creadas": 1,
+          "acc_defensivas": 10,
+          "pases_precisos": 12
+        },
+        "ataque": {
+          "toques": 59,
+          "toques_area": 1,
+          "regates": 0,
+          "pases_ultimo_tercio": 4,
+          "tiros_largos": 2,
+          "perdida_balon": 3
+        },
+        "defensa": {
+          "acc_defensivas": 10,
+          "entradas": 6,
+          "interceptaciones": 0,
+          "recuperaciones": 7,
+          "despejes": 3,
+          "regateado": 3
+        },
+        "duelos": {
+          "ganados": 10,
+          "perdidos": 10,
+          "terrestres": 10,
+          "aereos": 0,
+          "faltas": 0,
+          "faltas_recibidas": 4
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 35.7,
+          "y": 50.0
+        }
+      },
+      {
         "nombre": "Nicolás Meriano",
-        "id": 292834,
+        "id": 1299928,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -274,8 +271,6 @@
         "min": 90,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "tiros_totales": 3,
           "disparos_puerta": 2,
@@ -312,8 +307,53 @@
         }
       },
       {
-        "nombre": "Ignacio Abraham",
-        "id": 58486,
+        "nombre": "Santiago López",
+        "id": 1038763,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "24",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 6,
+          "pases_precisos": 23
+        },
+        "ataque": {
+          "toques": 56,
+          "toques_area": 0,
+          "regates": 0,
+          "pases_ultimo_tercio": 6,
+          "tiros_largos": 1,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 6,
+          "entradas": 0,
+          "interceptaciones": 2,
+          "recuperaciones": 8,
+          "despejes": 2,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 4,
+          "perdidos": 1,
+          "terrestres": 4,
+          "aereos": 0,
+          "faltas": 0,
+          "faltas_recibidas": 4
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 37.1,
+          "y": 89.0
+        }
+      },
+      {
+        "nombre": "Luis Ignacio Abraham",
+        "id": 1254641,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -321,8 +361,6 @@
         "min": 90,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "tiros_totales": 1,
           "disparos_puerta": 0,
@@ -331,7 +369,7 @@
           "pases_precisos": 17
         },
         "ataque": {
-          "toques": 56,
+          "toques": 55,
           "toques_area": 0,
           "regates": 0,
           "pases_ultimo_tercio": 8,
@@ -347,12 +385,12 @@
           "regateado": 1
         },
         "duelos": {
-          "ganados": 3,
+          "ganados": 2,
           "perdidos": 2,
-          "terrestres": 3,
+          "terrestres": 2,
           "aereos": 0,
           "faltas": 0,
-          "faltas_recibidas": 3
+          "faltas_recibidas": 2
         },
         "portero_stats": null,
         "pos": {
@@ -361,57 +399,8 @@
         }
       },
       {
-        "nombre": "Brandon Oviedo",
-        "id": 500140,
-        "tipo": "titular",
-        "portero": false,
-        "mvp": false,
-        "num": "13",
-        "min": 90,
-        "goles": 0,
-        "asist": 0,
-        "amarilla": false,
-        "roja": false,
-        "top": {
-          "tiros_totales": 1,
-          "disparos_puerta": 0,
-          "oport_creadas": 1,
-          "acc_defensivas": 10,
-          "pases_precisos": 13
-        },
-        "ataque": {
-          "toques": 59,
-          "toques_area": 1,
-          "regates": 0,
-          "pases_ultimo_tercio": 4,
-          "tiros_largos": 2,
-          "perdida_balon": 3
-        },
-        "defensa": {
-          "acc_defensivas": 10,
-          "entradas": 6,
-          "interceptaciones": 0,
-          "recuperaciones": 7,
-          "despejes": 3,
-          "regateado": 3
-        },
-        "duelos": {
-          "ganados": 9,
-          "perdidos": 10,
-          "terrestres": 9,
-          "aereos": 0,
-          "faltas": 0,
-          "faltas_recibidas": 3
-        },
-        "portero_stats": null,
-        "pos": {
-          "x": 35.7,
-          "y": 50.0
-        }
-      },
-      {
         "nombre": "Federico Medina",
-        "id": 455758,
+        "id": 1608141,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -419,8 +408,6 @@
         "min": 57,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "oport_creadas": 0,
           "acc_defensivas": 2,
@@ -457,8 +444,54 @@
         }
       },
       {
-        "nombre": "Ignacio Pais",
-        "id": 187451,
+        "nombre": "Tomás Adoryán",
+        "id": 1447884,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "20",
+        "min": 76,
+        "goles": 0,
+        "asist": 0,
+        "top": {
+          "tiros_totales": 2,
+          "disparos_puerta": 0,
+          "oport_creadas": 1,
+          "acc_defensivas": 3,
+          "pases_precisos": 18
+        },
+        "ataque": {
+          "toques": 34,
+          "toques_area": 1,
+          "pases_ultimo_tercio": 6,
+          "tiros_largos": 1,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 3,
+          "entradas": 2,
+          "interceptaciones": 1,
+          "recuperaciones": 4,
+          "despejes": 0,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 3,
+          "perdidos": 7,
+          "terrestres": 3,
+          "aereos": 0,
+          "faltas": 4,
+          "faltas_recibidas": 1
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 61.3,
+          "y": 50.0
+        }
+      },
+      {
+        "nombre": "Nacho Pais",
+        "id": 1242942,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -466,15 +499,13 @@
         "min": 76,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "oport_creadas": 1,
           "acc_defensivas": 8,
-          "pases_precisos": 21
+          "pases_precisos": 22
         },
         "ataque": {
-          "toques": 46,
+          "toques": 47,
           "toques_area": 2,
           "pases_ultimo_tercio": 7,
           "tiros_largos": 3,
@@ -502,56 +533,53 @@
         }
       },
       {
-        "nombre": "Tomas Adoryan",
-        "id": 362721,
+        "nombre": "Alexander Machado",
+        "id": 1054256,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
-        "num": "20",
-        "min": 76,
+        "num": "22",
+        "min": 80,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "tiros_totales": 2,
           "disparos_puerta": 0,
-          "oport_creadas": 1,
-          "acc_defensivas": 2,
-          "pases_precisos": 18
+          "oport_creadas": 0,
+          "acc_defensivas": 3,
+          "pases_precisos": 11
         },
         "ataque": {
-          "toques": 33,
-          "toques_area": 1,
-          "pases_ultimo_tercio": 6,
-          "tiros_largos": 1,
+          "toques": 27,
+          "toques_area": 4,
+          "pases_ultimo_tercio": 1,
           "perdida_balon": 0
         },
         "defensa": {
-          "acc_defensivas": 2,
+          "acc_defensivas": 3,
           "entradas": 1,
-          "interceptaciones": 1,
-          "recuperaciones": 4,
-          "despejes": 0,
-          "regateado": 0
+          "interceptaciones": 0,
+          "recuperaciones": 3,
+          "despejes": 2,
+          "bloqueos": 1,
+          "regateado": 1
         },
         "duelos": {
           "ganados": 2,
-          "perdidos": 7,
-          "terrestres": 2,
-          "aereos": 0,
-          "faltas": 4,
-          "faltas_recibidas": 1
+          "perdidos": 5,
+          "terrestres": 1,
+          "aereos": 1,
+          "faltas": 0
         },
         "portero_stats": null,
         "pos": {
-          "x": 61.3,
-          "y": 50.0
+          "x": 87.0,
+          "y": 70.0
         }
       },
       {
         "nombre": "Matías Hernández",
-        "id": 369729,
+        "id": 1372084,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -559,8 +587,6 @@
         "min": 57,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "tiros_totales": 1,
           "disparos_puerta": 0,
@@ -597,55 +623,8 @@
         }
       },
       {
-        "nombre": "Alexander Machado",
-        "id": 70077,
-        "tipo": "titular",
-        "portero": false,
-        "mvp": false,
-        "num": "22",
-        "min": 80,
-        "goles": 0,
-        "asist": 0,
-        "amarilla": false,
-        "roja": false,
-        "top": {
-          "tiros_totales": 2,
-          "disparos_puerta": 0,
-          "oport_creadas": 0,
-          "acc_defensivas": 3,
-          "pases_precisos": 9
-        },
-        "ataque": {
-          "toques": 25,
-          "toques_area": 4,
-          "pases_ultimo_tercio": 1,
-          "perdida_balon": 0
-        },
-        "defensa": {
-          "acc_defensivas": 3,
-          "entradas": 1,
-          "interceptaciones": 0,
-          "recuperaciones": 2,
-          "despejes": 2,
-          "bloqueos": 1,
-          "regateado": 1
-        },
-        "duelos": {
-          "ganados": 1,
-          "perdidos": 5,
-          "terrestres": 1,
-          "aereos": 0,
-          "faltas": 0
-        },
-        "portero_stats": null,
-        "pos": {
-          "x": 87.0,
-          "y": 70.0
-        }
-      },
-      {
         "nombre": "Lisandro Piñero",
-        "id": 484294,
+        "id": 1675394,
         "tipo": "suplente",
         "portero": false,
         "mvp": false,
@@ -653,8 +632,6 @@
         "min": 33,
         "goles": 0,
         "asist": 1,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "tiros_totales": 1,
           "disparos_puerta": 0,
@@ -679,7 +656,7 @@
         },
         "duelos": {
           "ganados": 1,
-          "perdidos": 2,
+          "perdidos": 1,
           "terrestres": 1,
           "aereos": 0,
           "faltas": 0
@@ -688,7 +665,7 @@
       },
       {
         "nombre": "Bruno Sepúlveda",
-        "id": 58591,
+        "id": 741669,
         "tipo": "suplente",
         "portero": false,
         "mvp": false,
@@ -696,17 +673,15 @@
         "min": 33,
         "goles": 2,
         "asist": 0,
-        "amarilla": true,
-        "roja": false,
         "top": {
           "tiros_totales": 2,
           "disparos_puerta": 2,
           "oport_creadas": 1,
           "acc_defensivas": 0,
-          "pases_precisos": 8
+          "pases_precisos": 9
         },
         "ataque": {
-          "toques": 17,
+          "toques": 18,
           "toques_area": 1,
           "perdida_balon": 0
         },
@@ -720,7 +695,7 @@
         },
         "duelos": {
           "ganados": 4,
-          "perdidos": 2,
+          "perdidos": 1,
           "terrestres": 1,
           "aereos": 3,
           "faltas": 1,
@@ -730,7 +705,7 @@
       },
       {
         "nombre": "David Zalazar",
-        "id": 354789,
+        "id": 1336106,
         "tipo": "suplente",
         "portero": false,
         "mvp": false,
@@ -738,8 +713,6 @@
         "min": 14,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "tiros_totales": 1,
           "disparos_puerta": 1,
@@ -748,9 +721,11 @@
           "pases_precisos": 1
         },
         "ataque": {
-          "toques": 6,
+          "toques": 7,
           "toques_area": 1,
           "regates": 0,
+          "pases_ultimo_tercio": 1,
+          "tiros_largos": 0,
           "perdida_balon": 0
         },
         "defensa": {
@@ -772,7 +747,7 @@
       },
       {
         "nombre": "Favio Álvarez",
-        "id": 6037,
+        "id": 529104,
         "tipo": "suplente",
         "portero": false,
         "mvp": false,
@@ -780,15 +755,13 @@
         "min": 14,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "oport_creadas": 0,
           "acc_defensivas": 0,
-          "pases_precisos": 7
+          "pases_precisos": 8
         },
         "ataque": {
-          "toques": 13,
+          "toques": 14,
           "toques_area": 0,
           "pases_ultimo_tercio": 2,
           "perdida_balon": 1
@@ -811,7 +784,7 @@
       },
       {
         "nombre": "Federico Anselmo",
-        "id": 5683,
+        "id": 589348,
         "tipo": "suplente",
         "portero": false,
         "mvp": false,
@@ -819,8 +792,6 @@
         "min": 10,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "oport_creadas": 1,
           "acc_defensivas": 0,
@@ -848,7 +819,7 @@
       },
       {
         "nombre": "Pedro Troglio",
-        "id": 2759,
+        "id": null,
         "tipo": "dt",
         "portero": false,
         "mvp": false,
@@ -856,8 +827,6 @@
         "min": null,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": null,
         "ataque": null,
         "defensa": null,
@@ -868,7 +837,7 @@
     "riverplate": [
       {
         "nombre": "Santiago Beltrán",
-        "id": 414525,
+        "id": 1652014,
         "tipo": "titular",
         "portero": true,
         "mvp": false,
@@ -876,8 +845,6 @@
         "min": 90,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "acc_defensivas": 0,
           "pases_precisos": 19
@@ -909,7 +876,7 @@
       },
       {
         "nombre": "Gonzalo Montiel",
-        "id": 2468,
+        "id": 687008,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -917,8 +884,6 @@
         "min": 69,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "oport_creadas": 2,
           "acc_defensivas": 4,
@@ -955,7 +920,7 @@
       },
       {
         "nombre": "Lucas Martínez Quarta",
-        "id": 6000,
+        "id": 638771,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -963,15 +928,13 @@
         "min": 88,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "oport_creadas": 0,
           "acc_defensivas": 10,
           "pases_precisos": 33
         },
         "ataque": {
-          "toques": 56,
+          "toques": 57,
           "toques_area": 0,
           "regates": 1,
           "pases_ultimo_tercio": 8,
@@ -1001,7 +964,7 @@
       },
       {
         "nombre": "Nicolás Otamendi",
-        "id": 624,
+        "id": 174321,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -1009,8 +972,6 @@
         "min": 90,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "oport_creadas": 0,
           "acc_defensivas": 10,
@@ -1047,7 +1008,7 @@
       },
       {
         "nombre": "Marcos Acuña",
-        "id": 1493,
+        "id": 561187,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -1055,8 +1016,6 @@
         "min": 82,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "oport_creadas": 2,
           "grandes_oport": 1,
@@ -1095,7 +1054,7 @@
       },
       {
         "nombre": "Fausto Vera",
-        "id": 6725,
+        "id": 981070,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -1103,8 +1062,6 @@
         "min": 90,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "tiros_totales": 1,
           "disparos_puerta": 1,
@@ -1144,7 +1101,7 @@
       },
       {
         "nombre": "Tobías Andrada",
-        "id": 516771,
+        "id": 1761527,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -1152,15 +1109,13 @@
         "min": 88,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "oport_creadas": 4,
           "acc_defensivas": 1,
           "pases_precisos": 42
         },
         "ataque": {
-          "toques": 62,
+          "toques": 63,
           "toques_area": 1,
           "regates": 2,
           "pases_ultimo_tercio": 7,
@@ -1189,58 +1144,56 @@
         }
       },
       {
-        "nombre": "Thiago Almada",
-        "id": 6067,
+        "nombre": "Tomás Galván",
+        "id": 1256242,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
-        "num": "23",
+        "num": "26",
         "min": 90,
-        "goles": 1,
-        "asist": 0,
-        "amarilla": false,
-        "roja": false,
+        "goles": 0,
+        "asist": 1,
         "top": {
-          "tiros_totales": 4,
-          "disparos_puerta": 2,
-          "oport_creadas": 2,
-          "grandes_oport": 1,
-          "acc_defensivas": 1,
-          "pases_precisos": 54
+          "tiros_totales": 2,
+          "disparos_puerta": 0,
+          "oport_creadas": 1,
+          "acc_defensivas": 3,
+          "pases_precisos": 35
         },
         "ataque": {
-          "toques": 82,
-          "toques_area": 9,
+          "toques": 54,
+          "toques_area": 4,
           "regates": 0,
-          "pases_ultimo_tercio": 7,
-          "tiros_largos": 5,
-          "perdida_balon": 4
+          "pases_ultimo_tercio": 6,
+          "tiros_largos": 2,
+          "perdida_balon": 0
         },
         "defensa": {
-          "acc_defensivas": 1,
+          "acc_defensivas": 3,
           "entradas": 1,
           "interceptaciones": 0,
           "recuperaciones": 5,
-          "despejes": 0,
+          "despejes": 2,
+          "bloqueos": 1,
           "regateado": 0
         },
         "duelos": {
-          "ganados": 3,
-          "perdidos": 7,
-          "terrestres": 3,
-          "aereos": 0,
+          "ganados": 4,
+          "perdidos": 3,
+          "terrestres": 2,
+          "aereos": 2,
           "faltas": 2,
-          "faltas_recibidas": 2
+          "faltas_recibidas": 1
         },
         "portero_stats": null,
         "pos": {
           "x": 67.8,
-          "y": 16.3
+          "y": 83.7
         }
       },
       {
         "nombre": "Ángel Correa",
-        "id": 53,
+        "id": 432950,
         "tipo": "titular",
         "portero": false,
         "mvp": true,
@@ -1248,18 +1201,16 @@
         "min": 90,
         "goles": 1,
         "asist": 1,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "tiros_totales": 6,
           "disparos_puerta": 2,
           "oport_creadas": 2,
           "grandes_oport": 2,
           "acc_defensivas": 4,
-          "pases_precisos": 47
+          "pases_precisos": 48
         },
         "ataque": {
-          "toques": 78,
+          "toques": 79,
           "toques_area": 10,
           "regates": 1,
           "pases_ultimo_tercio": 4,
@@ -1290,57 +1241,56 @@
         }
       },
       {
-        "nombre": "Tomás Galván",
-        "id": 265912,
+        "nombre": "Thiago Almada",
+        "id": 955271,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
-        "num": "26",
+        "num": "23",
         "min": 90,
-        "goles": 0,
-        "asist": 1,
-        "amarilla": false,
-        "roja": false,
+        "goles": 1,
+        "asist": 0,
         "top": {
-          "tiros_totales": 2,
-          "disparos_puerta": 0,
-          "oport_creadas": 1,
-          "acc_defensivas": 3,
-          "pases_precisos": 34
+          "tiros_totales": 4,
+          "disparos_puerta": 2,
+          "oport_creadas": 2,
+          "grandes_oport": 1,
+          "acc_defensivas": 1,
+          "pases_precisos": 54
         },
         "ataque": {
-          "toques": 52,
-          "toques_area": 4,
+          "toques": 82,
+          "toques_area": 9,
           "regates": 0,
-          "pases_ultimo_tercio": 5,
-          "tiros_largos": 1,
-          "perdida_balon": 0
+          "pases_ultimo_tercio": 6,
+          "tiros_largos": 4,
+          "perdida_balon": 4
         },
         "defensa": {
-          "acc_defensivas": 3,
+          "acc_defensivas": 1,
           "entradas": 1,
           "interceptaciones": 0,
           "recuperaciones": 5,
-          "despejes": 2,
+          "despejes": 0,
           "regateado": 0
         },
         "duelos": {
           "ganados": 3,
-          "perdidos": 4,
-          "terrestres": 2,
-          "aereos": 1,
+          "perdidos": 8,
+          "terrestres": 3,
+          "aereos": 0,
           "faltas": 2,
-          "faltas_recibidas": 1
+          "faltas_recibidas": 2
         },
         "portero_stats": null,
         "pos": {
           "x": 67.8,
-          "y": 83.7
+          "y": 16.3
         }
       },
       {
         "nombre": "Sebastián Driussi",
-        "id": 1222,
+        "id": 510698,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -1348,8 +1298,6 @@
         "min": 69,
         "goles": 1,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "tiros_totales": 4,
           "disparos_puerta": 2,
@@ -1388,49 +1336,8 @@
         }
       },
       {
-        "nombre": "Lucas Beltrán",
-        "id": 6010,
-        "tipo": "suplente",
-        "portero": false,
-        "mvp": false,
-        "num": "18",
-        "min": 21,
-        "goles": 0,
-        "asist": 0,
-        "amarilla": false,
-        "roja": false,
-        "top": {
-          "tiros_totales": 2,
-          "disparos_puerta": 1,
-          "oport_creadas": 2,
-          "grandes_oport": 1,
-          "acc_defensivas": 1,
-          "pases_precisos": 5
-        },
-        "ataque": {
-          "toques": 14,
-          "toques_area": 3,
-          "perdida_balon": 0
-        },
-        "defensa": {
-          "acc_defensivas": 1,
-          "entradas": 0,
-          "interceptaciones": 0,
-          "recuperaciones": 0,
-          "despejes": 1,
-          "bloqueos": 1,
-          "regateado": 0
-        },
-        "duelos": {
-          "ganados": 1,
-          "aereos": 1,
-          "faltas": 0
-        },
-        "portero_stats": null
-      },
-      {
         "nombre": "Giovanni González",
-        "id": 2610,
+        "id": 729189,
         "tipo": "suplente",
         "portero": false,
         "mvp": false,
@@ -1438,8 +1345,6 @@
         "min": 21,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "oport_creadas": 0,
           "acc_defensivas": 1,
@@ -1467,8 +1372,47 @@
         "portero_stats": null
       },
       {
+        "nombre": "Lucas Beltrán",
+        "id": 974755,
+        "tipo": "suplente",
+        "portero": false,
+        "mvp": false,
+        "num": "18",
+        "min": 21,
+        "goles": 0,
+        "asist": 0,
+        "top": {
+          "tiros_totales": 2,
+          "disparos_puerta": 1,
+          "oport_creadas": 2,
+          "grandes_oport": 2,
+          "acc_defensivas": 1,
+          "pases_precisos": 5
+        },
+        "ataque": {
+          "toques": 14,
+          "toques_area": 3,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 1,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 0,
+          "despejes": 1,
+          "bloqueos": 1,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 1,
+          "aereos": 1,
+          "faltas": 0
+        },
+        "portero_stats": null
+      },
+      {
         "nombre": "Francisco Ortega",
-        "id": 6064,
+        "id": 902969,
         "tipo": "suplente",
         "portero": false,
         "mvp": false,
@@ -1476,17 +1420,15 @@
         "min": 8,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "oport_creadas": 1,
           "acc_defensivas": 0,
-          "pases_precisos": 4
+          "pases_precisos": 5
         },
         "ataque": {
-          "toques": 5,
+          "toques": 6,
           "toques_area": 0,
-          "pases_ultimo_tercio": 1,
+          "pases_ultimo_tercio": 2,
           "perdida_balon": 0
         },
         "defensa": {
@@ -1506,7 +1448,7 @@
       },
       {
         "nombre": "Lautaro Rivero",
-        "id": 463851,
+        "id": 1649321,
         "tipo": "suplente",
         "portero": false,
         "mvp": false,
@@ -1514,8 +1456,6 @@
         "min": 2,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "oport_creadas": 0,
           "acc_defensivas": 0,
@@ -1543,7 +1483,7 @@
       },
       {
         "nombre": "Mauro Arambarri",
-        "id": 47258,
+        "id": 625340,
         "tipo": "suplente",
         "portero": false,
         "mvp": false,
@@ -1551,8 +1491,6 @@
         "min": 2,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "oport_creadas": 1,
           "acc_defensivas": 0,
@@ -1581,7 +1519,7 @@
       },
       {
         "nombre": "Leonardo Ponzio",
-        "id": 29366,
+        "id": null,
         "tipo": "dt",
         "portero": false,
         "mvp": false,
@@ -1589,8 +1527,6 @@
         "min": null,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": null,
         "ataque": null,
         "defensa": null,

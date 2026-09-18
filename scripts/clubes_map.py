@@ -6,7 +6,11 @@ para resolver IDs sin tener que repetirlos en cada script.
 A medida que probamos nuevos clubes, completamos su `fotmob` ID. Los `apisports`
 ya están todos en `fetch_fixtures.py`.
 """
+
 from __future__ import annotations
+
+import re
+import unicodedata
 
 # slug -> {apisports, fotmob (si lo conocemos), nombre}
 CLUBES = {
@@ -71,3 +75,35 @@ def estadisticas_path(slug: str, copa: str = '') -> str:
     """Devuelve el path relativo al JSON de estadísticas para ese club + copa."""
     suffix = f'_{copa}' if copa else ''
     return f'data/estadisticas/{slug}{suffix}.json'
+
+
+# slug → alias de URL amigable (espejo de URL_ALIAS en js/clubes.js / rewrites de vercel.json)
+ALIAS = {
+    'riverplate': 'river', 'bocajuniors': 'boca', 'racingclub': 'racing',
+    'independiente': 'independiente', 'sanlorenzo': 'sanlorenzo', 'huracan': 'huracan',
+    'velezsarsfield': 'velez', 'argentinosjuniors': 'argentinos',
+    'clubatleticoplatense': 'platense', 'tigre': 'tigre', 'lanus': 'lanus',
+    'banfield': 'banfield', 'union': 'union', 'sarmiento': 'sarmiento',
+    'belgrano': 'belgrano', 'instituto': 'instituto', 'talleres': 'talleres',
+    'newellsoldboys': 'newells', 'rosariocentral': 'central',
+    'centralcordobadesantiago': 'centralcordoba', 'estudiantes': 'estudiantes',
+    'gimnasialp': 'gimnasia', 'gimnasiamendoza': 'gimnasiamendoza',
+    'deportivoriestra': 'riestra', 'barracascentral': 'barracas',
+    'aldosivi': 'aldosivi', 'atleticotucuman': 'atleticotucuman',
+    'defensayjusticia': 'defensa', 'independienterivadavia': 'indrivadavia',
+    'estudiantesderiocuarto': 'erc',
+}
+
+
+def _url_token(s: str) -> str:
+    """slug/alias para la URL. El rival extranjero de copa no tiene slug: llega su
+    nombre api-sports ('Fluminense'), que se normaliza igual que en el frontend."""
+    if s in ALIAS:
+        return ALIAS[s]
+    n = unicodedata.normalize('NFKD', s).encode('ascii', 'ignore').decode()
+    return re.sub(r'[^a-z0-9]', '', n.lower())
+
+
+def puntuar_url(local_slug: str, visitante_slug: str) -> str:
+    """URL compartible de la landing de puntajes de un partido (puntuar.html)."""
+    return f'https://www.tribunapp.com.ar/puntuar/{_url_token(local_slug)}-{_url_token(visitante_slug)}'

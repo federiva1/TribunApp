@@ -16,7 +16,7 @@
       "local": [
         {
           "min": 90,
-          "jugador": "Álex Arce",
+          "jugador": "Alex Arce",
           "asist": null
         }
       ],
@@ -24,7 +24,7 @@
         {
           "min": 75,
           "jugador": "Kevin Serna",
-          "asist": null
+          "asist": "Hércules"
         }
       ]
     },
@@ -396,52 +396,6 @@
         }
       },
       {
-        "nombre": "José Florentín",
-        "id": 119809,
-        "tipo": "titular",
-        "portero": false,
-        "mvp": false,
-        "num": "25",
-        "min": 90,
-        "goles": 0,
-        "asist": 0,
-        "amarilla": false,
-        "roja": false,
-        "top": {
-          "oport_creadas": 1,
-          "acc_defensivas": 5,
-          "pases_precisos": 41
-        },
-        "ataque": {
-          "toques": 57,
-          "toques_area": 3,
-          "regates": 1,
-          "pases_ultimo_tercio": 7,
-          "tiros_largos": 6,
-          "perdida_balon": 0
-        },
-        "defensa": {
-          "acc_defensivas": 5,
-          "entradas": 0,
-          "interceptaciones": 2,
-          "recuperaciones": 4,
-          "despejes": 2,
-          "regateado": 1
-        },
-        "duelos": {
-          "ganados": 1,
-          "perdidos": 4,
-          "terrestres": 1,
-          "aereos": 0,
-          "faltas": 2
-        },
-        "portero_stats": null,
-        "pos": {
-          "x": 61.3,
-          "y": 37.5
-        }
-      },
-      {
         "nombre": "Tomás Bottari",
         "id": 292885,
         "tipo": "titular",
@@ -485,6 +439,52 @@
         "pos": {
           "x": 61.3,
           "y": 62.5
+        }
+      },
+      {
+        "nombre": "José Florentín",
+        "id": 119809,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "25",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 1,
+          "acc_defensivas": 5,
+          "pases_precisos": 41
+        },
+        "ataque": {
+          "toques": 57,
+          "toques_area": 3,
+          "regates": 1,
+          "pases_ultimo_tercio": 7,
+          "tiros_largos": 6,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 5,
+          "entradas": 0,
+          "interceptaciones": 2,
+          "recuperaciones": 4,
+          "despejes": 2,
+          "regateado": 1
+        },
+        "duelos": {
+          "ganados": 1,
+          "perdidos": 4,
+          "terrestres": 1,
+          "aereos": 0,
+          "faltas": 2
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 61.3,
+          "y": 37.5
         }
       },
       {
@@ -632,44 +632,6 @@
         }
       },
       {
-        "nombre": "Luciano Sábato",
-        "id": 560305,
-        "tipo": "suplente",
-        "portero": false,
-        "mvp": false,
-        "num": "45",
-        "min": 8,
-        "goles": 0,
-        "asist": 0,
-        "amarilla": false,
-        "roja": false,
-        "top": {
-          "oport_creadas": 0,
-          "acc_defensivas": 0,
-          "pases_precisos": 1
-        },
-        "ataque": {
-          "toques": 2,
-          "toques_area": 2,
-          "perdida_balon": 1
-        },
-        "defensa": {
-          "acc_defensivas": 0,
-          "entradas": 0,
-          "interceptaciones": 0,
-          "recuperaciones": 0,
-          "despejes": 0,
-          "regateado": 0
-        },
-        "duelos": {
-          "perdidos": 2,
-          "terrestres": 0,
-          "aereos": 0,
-          "faltas": 0
-        },
-        "portero_stats": null
-      },
-      {
         "nombre": "Rodrigo Atencio",
         "id": 362740,
         "tipo": "suplente",
@@ -706,6 +668,44 @@
           "terrestres": 0,
           "aereos": 0,
           "faltas": 1
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Luciano Sábato",
+        "id": 560305,
+        "tipo": "suplente",
+        "portero": false,
+        "mvp": false,
+        "num": "45",
+        "min": 8,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 0,
+          "pases_precisos": 1
+        },
+        "ataque": {
+          "toques": 2,
+          "toques_area": 2,
+          "perdida_balon": 1
+        },
+        "defensa": {
+          "acc_defensivas": 0,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 0,
+          "despejes": 0,
+          "regateado": 0
+        },
+        "duelos": {
+          "perdidos": 2,
+          "terrestres": 0,
+          "aereos": 0,
+          "faltas": 0
         },
         "portero_stats": null
       },
@@ -1040,7 +1040,7 @@
         "num": "35",
         "min": 90,
         "goles": 0,
-        "asist": 0,
+        "asist": 1,
         "amarilla": true,
         "roja": false,
         "top": {
@@ -1319,12 +1319,55 @@
         }
       },
       {
+        "nombre": "Kevin Serna",
+        "id": 70849,
+        "tipo": "suplente",
+        "portero": false,
+        "mvp": false,
+        "num": "90",
+        "min": 24,
+        "goles": 1,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "tiros_totales": 3,
+          "disparos_puerta": 2,
+          "oport_creadas": 0,
+          "acc_defensivas": 3,
+          "pases_precisos": 2
+        },
+        "ataque": {
+          "toques": 17,
+          "toques_area": 6,
+          "regates": 3,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 3,
+          "entradas": 1,
+          "interceptaciones": 0,
+          "recuperaciones": 2,
+          "despejes": 2,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 8,
+          "perdidos": 4,
+          "terrestres": 5,
+          "aereos": 3,
+          "faltas": 2,
+          "faltas_recibidas": 1
+        },
+        "portero_stats": null
+      },
+      {
         "nombre": "Luciano Acosta",
         "id": 50763,
         "tipo": "suplente",
         "portero": false,
         "mvp": false,
-        "num": "",
+        "num": "32",
         "min": 24,
         "goles": 0,
         "asist": 0,
@@ -1364,55 +1407,12 @@
         "portero_stats": null
       },
       {
-        "nombre": "Kevin Serna",
-        "id": 70849,
-        "tipo": "suplente",
-        "portero": false,
-        "mvp": false,
-        "num": "",
-        "min": 24,
-        "goles": 1,
-        "asist": 0,
-        "amarilla": false,
-        "roja": false,
-        "top": {
-          "tiros_totales": 3,
-          "disparos_puerta": 2,
-          "oport_creadas": 0,
-          "acc_defensivas": 3,
-          "pases_precisos": 2
-        },
-        "ataque": {
-          "toques": 17,
-          "toques_area": 6,
-          "regates": 3,
-          "perdida_balon": 0
-        },
-        "defensa": {
-          "acc_defensivas": 3,
-          "entradas": 1,
-          "interceptaciones": 0,
-          "recuperaciones": 2,
-          "despejes": 2,
-          "regateado": 0
-        },
-        "duelos": {
-          "ganados": 8,
-          "perdidos": 4,
-          "terrestres": 5,
-          "aereos": 3,
-          "faltas": 2,
-          "faltas_recibidas": 1
-        },
-        "portero_stats": null
-      },
-      {
         "nombre": "Julián Millán",
         "id": 13715,
         "tipo": "suplente",
         "portero": false,
         "mvp": false,
-        "num": "",
+        "num": "29",
         "min": 8,
         "goles": 0,
         "asist": 0,
