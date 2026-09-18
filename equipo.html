@@ -231,6 +231,34 @@ html.deep-stats #estadisticas-screen { display: block; }
 /* Sin resaltado de fila activa. Destildada: sin números (se ocultan en JS), nombre atenuado. */
 .eqt-table tbody tr.eqt-dimmed .kit-chip { opacity:.4; }
 .eqt-table tbody tr.eqt-dimmed .nm { color:rgba(255,255,255,0.4); font-weight:400; }
+/* Subsección de UN partido (aparece sola cuando queda un único partido tildado) */
+.equ-hint { margin:-4px 0 12px; font-family:'Barlow Condensed',sans-serif; font-size:11px; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,0.45); }
+.equ-hint-bar { height:2px; margin-top:5px; border-radius:2px; background:rgba(255,255,255,0.08); overflow:hidden; }
+.equ-hint-bar i { display:block; height:100%; width:100%; background:var(--acento); transform-origin:left; animation:equ-fill linear both; }
+@keyframes equ-fill { from { transform:scaleX(0); } to { transform:scaleX(1); } }
+.equ-card { border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:14px 12px 16px; background:rgba(255,255,255,0.025); animation:equ-in .22s ease-out both; }
+.equ-card.quieta { animation:none; }
+@keyframes equ-in { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+.equ-meta { text-align:center; font-family:'Barlow Condensed',sans-serif; font-size:11px; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,0.4); margin-bottom:8px; }
+.equ-score { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:10px; }
+.equ-team { display:flex; align-items:center; gap:8px; min-width:0; font-family:'Barlow Condensed',sans-serif; font-size:14px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; }
+.equ-team.away { flex-direction:row-reverse; text-align:right; }
+.equ-team img { width:30px; height:30px; object-fit:contain; flex-shrink:0; }
+.equ-team span { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.equ-res { font-family:'Bebas Neue',sans-serif; font-size:30px; line-height:1; letter-spacing:1px; white-space:nowrap; }
+.equ-goals { display:grid; grid-template-columns:1fr 1fr; gap:2px 14px; margin-top:8px; font-size:11px; color:rgba(255,255,255,0.6); }
+.equ-goals > div:last-child { text-align:right; }
+.equ-tabs { display:flex; margin:14px 0 14px; border-bottom:1px solid rgba(255,255,255,0.08); }
+.equ-tab { flex:1; text-align:center; padding:9px 4px; cursor:pointer; font-family:'Barlow Condensed',sans-serif; font-size:13px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:rgba(255,255,255,0.4); border-bottom:2px solid transparent; transition:all .15s; user-select:none; }
+.equ-tab.active { color:#fff; border-bottom-color:var(--acento); }
+.equ-link { display:block; text-align:center; margin-top:14px; font-family:'Barlow Condensed',sans-serif; font-size:12px; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,0.5); text-decoration:none; }
+.equ-link:hover { color:#fff; }
+/* El marcador de arriba ya dice quién es quién: el encabezado del bloque de stats sobra. */
+.equ-card .fc-st-hdr { display:none; }
+.mt-club-chip { flex:0 0 auto; display:flex; align-items:center; gap:7px; padding:6px 13px; border-radius:14px; cursor:pointer; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); font-family:'Barlow Condensed',sans-serif; font-size:13px; font-weight:600; letter-spacing:.5px; color:#fff; white-space:nowrap; user-select:none; transition:all .15s; }
+.mt-club-chip img { width:18px; height:18px; object-fit:contain; }
+.mt-club-chip.off { background:transparent; color:rgba(255,255,255,0.35); border-color:rgba(255,255,255,0.08); }
+.mt-club-chip.off img { opacity:.35; }
 
 /* ===== PLANTEL ===== */
 .pos-seccion { margin-bottom: 24px; }
@@ -1275,6 +1303,7 @@ html.deep-stats #estadisticas-screen { display: block; }
 <script src="js/club-colors.js"></script>
 <script src="js/clubes.js"></script>
 <script src="js/kits.js"></script>
+<script src="js/ficha-cancha.js"></script>
 <script>
 (function() {
 'use strict';
@@ -2708,7 +2737,14 @@ const EQ_COLS = [
 ];
 
 let _eqData = null;   // [{p, data}] partidos del club (index + json), cacheado
-const _eqSt = { fechas:null, hiddenPlayers:null, hiddenCols:null, sortKey:'min', sortAsc:false, comp:null };
+const _eqSt = { fechas:null, hiddenPlayers:null, hiddenCols:null, sortKey:'min', sortAsc:false, comp:null,
+                unico:null,      // id del partido cuya subsección está ARMADA (null = tabla sumada)
+                sub:'stats' };   // pestaña activa de la subsección: stats | forma | tabla
+// Espera antes de armar la subsección de un partido: mientras el usuario va
+// destildando no queremos que la pantalla salte a cada toque.
+const EQ_UNICO_MS = 1000;
+let _eqUnicoPend = null;         // { id, t0, timer } — armado agendado, todavía no disparado
+let _eqUnicoRecien = false;      // true solo en el render que ARMA la subsección (anima la entrada)
 
 // Grupo de competición para el selector (Liga engloba Apertura/Clausura).
 const EQ_COMP_ORDER = ['Liga', 'Libertadores', 'Sudamericana'];
@@ -2836,6 +2872,17 @@ function renderEqStats() {
   });
   fBlock.appendChild(fBar); wrap.appendChild(fBlock);
 
+  // ── Un solo partido tildado → subsección del partido (Estadísticas / Formaciones /
+  //    Tabla), igual que en la página del partido. Se arma tras EQ_UNICO_MS sin
+  //    cambios y se desarma al instante apenas hay dos tildados. ──
+  const solo = _eqSt.fechas.size === 1 ? [..._eqSt.fechas][0] : null;
+  if (!solo) { _eqUnicoCancelar(); _eqSt.unico = null; }
+  else if (_eqSt.unico !== solo) { _eqSt.unico = null; _eqUnicoAgendar(solo, wrap); }
+  if (solo && _eqSt.unico === solo) {
+    const x = compData.find(y => y.p.id === solo);
+    if (x) { renderEqUnico(wrap, x); return; }
+  }
+
   // ── Agregación de los partidos seleccionados ──
   const rows = aggregateEq(compData.filter(x => _eqSt.fechas.has(x.p.id)));
 
@@ -2847,6 +2894,147 @@ function renderEqStats() {
   if (!rows.length) { wrap.appendChild(_eqEl('div','pronto-msg','Sin datos de jugadores.')); return; }
   wrap.appendChild(_eqExportBar());
   wrap.appendChild(buildEqTable(rows));
+}
+
+// ── Subsección de un partido ────────────────────────────────────────────────
+function _eqUnicoCancelar() {
+  if (_eqUnicoPend) { clearTimeout(_eqUnicoPend.timer); _eqUnicoPend = null; }
+}
+// Agenda el armado. renderEqStats() se llama en cada toque (ordenar, ocultar
+// columnas…), así que si ya hay uno agendado para ESTE partido no se reinicia el
+// reloj: solo se vuelve a dibujar el aviso con el tiempo que le queda.
+function _eqUnicoAgendar(id, wrap) {
+  if (!_eqUnicoPend || _eqUnicoPend.id !== id) {
+    _eqUnicoCancelar();
+    const pend = { id, t0: Date.now(), timer: null };
+    pend.timer = setTimeout(() => {
+      if (_eqUnicoPend !== pend) return;
+      _eqUnicoPend = null;
+      if (_eqSt.fechas.size === 1 && _eqSt.fechas.has(id)) {
+        _eqSt.unico = id; _eqUnicoRecien = true; renderEqStats(); _eqUnicoRecien = false;
+      }
+    }, EQ_UNICO_MS);
+    _eqUnicoPend = pend;
+  }
+  const hint = _eqEl('div','equ-hint','Un solo partido · abriendo su ficha…');
+  const bar = _eqEl('div','equ-hint-bar'); const fill = document.createElement('i');
+  fill.style.animationDuration = EQ_UNICO_MS + 'ms';
+  fill.style.animationDelay = -(Date.now() - _eqUnicoPend.t0) + 'ms';
+  bar.appendChild(fill); hint.appendChild(bar); wrap.appendChild(hint);
+}
+
+// Nombre a mostrar: el corto de los 30 clubes si existe; para un rival extranjero
+// (sin entrada en NOMBRES_RIVAL, nbR devolvería el slug capitalizado: "Saopaulo")
+// vale el nombre de api-sports guardado en la ficha ("Sao Paulo").
+function _eqUnicoNom(p) {
+  const propio = s => NOMBRES_RIVAL[s]
+    || (typeof CLUBES_CONFIG !== 'undefined' && CLUBES_CONFIG[s] && (CLUBES_CONFIG[s].nombreCorto || CLUBES_CONFIG[s].nombre));
+  return (s, nomApi) => propio(s) || nomApi
+    || (s === p.local ? p.local_nombre : p.visitante_nombre) || nbR(s);
+}
+function _eqUnicoGol(g) {
+  if (typeof g === 'string') return '⚽ ' + g;
+  return `⚽ ${g.min ? g.min + "' " : ''}${g.jugador || ''}${g.en_contra ? ' (e/c)' : ''}`;
+}
+// Filas de la Tabla de un partido: el club con su plantel resuelto (aggregateEq) y
+// el rival tal cual viene en la ficha. `club` decide el kit de cada fila.
+function _eqUnicoRows(x) {
+  const p = x.data.partido, rival = p.local === slug ? p.visitante : p.local;
+  const propios = aggregateEq([x]).map(r => Object.assign(r, { club: slug }));
+  const ajenos = ((x.data.jugadores || {})[rival] || [])
+    .filter(j => j.tipo !== 'dt' && (j.min || 0) > 0)
+    .map(j => {
+      const flat = { club: rival, nombre: j.nombre, num: _eqNumOk(j.num), portero: j.portero,
+                     pj: 1, min: j.min || 0, goles: j.goles || 0, asist: j.asist || 0 };
+      ['top','ataque','defensa','duelos'].forEach(sec => Object.assign(flat, j[sec] || {}));
+      return flat;
+    });
+  return propios.concat(ajenos);
+}
+
+function renderEqUnico(wrap, x) {
+  const data = x.data, p = data.partido, nomFn = _eqUnicoNom(p);
+  // La entrada se anima solo al armarse; los re-render (cambiar de pestaña, ordenar) no.
+  const card = _eqEl('div','equ-card' + (_eqUnicoRecien ? '' : ' quieta'));
+
+  // Marcador
+  const fecha = (() => { const d = new Date(p.fecha + 'T12:00:00'); return isNaN(d) ? (p.fecha || '') : d.toLocaleDateString('es-AR', { day:'numeric', month:'short' }); })();
+  card.appendChild(_eqEl('div','equ-meta', [p.competicion, fecha, p.estadio].filter(Boolean).join(' · ')));
+  const sc = _eqEl('div','equ-score');
+  [[p.local, ''], null, [p.visitante, ' away']].forEach(t => {
+    if (!t) { sc.appendChild(_eqEl('div','equ-res', `${p.goles_local} - ${p.goles_visitante}`)); return; }
+    const d = _eqEl('div','equ-team' + t[1]);
+    const img = document.createElement('img'); img.src = `escudos/${t[0]}.png`; img.alt = '';
+    img.onerror = () => { img.style.visibility = 'hidden'; };
+    d.appendChild(img); d.appendChild(_eqEl('span', null, nomFn(t[0])));
+    sc.appendChild(d);
+  });
+  card.appendChild(sc);
+  const gd = p.goles_detalle || {};
+  if ((gd.local || []).length || (gd.visitante || []).length) {
+    const g = _eqEl('div','equ-goals');
+    [gd.local || [], gd.visitante || []].forEach(lista => {
+      const col = document.createElement('div');
+      lista.forEach(gol => col.appendChild(_eqEl('div', null, _eqUnicoGol(gol))));
+      g.appendChild(col);
+    });
+    card.appendChild(g);
+  }
+
+  // Formaciones: mismos jugadores que dibuja la página del partido. null = sin XI suficiente.
+  let formaHtml = null;
+  try {
+    const jug = s => ((data.jugadores || {})[s] || []).filter(j => j.tipo === 'titular' || (j.tipo === 'suplente' && j.min > 0));
+    formaHtml = fcCanchaHTML({ partido: p, jugadores: { [p.local]: jug(p.local), [p.visitante]: jug(p.visitante) } },
+                             { nomFn, layout: 'horizontal' });
+  } catch (e) {}
+  if (_eqSt.sub === 'forma' && !formaHtml) _eqSt.sub = 'stats';
+
+  // Pestañas
+  const tabs = _eqEl('div','equ-tabs');
+  [['stats','Estadísticas'], ['forma','Formaciones'], ['tabla','Tabla']].forEach(([k, label]) => {
+    if (k === 'forma' && !formaHtml) return;
+    const t = _eqEl('div','equ-tab' + (_eqSt.sub === k ? ' active' : ''), label);
+    t.onclick = () => { if (_eqSt.sub !== k) { _eqSt.sub = k; renderEqStats(); } };
+    tabs.appendChild(t);
+  });
+  card.appendChild(tabs);
+
+  const body = document.createElement('div');
+  if (_eqSt.sub === 'stats') body.innerHTML = fcStatsHTML(data, { nomFn });
+  else if (_eqSt.sub === 'forma') body.innerHTML = formaHtml;
+  else {
+    const rows = _eqUnicoRows(x);
+    // Chips de equipo: tildar/destildar todos los jugadores de un club.
+    const cBlock = _eqEl('div','eqt-block');
+    cBlock.appendChild(_eqEl('div','eqt-label','Equipos'));
+    const cBar = _eqEl('div','eqt-chiprow');
+    [p.local, p.visitante].forEach(club => {
+      const suyos = rows.filter(r => r.club === club);
+      if (!suyos.length) return;
+      const allOff = suyos.every(r => _eqSt.hiddenPlayers.has(r.nombre));
+      const chip = _eqEl('div','mt-club-chip' + (allOff ? ' off' : ''));
+      const img = document.createElement('img'); img.src = `escudos/${club}.png`; img.onerror = () => { img.style.display = 'none'; };
+      chip.appendChild(img); chip.appendChild(document.createTextNode(nomFn(club)));
+      chip.onclick = () => {
+        const s = new Set(_eqSt.hiddenPlayers);
+        suyos.forEach(r => allOff ? s.delete(r.nombre) : s.add(r.nombre));
+        _eqSt.hiddenPlayers = s; renderEqStats();
+      };
+      cBar.appendChild(chip);
+    });
+    cBlock.appendChild(cBar); body.appendChild(cBlock);
+    renderEqPlayerControls(body, rows);
+    renderEqColChips(body, rows);
+    if (!rows.length) body.appendChild(_eqEl('div','pronto-msg','Sin estadísticas individuales todavía.'));
+    else { body.appendChild(_eqExportBar()); body.appendChild(buildEqTable(rows)); }
+  }
+  card.appendChild(body);
+
+  const link = _eqEl('a','equ-link','Abrir la página del partido →');
+  link.href = `estadisticas.html?p=${encodeURIComponent(x.p.id)}&c=${encodeURIComponent(slug)}`;
+  card.appendChild(link);
+  wrap.appendChild(card);
 }
 
 // Agrega los jugadores (jugaron, sin DT) de los partidos dados, sumando campos.
@@ -2950,8 +3138,9 @@ function _eqSort(key) {
 }
 
 function buildEqTable(rows) {
+  // PJ siempre visible en la tabla sumada; con un solo partido armado es ruido (todo 1).
   const cols = EQ_COLS.filter(c =>
-    !_eqSt.hiddenCols.has(c.key) && (c.key==='pj' || rows.some(r => r[c.key] != null)));
+    !_eqSt.hiddenCols.has(c.key) && (c.key==='pj' ? !_eqSt.unico : rows.some(r => r[c.key] != null)));
   let sortKey = _eqSt.sortKey;
   if (sortKey !== 'nombre' && !cols.some(c => c.key === sortKey)) sortKey = 'min';
 
@@ -3021,7 +3210,7 @@ function buildEqTable(rows) {
       _eqSt.hiddenPlayers = s; renderEqStats();
     };
     cell.appendChild(tick);
-    cell.appendChild(kitChip(slug, r.num || '', 26));
+    cell.appendChild(kitChip(r.club || slug, r.num || '', 26));
     cell.appendChild(_eqEl('span','nm', r.nombre));
     tdN.appendChild(cell); tr.appendChild(tdN);
     cols.forEach(c => {
@@ -3072,9 +3261,11 @@ function _eqExportVal(r, c) {
 async function _eqExport(btn) {
   const compData = _eqData.filter(x => _eqCompGroup(x.p.competicion) === _eqSt.comp);
   const selected = compData.filter(x => _eqSt.fechas.has(x.p.id));
-  const rows = aggregateEq(selected).filter(r => !_eqSt.hiddenPlayers.has(r.nombre));  // solo tildados
+  const unico = _eqSt.unico ? compData.find(x => x.p.id === _eqSt.unico) : null;
+  const rows = (unico ? _eqUnicoRows(unico) : aggregateEq(selected))
+    .filter(r => !_eqSt.hiddenPlayers.has(r.nombre));                                  // solo tildados
   if (!rows.length) { showToast('No hay jugadores seleccionados para exportar.'); return; }
-  const cols = EQ_COLS.filter(c => !_eqSt.hiddenCols.has(c.key) && (c.key === 'pj' || rows.some(r => r[c.key] != null)));
+  const cols = EQ_COLS.filter(c => !_eqSt.hiddenCols.has(c.key) && (c.key === 'pj' ? !unico : rows.some(r => r[c.key] != null)));
 
   // Leyenda (qué se exporta), concisa cuando no hay filtro.
   const ley = [`${nombreEquipo || 'Equipo'} · Estadísticas de jugadores`, `${_eqSt.comp} · Temporada 2026`];
@@ -3087,8 +3278,9 @@ async function _eqExport(btn) {
   const d = new Date();
   ley.push(`Exportado de tribunapp.com.ar · ${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`);
 
-  const header = ['N°', 'Jugador', ...cols.map(c => c.label)];
-  const dataRows = rows.map(r => [r.num || '', r.nombre, ...cols.map(c => _eqExportVal(r, c))]);
+  const conClub = !!unico;                                                             // dos equipos → columna Equipo
+  const header = ['N°', 'Jugador', ...(conClub ? ['Equipo'] : []), ...cols.map(c => c.label)];
+  const dataRows = rows.map(r => [r.num || '', r.nombre, ...(conClub ? [_eqUnicoNom(unico.data.partido)(r.club)] : []), ...cols.map(c => _eqExportVal(r, c))]);
   const aoa = [...ley.map(t => [t]), [], header, ...dataRows];
   const base = `estadisticas-${slug}`;
 
@@ -3097,7 +3289,7 @@ async function _eqExport(btn) {
     const XLSX = await _loadXLSX();
     if (XLSX) {
       const ws = XLSX.utils.aoa_to_sheet(aoa);
-      ws['!cols'] = [{ wch: 4 }, { wch: 22 }, ...cols.map(() => ({ wch: 9 }))];
+      ws['!cols'] = [{ wch: 4 }, { wch: 22 }, ...(conClub ? [{ wch: 16 }] : []), ...cols.map(() => ({ wch: 9 }))];
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Estadísticas');
       XLSX.writeFile(wb, base + '.xlsx');
