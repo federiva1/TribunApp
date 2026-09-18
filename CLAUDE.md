@@ -6,7 +6,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 TribunApp is a static fan engagement SPA for all 30 clubs of the Argentine Liga Profesional. No build system, no framework — pure HTML + CSS + JS. Production: **www.tribunapp.com.ar** on Vercel.
 
-`FLUJO.md` complementa este doc con el ciclo de vida de cada fecha (pre-partido → FT → scraping → cierre de puntajes) y el plan de automatización.
+**Objetivo**: que el hincha arme su formación antes de cada partido, lo siga en vivo y puntúe a los jugadores después, con estadísticas FotMob, tablas y placas para compartir. Sin login (voto por dispositivo), sitio estático, operado a mano con las skills de `.claude/skills/`.
+
+**Documentos:**
+- **`PROYECTO.md`** — la foto completa del proyecto: objetivos, arquitectura, mapa del sitio, funcionamiento para el hincha, datos, procesos (publicar, ciclo de una fecha, cambios de código, correcciones), skills, entornos (compu / nube / Vercel), ramas, seguridad, historia y decisiones, problemas conocidos, pendientes y glosario. **Leerlo para entender el proyecto; mantenerlo al día cuando cambie algo de eso.**
+- **`CLAUDE.md`** (este) — guía técnica detallada: esquemas, funciones y convenciones de código.
+- **`FLUJO.md`** — **histórico** (etapa con GitHub Actions automáticos). No describe el flujo actual.
+
+**Mapa rápido:** `index.html` (home + EN JUEGO) · `club.html?c={slug}` (app de cada club: formación, puntajes, stats) · `puntuar.html` (`/armar/…`, `/puntuar/…`) · `fixture.html` · `estadisticas.html?p={id}` (ficha del partido) · `equipo.html?c={slug}&s=estadisticas` (stats del club) · `estadisticas-torneo.html` · `estadisticas-tribunapp.html` + `tribunapp-equipo.html` (votos de la gente) · `tablas.html`. Datos en `data/` (fixtures, `partidos/`, planteles, overrides), votos en Supabase, en vivo por `api/apisports.js` + `api/fotmob.js`.
+
+**Ramas especiales** (no son producción): `pizarra` (pizarra táctica, en pruebas; se actualiza mergeándole `master`) y `video` (demo para un video promocional: partido simulado en vivo + puntajes que no se guardan — **nunca mergear**, borrar al terminar).
 
 ## Dónde vive el código y cómo se publica (LEER PRIMERO)
 
@@ -17,7 +26,7 @@ Reglas:
 - **Datos → directo a `master`. Código → rama + PR**, así el preview de Vercel se mira antes de mergear.
 - **Desde una sesión en la nube no se puede pushear a `master`** (el proxy de GitHub solo acepta la rama `claude/…` de la sesión): ahí publicar = PR + squash-merge, como los PR #1–#135. El entorno necesita red *Custom* (`v3.football.api-sports.io`, `www.fotmob.com`, `www.tribunapp.com.ar`) y la key como *API credential* + `API_SPORTS_VIA_PROXY=1` (o la variable `API_SPORTS_KEY`). Detalle en la skill `/actualizar-fecha`.
 - **Arrancar con `git pull --rebase origin master`**; nunca `--force` a `master`.
-- **`.vercelignore` decide qué NO se publica** (`CLAUDE.md`, `FLUJO.md`, `.claude/`…). Verificado en un deploy desde git el 2026-09-18: `/CLAUDE.md` → 404. Si se agrega un archivo interno nuevo en la raíz, sumarlo ahí.
+- **`.vercelignore` decide qué NO se publica** (`CLAUDE.md`, `FLUJO.md`, `PROYECTO.md`, `.claude/`, `.github/`, `scripts/`…). Verificado en un deploy desde git el 2026-09-18: `/CLAUDE.md` → 404. Si se agrega un archivo interno nuevo en la raíz, sumarlo ahí.
 - **La API key nunca va a un commit**: `scripts/.apikey` en la compu (gitignored); en la nube, *API credential* del entorno (la inyecta el proxy, `API_SPORTS_VIA_PROXY=1`) o variable `API_SPORTS_KEY`. Los scripts arman el header con `apikey.api_headers()`, nunca a mano.
 - **Todo lo que escriba en el remoto se confirma con el usuario antes**, salvo los commits de datos que pida explícitamente ("cerrá X", "publicá"). Mergear un PR, tocar Actions o la config de Vercel: siempre con OK.
 
@@ -137,7 +146,7 @@ python scripts/migrar_votos_formaaajcion.py --execute  # migra de verdad
 python scripts/migrar_votos_formaaajcion.py --check    # estado del destino
 ```
 
-`scripts/clubes_map.py` es el módulo compartido con el mapping `slug → {apisports_id, fotmob_id, nombre}` y los helpers `lookup()`, `league_id()`, `estadisticas_path()`. Los scripts de stats lo importan. Los `fotmob_id` se van completando a medida que extendemos la app a nuevos clubes (hoy AAAJ + Platense + Riestra + Racing).
+`scripts/clubes_map.py` es el módulo compartido con el mapping `slug → {apisports_id, fotmob_id, nombre}` y los helpers `lookup()`, `league_id()`, `estadisticas_path()`. Los scripts de stats lo importan. Tiene los `fotmob_id` de los 30 clubes, más `ALIAS` y `puntuar_url()` (el link `/puntuar/…` que imprime `cierre_rapido.py`).
 
 ## Architecture
 
@@ -158,7 +167,7 @@ The single source of truth for all 30 clubs (frontend). Defines three globals:
 Para los scripts Python hay un equivalente: `scripts/clubes_map.py` (slug → `{apisports, fotmob, nombre}`).
 
 ### Data flow
-- **Live standings**: `https://v3.football.api-sports.io/standings?league=128&season=2026`. La API key NO va hardcodeada: los scripts la leen vía `scripts/apikey.py` (env var `API_SPORTS_KEY` o archivo local gitignored `scripts/.apikey`); el frontend nunca la toca (usa el proxy `/api/apisports`, que la lee de la env var de Vercel). Returns 4 groups: `[0]` Zona A, `[1]` Zona B, `[2]` Anual, `[3]` Promedios. Group order can swap (Zona B first) — both index.html and club.html detect this by checking if the first group name contains `"b"`.
+- **Live standings**: `https://v3.football.api-sports.io/standings?league=128&season=2026`. La API key NO va hardcodeada: los scripts la leen vía `scripts/apikey.py` (env var `API_SPORTS_KEY` o archivo local gitignored `scripts/.apikey`); el frontend nunca la toca (usa el proxy `/api/apisports`, que la lee de la env var de Vercel). Con `season=2026` devuelve los grupos de **Apertura A/B y Clausura A/B** (ya no trae Anual ni Promedios como grupos): el torneo actual se detecta por nombre de grupo, el Anual se suma y los Promedios usan `PROMEDIO_HIST` (ver tablas.html). El orden de los grupos puede cambiar — nunca asumir índices fijos.
 - **Live fixture** (club.html FIXTURE section): `https://v3.football.api-sports.io/fixtures?team={id}&season=2026&league={league}` con `league` 128 (liga) / 13 (Libertadores) / 11 (Sudamericana).
 - **Static fixture data** (club.html VER FECHAS section): `data/fixtures/{slug}.json` for liga, `data/fixtures/{slug}_libertadores.json` / `data/fixtures/{slug}_sudamericana.json` for copa teams. Format: array of `{ num, fecha, rival, local, goles }` where `goles` is `[argGoals, rivalGoals]` or `null` if unplayed. Generated by `scripts/fetch_fixtures.py` — excepto `argentinosjuniors.json` que se mantiene a mano (línea `if slug == 'argentinosjuniors': skipped (manual file)`).
 - **Stats por partido + jugadores** (club.html ESTADÍSTICAS section): `data/estadisticas/{slug}[_copa].json` (suffixes `_libertadores`, `_sudamericana` para copa). Schema:
@@ -292,9 +301,10 @@ workflows `match-monitor.yml` / `close-puntajes.yml` (tenían el cron comentado 
 y el frontend ya no los leía). El gate se calcula solo, en `applyGating()` de `club.html`:
 
 ```js
-PUNTAJES_OPEN = override || (hasData && within24h);
+PUNTAJES_OPEN = override || (hasData && (within24h || extendido));
 ```
-- `hasData` — existe `data/partidos/{id}.json` con jugadores del club (lo genera `liga-match-stats.yml`).
+- `hasData` — existe `data/partidos/{id}.json` con jugadores del club (lo generan `cierre_rapido.py` / `fetch_liga_partidos.py`).
+- `extendido` — extensión manual por partido en `data/puntajes_abiertos.json` (`{"{local}-{visitante}": "ISO hasta"}`); la leen también `puntuar.html` y `fixture.html`. Borrar la entrada cuando vence.
 - `within24h` — pasaron menos de 24 h desde el **kickoff** del último partido de `liga.json`.
 - `override` — `?testpuntajes=1` en la URL, para probar fuera de la ventana.
 
@@ -338,8 +348,8 @@ requieren el secret `API_SPORTS_KEY` en GitHub → Settings → Secrets.
 
 Además de las automáticas, hay tres generadores que se corren a mano. Todos comparten la
 identidad de `social_lineups` (escudos con estrellas de `esc_placa`, kit chips, fuentes
-embebidas) y escriben en `data/social/preview/` (que **no se commitea**: tras generar,
-`rm -rf data/social && git checkout -- data/social`).
+embebidas) y escriben en `data/social/preview/`, que está en `.gitignore` (no se commitea ni
+se publica; no hace falta limpiarlo).
 
 - **`social_fecha.py`** — PRÓXIMO PARTIDO / PARTIDOS DE HOY. Con un solo partido usa el
   layout de escudos grandes (`_html_uno`); con varios, la lista de tarjetas, que se
@@ -379,11 +389,11 @@ El Mundial ya se jugó. Las páginas quedaron en el repo y varias se **reutiliza
 
 ### Páginas
 
-- **`index.html`** — Home del Mundial. Header + partido en vivo + toggle **ELIMINATORIA (default) / FASE DE GRUPOS**. Ver "index.html (bracket de eliminatorias)" abajo.
+- **`index.html`** — (histórico) fue el home del Mundial con el bracket; hoy es el home del fútbol argentino (ver "index.html — home del fútbol argentino" más arriba).
 - **`fixture.html`** — Fixture del Mundial. Muestra amistosos + todas las fases (Fase de Grupos, **Dieciseisavos** (round `1/32`), Octavos, Cuartos, Semis, Final). Los tabs de fase se muestran solos cuando esa ronda tiene partidos en `mundial.json`, y abre en la más avanzada disponible (`FASES` con `visible` recalculado al cargar). Partidos definidos por penales muestran "Pen X-Y" bajo el marcador y marcan al ganador vía `p.winner`. Datos en `data/fixtures/mundial.json`. La pill "Estadísticas" del header apunta a `estadisticas-torneo.html`.
 - **`estadisticas-torneo.html`** — Landing de estadísticas. **Repurposada a clubes de Liga** (ya no selecciones): la grilla inferior lista los 30 clubes leídos de **`data/equipos.json`** (`[{slug, nombre}]`); los que tienen partido en `data/partidos/index.json` muestran "Ver stats" y linkan a `equipo.html?c={slug}&s=estadisticas`. El nombre a mostrar sale de `equipos.json` (helper `nomEquipo`/`nomBySlug`, no del map de selecciones `nbSlug`). Sección superior: goleadores/asistidores globales computados leyendo todos los `data/partidos/*.json`.
 - **`equipo.html`** — Perfil de equipo. **Ahora club-aware**: incluye `js/clubes.js` y `init()` soporta tanto el plantel de club (array `[{num,name,fid,position}]`) como el del Mundial (`{equipo,grupo,jugadores:[{numero,nombre,...}]}`); color/nombre salen de `CLUBES_CONFIG` (fallback a `COLORES_EQUIPO`/`NAMES_ES`). La sección "estadísticas" (`loadPartidosStats` → `renderEqStats`) es una **tabla FotMob ancha agregada con filtros**: selector de partidos multi-toggle que **suma** (`aggregateEq`, agrupa por jugador vía `matchPlantel` para unificar grafías entre partidos como "Rodrigo Rey"/"R. Rey", columna PJ), chips de jugador (`hiddenPlayers`) y de columna (`hiddenCols`), catálogo `EQ_COLS` del schema rico (`top/ataque/defensa/duelos` aplanados), columna Jugador sticky, ordenable. Data-driven: solo se muestran columnas con algún valor. Deep-link `?s=estadisticas` abre la sección directo. (El viejo card-list + overlay Acumulado quedaron sin uso.) **Subsección de un partido**: cuando queda **un solo** partido tildado, tras `EQ_UNICO_MS` (1 s, con aviso y barrita de progreso — `_eqUnicoAgendar`; la espera evita que la pantalla salte mientras se va destildando) la tabla sumada se reemplaza por la ficha de ese partido (`renderEqUnico`): marcador + goles y las mismas tres pestañas que `estadisticas.html` — **Estadísticas** (`fcStatsHTML`), **Formaciones** (`fcCanchaHTML` apaisada; la pestaña no aparece si no hay XI) y **Tabla** (los dos equipos con la MISMA maquinaria `buildEqTable`: `_eqUnicoRows` = club vía `aggregateEq` + rival tal cual la ficha, `r.club` decide el kit de la fila, chips de equipo, sin columna PJ). Al tildar un segundo partido se desarma al instante. Estado: `_eqSt.unico` (id armado) y `_eqSt.sub` (pestaña, se recuerda). El Excel exporta lo que se ve (con un partido: los dos equipos + columna Equipo). Nombres: `_eqUnicoNom` (corto para los 30 clubes, nombre api-sports para extranjeros).
-- **`estadisticas.html`** — Vista de un partido específico. URL: `?p={partido-id}` + `?c={slug-equipo}` (opcional, para auto-seleccionar el tab del equipo visitante si se entra desde su perfil). Tiene dos tabs: **Estadísticas** (stats globales del partido) y **Jugadores** (switcher Local/Visitante con cards expandibles por jugador).
+- **`estadisticas.html`** — Vista de un partido específico. URL: `?p={partido-id}` + `?c={slug-equipo}` (opcional, para auto-seleccionar el tab del equipo visitante si se entra desde su perfil). Tabs **Estadísticas** (stats globales), **Formaciones** (cancha apaisada con los dos XI, `fcCanchaHTML`; solo si hay XI) y **Tabla** (jugadores de los dos equipos, estilo FotMob). El tab **Jugadores** (cards por jugador) sigue en el código pero oculto; `?tab=jugadores` cae en la Tabla.
 
 ### Bracket de eliminatorias del Mundial (histórico — ya no está en `index.html`)
 
@@ -456,7 +466,7 @@ Los archivos de foto (`fotos/{fid}.png`) usan el **fid del plantel** (`data/plan
 
 Pages showing community-generated data (formation votes + puntajes) for Mundial 2026:
 
-- **`estadisticas-tribunapp.html`** — Landing page. Lists all 48 teams. Queries Supabase `formaciones?select=club` and `puntajes?select=club` to detect which teams have data. Teams with data appear first (gold "VER STATS" badge, clickable → `tribunapp-equipo.html?c={slug}`). Teams without data are grayed and non-clickable.
+- **`estadisticas-tribunapp.html`** — Landing page. Hoy lista los **30 clubes** (de `data/equipos.json`; nació con las 48 selecciones del Mundial). Queries Supabase `formaciones?select=club` and `puntajes?select=club` to detect which teams have data. Teams with data appear first (gold "VER STATS" badge, clickable → `tribunapp-equipo.html?c={slug}`). Teams without data are grayed and non-clickable.
 - **`tribunapp-equipo.html`** — Per-team community stats (hoy la usan los **clubes**: es adonde lleva el tile "Est. TribunApp" de `club.html`). Selector de competición (Liga / Libertadores / Sudamericana) + selector de partido + Acumulado. **Agrupa los votos por PARTIDO REAL**, no por `match_date` crudo: arma `CLUB_MATCHES` con los partidos del club de `liga.json` + `copas.json` (+ `data/partidos/index.json` para rondas viejas de copa) y `matchOf(row)` ancla cada fila al partido más cercano (±2 días; el rival desempata). Hace falta porque el mismo partido tiene votos con `match_date` distintos: la formación guarda el día local AR del fixture por-club, los puntajes de copa guardaban el día UTC del archivo (kickoff 21:30 AR = día siguiente en UTC) y una reprogramación deja votos con la fecha vieja — caso real: Boca-San Pablo aparecía como "Cuartos - Sao Paulo" **tres veces**. Etiquetas: liga `F9 - Cen. Córdoba`; copa `Cuartos · Ida - Sao Paulo` / `Cuartos · Vuelta - …` (Ida/Vuelta = hay otro partido del mismo cruce en la misma ronda). Filas huérfanas caen al agrupado viejo `fecha||rival`. `r._fecha` = fecha canónica (la usa el cutoff del acumulado).
 
 ### `data/estado_mundial.json` (Mundial puntajes gate)
@@ -490,15 +500,15 @@ Fetched by `equipo.html` on load (with `?v=${Date.now()}` cache bust). Controls 
 - `rivalActual` in `js/clubes.js` must match the rival name used in `data/fixtures/{slug}.json` exactly — this string is used as the Supabase `rival` column value.
 - `var currentUser = null` in config.js is intentional — `var` hoisting makes it available to inline scripts before auth.js loads. Do not change to `let` or `const`.
 - `data/fixtures/{slug}.json` exists for all 30 clubs (liga) and 12 copa files. Regenerated by `fetch_fixtures.py` (skips `argentinosjuniors.json` que es manual).
-- **Nunca ordenar/elegir partidos por número de fecha — siempre por fecha REAL (`status.utcTime`).** El número de fecha (`fecha` en `liga.json`, `fecha_num` en `data/partidos`) NO es cronológico: una postergación deja p.ej. la F2 a jugarse *después* de la F3 (caso real: Estudiantes F2 vs Boca movido entre F3 y F4). Cualquier lógica de "próximo partido", "fecha actual" o listado cronológico debe sortear por `status.utcTime` (liga.json) o por el `fecha`-string de día (`data/partidos`/fixtures per-club), no por el número. Ya corregido en `fixture.html` (lista por equipo + fecha auto-abierta), `club.html` (`clubLigaMatches` próximo, selector Est.TribunApp, default de stats). Ojo: `fecha` significa cosas distintas según el archivo — en `liga.json` es el **número** de fecha (el día está en `status.utcTime`), mientras que en `data/partidos/*.json` y `data/fixtures/{slug}.json` es un **string de día** `YYYY-MM-DD` (el número está en `fecha_num`/`num`). Los datos se auto-sincronizan: `update-fixtures.yml` regenera `liga.json` desde api-sports cada 2 h, así que una postergación reflejada en la API entra sola (parche manual a `liga.json` solo si la API tarda).
+- **Nunca ordenar/elegir partidos por número de fecha — siempre por fecha REAL (`status.utcTime`).** El número de fecha (`fecha` en `liga.json`, `fecha_num` en `data/partidos`) NO es cronológico: una postergación deja p.ej. la F2 a jugarse *después* de la F3 (caso real: Estudiantes F2 vs Boca movido entre F3 y F4). Cualquier lógica de "próximo partido", "fecha actual" o listado cronológico debe sortear por `status.utcTime` (liga.json) o por el `fecha`-string de día (`data/partidos`/fixtures per-club), no por el número. Ya corregido en `fixture.html` (lista por equipo + fecha auto-abierta), `club.html` (`clubLigaMatches` próximo, selector Est.TribunApp, default de stats). Ojo: `fecha` significa cosas distintas según el archivo — en `liga.json` es el **número** de fecha (el día está en `status.utcTime`), mientras que en `data/partidos/*.json` y `data/fixtures/{slug}.json` es un **string de día** `YYYY-MM-DD` (el número está en `fecha_num`/`num`). Con Actions apagado, `liga.json` se refresca **a mano** (`python scripts/fetch_liga_fixtures.py`, parte B de `/actualizar-fecha`): una postergación entra en el próximo refresco (parche manual a `liga.json` solo si la API tarda).
 - El gate de puntajes de la liga se calcula client-side (`applyGating()` en `club.html`): 24 h desde el kickoff + que exista `data/partidos/{id}.json`. Ya no hay `data/estado.json`. Para probar fuera de la ventana: `?testpuntajes=1`.
 - `data/estadisticas/{slug}[_copa].json` se genera con `fetch_match_stats.py` + `scrape_fotmob_partidos.py` (en ese orden — el segundo recomputa el `xG` sumando individual). Para fechas viejas de AAAJ existe `excel_to_json.py` (deprecado pero mantenido).
 - `fetch_match_stats.py` y `scrape_fotmob_partidos.py` aceptan `--slug --copa --date` y resuelven IDs vía `clubes_map.py`. Para clubes nuevos hay que agregar el `fotmob` ID a ese archivo.
 - `match_date` es el matching canónico para Supabase ↔ JSON. Nunca matchear por `rival` string.
 - Los planteles pueden tener `num` duplicados (real). El frontend de stats desambigua via lookup por nombre con FotMob.
 - `scripts/migrar_votos_formaaajcion.py` es one-shot. Ya se ejecutó (107 formaciones + 114 puntajes para Banfield/IndRiv/AtlTuc; después se sumaron 14+19 de Huracán). **No volver a correr con `--execute` — duplica filas.**
-- Los scripts leen la API key **solo** de `scripts/apikey.py → get_api_key()` (env var `API_SPORTS_KEY` que usan los GitHub Actions, o archivo local gitignored `scripts/.apikey`). **Ya NO hay key hardcodeada** en ningún script (se sacó por seguridad); si falta, `get_api_key()` aborta con mensaje claro. El frontend nunca toca la key (usa el proxy `/api/apisports`).
-- `FLUJO.md` documenta el ciclo de vida completo de una fecha y el plan de automatización.
+- Los scripts leen la API key **solo** de `scripts/apikey.py → get_api_key()` (env var `API_SPORTS_KEY`, o archivo local gitignored `scripts/.apikey`; en la nube, *API credential* del entorno + `API_SPORTS_VIA_PROXY=1`, y el header se arma siempre con `api_headers()`). **Ya NO hay key hardcodeada** en ningún script (se sacó por seguridad); si falta, `get_api_key()` aborta con mensaje claro. El frontend nunca toca la key (usa el proxy `/api/apisports`).
+- El ciclo de vida de una fecha y los procesos de operación están en `PROYECTO.md` §7 (`FLUJO.md` es histórico).
 - **Nombres de jugadores en `data/partidos/*.json` vienen de FotMob tal cual** y a veces están mal escritos (caso real: "Thiago Silveor" por Silvero, Vélez #32). No hay override de nombres en los scrapers (sí para DTs, `data/dt_overrides.json`): un reproceso con `--force` reintroduce el error. Corregir a mano en las fichas afectadas.
 - **Bajas/altas de plantel** se hacen en `data/planteles/{slug}.json` **y** en `data/planteles_overrides.json` (`quitar`/`agregar`/`numeros`), si no el próximo refresco desde FotMob las deshace.
 - Cada publicación es un commit en `master` (mensaje `data: …` para datos, `<página>: …` para código). Volver atrás: `git revert <sha>` + push, o *Instant Rollback* en Vercel.
@@ -554,7 +564,10 @@ Para casos puntuales/manuales siguen sirviendo `fetch_mundial_match.py --fixture
 5. Token overlap ≥ 2
 6. **Surname contained**: todos los tokens no-iniciales del nombre abreviado (ej. "A. Amaimouni") están en el nombre del plantel, match único → usa ese fid. Maneja "A. Amaimouni" → "Ayoube Amaimouni-Echghouyab".
 
-### Las 3 opciones de automatización
+### Las 3 opciones de automatización (histórico — etapa del Mundial)
+
+> Registro de cómo se pensó automatizar el Mundial. Hoy **no aplica**: Actions está apagado y la operación es manual con skills (ver "Dónde vive el código" y `PROYECTO.md`).
+
 
 #### 🖥️ Opción "Compu" (local — ya funcionando)
 - **Mecanismo**: Claude Code scheduled tasks (skill `/schedule`) en la máquina local

@@ -1,5 +1,9 @@
 # Flujo de TribunApp
 
+> **Documento histórico.** Describe la etapa en que GitHub Actions corría los cierres y las
+> placas solo. Desde el 18/9/2026 Actions está apagado y la operación es manual con skills.
+> El flujo actual está en **`PROYECTO.md`** (§7 Procesos) y en `CLAUDE.md`.
+
 Documento del ciclo de vida de cada fecha y de cómo funciona la sección de estadísticas. Complementa `CLAUDE.md` (que cubre arquitectura).
 
 ## Ciclo de una fecha
