@@ -1086,6 +1086,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 <script src="js/clubes.js"></script>
 <script src="js/club-colors.js"></script>
 <script src="js/kits.js"></script>
+<script src="js/demo-video.js"></script><!-- SOLO rama video: puntajes del partido simulado -->
 <script>
 // ============================================================
 // CONFIG GLOBAL
@@ -1204,7 +1205,10 @@ let PUNTAJES_OPEN = false, FORMACION_OPEN = true;
 // se lee ni se escribe nada, para no volver a mezclar un partido con otro.
 // Puntajes → SCORES_MATCH_DATE (el partido que se está puntuando).
 // Formación → FECHA_ACTUAL (el próximo partido).
-function lsScoresKey()     { return SCORES_MATCH_DATE ? `${CLUB_SLUG}_${SCORES_MATCH_DATE}_puntajes` : null; }
+function lsScoresKey()     {
+  if (window.DEMO_VIDEO && window.DEMO_VIDEO.esPartido(scoresMatchId)) return null;   // solo rama video
+  return SCORES_MATCH_DATE ? `${CLUB_SLUG}_${SCORES_MATCH_DATE}_puntajes` : null;
+}
 function lsScoresDataKey() { const k = lsScoresKey(); return k && k + '_data'; }   // ojo: null + '_data' es "null_data", truthy
 function lsFormKey()       { return FECHA_ACTUAL ? `${CLUB_SLUG}_${FECHA_ACTUAL}_formacion` : null; }
 function lsFormDataKey()   { return FECHA_ACTUAL ? `${CLUB_SLUG}_${FECHA_ACTUAL}_formacion_data` : null; }
@@ -2676,6 +2680,14 @@ document.getElementById('scores-confirm-btn').addEventListener('click', async ()
   scoresSent = true;
   btn.textContent = 'Enviando...'; btn.disabled = true;
   try {
+    // DEMO VIDEO (solo rama video): simula el envío sin escribir en Supabase —
+    // cada toma del video sumaría un voto falso a los datos reales.
+    if (window.DEMO_VIDEO && window.DEMO_VIDEO.esPartido(scoresMatchId)) {
+      await new Promise(r => setTimeout(r, 700));
+      showToast(`¡Puntajes enviados! Vamos ${CLUB.nombreCorto} 🔥`);
+      enterPostScores();
+      return;
+    }
     const scoresPayload = { rival: SCORES_RIVAL, club: CLUB_SLUG, puntajes: userScores };
     if (SCORES_MATCH_DATE) scoresPayload.match_date = SCORES_MATCH_DATE;
     const res = await fetch(`${SUPABASE_URL}/rest/v1/puntajes`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' }, body: JSON.stringify(scoresPayload) });
@@ -4023,7 +4035,11 @@ async function clubLigaMatches() {
                      .sort((a, b) => (a.status.utcTime || '').localeCompare(b.status.utcTime || ''));
     const proximo = mine.find(p => !p.status.finished);
     const finished = mine.filter(p => p.status.finished);
-    _ligaMine = { mine, proximo, ultimo: finished[finished.length - 1] || null };
+    // DEMO VIDEO (solo rama video): los puntajes de los dos clubes del partido
+    // simulado apuntan a ese partido. Fuera de la demo DEMO_VIDEO no existe.
+    const demo = window.DEMO_VIDEO && window.DEMO_VIDEO.puntajesDe(CLUB_SLUG)
+      && mine.find(p => String(p.api_id) === window.DEMO_VIDEO.apiId);
+    _ligaMine = { mine, proximo, ultimo: demo || finished[finished.length - 1] || null };
   } catch (e) { _ligaMine = { mine: [], proximo: null, ultimo: null }; }
   return _ligaMine;
 }
@@ -4280,7 +4296,8 @@ function applyGating() {
   const within24h = SCORES_FT ? (Date.now() - SCORES_FT.getTime()) < 24 * 3600 * 1000 : false;
   const hasta = scoresMatchId && PUNTAJES_HASTA[scoresMatchId];
   const extendido = !!hasta && Date.now() < Date.parse(hasta);
-  PUNTAJES_OPEN = override || (hasData && (within24h || extendido));
+  const demoVideo = !!(window.DEMO_VIDEO && window.DEMO_VIDEO.esPartido(scoresMatchId));   // solo rama video
+  PUNTAJES_OPEN = override || (hasData && (within24h || extendido || demoVideo));
   FORMACION_OPEN = fOverride || !!(RIVAL && RIVAL !== 'Por definir');
 }
 
