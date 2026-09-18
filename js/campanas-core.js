@@ -89,7 +89,13 @@
         });
       }
     });
+    var showSubstitutes = roster.some(function (p) {
+      return p.substitute && (match.scorers || []).some(function (name, index) {
+        return normalize(name) === normalize(p.name) && (!(match.scorerTeams || [])[index] || match.scorerTeams[index] === p.team);
+      });
+    });
     return roster.filter(function (p) {
+      if (p.substitute && !showSubstitutes) return false;
       var key = normalize(p.id);
       if (seen.has(key)) return false;
       seen.add(key);
@@ -122,6 +128,7 @@
   function eligible(matches, club, mode) {
     return matches.filter(function (match) {
       return (
+        (!match.availability || match.availability[mode] === true) &&
         (!club ||
           club === "all" ||
           [match.home, match.away, match.homeSlug, match.awaySlug].includes(club)) &&

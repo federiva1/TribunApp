@@ -10,8 +10,10 @@ Se guarda la mejor marca por colección/partido/modo en este navegador, con cant
 de intentos y fechas. Una respuesta incorrecta también termina el desafío; repetirlo
 no multiplica la mejor marca. Abandonar o recargar una partida incompleta no la guarda.
 
-Las siguientes colecciones se decidirán después de revisar este juego. Las 60
-opciones de `campanas-objetivos.md` son objetivos editoriales, no datasets producidos.
+Se agregaron 24 campañas históricas (dos por cada uno de los 12 clubes pedidos),
+con selector de colección, carga diferida y progreso separado. Catálogo, cobertura,
+fuentes y límites: `campanas-historicas.md`. Las otras propuestas del documento
+`campanas-objetivos.md` siguen siendo objetivos editoriales, no datos publicados.
 
 ## Arquitectura
 
@@ -72,8 +74,10 @@ del dorsal mediante pista. Revisar de nuevo luego de cambios funcionales.
 
 ### Revisión de ayudas y archivo (18/09/2026)
 
-Las letras se muestran dentro del mismo recuadro del campo de respuesta y permanecen
-visibles al escribir. Cada jugador vale 3 puntos sin ayuda, 2 tras la primera, 1 tras
+Las letras reemplazan el placeholder dentro del propio input del apellido, sin una
+pista debajo. Al escribir se muestra la respuesta del usuario; al vaciar el campo
+vuelve la pista. Pedir otra ayuda no borra lo escrito. Cada jugador vale 3 puntos
+sin ayuda, 2 tras la primera, 1 tras
 la segunda y 0 desde la tercera; revelar dos letras o la mitad de un apellido corto
 también anula los puntos. Una revelación completa resuelve automáticamente sin sumar.
 Si falta el dorsal, la primera pista pasa directamente a la longitud del apellido.

@@ -2,7 +2,7 @@
 
 Fecha de investigación: 18 de septiembre de 2026.
 
-**Estado: propuesta provisional; las 60 campañas de esta lista NO están producidas ni habilitadas en el juego.** Primero se revisa el juego con el campeonato ya disponible; después se decide y produce la tanda de dos campañas por club. Este documento no agrega datos de partidos al producto.
+**Estado: propuesta editorial original, no catálogo del juego.** Posteriormente el usuario acotó la primera tanda a 12 clubes: se produjeron 24 campañas, con una selección parcialmente distinta. El catálogo implementado, fuentes y cobertura están en `campanas-historicas.md`. Los demás candidatos de esta lista siguen pendientes.
 
 Universo: los 30 clubes de `data/equipos.json`. Hay exactamente dos opciones por club, 60 en total. A es la primera recomendación editorial; B completa la pareja. Se priorizan competiciones terminadas de 2022–2025, con excepciones anteriores por su importancia para el club. La selección es una recomendación, no una lista de las dos mejores campañas de toda su historia.
 

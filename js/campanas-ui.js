@@ -28,7 +28,7 @@
         "Tenés los equipos y sus formaciones. Falta lo más importante: el marcador exacto.",
     },
   };
-  let data,
+  let data, catalog = [], loadingCollection = false,
     teams,
     scope = new URLSearchParams(location.search).get("club") || "all",
     round = null;
@@ -51,8 +51,42 @@
     };
   }
   const progress = window.CampanasProgress.open(storage, storageError);
-  const crest = (slug, name, className = "") =>
-    `<img class="${className}" src="escudos/${escape(slug)}.png" alt="${escape(name)}" width="40" height="46">`;
+  const crest = (slug, name, className = "") => {
+    const match = data?.matches.find(m => m.homeSlug === slug || m.awaySlug === slug);
+    const side = match?.homeSlug === slug ? "home" : "away";
+    const external = match?.[side + "Crest"];
+    const src = external && /^https:\/\/a\.espncdn\.com\//.test(external) ? external : `escudos/${slug}.png`;
+    return `<img class="${className}" src="${escape(src)}" alt="${escape(name)}" width="40" height="46">`;
+  };
+  function showLibrary() {
+    round = null;
+    const clubs = [...new Map(catalog.map(item => [item.clubSlug, item.club])).entries()];
+    app.innerHTML = `<div class="section-bar"><span class="eyebrow">CAMPAÑAS · EL FÚTBOL SE JUEGA DE MEMORIA</span></div><h1 class="display">Elegí qué historia jugar</h1><p class="muted">Un torneo completo o dos campañas inolvidables de tu club. Los mismos tres retos, con progreso independiente por campaña.</p><section class="coming"><div><h2>Apertura 2026</h2><p class="muted">Los 255 partidos de los 30 clubes.</p></div><button class="primary" data-collection="apertura-2026">Jugar el torneo →</button></section><section aria-label="Campañas históricas"><div class="club-picker"><div><h2>Campañas históricas</h2><p class="muted">24 campañas · 12 clubes</p></div><label>Club <select id="history-club"><option value="all">Todos los clubes</option>${clubs.map(([slug,name])=>`<option value="${escape(slug)}">${escape(name)}</option>`).join("")}</select></label></div><div class="archive-grid">${catalog.map(item=>`<article class="archive-card historical-card" data-club="${escape(item.clubSlug)}">${crest(item.clubSlug,item.club)}<h2>${escape(item.title)}</h2><p>${escape(item.achievement)}</p><p class="muted">${item.matchCount} partidos · Formación: ${item.coverage.formation} · Goleadores: ${item.coverage.scorers} · Resultado: ${item.coverage.result}</p><button class="primary" data-collection="${escape(item.id)}">Elegir retos →</button></article>`).join("")}</div><p class="local-note">Las fichas conservan su fuente. Los retos sin datos suficientes y los encuentros suspendidos no se habilitan; los 0–0 no participan en goleadores.</p></section>`;
+    focusMain();
+  }
+  async function loadCollection(id) {
+    if (loadingCollection) return;
+    const item = catalog.find(c=>c.id===id);
+    if (id !== "apertura-2026" && !item) return;
+    loadingCollection = true;
+    try {
+      const response = await fetch(item?.file || "data/campanas/apertura-2026.json");
+      if (!response.ok) throw new Error("No se pudo cargar la campaña");
+      const next = await response.json();
+      if (!next.matches?.length) throw new Error("Campaña sin partidos");
+      data = next;
+      const bySlug = new Map();
+      data.matches.forEach(match => ["home", "away"].forEach(side => bySlug.set(match[side+"Slug"],match[side])));
+      teams = [...bySlug].map(([slug,name])=>({slug,name})).sort((a,b)=>a.name.localeCompare(b.name,"es"));
+      scope = data.clubSlug || new URLSearchParams(location.search).get("club") || "all";
+      if (!teams.some(team=>team.slug===scope)) scope="all";
+      const url = new URL(location.href);url.searchParams.set("collection",data.id);history.replaceState(null,"",url);
+      showHome();focusMain();
+    } catch(error) {
+      showLibrary();
+      const notice = document.createElement("p");notice.className="notice bad";notice.setAttribute("role","alert");notice.textContent="No pudimos cargar esa campaña. Volvé a intentarlo; tu progreso está guardado.";app.prepend(notice);
+    } finally { loadingCollection=false; }
+  }
   const records = () =>
     progress
       .list()
@@ -79,9 +113,9 @@
   }
   function showHome() {
     round = null;
-    app.innerHTML = `<div class="section-bar"><span class="eyebrow">CAMPAÑAS · EL ARCHIVO DE LA TRIBUNA</span><button class="archive-button" data-action="archive">Mi archivo <span aria-hidden="true">↗</span></button></div>
-      <section class="hero"><div><span class="eyebrow">VOLVÉ A JUGAR EL CAMPEONATO</span><h1>¿Cuánto te acordás<br>del <span>Apertura 2026?</span></h1><p>Los nombres, los goles, esos resultados que no se olvidan. Poné a prueba tu memoria con tu equipo o recorré todo el torneo.</p><div class="hero-tags"><span class="tag">${data.matches.length} PARTIDOS</span><span class="tag">${teams.length} CLUBES</span><span class="tag">3 FORMAS DE JUGAR</span></div></div><div class="crest-wall" aria-label="Los 30 clubes del torneo">${teams.map((team) => crest(team.slug, team.name)).join("")}</div></section>
-      <section aria-label="Elegir desafío"><div class="club-picker"><div><h2>Elegí tu desafío</h2><p class="muted">Seguí a tu club o jugá con todos.</p></div><label><span class="eyebrow" style="display:block;margin-bottom:6px">EQUIPO</span><select id="club-select" aria-label="Equipo"> <option value="all">Todos los equipos</option>${teams.map((team) => `<option value="${escape(team.slug)}" ${scope === team.slug ? "selected" : ""}>${escape(team.name)}</option>`).join("")}</select></label></div>
+    app.innerHTML = `<div class="section-bar"><button class="back" data-action="library">← Elegir campaña</button><button class="archive-button" data-action="archive">Mi archivo <span aria-hidden="true">↗</span></button></div>
+      <section class="hero"><div><span class="eyebrow">VOLVÉ A JUGAR LA HISTORIA</span><h1>${escape(data.title)}</h1><p>${escape(data.description)}</p><div class="hero-tags"><span class="tag">${data.matches.length} PARTIDOS</span><span class="tag">3 FORMAS DE JUGAR</span></div></div><div class="crest-wall" aria-label="Clubes de la campaña">${teams.filter(team=>!data.clubSlug||team.slug===data.clubSlug).map((team) => crest(team.slug, team.name)).join("")}</div></section>
+      <section aria-label="Elegir desafío"><div class="club-picker"><div><h2>Elegí tu desafío</h2><p class="muted">${data.clubSlug ? escape(data.club) : "Seguí a tu club o jugá con todos."}</p></div>${data.clubSlug ? "" : `<label><span class="eyebrow" style="display:block;margin-bottom:6px">EQUIPO</span><select id="club-select" aria-label="Equipo"> <option value="all">Todos los equipos</option>${teams.map((team) => `<option value="${escape(team.slug)}" ${scope === team.slug ? "selected" : ""}>${escape(team.name)}</option>`).join("")}</select></label>`}</div>
       <div class="mode-grid">${Object.entries(modes)
         .map(([mode, info]) => {
           const total = C.eligible(data.matches, scope, mode).length,
@@ -91,7 +125,7 @@
         .join("")}</div></section>
       <p class="local-note"><span aria-hidden="true">◉</span><span>Jugá sin registrarte. Tu progreso queda en este navegador. Si cambiás de dispositivo o borrás sus datos, empezás de nuevo.</span></p>
       ${records().length ? `<div class="summary-strip"><span><b>${records().length}</b> desafíos completados</span><span><b>${bestTotal()}</b> puntos · suma de tus mejores marcas</span></div>` : ""}
-      <section class="coming"><div><h2>La historia recién empieza</h2><p class="muted">Más adelante: campañas históricas de cada club y partidos icónicos.</p></div><span class="tag">PRÓXIMAMENTE</span></section>`;
+      ${data.clubSlug ? `<details class="coming"><summary>Ver recorrido y disponibilidad</summary><div>${data.matches.map(match=>`<p>${escape(match.date)} · ${escape(match.home)} — ${escape(match.away)} · ${Object.entries(modes).filter(([mode])=>C.eligible([match],"all",mode).length).map(([,info])=>info.title).join(" / ") || "Pendiente de revisión"}</p>`).join("")}</div></details>` : ""}`;
   }
   function start(mode, matchId) {
     const options = C.eligible(data.matches, scope, mode);
@@ -144,7 +178,7 @@
     const number = hiddenNumber(player) && level === undefined && !solved ? "—" : (player.n ?? "—");
     const letterHint = level === undefined || (hiddenNumber(player) && level === 0)
       ? "" : mask(player.name, Math.max(0, level - (hiddenNumber(player) ? 1 : 0)));
-    return `<li class="player-row ${solved ? "solved" : ""}" data-player="${key}"><span class="shirt-number">${escape(number)}</span>${solved || round.mode !== "formation" ? `<span class="player-name">${escape(player.name)}</span>${solved ? '<span class="solved-mark">✓</span>' : ""}` : `<form data-player-form="${key}"><div class="entry-wrap ${letterHint ? "has-hint" : ""}"><label class="sr-only" for="guess-${key}">Apellido del jugador ${index + 1} de ${escape(side === "home" ? round.match.home : round.match.away)}</label>${letterHint ? `<span class="letter-hint" id="hint-${key}">${escape(letterHint)}</span>` : ""}<input id="guess-${key}" name="answer" placeholder="${letterHint ? "Escribí tu respuesta" : "Apellido del jugador"}" ${letterHint ? `aria-describedby="hint-${key}"` : ""} autocomplete="off" autocapitalize="words" spellcheck="false" required></div><button class="check-answer" aria-label="Comprobar jugador ${index + 1}" title="Comprobar">✓</button></form><button class="player-hint" data-hint="${key}" title="Pedir una pista para este jugador" aria-label="Pista para jugador ${index + 1}">?</button>`}</li>`;
+    return `<li class="player-row ${solved ? "solved" : ""}" data-player="${key}"><span class="shirt-number">${escape(number)}</span>${solved || round.mode !== "formation" ? `<span class="player-name">${escape(player.name)}</span>${solved ? '<span class="solved-mark">✓</span>' : ""}` : `<form data-player-form="${key}"><div class="entry-wrap"><label class="sr-only" for="guess-${key}">Apellido del jugador ${index + 1} de ${escape(side === "home" ? round.match.home : round.match.away)}</label><input id="guess-${key}" name="answer" class="${letterHint ? "hint-placeholder" : ""}" placeholder="${escape(letterHint || "Apellido del jugador")}" title="${escape(letterHint || "Apellido del jugador")}" aria-label="Apellido del jugador ${index + 1}${letterHint ? `, pista: ${escape(letterHint)}` : ""}" autocomplete="off" autocapitalize="words" spellcheck="false" required></div><button class="check-answer" aria-label="Comprobar jugador ${index + 1}" title="Comprobar">✓</button></form><button class="player-hint" data-hint="${key}" title="Pedir una pista para este jugador" aria-label="Pista para jugador ${index + 1}">?</button>`}</li>`;
   }
   function mask(name, count) {
     const letters = [...name],
@@ -173,6 +207,8 @@
       slug = match[side + "Slug"],
       players = match[side + "XI"];
     let body = players.map((player, index) => playerRow(player, side, index)).join("");
+    if (round.mode === "result" && match.availability?.formation === false)
+      body = '<li class="player-row muted">La formación completa no está disponible en esta ficha. Podés jugar a recordar el resultado.</li>';
     if (round.mode === "scorers") {
       const candidates = C.scorerCandidates(match).filter((player) => player.team === name);
       body = candidates
@@ -181,7 +217,8 @@
         .join("");
       const subs = candidates.filter((player) => player.substitute),
         others = candidates.filter((player) => player.rosterUnknown);
-      if (subs.length)
+      const substituteScored = C.scorerCandidates(match).some(player => player.substitute && C.actualScorers(match).includes(player.id));
+      if (subs.length && substituteScored)
         body += `<li class="sub-heading">SUPLENTES</li>${subs.map(scorerRow).join("")}`;
       if (others.length)
         body += `<li class="sub-heading">OTROS JUGADORES DE LA FICHA</li>${others.map(scorerRow).join("")}`;
@@ -208,14 +245,14 @@
         : round.mode === "scorers"
           ? "Tocá un jugador una vez por cada gol. Podés quitar goles con −. Acertar suma 20 puntos; con ayudas: 14, 8 o 0. Un error resta 5."
           : "Ingresá el marcador al final del partido (incluye alargue, no la tanda de penales). Acertar suma 20 puntos; un error resta 5.";
-    app.innerHTML = `<div class="section-bar"><button class="back" data-action="home">← Cambiar desafío</button><button class="archive-button" data-action="archive">Mi archivo ↗</button></div><div class="game-top"><div><span class="eyebrow">APERTURA 2026 · ${escape(scopeName())}</span><h1>${info.title}</h1></div><div class="points" aria-label="Puntos de esta partida">${round.points} pts</div></div>
+    app.innerHTML = `<div class="section-bar"><button class="back" data-action="home">← Cambiar desafío</button><button class="archive-button" data-action="archive">Mi archivo ↗</button></div><div class="game-top"><div><span class="eyebrow">${escape(data.title)} · ${escape(scopeName())}</span><h1>${info.title}</h1></div><div class="points" aria-label="Puntos de esta partida">${round.points} pts</div></div>
       <section class="match-board" aria-label="Partido"><p class="match-date">${escape(match.date)}</p><div class="scoreboard"><div class="score-team">${crest(match.homeSlug, "")}<span>${escape(match.home)}</span></div><strong class="score-value">${round.mode === "result" && !round.completed ? "? — ?" : escape(match.score)}</strong><div class="score-team away">${crest(match.awaySlug, "")}<span>${escape(match.away)}</span></div></div><p class="venue">${escape(match.stadium)}${round.mode !== "result" || round.completed ? ` · ${escape(match.zone)}` : ""}</p></section>
       <p class="rules-strip">${rules}</p>
       ${round.mode === "result" && !round.completed ? `<form id="result-form" class="result-form"><label>${escape(match.home)}<input name="home" type="number" inputmode="numeric" min="0" max="99" step="1" required aria-label="Goles de ${escape(match.home)}"></label><span aria-hidden="true">—</span><label>${escape(match.away)}<input name="away" type="number" inputmode="numeric" min="0" max="99" step="1" required aria-label="Goles de ${escape(match.away)}"></label><button class="primary">Confirmar resultado</button></form>` : ""}
       <p class="notice ${tone}" id="game-message" role="status" aria-live="polite">${escape(message || (round.mode === "formation" ? `${round.solved.size} / 22 apellidos encontrados` : round.mode === "scorers" ? `${round.selected.length} / ${match.scorers.length} goles elegidos` : "La formación te puede ayudar a recordar."))}</p>
       ${round.completed ? `<section class="completion"><h2>${round.mode === "formation" ? "Planilla completa" : round.correct ? "¡Lo tenías guardado!" : "Uno más para la memoria"}</h2><p>Terminaste con <strong>${round.points} puntos</strong>. ${round.saved?.bestScore > round.points ? `Tu mejor marca: ${round.saved.bestScore} puntos.` : "Tu marca quedó en el archivo, incluso si sumaste 0 puntos."}</p>${round.mode === "scorers" ? `<div class="goal-summary">Goleadores: ${escape(match.scorers.join(", "))}.</div>` : ""}${pendingButtons(match)}<button class="primary" data-action="next" style="margin-top:18px">Siguiente partido →</button></section>` : ""}
       <div class="sheets">${sheet("home")}${sheet("away")}</div>
-      <div class="game-actions">${round.mode === "scorers" && !round.completed ? `<button class="secondary" data-action="scorer-hint" ${C.scorerHintPlan(match, round.eliminated, round.scorerHints).length ? "" : "disabled"}>? Ayuda (${round.scorerHints}/3)</button><span class="muted">Acertar ahora: ${C.scoreScorers(C.actualScorers(match), match, round.scorerHints).score} puntos</span><button class="primary" data-action="confirm-scorers" ${round.selected.length !== match.scorers.length ? "disabled" : ""}>Confirmar goleadores</button>` : `<span class="muted">${round.mode === "formation" ? `${round.solved.size} / 22 apellidos` : "Apertura 2026"}</span>`}<button class="secondary" data-action="next">${round.completed ? "Siguiente partido →" : "Saltar partido →"}</button></div>`;
+      <div class="game-actions">${round.mode === "scorers" && !round.completed ? `<button class="secondary" data-action="scorer-hint" ${C.scorerHintPlan(match, round.eliminated, round.scorerHints).length ? "" : "disabled"}>? Ayuda (${round.scorerHints}/3)</button><span class="muted">Acertar ahora: ${C.scoreScorers(C.actualScorers(match), match, round.scorerHints).score} puntos</span><button class="primary" data-action="confirm-scorers" ${round.selected.length !== match.scorers.length ? "disabled" : ""}>Confirmar goleadores</button>` : `<span class="muted">${round.mode === "formation" ? `${round.solved.size} / 22 apellidos` : escape(data.title)}</span>`}<button class="secondary" data-action="next">${round.completed ? "Siguiente partido →" : "Saltar partido →"}</button></div>`;
     for (const [id, value] of Object.entries(drafts)) {
       const input = document.getElementById(id);
       if (input) input.value = value;
@@ -259,6 +296,7 @@
           : `Pista para este jugador. Este apellido ahora vale ${C.pointsForPlayer(level, player.name, hiddenNumber(player))} puntos.`,
         "",
       );
+    document.getElementById(`guess-${key}`)?.focus({ preventScroll: true });
   }
   function scorerHint() {
     if (round.completed || round.scorerHints >= 3) return;
@@ -290,6 +328,10 @@
     focusMain();
   }
   app.addEventListener("change", (event) => {
+    if (event.target.id === "history-club") {
+      app.querySelectorAll(".historical-card").forEach(card=>{card.hidden=event.target.value!=="all"&&card.dataset.club!==event.target.value;});
+      return;
+    }
     if (event.target.id !== "club-select") return;
     scope = event.target.value;
     const url = new URL(location.href);
@@ -302,9 +344,14 @@
   app.addEventListener("click", (event) => {
     const button = event.target.closest("button");
     if (!button || button.disabled) return;
+    if (button.dataset.collection) return loadCollection(button.dataset.collection);
     if (button.dataset.mode) return start(button.dataset.mode);
     if (button.dataset.replay) return start(button.dataset.replayMode, button.dataset.replay);
     const action = button.dataset.action;
+    if (action === "library") {
+      const url = new URL(location.href);url.searchParams.delete("collection");history.replaceState(null,"",url);
+      return showLibrary();
+    }
     if (action === "home") {
       showHome();
       focusMain();
@@ -398,21 +445,13 @@
     }
   });
   try {
-    const response = await fetch("data/campanas/apertura-2026.json");
-    if (!response.ok) throw new Error("No se pudo cargar el torneo");
-    data = await response.json();
-    if (!Array.isArray(data.matches) || !data.matches.length)
-      throw new Error("El torneo no contiene partidos");
-    const bySlug = new Map();
-    data.matches.forEach((match) => {
-      bySlug.set(match.homeSlug, match.home);
-      bySlug.set(match.awaySlug, match.away);
-    });
-    teams = [...bySlug]
-      .map(([slug, name]) => ({ slug, name }))
-      .sort((a, b) => a.name.localeCompare(b.name, "es"));
-    if (!teams.some((team) => team.slug === scope)) scope = "all";
-    showHome();
+    const response = await fetch("data/campanas/catalog.json");
+    if (!response.ok) throw new Error("No se pudo cargar el catálogo");
+    catalog = (await response.json()).collections;
+    if (!Array.isArray(catalog)) throw new Error("Catálogo inválido");
+    const requested = new URLSearchParams(location.search).get("collection");
+    if (requested && (requested === "apertura-2026" || catalog.some(item=>item.id===requested))) await loadCollection(requested);
+    else showLibrary();
   } catch (error) {
     app.innerHTML =
       '<div class="empty-state"><h1>No pudimos abrir las planillas</h1><p class="muted">Revisá tu conexión e intentá de nuevo. Tu progreso guardado sigue en este navegador.</p><button class="primary" id="retry-load">Volver a intentar</button></div>';

@@ -18,9 +18,10 @@
 
 > Desarrollo separado: **Campañas** se prepara en la rama `campanas` con el Apertura
 > 2026, tres modos de memoria y progreso local sin login. Aún pendiente de revisión
-> y merge. Arquitectura y validaciones: `docs/campanas-integracion.md`. La propuesta
-> de dos campañas históricas por club está en `docs/campanas-objetivos.md`; todavía
-> no se produjeron esos datasets.
+> y merge. Incluye además 24 campañas históricas de 12 clubes, seleccionables con
+> los mismos retos y progreso independiente. Arquitectura: `docs/campanas-integracion.md`.
+> Catálogo producido, fuentes y límites: `docs/campanas-historicas.md`. Las propuestas
+> restantes de `docs/campanas-objetivos.md` siguen pendientes.
 
 Una web para **hinchas de los 30 clubes de la Liga Profesional Argentina** (y de los clubes
 argentinos en Libertadores y Sudamericana). Producción: **www.tribunapp.com.ar**.

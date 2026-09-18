@@ -539,6 +539,12 @@ h3,
 .player-row input::placeholder {
   color: #777e96;
 }
+.player-row input.hint-placeholder::placeholder {
+  color: var(--celeste);
+  opacity: 1;
+}
+.historical-card[hidden] { display: none; }
+.historical-card img { object-fit: contain; }
 .check-answer,
 .player-hint {
   border: 1px solid #ffffff15;
