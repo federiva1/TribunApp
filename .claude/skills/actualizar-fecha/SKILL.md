@@ -26,6 +26,8 @@ cd "C:/Users/feder/OneDrive/Escritorio/tribunapp-deploy/tribunappdeploy"
 python scripts/cierre_rapido.py --check     # ¿hay candidatos? (100–210 min desde el kickoff, sin API)
 python scripts/cierre_rapido.py             # marca FT en liga.json + genera data/partidos/{id}.json + tabla xG
 ```
+- `cierre_rapido` imprime el **link para compartir** de cada partido cerrado
+  (`https://www.tribunapp.com.ar/puntuar/newells-velez`): pasárselo al usuario junto con el resultado.
 - Si FotMob todavía no tiene `playerStats`, el archivo sale con la base de api-sports (min/goles/asist).
   Se auto-repara volviendo a correr más tarde: `python scripts/fetch_liga_partidos.py --torneo clausura`
   y después `python scripts/build_tabla_xg.py`.

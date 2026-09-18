@@ -13,9 +13,14 @@ TribunApp is a static fan engagement SPA for all 30 clubs of the Argentine Liga 
 Hay **dos carpetas** y no son equivalentes:
 
 - **`C:\Users\feder\OneDrive\Escritorio\tribunapp-deploy\tribunappdeploy`** — la **carpeta de producción**. Es la fuente de verdad: acá se editan los archivos, se corren los scripts y se publica con `vercel --prod --yes`. Tiene un git **local** (sin remote) que sirve solo como snapshot para volver atrás (`git commit` después de cada publicación).
-- **`C:\Users\feder\OneDrive\Escritorio\TribunApp`** — el repo git original (donde vive este `CLAUDE.md` y `.claude/skills`). Está **~1 mes atrasado** respecto de producción. **Nunca** correr `vercel --prod` desde acá: pisaría la web con código viejo y subiría `scripts/.apikey`.
+- **`C:\Users\feder\OneDrive\Escritorio\TribunApp`** — el repo git original (donde vive este `CLAUDE.md` y `.claude/skills`). Su `master` local quedó **muy atrasado** (384 commits detrás de `origin/master` al 18/9, con cambios sin commitear): no usarlo como referencia del código; para eso está la rama de sync o la carpeta de producción. **Nunca** correr `vercel --prod` desde acá: pisaría la web con código viejo y subiría `scripts/.apikey`.
 
-**GitHub está fuera de juego**: la cuenta `federiva1` está suspendida desde ~2026-08-03 (push → 403, Pages 404, y los workflows de `.github/workflows/` no corren). Todo lo que abajo dice "lo hace el workflow X" hoy se hace **a mano** con las skills. No abrir una cuenta nueva (evasión de sanción). Vercel no dependía del login de GitHub y sigue funcionando (`sourceless`, CLI autenticado).
+**GitHub: cuenta recuperada el 2026-09-18, con Actions APAGADO a propósito.** La cuenta `federiva1` estuvo suspendida del ~2026-08-31 al 2026-09-18 (la última corrida de un workflow y el último commit del `master` remoto son del 31/8). Causa más probable: los cinco workflows con cron (5 y 10 min) sumaban **~600 corridas por día** de scraping + auto-commit de JSON, sin compilar ni deployar nada. Al volver:
+- **Actions está deshabilitado en el repo** (*Settings → Actions → Disable actions*; verificar con `gh api repos/federiva1/TribunApp/actions/permissions`). Eso congela también el deploy de GitHub Pages (es un workflow), que quedó en la versión del 31/8; producción sale de Vercel, así que no afecta.
+- Los cinco workflows quedaron con el **`schedule:` comentado** y solo `workflow_dispatch`. **No reactivar los crons como estaban**: si alguna vez vuelven, que sea con intervalos largos y decisión explícita del usuario.
+- Todo lo que abajo dice "lo hace el workflow X" se sigue haciendo **a mano** con las skills. Vercel no depende de GitHub (`sourceless`, CLI autenticado).
+- `gh` (GitHub CLI) está instalado en `C:\Program Files\GitHub CLI\gh.exe` y logueado como `federiva1` (scopes `repo`, `workflow`). **Todo lo que escriba en el remoto (push, PR, tocar Actions) se confirma con el usuario antes.**
+- El trabajo hecho durante la suspensión se volcó al repo en la rama `sync/produccion-2026-09-18`. Mientras esa rama no esté mergeada en `master`, la carpeta de producción sigue siendo la fuente de verdad.
 
 Skills del proyecto (en `.claude/skills/` del repo, se invocan con `/nombre`):
 - **`/actualizar-fecha`** — el circuito completo: `cierre_rapido.py` (cierra un partido: FT en `liga.json` + `data/partidos/{id}.json` + tabla xG + imprime el link `/puntuar/...`), refresco de fixtures, `vercel deploy --dry` → `vercel --prod --yes` → commit local → `curl` de verificación. Reglas: la API key va por env var (`API_SPORTS_KEY` leída de `Escritorio\TribunApp\scripts\.apikey`), nunca escrita en la carpeta de producción; si un diff achica `liga.json` o borra `data/partidos/`, parar.
@@ -289,7 +294,7 @@ El contexto (rival, `match_date`, plantel que jugó) lo arma `resolveMatchContex
 `resolveScoresContext()` leyendo `liga.json` + `data/partidos/index.json`. El Mundial sí conserva
 su propio gate por archivo (`data/estado_mundial.json`, ver más abajo).
 
-Workflows programados que quedan en `.github/workflows/` — **hoy NO corren** (cuenta de GitHub suspendida, ver arriba); cada uno tiene su equivalente manual en `/actualizar-fecha` y `/placas`. Se documentan para cuando vuelva GitHub:
+Workflows que quedan en `.github/workflows/` — **hoy NO corren**: Actions está deshabilitado en el repo y sus `schedule:` están comentados (ver "GitHub: cuenta recuperada" arriba). Cada uno tiene su equivalente manual en `/actualizar-fecha` y `/placas`. Los intervalos que figuran abajo son los **históricos**, los que tenían antes de la suspensión:
 - **`update-fixtures.yml`** — corre `fetch_fixtures.py` para mantener los JSON de fixtures al día.
 - **`liga-match-stats.yml`** — cada 3 h, genera `data/partidos/{id}.json` de los FT de la liga.
 - **`cierre-rapido.yml`** — cada 10 min con guard barato (`cierre_rapido.py --check`): si un

@@ -6,6 +6,12 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "3030"],
       "port": 3030
+    },
+    {
+      "name": "prod",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "3031", "--directory", "C:/Users/feder/OneDrive/Escritorio/tribunapp-deploy/tribunappdeploy"],
+      "port": 3031
     }
   ]
 }
