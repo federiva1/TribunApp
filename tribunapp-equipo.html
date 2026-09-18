@@ -318,7 +318,7 @@ function calcPuntajes(rows) {
   var fechasScope = {};
   var globalSum = 0, globalCnt = 0;
   rows.forEach(function(r) {
-    var fkey = r.match_date || '__sinfecha';   // filas legacy sin fecha = 1 pseudo-fecha
+    var fkey = r._fecha || r.match_date || '__sinfecha';   // fecha canónica del partido (ver matchOf); legacy sin fecha = 1 pseudo-fecha
     fechasScope[fkey] = true;
     Object.entries(r.puntajes || {}).forEach(function(entry) {
       var num = entry[0], val = entry[1];
@@ -650,35 +650,81 @@ async function init() {
     return;
   }
 
-  // Mapa partido -> número de fecha (round) desde liga.json. Se carga ANTES de
-  // agrupar porque la fecha del fixture es la que canoniza la clave (ver abajo).
-  var fixturesJson = [];
+  // ── Partidos REALES del club (liga.json + copas.json): son la clave de agrupado.
+  // Los votos del MISMO partido pueden traer match_date distintos: la formación
+  // guarda el día local AR del fixture por-club, los puntajes de copa guardaban el
+  // día UTC del archivo del partido (un kickoff 21:30 AR ya es el día siguiente en
+  // UTC) y una reprogramación deja votos viejos con la fecha anterior. Caso real:
+  // Boca-San Pablo (Sudamericana) con votos 8/9, 9/9 y 16/9 → "Cuartos - Sao Paulo"
+  // tres veces. Anclar cada fila al partido real (±2 días; el rival desempata si
+  // liga y copa caen a dos días) los agrupa bien y da la etiqueta correcta:
+  // F{n} en liga, ronda + Ida/Vuelta en copa.
+  var fixturesJson = [], copasJson = null;
   try { fixturesJson = await fetch('data/fixtures/liga.json?v=' + Date.now()).then(function(r){ return r.json(); }); } catch(e) {}
-
-  // Fecha canónica del partido del club más cercana a `date` (±2 días). El
-  // match_date guardado puede no coincidir entre filas del MISMO partido: sale
-  // del fixture al momento de votar, así que una reprogramación deja votos
-  // viejos con la fecha anterior (caso real: Lanús-Argentinos, puntajes 23/8 y
-  // formaciones 24/8 → el selector mostraba "Lanús" dos veces). Anclar a la
-  // fecha del fixture los agrupa en un solo partido.
-  function fechaCanonica(date) {
-    if (!date) return '';
-    var mejor = null, mejorD = 3;
-    (fixturesJson || []).forEach(function(p) {
-      if (!(p.home && p.away && (p.home.slug === slug || p.away.slug === slug))) return;
-      var pDate = (p.status && p.status.utcTime) ? p.status.utcTime.slice(0, 10) : (p.date || '');
-      var d = _dDiff(pDate, date);
-      if (d <= 2 && d < mejorD) { mejorD = d; mejor = pDate; }
+  try { copasJson = await fetch('data/fixtures/copas.json?v=' + Date.now()).then(function(r){ return r.ok ? r.json() : null; }); } catch(e) {}
+  function _diaAR(utc) { return new Date(new Date(utc).getTime() - 3 * 3600 * 1000).toISOString().slice(0, 10); }
+  function _rondaCorta(r) { r = r || ''; return r.replace(/\s+de\s+Final$/i, '').replace(/^Semifinales?$/i, 'Semis'); }
+  var CLUB_MATCHES = [];
+  (fixturesJson || []).forEach(function(p) {
+    if (!(p.home && p.away && (p.home.slug === slug || p.away.slug === slug))) return;
+    var utc = p.status && p.status.utcTime; if (!utc) return;
+    var opp = p.home.slug === slug ? p.away : p.home;
+    CLUB_MATCHES.push({ key: 'liga:' + p.api_id, date: _diaAR(utc), group: 'Liga', fechaNum: p.fecha, ronda: null, leg: '',
+                        rivalSlug: opp.slug || '', rivalNom: (opp.slug && NAMES_ES[opp.slug]) || opp.name || '' });
+  });
+  [['libertadores', 'Libertadores'], ['sudamericana', 'Sudamericana']].forEach(function(pair) {
+    var lista = (((copasJson || {})[pair[0]]) || {}).partidos || [];
+    lista.forEach(function(p) {
+      if (!(p.home && p.away && (p.home.slug === slug || p.away.slug === slug)) || !p.utcTime) return;
+      var opp = p.home.slug === slug ? p.away : p.home;
+      // Ida/Vuelta: hay otro partido del mismo cruce en la lista (misma ronda).
+      var par = [p.home.name, p.away.name].sort().join('|');
+      var otros = lista.filter(function(q){ return q !== p && q.utcTime && [q.home.name, q.away.name].sort().join('|') === par; });
+      var leg = !otros.length ? '' : otros.every(function(q){ return q.utcTime > p.utcTime; }) ? 'Ida' : 'Vuelta';
+      CLUB_MATCHES.push({ key: pair[0] + ':' + p.api_id, date: _diaAR(p.utcTime), group: pair[1], fechaNum: null,
+                          ronda: _rondaCorta(p.ronda), leg: leg, rivalSlug: opp.slug || '', rivalNom: (opp.slug && NAMES_ES[opp.slug]) || opp.name || '' });
     });
-    return mejor || date;
+  });
+  // Rondas viejas de copa ya no están en copas.json (solo trae la ronda en curso):
+  // se completan desde data/partidos/index.json, con Ida/Vuelta si hay dos
+  // partidos contra el mismo rival en la misma competición.
+  (PART_INDEX || []).forEach(function(e) {
+    if (!e.fecha) return;
+    var yaEsta = CLUB_MATCHES.some(function(m){ return _dDiff(m.date, e.fecha) <= 1 && m.group === compGroup(e.competicion); });
+    if (yaEsta) return;
+    var rivalNom = (e.local === slug) ? e.visitante_nombre : e.local_nombre;
+    var rivalSl = (e.local === slug) ? e.visitante : e.local;
+    var hermanos = (PART_INDEX || []).filter(function(o){ return o !== e && o.competicion === e.competicion && (o.local === rivalSl || o.visitante === rivalSl); });
+    var leg = !hermanos.length ? '' : hermanos.every(function(o){ return (o.fecha || '') > e.fecha; }) ? 'Ida' : 'Vuelta';
+    CLUB_MATCHES.push({ key: 'idx:' + e.id, date: e.fecha, group: compGroup(e.competicion), fechaNum: e.fecha_num || null,
+                        ronda: e.ronda || null, leg: leg, rivalSlug: rivalSl || '', rivalNom: (rivalSl && NAMES_ES[rivalSl]) || rivalNom || '' });
+  });
+  // Partido real de una fila: el más cercano en fecha (±2 días); con más de un
+  // candidato (liga y copa a dos días) gana el que coincide en rival.
+  function matchOf(r) {
+    var d = r.match_date || ''; if (!d) return null;
+    var cands = CLUB_MATCHES.filter(function(m){ return _dDiff(m.date, d) <= 2; });
+    if (!cands.length) return null;
+    if (cands.length > 1 && r.rival) {
+      var rn = _norm(r.rival), rs = rivalSlug(r.rival);
+      var porRival = cands.filter(function(m){
+        var mn = _norm(m.rivalNom);
+        return (rs && m.rivalSlug && rs === m.rivalSlug) || (mn && rn && (mn === rn || mn.indexOf(rn) === 0 || rn.indexOf(mn) === 0));
+      });
+      if (porRival.length) cands = porRival;
+    }
+    cands.sort(function(a, b){ return _dDiff(a.date, d) - _dDiff(b.date, d); });
+    return cands[0];
   }
 
-  // Agrupar por partido (fecha canónica + rival)
+  // Agrupar por partido real; una fila huérfana (partido que no figura en ningún
+  // fixture) cae al agrupado viejo por fecha + rival.
   var matchesMap = {};
-  function keyOf(r) { return fechaCanonica(r.match_date || '') + '||' + (r.rival || ''); }
   function ensure(r) {
-    var k = keyOf(r);
-    if (!matchesMap[k]) matchesMap[k] = { key: k, date: fechaCanonica(r.match_date || ''), rival: r.rival || '', forms: [], punts: [] };
+    var m = matchOf(r);
+    var k = m ? m.key : ((r.match_date || '') + '||' + (r.rival || ''));
+    r._fecha = m ? m.date : (r.match_date || '');     // fecha canónica (para contar fechas en el acumulado)
+    if (!matchesMap[k]) matchesMap[k] = { key: k, date: m ? m.date : (r.match_date || ''), rival: r.rival || '', match: m || null, forms: [], punts: [] };
     return matchesMap[k];
   }
   allForms.forEach(function(r) { ensure(r).forms.push(r); });
@@ -690,9 +736,7 @@ async function init() {
     mainEl.innerHTML = '<div class="msg-center">Aún no hay votos para este equipo.</div>';
     return;
   }
-  // El club juega un partido por fecha → date + su slug identifican el partido.
-  // Tolerante a ±1 día: el match_date de Supabase es la fecha local del voto y el
-  // utcTime de liga.json es UTC (partidos nocturnos caen al día siguiente en UTC).
+  // Número de fecha de una fila huérfana de liga (±1 día contra liga.json).
   function roundFor(date, riv) {
     var f = (fixturesJson || []).find(function(p) {
       if (!(p.home && p.away && (p.home.slug === slug || p.away.slug === slug))) return false;
@@ -702,20 +746,23 @@ async function init() {
     return f ? f.fecha : null;
   }
 
-  // Competición de cada partido (Liga / Libertadores / Sudamericana) desde data/partidos.
-  matches.forEach(function(m) { var cb = compByDate(m.date); m.compGroup = cb.group; m.ronda = cb.ronda; m.rivalNom = cb.rivalNom; });
+  // Competición / ronda / rival / Ida-Vuelta: del partido real; huérfanas → data/partidos por fecha.
+  matches.forEach(function(m) {
+    if (m.match) { m.compGroup = m.match.group; m.ronda = m.match.ronda; m.rivalNom = m.match.rivalNom; m.leg = m.match.leg; m.fechaNum = m.match.fechaNum; }
+    else { var cb = compByDate(m.date); m.compGroup = cb.group; m.ronda = cb.ronda; m.rivalNom = cb.rivalNom; m.leg = ''; m.fechaNum = null; }
+  });
   var groups = COMP_ORDER.filter(function(g){ return matches.some(function(m){ return m.compGroup === g; }); });
   var compSel = (groups.indexOf('Liga') >= 0) ? 'Liga' : (groups[0] || 'Liga');
 
-  // Etiqueta de cada partido: copa usa la ronda ("Octavos"); liga usa "F{n}".
+  // Etiqueta de cada partido: copa "Cuartos · Ida - Sao Paulo"; liga "F9 - Cen. Córdoba".
   function matchLabel(m) {
+    var rn = m.rivalNom || NAMES_ES[m.rival] || m.rival || '—';
     if (m.compGroup !== 'Liga') {
-      var rn = m.rivalNom || NAMES_ES[m.rival] || m.rival || '—';
-      return (m.ronda ? m.ronda + ' - ' : '') + rn;
+      var pref = [m.ronda, m.leg].filter(Boolean).join(' · ');
+      return (pref ? pref + ' - ' : '') + rn;
     }
-    var rivalName = NAMES_ES[m.rival] || m.rival || '—';
-    var rd = roundFor(m.date, m.rival);
-    return (rd ? 'F' + rd + ' - ' : '') + rivalName;
+    var rd = (m.fechaNum != null) ? m.fechaNum : roundFor(m.date, m.rival);
+    return (rd ? 'F' + rd + ' - ' : '') + rn;
   }
 
   mainEl.innerHTML = '';

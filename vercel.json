@@ -5,6 +5,14 @@
       "destination": "/api/apisports"
     },
     {
+      "source": "/puntuar/:p",
+      "destination": "/puntuar.html?p=:p&modo=puntuar"
+    },
+    {
+      "source": "/armar/:p",
+      "destination": "/puntuar.html?p=:p&modo=armar"
+    },
+    {
       "source": "/:alias(river|River)",
       "destination": "/club.html?c=riverplate"
     },

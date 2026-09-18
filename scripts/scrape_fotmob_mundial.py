@@ -289,6 +289,32 @@ def fotmob_home_id(nd: dict):
     return (g.get('homeTeam') or {}).get('id')
 
 
+def fotmob_away_id(nd: dict):
+    """FotMob id del visitante. Junto con fotmob_home_id permite orientar los
+    arrays reconociendo UNO solo de los dos equipos (en copa el rival extranjero
+    no está en clubes_map)."""
+    g = ((nd.get('props') or {}).get('pageProps') or {}).get('general') or {}
+    return (g.get('awayTeam') or {}).get('id')
+
+
+def fotmob_match_date(nd: dict) -> str:
+    """Día UTC del partido según FotMob ('YYYY-MM-DD'), para confirmar que la
+    página resuelta es la del partido que estamos procesando."""
+    g = ((nd.get('props') or {}).get('pageProps') or {}).get('general') or {}
+    return str(g.get('matchTimeUTCDate') or '')[:10]
+
+
+def venue_from_nd(nd: dict) -> str:
+    """'Estadio, Ciudad' desde FotMob. api-sports a veces no trae el nombre del
+    estadio y hasta erra la ciudad (caso real: Fluminense-Platense en el Maracaná
+    figuraba como 'Buenos Aires')."""
+    c = ((nd.get('props') or {}).get('pageProps') or {}).get('content') or {}
+    st = ((c.get('matchFacts') or {}).get('infoBox') or {}).get('Stadium') or {}
+    nombre = (st.get('name') or '').strip()
+    ciudad = (st.get('city') or '').split(',')[0].strip()
+    return ', '.join(x for x in (nombre, ciudad) if x)
+
+
 def team_stats_from_nd(nd: dict, home_es_local: bool = True) -> list | None:
     """top_stats (schema data/partidos) desde las stats de equipo de FotMob.
     home_es_local: si el home de FotMob coincide con nuestro `local` (chequear

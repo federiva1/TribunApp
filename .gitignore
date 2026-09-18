@@ -1,17 +1,10 @@
-# Python
+# repo LOCAL de respaldo (sin remoto). No es el repo de GitHub.
+tribunappdeploy.zip
+.vercel/
+.env.local
 __pycache__/
 *.pyc
-
-# Secreto local: API key de api-sports (no subir al repo)
 scripts/.apikey
-
-# FotMob raw scrape outputs (regenerables con scrape_fotmob_partidos.py)
-scripts/_fotmob_raw/
-
-# Worktrees temporales de Claude
-.claude/worktrees/
-
-# Editor
-.vscode/
-.idea/
-.DS_Store
+# placas a demanda (CLAUDE.md: no se commitean ni se publican)
+data/social/preview/
+export/

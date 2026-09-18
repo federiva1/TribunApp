@@ -267,6 +267,19 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .player-chip:active { background: rgba(255,255,255,0.15); }
 .player-chip.used { opacity: 0.25; cursor: default; pointer-events: none; }
 .player-chip.injured { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+/* Último chip del banco: crear un jugador que no está en el plantel (solo para
+   descargar/compartir; con uno en la cancha no se puede enviar a la encuesta). */
+.player-chip.create { border-style: dashed; border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.03); }
+.player-chip.create .create-plus { width: 36px; height: 36px; border-radius: 50%; border: 1.5px dashed rgba(255,255,255,0.45); display: flex; align-items: center; justify-content: center; font-size: 22px; line-height: 1; color: rgba(255,255,255,0.7); }
+#crear-modal { display: none; position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; padding: 20px; }
+#crear-modal .box { background: var(--dark2); border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; padding: 18px 16px; width: 100%; max-width: 320px; }
+#crear-modal h3 { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 2px; color: #fff; margin: 0 0 4px; }
+#crear-modal .hint { font-size: 11px; color: #888; margin-bottom: 14px; line-height: 1.4; }
+#crear-modal label { display: block; font-size: 10px; color: #777; letter-spacing: 1px; text-transform: uppercase; margin: 8px 0 4px; }
+#crear-modal input { width: 100%; box-sizing: border-box; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 9px 10px; color: #fff; font-size: 14px; }
+#crear-modal .btns { display: flex; gap: 8px; margin-top: 16px; }
+#crear-modal .btns button { flex: 1; font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 1px; border-radius: 8px; padding: 10px; cursor: pointer; }
+#custom-hint { display: none; font-size: 11px; color: #f0c05a; text-align: center; margin-top: 8px; line-height: 1.4; }
 .chip-num { font-size: 11px; color: var(--club-color); font-weight: 500; line-height: 1; }
 .chip-name { font-size: 8px; color: #ccc; text-align: center; line-height: 1.2; word-break: break-word; }
 .injury-badge {
@@ -290,7 +303,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .player-bubble img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: none; }
 .player-bubble .fallback-num { font-family: 'Bebas Neue', sans-serif; font-size: var(--pfs, 16px); color: #fff; }
 .player-numtag {
-  font-size: var(--ntfs, 10px); color: #fff; font-weight: 500;
+  font-size: var(--ntfs, 10px); color: var(--tag-fg, #fff); font-weight: 500;
   background: var(--club-color); border: 1.5px solid #fff;
   border-radius: 8px; padding: 1px 5px; margin-top: 2px;
   line-height: 1.3; white-space: nowrap;
@@ -437,17 +450,6 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   pointer-events: none; z-index: 9999; white-space: nowrap;
 }
 #toast.show { opacity: 1; }
-
-/* ===== FEED ===== */
-#feed-screen {
-  display: none; position: absolute; inset: 0; background: var(--dark2);
-  flex-direction: column; z-index: 300; overflow-y: auto;
-}
-.feed-top {
-  padding: 12px 16px 10px; display: flex; align-items: center; gap: 10px;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-  position: sticky; top: 0; background: var(--dark2); z-index: 10; backdrop-filter: blur(10px);
-}
 
 /* ===== FECHAS ===== */
 .fecha-card {
@@ -877,26 +879,14 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
     <button onclick="closeSection('formation')" style="margin-top:6px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;background:var(--club-color);color:#fff;border:none;border-radius:8px;padding:10px 24px;cursor:pointer;">← Volver</button>
   </div>
 
-  <!-- FEED de equipos -->
-  <div id="feed-screen">
-    <div class="feed-top">
-      <button id="back-feed-btn" style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1px;background:transparent;color:#aaa;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:6px 12px;cursor:pointer;">← Volver</button>
-      <span style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:#fff;letter-spacing:2px;flex:1;">👥 EQUIPOS DE LA GENTE</span>
-      <span id="feed-count" style="font-size:11px;color:rgba(255,255,255,0.3);"></span>
-    </div>
-    <div id="feed-my-team-section"></div>
-    <div id="feed-others-label" style="display:none;font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.25);text-transform:uppercase;padding:14px 14px 4px;">Otros hinchas</div>
-    <div id="feed-list"></div>
-    <div style="height:24px;"></div>
-  </div>
-
   <!-- RESULTADOS FORMACIÓN -->
   <div id="results-screen">
     <h2>⚽ Resultados</h2>
     <div class="subtitle">¿A quién elegiría la gente?</div>
     <div id="total-votes" style="font-size:11px;color:#555;text-align:center;margin-bottom:10px;"></div>
     <div id="results-list"><div style="text-align:center;color:#666;padding:20px;font-size:13px;">Cargando...</div></div>
-    <button id="ver-feed-btn" style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;background:var(--club-color);color:#fff;border:2px solid #fff;border-radius:8px;padding:10px;cursor:pointer;width:100%;margin-top:8px;">👥 Ver equipos de la gente</button>
+    <!-- Equipos de la gente, inline bajo las barras (mismas cards que Est. TribunApp) -->
+    <div id="results-feed"></div>
     <button id="back-results-btn" style="font-family:'Bebas Neue',sans-serif;font-size:15px;color:#aaa;background:none;border:1px solid #333;border-radius:8px;padding:8px 20px;cursor:pointer;width:100%;margin-top:8px;">← Volver</button>
   </div>
 
@@ -949,6 +939,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
       <button id="confirm-btn" style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;background:var(--club-color);color:#fff;border:none;border-radius:8px;padding:9px 14px;cursor:not-allowed;opacity:0.3;transition:opacity 0.3s;" disabled>Enviar a encuesta</button>
     </div>
   </div>
+  <div id="custom-hint">Tenés un jugador creado: podés descargar y compartir, pero no enviar a la encuesta.</div>
   <!-- Los resultados de la gente viven en la sección Est. TribunApp -->
   <div style="margin-top:6px;display:none;">
     <button id="ver-resultados-btn" style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1px;background:transparent;color:rgba(255,255,255,0.4);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px;cursor:pointer;width:100%;">Ver resultados →</button>
@@ -1074,6 +1065,21 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 </div>
 
 <div id="toast"></div>
+<!-- Crear jugador (formación): nombre + número, no va a la base -->
+<div id="crear-modal">
+  <div class="box">
+    <h3>➕ Crear jugador</h3>
+    <div class="hint">Para armar un equipo con alguien que no está en el plantel. Sirve para descargar y compartir; no entra a la encuesta.</div>
+    <label for="crear-nombre">Nombre</label>
+    <input id="crear-nombre" type="text" maxlength="30" placeholder="Ej: Lionel Messi" autocomplete="off">
+    <label for="crear-num">Número (opcional)</label>
+    <input id="crear-num" type="text" inputmode="numeric" maxlength="2" placeholder="10" autocomplete="off">
+    <div class="btns">
+      <button id="crear-cancelar" style="background:transparent;color:#aaa;border:1px solid rgba(255,255,255,0.2);">Cancelar</button>
+      <button id="crear-ok" style="background:var(--club-color);color:#fff;border:none;">Agregar</button>
+    </div>
+  </div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="js/config.js"></script>
@@ -1090,23 +1096,8 @@ const params = new URLSearchParams(window.location.search);
 // Sanitizar params de usuario: el slug se usa en URLs de Supabase y paths de fetch.
 // URLs amigables (/river, /boca/sudamericana): el rewrite de Vercel sirve este
 // archivo pero el ?c= del destino NO llega al navegador (location.search queda
-// vacío), así que el slug también se resuelve desde el path. El mapa es el
-// espejo de los rewrites de vercel.json.
-const URL_ALIAS = {
-  river: 'riverplate', boca: 'bocajuniors', racing: 'racingclub',
-  independiente: 'independiente', sanlorenzo: 'sanlorenzo', huracan: 'huracan',
-  velez: 'velezsarsfield', argentinos: 'argentinosjuniors',
-  platense: 'clubatleticoplatense', tigre: 'tigre', lanus: 'lanus',
-  banfield: 'banfield', union: 'union', sarmiento: 'sarmiento',
-  belgrano: 'belgrano', instituto: 'instituto', talleres: 'talleres',
-  newells: 'newellsoldboys', central: 'rosariocentral',
-  centralcordoba: 'centralcordobadesantiago', estudiantes: 'estudiantes',
-  gimnasia: 'gimnasialp', gimnasiamendoza: 'gimnasiamendoza',
-  riestra: 'deportivoriestra', barracas: 'barracascentral',
-  aldosivi: 'aldosivi', atleticotucuman: 'atleticotucuman',
-  defensa: 'defensayjusticia', indrivadavia: 'independienterivadavia',
-  erc: 'estudiantesderiocuarto',
-};
+// vacío), así que el slug también se resuelve desde el path. El mapa URL_ALIAS
+// vive en js/clubes.js (espejo de los rewrites de vercel.json).
 const _pathSegs = location.pathname.split('/').filter(Boolean);
 const _pathSlug = URL_ALIAS[(_pathSegs[0] || '').toLowerCase()] || '';
 const _pathCopa = (_pathSegs[1] || '').toLowerCase();
@@ -1144,6 +1135,20 @@ if (!CLUB) {
 
 // ---- Aplicar colores del club ----
 document.documentElement.style.setProperty('--club-color', CLUB.color);
+// Color del texto de la etiqueta de la cancha. Sobre el amarillo de Central y
+// Defensa (#f5c518) el blanco da 1.63 de contraste: no se lee. Se calcula la
+// luminancia del color del club y se pasa a negro solo cuando el blanco no llega
+// a 3, asi los rojos y azules siguen en blanco como hasta ahora.
+(function () {
+  const h = String(CLUB.color || '').trim();
+  const m = /^#([0-9a-f]{6})$/i.exec(h);
+  if (!m) return;
+  const c = i => { const v = parseInt(m[1].substr(i, 2), 16) / 255;
+                   return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+  const L = 0.2126 * c(0) + 0.7152 * c(2) + 0.0722 * c(4);
+  const contraste = otro => (Math.max(L, otro) + 0.05) / (Math.min(L, otro) + 0.05);
+  document.documentElement.style.setProperty('--tag-fg', contraste(1) < 3 ? '#111' : '#fff');
+})();
 document.documentElement.style.setProperty('--club-color2', CLUB.colorSecundario);
 document.title = `TribunApp — ${CLUB.nombre}`;
 const COMPETENCIA_LABEL = COPA === 'libertadores' ? 'Copa Libertadores 2026' : COPA === 'sudamericana' ? 'Copa Sudamericana 2026' : 'Liga Profesional Argentina 2026';
@@ -1179,6 +1184,8 @@ let RIVAL_SLUG = '', FECHA_NUM = null;
 let SCORES_RIVAL_SLUG = '', SCORES_MARCADOR = '', SCORES_FECHA_NUM = null;
 // Copa: el rival es extranjero y no tiene slug — la placa usa esta ruta local.
 let RIVAL_ESCUDO = '', SCORES_RIVAL_ESCUDO = '';
+// Copa: instancia de la serie ("Cuartos de Final · Ida"), lo que en liga es "Fecha N".
+let RIVAL_INSTANCIA = '', SCORES_INSTANCIA = '';
 // Formación real del partido (ej. '5-3-2'), de data/partidos/{id}.json.
 let SCORES_FORMACION = '';
 
@@ -1376,9 +1383,16 @@ const SHARE_W = 800, SHARE_H = 450, SHARE_GOLD = '#f2c200';
 // `let` a propósito, para poder barrer valores al comparar renders.
 let SHARE_CHIP = 46;
 
+// Las imágenes de la placa van con URL ABSOLUTA: html2canvas clona el documento
+// en un iframe y en WebKit (Safari/iPhone) ese clon no hereda el <base href="/">,
+// así que en las URLs cortas de copa (/boca/sudamericana, dos niveles) un src
+// relativo resolvía a /boca/escudos/... → 404 y la placa salía sin escudo ni logo.
+// document.baseURI respeta el <base> cuando está y la URL real cuando no.
+function _shAbs(rel) { try { return new URL(rel, document.baseURI).href; } catch (e) { return rel; } }
+
 function _shEscudoSrc(src, size) {
   const i = document.createElement('img');
-  i.src = src;
+  i.src = _shAbs(src);
   i.style.cssText = `width:${size}px;height:${size}px;object-fit:contain;`;
   i.onerror = () => { i.style.opacity = '0.15'; };
   return i;
@@ -1492,15 +1506,33 @@ function _shChip(p, size) {
   return cell;
 }
 
+// Nombres de pila frecuentes: resuelven la ambigüedad de los nombres de tres
+// palabras. Si la del medio es un nombre de pila, el apellido es solo el último
+// ("Juan Manuel Villalba" → Villalba); si no lo es, se asume apellido compuesto
+// ("Jerónimo Gómez Mattar" → Gómez Mattar). Cortar un compuesto por la mitad
+// cambia a quién nombra, así que conviene errar hacia conservarlo entero.
+const _PILA = new Set(('agustin alan alejandro alexis andres angel antonio ariel augusto bautista '
+  + 'benjamin braian brian bruno carlos cesar cristian daniel dario david diego eduardo emanuel '
+  + 'emiliano emilio enzo ezequiel fabian facundo federico felipe fernando francisco franco gabriel '
+  + 'geronimo gonzalo gaston guillermo gustavo hernan horacio hugo ignacio ivan javier jeremias '
+  + 'joaquin jorge jose juan julian julio kevin lautaro leandro leonardo lucas luciano luis manuel '
+  + 'marcelo marcos mariano mario martin mateo matias mauricio mauro maximiliano miguel nahuel '
+  + 'nazareno nicolas octavio omar oscar pablo patricio pedro rafael ramiro raul ricardo roberto '
+  + 'rodrigo rodolfo ruben salvador santiago sebastian sergio silvio simon thiago tobias tomas '
+  + 'valentin victor walter maria jesus cruz').split(' '));
+const _PART = new Set(['di', 'de', 'del', 'da', 'dal', 'la', 'le', 'los', 'san', 'santa',
+                       'van', 'von', 'der', 'den', 'ter', 'mac', 'mc', 'do', 'dos']);
+const _sinTilde = x => String(x || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
 function _shApellido(name) {
-  const t = String(name || '').trim().split(/\s+/);
+  const t = String(name || '').trim().split(/\s+/).filter(Boolean);
   if (t.length <= 1) return t[0] || '';
-  // El apellido arrastra sus partículas ("Di Lollo", "De la Cruz", "Van Dijk")
-  // en vez de quedar solo el último token ("Lollo").
-  const PART = new Set(['di', 'de', 'del', 'da', 'dal', 'la', 'le', 'san', 'van', 'von']);
+  if (t.length === 2) return t[1];
+  // Las partículas se arrastran hacia atrás ("Thiago De Martini" → De Martini).
   let i = t.length - 1;
-  while (i > 1 && PART.has(t[i - 1].toLowerCase())) i--;
-  return t.slice(i).join(' ');
+  while (i > 1 && _PART.has(_sinTilde(t[i - 1]))) i--;
+  if (i < t.length - 1) return t.slice(i).join(' ');
+  return _PILA.has(_sinTilde(t[t.length - 2])) ? t[t.length - 1] : t.slice(-2).join(' ');
 }
 
 // Coordenadas de la cancha en apaisado. La cancha de "armá tu formación" es
@@ -1676,7 +1708,7 @@ function _shCard(o) {
   // de o.pie solo se dibuja si hay algo que decir (ej. "N hinchas votaron").
   if (o.pie) bot.innerHTML = `<div style="font-size:14px;color:#8b93a7;margin-bottom:12px;">${escapeHtml(o.pie)}</div>`;
   const logo = document.createElement('img');
-  logo.src = 'logo-share.png';
+  logo.src = _shAbs('logo-share.png');
   logo.style.cssText = 'width:100%;display:block;';
   bot.appendChild(logo);
   panel.appendChild(bot); c.appendChild(panel);
@@ -1697,6 +1729,138 @@ function _shCard(o) {
   der.appendChild(pitch);
   if (o.sup || o.dt) der.appendChild(_shBanco(o.sup || [], o.dt));
   c.appendChild(der);
+  return c;
+}
+
+// ============================================================
+// PLACA VERTICAL (formación): la cancha tal cual se ve en la web, con una
+// barra arriba (escudo del club a la izquierda, logo TribunApp a la derecha).
+// Reusa el dibujo de #pitch (rayas y líneas) y el look de .player-on-pitch;
+// el kit va en <canvas> (_shKitCanvas) porque html2canvas no pinta los
+// gradientes repetidos de los bastones.
+// ============================================================
+const SHV_W = 600, SHV_BAR = 64, SHV_BANCO = 96;
+// Color del cuadradito del puntaje: de rojo a azul (estilo FotMob). S/P = gris.
+function _shColorPuntaje(val) {
+  const v = parseFloat(String(val).replace(',', '.'));
+  if (!Number.isFinite(v)) return { bg: '#616161', fg: '#fff' };
+  if (v >= 9)   return { bg: '#1e88e5', fg: '#fff' };
+  if (v >= 7.5) return { bg: '#2e7d32', fg: '#fff' };
+  if (v >= 6.5) return { bg: '#7cb342', fg: '#fff' };
+  if (v >= 5.5) return { bg: '#fbc02d', fg: '#1b1b1b' };
+  if (v >= 4.5) return { bg: '#fb8c00', fg: '#fff' };
+  return { bg: '#d32f2f', fg: '#fff' };
+}
+// Cuadradito con el puntaje, pegado abajo a la derecha de la ficha.
+function _shBadgeVertical(val, size) {
+  const col = _shColorPuntaje(val);
+  const b = document.createElement('div');
+  const h = Math.round(size * 0.5);
+  b.style.cssText = `position:absolute;right:${-Math.round(size * 0.36)}px;bottom:-4px;background:${col.bg};color:${col.fg};`
+    + `font-family:'Bebas Neue',sans-serif;font-size:${Math.round(size * 0.4)}px;min-width:${h}px;height:${h}px;padding:0 4px;`
+    + `display:flex;align-items:center;justify-content:center;border-radius:5px;border:2px solid #fff;`
+    + `box-shadow:0 1px 3px rgba(0,0,0,.5);line-height:1;box-sizing:border-box;z-index:2;`;
+  b.textContent = val; return b;
+}
+function _shAlturaVertical(o) {
+  return SHV_BAR + Math.round(SHV_W / 0.82) + ((o.sup || o.dt) ? SHV_BANCO : 0);
+}
+function _shCardVertical(o) {
+  const ph = Math.round(SHV_W / 0.82);                 // misma proporción que #pitch
+  const c = document.createElement('div');
+  c.style.cssText = `position:fixed;left:-99999px;top:0;width:${SHV_W}px;height:${_shAlturaVertical(o)}px;`
+    + `box-sizing:border-box;overflow:hidden;color:#fff;font-family:'DM Sans',sans-serif;background:#0d1730;`;
+
+  const bar = document.createElement('div');
+  bar.style.cssText = `height:${SHV_BAR}px;display:flex;align-items:center;justify-content:space-between;`
+    + `padding:0 18px;box-sizing:border-box;background:linear-gradient(120deg,#0d1730,#070b16);`;
+  const izq = document.createElement('div'); izq.style.cssText = 'display:flex;align-items:center;gap:12px;';
+  izq.appendChild(_shEscudo(CLUB_SLUG, 42));
+  const nom = document.createElement('div');
+  nom.style.cssText = "font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:1.5px;line-height:1;";
+  nom.textContent = (CLUB.nombreCorto || CLUB.nombre || '').toUpperCase();
+  const txt = document.createElement('div'); txt.appendChild(nom);
+  const subt = o.sub || '';                          // "Fecha N · vs Rival"
+  if (subt) {
+    const st = document.createElement('div');
+    st.style.cssText = 'font-size:12px;color:#8b93a7;margin-top:3px;line-height:1;white-space:nowrap;';
+    st.textContent = subt; txt.appendChild(st);
+  }
+  izq.appendChild(txt); bar.appendChild(izq);
+  const logo = document.createElement('img');
+  logo.src = _shAbs('logo-share.png');
+  logo.style.cssText = 'height:34px;width:auto;display:block;';
+  bar.appendChild(logo);
+  c.appendChild(bar);
+
+  const cancha = document.createElement('div');
+  cancha.style.cssText = `position:relative;width:${SHV_W}px;height:${ph}px;overflow:hidden;background:#2d7a3a;`
+    + `border-top:2px solid rgba(255,255,255,0.15);box-sizing:border-box;`;
+  // Rayas y líneas: copia de los elementos estáticos de la cancha real.
+  pitch.querySelectorAll('.stripe, .pl, .pc').forEach(n => cancha.appendChild(n.cloneNode(true)));
+
+  const size = Math.round(SHV_W * 0.09);               // = updatePlayerSizes() para este ancho
+  const clubColor = getComputedStyle(document.documentElement).getPropertyValue('--club-color').trim() || '#e53935';
+  // Mismo criterio que la cancha: sobre el amarillo de Central/Defensa el blanco no se lee.
+  const tagFg = getComputedStyle(document.documentElement).getPropertyValue('--tag-fg').trim() || '#fff';
+  o.jugadores.forEach(j => {
+    const el = document.createElement('div');
+    el.style.cssText = `position:absolute;left:${j.xPct}%;top:${j.yPct}%;transform:translate(-50%,-50%);`
+      + `display:flex;flex-direction:column;align-items:center;z-index:10;`;
+    const bubble = document.createElement('div');
+    bubble.style.cssText = `width:${size}px;height:${size}px;border-radius:50%;border:2.5px solid #fff;overflow:hidden;`
+      + `position:relative;box-shadow:0 2px 6px rgba(0,0,0,0.5);background:${clubColor};box-sizing:border-box;`;
+    const kc = _shKitCanvas(size - 5); kc.style.cssText += 'position:absolute;inset:0;';
+    bubble.appendChild(kc);
+    const num = document.createElement('div');
+    num.style.cssText = `position:absolute;inset:0;display:flex;align-items:center;justify-content:center;`
+      + `font-family:'Bebas Neue',sans-serif;font-size:${Math.round(size * 0.5)}px;color:#fff;text-shadow:${NUM_OUTLINE};line-height:1;`;
+    num.textContent = j.num || ''; bubble.appendChild(num);
+    if (j.val != null) { bubble.style.overflow = 'visible'; bubble.appendChild(_shBadgeVertical(j.val, size)); }
+    const tag = document.createElement('div');
+    tag.style.cssText = `font-size:${Math.round(size * 0.27)}px;color:${tagFg};font-weight:500;background:${clubColor};`
+      + `border:1.5px solid #fff;border-radius:8px;padding:1px 6px;margin-top:2px;line-height:1.3;white-space:nowrap;`;
+    tag.textContent = _shApellido(j.name);   // solo apellido: el número ya identifica
+    el.appendChild(bubble); el.appendChild(tag); cancha.appendChild(el);
+  });
+  c.appendChild(cancha);
+
+  if (o.sup || o.dt) {
+    const s = document.createElement('div');
+    s.style.cssText = `height:${SHV_BANCO}px;display:flex;align-items:center;gap:10px;padding:0 16px;box-sizing:border-box;`
+      + `background:linear-gradient(120deg,#0d1730,#070b16);border-top:1px solid rgba(255,255,255,.09);`;
+    const l = document.createElement('div');
+    l.style.cssText = "font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1px;color:#7d879e;line-height:1.05;width:62px;flex:0 0 auto;";
+    l.textContent = 'INGRESARON'; s.appendChild(l);
+    const row = document.createElement('div');
+    const sup = o.sup || [], chico = sup.length >= 5, sz = chico ? 34 : 40;
+    row.style.cssText = `flex:1;min-width:0;display:flex;gap:${chico ? 10 : 16}px;align-items:flex-start;justify-content:center;`;
+    if (sup.length) sup.forEach(p => {
+      const cell = document.createElement('div'); cell.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:3px;';
+      const w = document.createElement('div'); w.style.cssText = 'position:relative;';
+      const k = _shChipKit(p.num, sz); k.style.overflow = 'visible'; w.appendChild(k);
+      if (p.val != null) w.appendChild(_shBadgeVertical(p.val, sz));
+      cell.appendChild(w);
+      const lb = document.createElement('div');
+      lb.style.cssText = 'font-size:11px;color:#dfe4ee;font-weight:600;text-align:center;line-height:1.1;white-space:nowrap;';
+      lb.textContent = _shApellido(p.name); cell.appendChild(lb); row.appendChild(cell);
+    });
+    else { const e = document.createElement('div'); e.style.cssText = 'font-size:12px;color:#5d6479;'; e.textContent = 'Sin cambios'; row.appendChild(e); }
+    s.appendChild(row);
+    if (o.dt) {
+      const sep = document.createElement('div'); sep.style.cssText = 'width:1px;height:44px;background:rgba(255,255,255,.14);flex:0 0 auto;'; s.appendChild(sep);
+      const d = document.createElement('div'); d.style.cssText = 'flex:0 0 auto;display:flex;align-items:center;gap:8px;';
+      const w = document.createElement('div'); w.style.cssText = 'position:relative;';
+      const k = _shChipKit('DT', 36); k.style.overflow = 'visible'; w.appendChild(k);
+      if (o.dt.val != null) w.appendChild(_shBadgeVertical(o.dt.val, 36));
+      d.appendChild(w);
+      const info = document.createElement('div');
+      info.innerHTML = `<div style="font-size:9px;color:#7d879e;letter-spacing:2px;">DT</div>`
+        + `<div style="font-size:12px;font-weight:600;line-height:1.15;white-space:nowrap;">${escapeHtml(_shApellido(o.dt.name))}</div>`;
+      d.appendChild(info); s.appendChild(d);
+    }
+    c.appendChild(s);
+  }
   return c;
 }
 
@@ -1738,18 +1902,19 @@ function _shNormalizarEscudos(el, size) {
 }
 
 async function _shCanvas(o) {
-  const el = _shCard(o);
+  const el = o.vertical ? _shCardVertical(o) : _shCard(o);
+  const W = o.vertical ? SHV_W : SHARE_W, H = o.vertical ? _shAlturaVertical(o) : SHARE_H;
   document.body.appendChild(el);
   try {
     const imgs = [...el.querySelectorAll('img')];
     await Promise.all(imgs.map(i => i.complete ? null : new Promise(r => { i.onload = r; i.onerror = r; })));
-    _shNormalizarEscudos(el, 44);   // igualar escudos del panel por área (tras cargar)
+    if (!o.vertical) _shNormalizarEscudos(el, 44);   // igualar escudos del panel por área (tras cargar)
     if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch (e) {} }
     await new Promise(r => setTimeout(r, 120));
     // Tope de tiempo: si una hoja de estilos externa queda colgada, html2canvas
     // se queda esperando para siempre y el botón moría en "Generando...".
     const canvas = await Promise.race([
-      html2canvas(el, { backgroundColor: '#070b16', scale: 2, useCORS: true, logging: false, width: SHARE_W, height: SHARE_H }),
+      html2canvas(el, { backgroundColor: '#070b16', scale: 2, useCORS: true, logging: false, width: W, height: H }),
       new Promise((_, rej) => setTimeout(() => rej(new Error('timeout al generar la imagen')), 20000)),
     ]);
     return canvas;
@@ -1879,7 +2044,46 @@ function renderGrid() {
     }
     grid.appendChild(chip);
   });
+  // Último chip: "+ Crear" — un jugador inventado (no está en el plantel).
+  const crear = document.createElement('div');
+  crear.className = 'player-chip create';
+  const plus = document.createElement('div'); plus.className = 'create-plus'; plus.textContent = '+';
+  const nm = document.createElement('span'); nm.className = 'chip-name'; nm.textContent = 'Crear';
+  crear.appendChild(plus); crear.appendChild(nm);
+  crear.addEventListener('click', abrirCrearJugador);
+  grid.appendChild(crear);
 }
+
+// ---- Crear jugador ----
+// Un jugador inventado se comporta como cualquier otro en la cancha (mismo chip,
+// se arrastra, sale en la placa) pero nunca va a Supabase: con uno en la cancha
+// "Enviar a encuesta" queda bloqueado (updateCounter). Al sacarlo con la ✕
+// desaparece (no queda en el banco). El fid negativo garantiza una identidad
+// propia (_pKey) aunque el número coincida con uno real.
+let _customSeq = 0;
+function abrirCrearJugador() {
+  if (onPitch.length >= 11) { showToast('Ya tenés 11 en la cancha'); return; }
+  const m = document.getElementById('crear-modal');
+  document.getElementById('crear-nombre').value = '';
+  document.getElementById('crear-num').value = '';
+  m.style.display = 'flex';
+  setTimeout(() => document.getElementById('crear-nombre').focus(), 50);
+}
+function cerrarCrearJugador() { document.getElementById('crear-modal').style.display = 'none'; }
+function confirmarCrearJugador() {
+  const name = document.getElementById('crear-nombre').value.trim();
+  const num = document.getElementById('crear-num').value.trim().replace(/\D/g, '');
+  if (!name) { document.getElementById('crear-nombre').focus(); return; }
+  cerrarCrearJugador();
+  placeFromBench({ num, name, fid: -(++_customSeq), custom: true, position: 'midfielders' });
+}
+document.getElementById('crear-ok').addEventListener('click', confirmarCrearJugador);
+document.getElementById('crear-cancelar').addEventListener('click', cerrarCrearJugador);
+document.getElementById('crear-modal').addEventListener('click', e => { if (e.target.id === 'crear-modal') cerrarCrearJugador(); });
+['crear-nombre', 'crear-num'].forEach(id => document.getElementById(id).addEventListener('keydown', e => {
+  if (e.key === 'Enter') confirmarCrearJugador();
+  if (e.key === 'Escape') cerrarCrearJugador();
+}));
 
 function removePlayer(key) {
   const idx = onPitch.findIndex(x => _pKey(x) === key);
@@ -1898,7 +2102,8 @@ function makePitchPlayer(p) {
   fb.style.cssText = `display:flex;color:#fff;font-size:22px;text-shadow:${NUM_OUTLINE};`;
   bubble.appendChild(fb);
   const numTag = document.createElement('div'); numTag.className = 'player-numtag';
-  numTag.textContent = p.name;
+  numTag.textContent = _shApellido(p.name);   // en la cancha solo el apellido: el nombre
+                                              // completo no entra y desborda la ficha
   el.appendChild(bubble); el.appendChild(numTag);
   const xbtn = document.createElement('button'); xbtn.className = 'xbtn'; xbtn.textContent = '✕';
   xbtn.addEventListener('click', e => { e.stopPropagation(); removePlayer(_pKey(p)); });
@@ -1948,7 +2153,7 @@ function addToPitch(p, xPct, yPct, silent = false) {
   el.addEventListener('touchstart', ev => startPitchDrag(ev, el, p), { passive: false });
   el.addEventListener('mousedown', ev => { if (!ev.target.classList.contains('xbtn')) startPitchDrag(ev, el, p); });
   pitch.appendChild(el);
-  onPitch.push({ num: p.num, name: p.name, fid: p.fid, xPct, yPct, el });
+  onPitch.push({ num: p.num, name: p.name, fid: p.fid, custom: !!p.custom, xPct, yPct, el });
   if (!silent) { updateCounter(); renderGrid(); }
 }
 
@@ -2005,7 +2210,9 @@ function updateCounter() {
   const n = onPitch.length;
   document.getElementById('count').textContent = n;
   document.getElementById('count2').textContent = n;
-  const isReady = n === 11;
+  const isReady = n === 11;                        // descargar / compartir
+  const hasCustom = onPitch.some(p => p.custom);
+  const canSubmit = isReady && !hasCustom;         // encuesta: solo con 11 del plantel real
   const dlBtn = document.getElementById('download-pitch-btn');
   const cfBtn = document.getElementById('confirm-btn');
   const alreadyVoted = !!lsGet(lsFormKey());
@@ -2017,15 +2224,17 @@ function updateCounter() {
     b.style.opacity = isReady ? '1' : '0.3';
     b.style.cursor = isReady ? 'pointer' : 'not-allowed';
   });
+  const hint = document.getElementById('custom-hint');
+  if (hint) hint.style.display = (hasCustom && !alreadyVoted) ? 'block' : 'none';
   if (alreadyVoted) {
     cfBtn.disabled = true; cfBtn.style.opacity = '0.3'; cfBtn.style.cursor = 'not-allowed'; cfBtn.textContent = 'Ya enviaste ✓';
   } else {
-    cfBtn.disabled = !isReady; cfBtn.style.opacity = isReady ? '1' : '0.3'; cfBtn.style.cursor = isReady ? 'pointer' : 'not-allowed';
+    cfBtn.disabled = !canSubmit; cfBtn.style.opacity = canSubmit ? '1' : '0.3'; cfBtn.style.cursor = canSubmit ? 'pointer' : 'not-allowed';
     cfBtn.textContent = 'Enviar a encuesta';
-    if (isReady && !wasReady) { cfBtn.style.animation = 'none'; void cfBtn.offsetWidth; cfBtn.style.animation = 'pulse-btn 1s ease-in-out 3'; }
+    if (canSubmit && !wasReady) { cfBtn.style.animation = 'none'; void cfBtn.offsetWidth; cfBtn.style.animation = 'pulse-btn 1s ease-in-out 3'; }
   }
-  if (!isReady) cfBtn.style.animation = '';
-  wasReady = isReady;
+  if (!canSubmit) cfBtn.style.animation = '';
+  wasReady = canSubmit;
 }
 
 // Cargar plantel desde JSON y restaurar formación guardada
@@ -2065,9 +2274,11 @@ function _shOptsFormacion() {
     marcador: conRival ? 'VS' : '',
     rivalSlug: conRival ? RIVAL_SLUG : '',
     rivalEscudo: conRival ? RIVAL_ESCUDO : '',
-    sub: (FECHA_NUM ? `Fecha ${FECHA_NUM} · ` : '') + (conRival ? `vs ${RIVAL}` : 'Próxima fecha'),
+    sub: (FECHA_NUM ? `Fecha ${FECHA_NUM} · ` : RIVAL_INSTANCIA ? `${RIVAL_INSTANCIA} · ` : '')
+         + (conRival ? `vs ${RIVAL}` : 'Próxima fecha'),
     pie: '',
-    jugadores: onPitch.map(j => _shRotar({ num: j.num, name: j.name, xPct: j.xPct, yPct: j.yPct })),
+    vertical: true,
+    jugadores: onPitch.map(j => ({ num: j.num, name: j.name, xPct: j.xPct, yPct: j.yPct })),
   };
 }
 async function _shFormacion(btn, label) {
@@ -2094,6 +2305,7 @@ document.getElementById('save-pitch-btn').addEventListener('click', function () 
 // ---- Enviar a encuesta ----
 document.getElementById('confirm-btn').addEventListener('click', async () => {
   if (onPitch.length !== 11 || sending || lsGet(lsFormKey())) return;
+  if (onPitch.some(p => p.custom)) { showToast('Con un jugador creado no se puede enviar a la encuesta.'); return; }
   sending = true;
   const btn = document.getElementById('confirm-btn');
   btn.textContent = 'Enviando...'; btn.disabled = true;
@@ -2146,12 +2358,9 @@ document.getElementById('confirm-btn').addEventListener('click', async () => {
 // ---- Ver resultados (votación global — sin filtros de login) ----
 document.getElementById('ver-resultados-btn').addEventListener('click', () => { showResults(); });
 
-// Tras enviar la formación: vistazo único a la votación global.
-// Solo Descargar + Volver (Volver vuelve a la cancha; el voto ya quedó bloqueado).
-// Para volver a ver cómo va la votación hay que entrar por Est. TribunApp.
+// Tras enviar la formación: votación global + equipos de la gente en la misma
+// pantalla (Volver vuelve a la cancha; el voto ya quedó bloqueado).
 function enterPostSubmitResults() {
-  const feedBtn = document.getElementById('ver-feed-btn');
-  if (feedBtn) feedBtn.style.display = 'none';   // en este flujo: solo Descargar + Volver
   showResults();
 }
 
@@ -2161,11 +2370,14 @@ document.getElementById('back-results-btn').addEventListener('click', () => {
 
 async function showResults() {
   resultsScreen.style.display = 'flex';
+  resultsScreen.scrollTop = 0;
   const list = document.getElementById('results-list');
   const totalEl = document.getElementById('total-votes');
-  list.innerHTML = '<div style="text-align:center;color:#666;padding:20px;font-size:13px;">Cargando...</div>'; totalEl.textContent = '';
+  const feed = document.getElementById('results-feed');
+  list.innerHTML = '<div style="text-align:center;color:#666;padding:20px;font-size:13px;">Cargando...</div>'; totalEl.textContent = ''; feed.innerHTML = '';
   try {
-    let url = `${SUPABASE_URL}/rest/v1/formaciones?select=jugadores&rival=eq.${encodeURIComponent(RIVAL)}&club=eq.${CLUB_SLUG}`;
+    // Una sola consulta alimenta las barras de % y los equipos de la gente de abajo.
+    let url = `${SUPABASE_URL}/rest/v1/formaciones?select=id,jugadores,likes,device_id,created_at&order=likes.desc,created_at.desc&rival=eq.${encodeURIComponent(RIVAL)}&club=eq.${CLUB_SLUG}`;
     if (FECHA_ACTUAL) url += `&match_date=eq.${FECHA_ACTUAL}`;
     const res = await fetch(url, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
     const data = await res.json();
@@ -2174,9 +2386,55 @@ async function showResults() {
     const counts = {};
     data.forEach(row => { (row.jugadores || []).forEach(j => { if (!counts[j.num]) { const sq = squad.find(s => s.num === j.num); counts[j.num] = { num: j.num, name: j.name, fid: j.fid || sq?.fid || 0, count: 0 }; } counts[j.num].count++; }); });
     const players = Object.values(counts).map(p => ({ ...p, pct: Math.round((p.count / total) * 100) })).sort((a, b) => b.pct - a.pct);
-    totalEl.textContent = `${total} formación${total !== 1 ? 'es' : ''} enviada${total !== 1 ? 's' : ''}`;
+    totalEl.textContent = total !== 1 ? `${total} formaciones enviadas` : '1 formación enviada';
     _renderEleccionBars(list, players);
+    _renderResultsFeed(feed, data);
   } catch(e) { list.innerHTML = '<div style="text-align:center;color:#666;padding:20px;font-size:13px;">Error al cargar resultados.</div>'; }
+}
+
+// Equipos de la gente INLINE bajo las barras, con las mismas cards que Est.
+// TribunApp (buildFeedCard): tu formación primero, después las demás por likes.
+// Se muestran RESULTS_FEED_N y un "Ver más" despliega el resto. Antes era una
+// pantalla aparte detrás de un botón que además se escondía tras enviar — justo
+// cuando más ganas hay de comparar. Cierra con la puerta de entrada al histórico.
+const RESULTS_FEED_N = 10;
+function _renderResultsFeed(feed, data) {
+  const valid = data.filter(r => r.jugadores && r.jugadores.length === 11);
+  feed.innerHTML = '';
+  if (!valid.length) return;
+  const deviceId = getDeviceId();
+  const myRow = valid.find(r => r.device_id === deviceId);
+  const others = valid.filter(r => r.id !== (myRow && myRow.id));
+  const card = (row, isMine, isTop) => { const c = buildFeedCard(row, isMine, isTop); c.style.marginLeft = '0'; c.style.marginRight = '0'; return c; };
+
+  const hdr = document.createElement('div');
+  hdr.style.cssText = 'display:flex;align-items:center;gap:10px;margin-top:22px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.1);';
+  hdr.innerHTML = `<span style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:#fff;letter-spacing:2px;flex:1;">👥 EQUIPOS DE LA GENTE</span>`
+    + `<span style="font-size:11px;color:rgba(255,255,255,0.3);">${valid.length} equipo${valid.length !== 1 ? 's' : ''}</span>`;
+  feed.appendChild(hdr);
+  if (myRow) feed.appendChild(card(myRow, true, false));
+  if (others.length) {
+    const lbl = document.createElement('div');
+    lbl.style.cssText = 'font-family:"Barlow Condensed",sans-serif;font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.25);text-transform:uppercase;padding:14px 0 0;';
+    lbl.textContent = 'Otros hinchas';
+    feed.appendChild(lbl);
+    const listEl = document.createElement('div');
+    feed.appendChild(listEl);
+    const addCards = (from, to) => others.slice(from, to).forEach((r, i) => listEl.appendChild(card(r, false, from + i === 0 && r.likes > 0)));
+    addCards(0, RESULTS_FEED_N);
+    if (others.length > RESULTS_FEED_N) {
+      const more = document.createElement('button');
+      more.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:14px;letter-spacing:1px;color:#ccc;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:9px;cursor:pointer;width:100%;margin-top:12px;';
+      more.textContent = `Ver ${others.length - RESULTS_FEED_N} equipos más`;
+      more.onclick = () => { addCards(RESULTS_FEED_N, others.length); more.remove(); };
+      feed.appendChild(more);
+    }
+  }
+  const link = document.createElement('button');
+  link.style.cssText = 'font-family:"Barlow Condensed",sans-serif;font-size:13px;letter-spacing:0.5px;color:var(--club-color);background:none;border:none;padding:16px 0 4px;cursor:pointer;width:100%;';
+  link.textContent = 'Ver todas las fechas en Est. TribunApp →';
+  link.onclick = () => { resultsScreen.style.display = 'none'; _ta.view = 'equipos'; openSection('tribunapp'); };
+  feed.appendChild(link);
 }
 
 // % de elección como barras horizontales (una fila por jugador: chip + nombre +
@@ -2227,10 +2485,6 @@ function _renderEleccionBars(list, players) {
     list.appendChild(band);
   });
 }
-
-// ---- Feed ----
-document.getElementById('ver-feed-btn').addEventListener('click', openFeed);
-document.getElementById('back-feed-btn').addEventListener('click', () => { document.getElementById('feed-screen').style.display = 'none'; });
 
 // El like va por RPC (toggle_formacion_like): el conteo lo lleva el server, uno
 // por dispositivo. La anon key ya no puede escribir `likes` con un valor libre.
@@ -2287,7 +2541,7 @@ function renderMiniPitch(jugadores, container) {
     const fb = document.createElement('div'); fb.className = 'fallback-num'; fb.textContent = (j.num != null ? j.num : '');
     fb.style.cssText = `display:flex;color:#fff;font-size:22px;text-shadow:${NUM_OUTLINE};`;
     bubble.appendChild(fb);
-    const nt = document.createElement('div'); nt.className = 'player-numtag'; nt.textContent = j.name || j.num || '';
+    const nt = document.createElement('div'); nt.className = 'player-numtag'; nt.textContent = _shApellido(j.name) || j.num || '';
     nt.style.maxWidth = '72px'; nt.style.overflow = 'hidden'; nt.style.textOverflow = 'ellipsis';
     el.appendChild(bubble); el.appendChild(nt);
     container.appendChild(el);
@@ -2318,28 +2572,6 @@ function buildFeedCard(row, isMine, isTop) {
   }
   card.appendChild(footer);
   return card;
-}
-
-async function openFeed() {
-  const screen = document.getElementById('feed-screen');
-  screen.style.display = 'flex'; screen.style.flexDirection = 'column';
-  const mySection = document.getElementById('feed-my-team-section'); const list = document.getElementById('feed-list'); const othersLabel = document.getElementById('feed-others-label'); const countEl = document.getElementById('feed-count');
-  mySection.innerHTML = ''; list.innerHTML = ''; othersLabel.style.display = 'none';
-  list.innerHTML = '<div style="text-align:center;color:#555;font-size:13px;padding:40px;">Cargando...</div>';
-  const deviceId = getDeviceId();
-  try {
-    const feedDateFilter = FECHA_ACTUAL ? `&match_date=eq.${FECHA_ACTUAL}` : '';
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/formaciones?select=id,jugadores,likes,device_id,created_at&order=likes.desc,created_at.desc&limit=80&rival=eq.${encodeURIComponent(RIVAL)}&club=eq.${CLUB_SLUG}${feedDateFilter}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
-    const data = await res.json();
-    const valid = data.filter(r => r.jugadores && r.jugadores.length === 11);
-    countEl.textContent = `${valid.length} equipo${valid.length !== 1 ? 's' : ''}`;
-    const myRow = valid.find(r => r.device_id === deviceId);
-    if (myRow) { mySection.appendChild(buildFeedCard(myRow, true, false)); }
-    list.innerHTML = '';
-    const others = valid.filter(r => r.id !== myRow?.id);
-    if (others.length) { othersLabel.style.display = 'block'; others.forEach((row, i) => { list.appendChild(buildFeedCard(row, false, i === 0 && row.likes > 0)); }); }
-    else { list.innerHTML = '<div style="text-align:center;color:#555;font-size:13px;padding:20px;">Todavía no hay equipos de otros hinchas.</div>'; }
-  } catch(e) { list.innerHTML = '<div style="text-align:center;color:var(--club-color);font-size:12px;padding:20px;">Error al cargar.</div>'; }
 }
 
 // ============================================================
@@ -2574,9 +2806,13 @@ function _shOptsPuntajes(valorPorId, fmt, titulo, pie) {
     marcador: SCORES_MARCADOR || 'VS',
     rivalSlug: SCORES_RIVAL_SLUG,
     rivalEscudo: SCORES_RIVAL_ESCUDO,
-    sub: (SCORES_FECHA_NUM ? `Fecha ${SCORES_FECHA_NUM} · ` : '') + `vs ${SCORES_RIVAL}`,
+    sub: (SCORES_FECHA_NUM ? `Fecha ${SCORES_FECHA_NUM} · ` : SCORES_INSTANCIA ? `${SCORES_INSTANCIA} · ` : '')
+         + `vs ${SCORES_RIVAL}`,
     pie,
-    jugadores: _shPosiciones(titulares),
+    vertical: true,
+    // _shPosiciones ubica en apaisado (arco propio a la izquierda); la placa
+    // vertical lo gira: profundidad -> alto (arco propio abajo), lateral -> ancho.
+    jugadores: _shPosiciones(titulares).map(j => ({ ...j, xPct: j.sy, yPct: Math.min(89, 100 - j.sx) })),
     sup,
     dt: dtj ? { name: dtj.name, val: conVal(dtj) } : null,
   };
@@ -3766,20 +4002,10 @@ async function openPrevFecha(f) {
 }
 
 // ---- formation-download-btn ----
-document.getElementById('formation-download-btn').addEventListener('click', async () => {
-  document.getElementById('formation-download-btn').textContent = 'Generando...';
-  document.querySelectorAll('.xbtn').forEach(x => x.style.display = 'none');
-  document.getElementById('formation-success').style.display = 'none';
-  try {
-    await new Promise(r => setTimeout(r, 100));
-    const canvas = await html2canvas(pitch, { backgroundColor: '#2d7a3a', scale: 2, useCORS: true, logging: false });
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.font = `bold ${Math.round(canvas.width * 0.04)}px sans-serif`; ctx.textAlign = 'right';
-    ctx.fillText(`Mi formación ${CLUB.nombreCorto}`, canvas.width - 12, canvas.height - 12);
-    const link = document.createElement('a'); link.download = `formacion-${CLUB_SLUG}.png`; link.href = canvas.toDataURL('image/png'); link.click();
-    showToast('¡Descargada!');
-  } catch(e) { showToast('No se pudo generar.'); }
-  finally { document.querySelectorAll('.xbtn').forEach(x => x.style.display = ''); document.getElementById('formation-success').style.display = 'flex'; document.getElementById('formation-download-btn').textContent = 'Descargar mi formación'; }
+document.getElementById('formation-download-btn').addEventListener('click', async function () {
+  // Misma placa vertical que "compartir"/"descargar" de la barra de acciones.
+  this.dataset.solo = '1';
+  await _shFormacion(this, 'Descargar mi formación');
 });
 
 // ============================================================
@@ -3826,6 +4052,7 @@ fillTiles();
 // inicializado en este punto (más arriba estaría en TDZ).
 async function resolveMatchContext() {
   try {
+    await cargarPuntajesHasta();
     if (!COPA) {
       const { proximo, ultimo } = await clubLigaMatches();
       // Formación → próximo partido
@@ -3865,7 +4092,12 @@ async function resolveMatchContext() {
     updateCopaTiles();
   } catch(e) {}
 }
-resolveMatchContext();
+// Deep-link ?s=puntajes (desde "Puntuar jugadores" en fixture.html): abre la
+// sección de puntajes recién cuando el contexto está resuelto (gate + plantel).
+resolveMatchContext().then(() => {
+  if (params.get('s') === 'puntajes') openSection('scores');
+  if (params.get('s') === 'formacion') openSection('formation');   // desde /armar/… (puntuar.html en modo pre)
+});
 
 // Contexto de puntajes en modo copa: último partido con kickoff pasado según
 // data/fixtures/copas.json (trae utcTime, que el fixture por-club no tiene).
@@ -3876,6 +4108,17 @@ resolveMatchContext();
 // Escudo del rival del PRÓXIMO partido de copa (el de la placa "Mi formación").
 // El fixture por-club solo guarda el nombre del rival, así que el logo sale de
 // copas.json: primer partido del club con kickoff futuro.
+// "Cuartos de Final · Ida": instancia de la serie, para el subtítulo de las placas
+// (la liga muestra "Fecha N"). Ida/vuelta se deduce de la otra pata de la misma
+// serie (mismos dos clubes en la misma copa); si no está, queda solo la ronda.
+function _copaInstancia(p, partidos) {
+  const par = [p.home.name, p.away.name].sort().join('|');
+  const otros = partidos.filter(q => q !== p && q.utcTime &&
+                                     [q.home.name, q.away.name].sort().join('|') === par);
+  const pata = !otros.length ? '' : otros.every(q => q.utcTime > p.utcTime) ? 'Ida' : 'Vuelta';
+  return [p.ronda, pata].filter(Boolean).join(' · ');
+}
+
 async function resolveCopaRivalEscudo() {
   const copas = await fetch(`data/fixtures/copas.json?t=${Date.now()}`).then(r => r.ok ? r.json() : null).catch(() => null);
   const partidos = ((copas || {})[COPA] || {}).partidos || [];
@@ -3887,6 +4130,11 @@ async function resolveCopaRivalEscudo() {
   const opp = prox.home.slug === CLUB_SLUG ? prox.away : prox.home;
   RIVAL_SLUG = opp.slug || '';
   RIVAL_ESCUDO = opp.slug ? '' : _escudoCopaLocal(opp.logo);
+  RIVAL_INSTANCIA = _copaInstancia(prox, partidos);
+  // match_date canónico = día local AR del kickoff, igual que la liga y que los
+  // puntajes de copa. El fixture por-club trae el día UTC: un partido de las 21:30
+  // quedaba guardado (y scopeado en localStorage) con el día siguiente.
+  FECHA_ACTUAL = new Date(new Date(prox.utcTime).getTime() - 3 * 3600 * 1000).toISOString().slice(0, 10);
 }
 
 async function resolveCopaScoresContext() {
@@ -3903,7 +4151,8 @@ async function resolveCopaScoresContext() {
   SCORES_RIVAL = opp.name;
   SCORES_RIVAL_SLUG = opp.slug || '';   // rival extranjero: sin slug → escudo local por ID
   SCORES_RIVAL_ESCUDO = opp.slug ? '' : _escudoCopaLocal(opp.logo);
-  SCORES_FECHA_NUM = null;              // copa: sin número de fecha (el sub de la placa lo omite)
+  SCORES_FECHA_NUM = null;              // copa: sin número de fecha, va la instancia
+  SCORES_INSTANCIA = _copaInstancia(u, partidos);
   SCORES_MARCADOR = (u.home_score != null && u.away_score != null)
     ? (isHome ? `${u.home_score}-${u.away_score}` : `${u.away_score}-${u.home_score}`) : '';
   SCORES_FT = new Date(u.utcTime);
@@ -3920,12 +4169,13 @@ async function resolveCopaScoresContext() {
                                 compRe.test(e.competicion || '') && mismoDia(e));
     if (!entry) return;   // sin datos aún → applyGating deja los puntajes cerrados
     scoresMatchId = entry.id;
-    // match_date canónico = el día del archivo del partido (día UTC), que es el
-    // mismo que usa la formación (fixture por-club) y el matching de la sección
-    // ESTADÍSTICAS. El local AR de arriba era solo para buscar el archivo; si
-    // quedaba, los votos de puntajes caían un día antes que los de formación y
-    // Est. TribunApp mostraba el partido duplicado (caso real: River-Santa Fe).
-    if (entry.fecha) SCORES_MATCH_DATE = entry.fecha;
+    // match_date canónico = día LOCAL AR del kickoff (SCORES_MATCH_DATE de arriba),
+    // el mismo que guarda la formación (fixture por-club, pedido con timezone AR)
+    // y que usa la liga. Antes se pisaba con entry.fecha (día UTC del archivo):
+    // con kickoff 21:30 AR los puntajes caían un día DESPUÉS que las formaciones
+    // y Est. TribunApp mostraba el partido repetido (caso real: Boca-San Pablo,
+    // "Cuartos - Sao Paulo" tres veces). tribunapp-equipo.html además agrupa por
+    // partido real (±2 días), así que las filas viejas igual quedan juntas.
     const data = await fetch(`data/partidos/${entry.id}.json?t=${Date.now()}`).then(r => r.ok ? r.json() : null);
     // Marcador desde el archivo del partido, que viene del endpoint por-id: el de
     // copas.json sale del agregado y puede quedar viejo un rato tras el FT (caso
@@ -4016,13 +4266,21 @@ async function resolveScoresContext(ultimo) {
 // cierre-rapido actualiza liga.json antes de abrir los puntajes). Se cierra solo
 // sin próximo partido (fin de torneo / rival por definir). Override de prueba:
 // ?testpuntajes=1 fuerza los puntajes; ?testformacion=1 fuerza la formación.
+// Extensión manual de la ventana por partido: data/puntajes_abiertos.json
+// ({ "{local}-{visitante}": "ISO hasta" }). La leen también puntuar.html y fixture.html.
+let PUNTAJES_HASTA = {};
+async function cargarPuntajesHasta() {
+  try { const r = await fetch(`data/puntajes_abiertos.json?t=${Date.now()}`, { cache: 'no-store' }); if (r.ok) PUNTAJES_HASTA = await r.json(); } catch (e) {}
+}
 function applyGating() {
   const qs = new URLSearchParams(location.search);
   const override  = qs.get('testpuntajes')  === '1';
   const fOverride = qs.get('testformacion') === '1';
   const hasData = scoresSquad.length > 0;
   const within24h = SCORES_FT ? (Date.now() - SCORES_FT.getTime()) < 24 * 3600 * 1000 : false;
-  PUNTAJES_OPEN = override || (hasData && within24h);
+  const hasta = scoresMatchId && PUNTAJES_HASTA[scoresMatchId];
+  const extendido = !!hasta && Date.now() < Date.parse(hasta);
+  PUNTAJES_OPEN = override || (hasData && (within24h || extendido));
   FORMACION_OPEN = fOverride || !!(RIVAL && RIVAL !== 'Por definir');
 }
 
@@ -4202,16 +4460,34 @@ async function _taSquadIndex() {
 }
 
 // Mapa fecha-local → {fecha, rival} de los partidos del club (para etiquetar las solapas).
+// match_date → partido. Cada partido entra por su día local AR (canon) Y por su
+// día UTC (un kickoff 21:30 AR ya es el día siguiente en UTC): las filas viejas
+// guardadas con cualquiera de los dos caen al mismo partido. En contexto copa los
+// partidos salen de copas.json, con etiqueta ronda · Ida/Vuelta.
 async function _taMatchByDate() {
-  const { mine } = await clubLigaMatches();
   const map = {};
-  (mine || []).forEach(m => {
-    const utc = m.status && m.status.utcTime; if (!utc) return;
-    const d = new Date(new Date(utc).getTime() - 3 * 3600 * 1000).toISOString().slice(0, 10);
-    map[d] = { fecha: m.fecha, rival: _matchInfo(m).rival };
+  const add = (utc, info) => {
+    const canon = new Date(new Date(utc).getTime() - 3 * 3600 * 1000).toISOString().slice(0, 10);
+    [canon, utc.slice(0, 10)].forEach(d => { if (!map[d]) map[d] = Object.assign({ canon }, info); });
+  };
+  if (!COPA) {
+    const { mine } = await clubLigaMatches();
+    (mine || []).forEach(m => {
+      const utc = m.status && m.status.utcTime; if (!utc) return;
+      add(utc, { fecha: m.fecha, rival: _matchInfo(m).rival, label: `Fecha ${m.fecha}` });
+    });
+    return map;
+  }
+  const copas = await fetch(`data/fixtures/copas.json?t=${Date.now()}`).then(r => r.ok ? r.json() : null).catch(() => null);
+  const partidos = ((copas || {})[COPA] || {}).partidos || [];
+  partidos.filter(p => p.utcTime && (p.home.slug === CLUB_SLUG || p.away.slug === CLUB_SLUG)).forEach(p => {
+    const opp = p.home.slug === CLUB_SLUG ? p.away : p.home;
+    const rival = opp.slug ? (CLUBES_CONFIG[opp.slug]?.nombreCorto || opp.name) : opp.name;
+    add(p.utcTime, { fecha: null, rival, label: _copaInstancia(p, partidos).replace(/\s+de\s+Final/i, '') || 'Copa' });
   });
   return map;
 }
+function _taCanon(d) { const m = d && _ta.dateMap && _ta.dateMap[d]; return m ? m.canon : null; }
 
 async function renderTribunApp() {
   const cont = document.getElementById('tribunapp-content');
@@ -4228,9 +4504,11 @@ async function renderTribunApp() {
   } catch (e) { _ta.forms = []; _ta.punts = []; }
 
   const dateMap = await _taMatchByDate();
-  // solo fechas que mapean a un partido de liga.json (descarta filas viejas huérfanas)
-  const dates = [...new Set([..._ta.forms, ..._ta.punts].map(r => r.match_date).filter(d => d && dateMap[d]))];
-  const fechas = dates.map(d => ({ date: d, fecha: dateMap[d].fecha, rival: dateMap[d].rival }))
+  _ta.dateMap = dateMap;
+  // solo fechas que mapean a un partido real (descarta filas viejas huérfanas);
+  // se agrupa por la fecha CANÓNICA del partido (AR y UTC del mismo kickoff → una sola)
+  const dates = [...new Set([..._ta.forms, ..._ta.punts].map(r => _taCanon(r.match_date)).filter(Boolean))];
+  const fechas = dates.map(d => ({ date: d, fecha: dateMap[d].fecha, rival: dateMap[d].rival, label: dateMap[d].label }))
     .sort((a, b) => (a.date || '').localeCompare(b.date || ''));  // cronológico (no por nº de fecha, que se desfasa con postergaciones)
 
   if (!fechas.length) {
@@ -4244,7 +4522,7 @@ async function renderTribunApp() {
 async function _taRenderLayout(fechas, dateMap) {
   const cont = document.getElementById('tribunapp-content');
   const fechaBtns = fechas.map(f =>
-    `<button class="estad-fecha-btn ${_ta.fechaSel === f.date ? 'active' : ''}" data-date="${f.date}"><span>Fecha ${f.fecha}</span><small>vs ${escapeHtml(f.rival)}</small></button>`
+    `<button class="estad-fecha-btn ${_ta.fechaSel === f.date ? 'active' : ''}" data-date="${f.date}"><span>${escapeHtml(f.label)}</span><small>vs ${escapeHtml(f.rival)}</small></button>`
   ).join('') + `<button class="estad-fecha-btn ${_ta.fechaSel === 'acumulado' ? 'active' : ''}" data-date="acumulado"><span>Acumulado</span><small>todas</small></button>`;
   const tab = active => `flex:1;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1px;border:none;border-radius:7px;padding:8px 4px;cursor:pointer;background:${active ? 'var(--club-color)' : 'transparent'};color:${active ? '#fff' : 'rgba(255,255,255,0.4)'};`;
   cont.innerHTML = `
@@ -4263,15 +4541,15 @@ async function _taRenderLayout(fechas, dateMap) {
 async function _taRenderVotos() {
   const body = document.getElementById('ta-body');
   const acum = _ta.fechaSel === 'acumulado';
-  const forms = (acum ? _ta.forms : _ta.forms.filter(r => r.match_date === _ta.fechaSel)).filter(r => r.jugadores && r.jugadores.length);
-  const punts = acum ? _ta.punts : _ta.punts.filter(r => r.match_date === _ta.fechaSel);
+  const forms = (acum ? _ta.forms : _ta.forms.filter(r => _taCanon(r.match_date) === _ta.fechaSel)).filter(r => r.jugadores && r.jugadores.length);
+  const punts = acum ? _ta.punts : _ta.punts.filter(r => _taCanon(r.match_date) === _ta.fechaSel);
   if (!forms.length && !punts.length) { body.innerHTML = '<div class="stats-empty">Sin votos para esta fecha.</div>'; return; }
   const html = [];
   if (forms.length) {
     const count = {}, meta = {};
     forms.forEach(f => (f.jugadores || []).forEach(j => { const k = String(j.num); count[k] = (count[k] || 0) + 1; if (!meta[k]) meta[k] = { num: j.num, name: j.name }; }));
     const top = Object.keys(count).map(k => ({ ...meta[k], pct: Math.round(count[k] / forms.length * 100) })).sort((a, b) => b.pct - a.pct).slice(0, 11);
-    html.push(`<div class="ta-sec-title">⚽ Jugadores más elegidos <span>${forms.length} formación${forms.length !== 1 ? 'es' : ''}</span></div>`);
+    html.push(`<div class="ta-sec-title">⚽ Jugadores más elegidos <span>${forms.length} ${forms.length !== 1 ? 'formaciones' : 'formación'}</span></div>`);
     html.push('<div class="ta-list">' + top.map(p => `<div class="ta-item"><div class="ta-av" data-num="${escapeHtml(p.num)}"></div><div class="ta-name">${escapeHtml(p.name || ('#' + p.num))}</div><div class="ta-barwrap"><div class="ta-bar" style="width:${p.pct}%"></div></div><div class="ta-pct">${p.pct}%</div></div>`).join('') + '</div>');
   }
   if (punts.length) {
@@ -4285,11 +4563,11 @@ async function _taRenderVotos() {
         const raw = o[k]; if (raw == null || raw === '') return;   // S/P: no cuenta (Number(null)===0)
         const v = Number(raw); if (isNaN(v)) return;
         sum[k] = (sum[k] || 0) + v; cnt[k] = (cnt[k] || 0) + 1;
-        (fechas[k] = fechas[k] || new Set()).add(row.match_date);
+        (fechas[k] = fechas[k] || new Set()).add(_taCanon(row.match_date) || row.match_date);
       });
     });
     // Acumulado: solo aparece quien fue puntuado en ≥ la mitad de las fechas con datos.
-    const nFechas = new Set(punts.map(r => r.match_date)).size;
+    const nFechas = new Set(punts.map(r => _taCanon(r.match_date) || r.match_date)).size;
     const cutoff = acumMode ? Math.ceil(nFechas / 2) : 1;
     const rank = Object.keys(sum)
       .filter(k => (fechas[k] ? fechas[k].size : 0) >= cutoff)
@@ -4305,7 +4583,7 @@ async function _taRenderVotos() {
 function _taRenderEquipos(fechas) {
   const body = document.getElementById('ta-body');
   const targetDate = _ta.fechaSel === 'acumulado' ? fechas[fechas.length - 1].date : _ta.fechaSel;
-  const rows = _ta.forms.filter(r => r.match_date === targetDate && r.jugadores && r.jugadores.length === 11);
+  const rows = _ta.forms.filter(r => _taCanon(r.match_date) === targetDate && r.jugadores && r.jugadores.length === 11);
   const deviceId = getDeviceId();
   const myRow = rows.find(r => r.device_id === deviceId);
   const others = rows.filter(r => r.id !== (myRow && myRow.id)).sort((a, b) => (b.likes || 0) - (a.likes || 0));
