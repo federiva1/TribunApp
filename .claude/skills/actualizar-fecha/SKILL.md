@@ -12,8 +12,9 @@ de Fede y desde una sesión en la nube.
 ## Reglas de oro
 1. **Lo que se pushea, sale.** No hay paso intermedio: validar ANTES de commitear con
    `python scripts/check_datos.py`. Si falla, no se commitea — se avisa al usuario.
-2. **Datos → directo a `master`. Código → rama + PR** (el PR genera un preview de Vercel para
-   mirar antes). Un cierre de partido es datos; tocar `club.html` es código.
+2. **Datos y código → directo a `master`.** PR (con preview de Vercel y OK de Fede) solo para
+   cambios muy grandes o que necesiten una aprobación más contundente. Desde la nube todo va
+   por PR porque no se puede pushear a `master`; en los cambios chicos se mergea enseguida.
 3. **Un solo camino.** NO usar más `vercel --prod` desde la carpeta
    `Escritorio\tribunapp-deploy\tribunappdeploy`: quedó como respaldo congelado. Si se publica
    por los dos lados gana el último y la web puede retroceder.

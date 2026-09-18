@@ -256,8 +256,9 @@ desde el SQL Editor del dashboard.
 | Tipo de cambio | Cómo |
 |---|---|
 | **Datos** (cierre de partido, fixtures, planteles) | Desde la compu: `python scripts/check_datos.py` → commit `data: …` → `git push origin master` |
-| **Código o docs** | Rama → PR → mirar el preview de Vercel → OK de Fede → squash-merge |
-| **Desde una sesión en la nube** | La nube solo puede pushear a su rama `claude/…`: todo va por PR + squash-merge |
+| **Código o docs** (chicos o medianos) | Desde la compu: probar en local → commit → `git push origin master` |
+| **Cambios muy grandes** o que necesitan una aprobación más contundente | Rama → PR → mirar el preview de Vercel → OK de Fede → squash-merge |
+| **Desde una sesión en la nube** | La nube solo puede pushear a su rama `claude/…`: todo va por PR + squash-merge (en los cambios chicos se mergea enseguida) |
 
 - `check_datos.py` es **obligatorio** antes de commitear datos: falla si un fixture pierde
   partidos, si `liga.json` "des-termina" un resultado, si se borra una ficha o si un JSON quedó roto.
@@ -284,9 +285,18 @@ Detalles del cierre:
 - Copas: las toma el mismo `cierre_rapido`; después `fetch_copas_fixtures.py`.
 
 ### 7.3 Cambios de código
+Regla desde el 18/9/2026: **directo a `master`**, salvo cambios muy grandes o que necesiten una
+aprobación más contundente.
+
+**Cambio chico o mediano** (lo normal):
+1. Cambiar, chequear sintaxis (`node --check` de los `<script>`) y probar en el navegador de la app
+   con el server local.
+2. Commit + `git push origin master` → verificar producción por `curl` o en el navegador.
+3. Si algo salió mal: `git revert <sha>` + push.
+
+**Cambio muy grande:**
 1. Worktree nuevo (`.claude/worktrees/<nombre>`) con una rama desde `origin/master`.
-2. Cambiar, chequear sintaxis (`node --check` de los `<script>`), probar en el navegador de la app
-   con un server local sobre el worktree (config temporal en `.claude/launch.json`).
+2. Cambiar y probar como arriba (config temporal en `.claude/launch.json` para servir el worktree).
 3. Commit, push de la rama, PR con descripción y qué mirar en el preview.
 4. Fede mira el preview (pide login de Vercel) y da el OK → squash-merge → verificar producción.
 5. Borrar la rama. (OneDrive a veces no deja borrar la carpeta del worktree: se borra a mano.)
@@ -361,9 +371,9 @@ Configuración del entorno (ícono de nube → engranaje):
   de entorno de Vercel para el proxy, *API credential* en la nube. El repo es **público**.
 - **`.vercelignore`** mantiene fuera de la web los archivos internos (verificado: dan 404).
 - El proxy `api/apisports.js` solo permite `fixtures`, `standings`, `teams`, `players`, con control de origen.
-- **Confirmaciones**: todo lo que escribe en GitHub o Vercel (mergear un PR, tocar Actions o la
-  config de Vercel) se hace con el OK de Fede. Excepción: los commits de datos que él pide
-  explícitamente ("cerrá X", "publicá").
+- **Confirmaciones**: lo que Fede pide (datos, cambios de código chicos o medianos) se publica
+  directo sin volver a preguntar. Con su OK explícito: cambios muy grandes (por PR), tocar
+  Actions o la config de Vercel, borrar ramas o datos.
 - **GitHub Actions apagado** y los 5 crons comentados (ver §12). No reactivarlos como estaban.
 - **No abrir otra cuenta de GitHub** (sería evadir una sanción).
 
