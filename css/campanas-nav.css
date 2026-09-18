@@ -1,0 +1,19 @@
+/* La quinta sección debe seguir siendo accesible en pantallas angostas. */
+@media (max-width: 800px) {
+  #site-header {
+    flex-wrap: wrap;
+  }
+  #site-header .header-actions {
+    flex-wrap: wrap;
+    margin-left: auto;
+  }
+  #site-header .header-pill-label {
+    display: none;
+  }
+  #site-header .header-pill {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    justify-content: center;
+  }
+}
