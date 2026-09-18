@@ -7,8 +7,12 @@ name: Liga + Copa Match Stats
 # api). Se auto-repara si FotMob todavía no tenía los datos (reintenta en la próxima corrida).
 
 on:
-  schedule:
-    - cron: '0 */3 * * *'   # cada 3 h: capta partidos a medida que terminan (+ delay FotMob)
+  # schedule DESACTIVADO (2026-09-18): los crons de 5/10 min sumaban ~600 corridas/día
+  # de scraping + auto-commit, la causa más probable de la suspensión de la cuenta
+  # (31/8 → 18/9). El circuito corre a mano (skills /actualizar-fecha y /placas, deploy
+  # con Vercel CLI). Para reactivarlo, descomentar — idealmente con un intervalo más largo.
+  # schedule:
+  #   - cron: '0 */3 * * *'   # cada 3 h: capta partidos a medida que terminan (+ delay FotMob)
   workflow_dispatch:
     inputs:
       force_date:

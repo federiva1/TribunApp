@@ -78,7 +78,10 @@ COPAS = {
 
 def fetch_fixtures(team_id, league_id):
     url = (f'https://v3.football.api-sports.io/fixtures'
-           f'?team={team_id}&season={SEASON}&league={league_id}')
+           f'?team={team_id}&season={SEASON}&league={league_id}'
+           # Día local AR: sin esto `fecha` era el día UTC y un partido de las
+           # 21:30 quedaba con el día siguiente (match_date/VER FECHAS corridos).
+           f'&timezone=America/Argentina/Buenos_Aires')
     req = urllib.request.Request(url, headers={'x-apisports-key': API_KEY})
     with urllib.request.urlopen(req, timeout=15) as resp:
         return json.loads(resp.read())['response']

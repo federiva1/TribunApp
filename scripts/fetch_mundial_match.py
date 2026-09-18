@@ -211,6 +211,41 @@ def ronda_label(round_str: str):
     return r or None
 
 
+
+_DT_OVR = None
+
+
+def _dt_override(slug, fecha=None):
+    """DT corregido a mano para ese club, o None. Lee data/dt_overrides.json.
+
+    El valor puede ser el nombre suelto (vale siempre) o un objeto con ventana:
+        {"nombre": "Walter Perazzo", "desde": "2026-09-05", "hasta": "2026-09-05"}
+    La ventana es para los interinos: sin ella el DT viejo se arrastraria a todas
+    las fechas siguientes. `fecha` es el dia del partido (YYYY-MM-DD); si no se
+    pasa, solo se aplican los overrides sin ventana.
+    """
+    global _DT_OVR
+    if _DT_OVR is None:
+        try:
+            _DT_OVR = {k: v for k, v in json.loads(
+                (ROOT / 'data' / 'dt_overrides.json').read_text(encoding='utf-8')).items()
+                if not k.startswith('_')}
+        except Exception:
+            _DT_OVR = {}
+    v = _DT_OVR.get(slug)
+    if v is None or isinstance(v, str):
+        return v
+    desde, hasta = v.get('desde'), v.get('hasta')
+    if desde or hasta:
+        if not fecha:
+            return None                      # con ventana pero sin fecha: no arriesgar
+        if desde and fecha < desde:
+            return None
+        if hasta and fecha > hasta:
+            return None
+    return v.get('nombre')
+
+
 def build_partidos_json(raw: dict, local_slug: str, visitante_slug: str,
                         output_id: str, competicion: str) -> dict:
     fix      = raw['fixture']
@@ -335,6 +370,12 @@ def build_partidos_json(raw: dict, local_slug: str, visitante_slug: str,
             if pl.get('id'):
                 full_name_by_id[pl['id']] = pl.get('name', '')
 
+        # Dorsal por id, titulares + banco: api-sports SÍ trae el número de los
+        # suplentes en lineups.substitutes. Antes quedaba '' y se dependía del plantel
+        # local, que a veces no tiene el número (caso Unión: Ramírez 43, García 32).
+        num_by_id = {(q.get('player') or {}).get('id'): str((q.get('player') or {}).get('number') or '')
+                     for q in (lu.get('startXI', []) + lu.get('substitutes', []))}
+
         # Titulares
         for p in lu.get('startXI', []):
             pl   = p.get('player', {})
@@ -373,7 +414,7 @@ def build_partidos_json(raw: dict, local_slug: str, visitante_slug: str,
                 'tipo':    'suplente',
                 'portero': False,
                 'mvp':     False,
-                'num':     '',
+                'num':     num_by_id.get(s['id'], ''),
                 'min':     90 - s['min_in'] if s['min_in'] else None,
                 'goles':   ev_info.get(s['id'], {}).get('goles', 0),
                 'asist':   ev_info.get(s['id'], {}).get('asist', 0),
@@ -384,11 +425,13 @@ def build_partidos_json(raw: dict, local_slug: str, visitante_slug: str,
             }
             result.append(entry)
 
-        # DT
+        # DT. api-sports tarda semanas en registrar un cambio de tecnico, asi que
+        # data/dt_overrides.json permite corregirlo por club (ver _dt_override).
         coach = lu.get('coach', {})
-        if coach:
+        _ovr = _dt_override(local_slug if is_local else visitante_slug, fecha)
+        if coach or _ovr:
             result.append({
-                'nombre': coach.get('name', ''), 'id': coach.get('id'),
+                'nombre': _ovr or coach.get('name', ''), 'id': None if _ovr else coach.get('id'),
                 'tipo': 'dt', 'portero': False, 'mvp': False, 'num': '',
                 'min': None, 'goles': 0, 'asist': 0,
                 'amarilla': False, 'roja': False,

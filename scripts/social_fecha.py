@@ -50,13 +50,20 @@ def partidos_del_dia(fecha):
     except FileNotFoundError:
         copas = {}
     for key in ('libertadores', 'sudamericana'):
-        for p in ((copas.get(key) or {}).get('partidos')) or []:
-            if not p.get('utcTime'):
-                continue
+        todos = [p for p in (((copas.get(key) or {}).get('partidos')) or []) if p.get('utcTime')]
+        for p in todos:
             ko = datetime.fromisoformat(p['utcTime']).astimezone(AR)
             if ko.strftime('%Y-%m-%d') != fecha:
                 continue
+            # Ida o vuelta: se deduce de la otra pata de la misma serie (mismos
+            # dos clubes en la misma copa). Si no está la otra, no se etiqueta.
+            par = {p['home']['name'], p['away']['name']}
+            otros = [q for q in todos if q is not p and {q['home']['name'], q['away']['name']} == par]
+            pata = None
+            if otros:
+                pata = 'IDA' if all(q['utcTime'] > p['utcTime'] for q in otros) else 'VUELTA'
             out.append({'ko': ko, 'fecha_num': None, 'comp': key,
+                        'ronda': p.get('ronda'), 'pata': pata,
                         'home': p['home'].get('slug'), 'away': p['away'].get('slug'),
                         'home_name': p['home']['name'], 'away_name': p['away']['name'],
                         'home_logo': p['home'].get('logo'), 'away_logo': p['away'].get('logo')})
@@ -75,14 +82,22 @@ def _nombre(slug, fallback):
     return (NOM.get(slug) or fallback or '').upper()
 
 
+def _torneo_label(m):
+    """'TORNEO LOCAL · FECHA 8' o 'COPA LIBERTADORES · CUARTOS DE FINAL · IDA'."""
+    if m.get('fecha_num'):
+        return f"TORNEO LOCAL · FECHA {m['fecha_num']}"
+    base = {'libertadores': 'COPA LIBERTADORES',
+            'sudamericana': 'COPA SUDAMERICANA'}.get(m['comp'], 'TORNEO LOCAL')
+    partes = [base] + [x.upper() for x in (m.get('ronda'), m.get('pata')) if x]
+    return ' · '.join(partes)
+
+
 def _html_uno(m, fecha, titulo):
     """Placa de UN partido: escudos grandes centrados + hora, en vez de la
     tarjeta chica de la lista (con un solo cruce quedaba flotando en el vacío)."""
     d = datetime.strptime(fecha, '%Y-%m-%d')
     sub = f'{DIAS[d.weekday()]} {d.day} DE {MESES[d.month - 1]}'
-    torneo = (f"TORNEO LOCAL · FECHA {m['fecha_num']}" if m.get('fecha_num')
-              else {'libertadores': 'COPA LIBERTADORES',
-                    'sudamericana': 'COPA SUDAMERICANA'}.get(m['comp'], 'TORNEO LOCAL'))
+    torneo = _torneo_label(m)
 
     ff = ''.join(
         "@font-face{font-family:'%s';font-weight:%s;src:url(%s) format('woff2');}"
@@ -173,10 +188,16 @@ def _html(partidos, fecha, titulo):
         return (f'<img class="esc" src="{_b64(cp, "image/png")}">'
                 if cp else '<div class="esc"></div>')
 
-    # con muchos partidos las tarjetas se achican para que entren todas
+    # con muchos partidos las tarjetas se achican para que entren todas; con
+    # dos o tres se agrandan, si no quedan flotando en el medio de la placa.
     n = max(1, len(partidos))
-    alto = 132 if n <= 4 else (118 if n == 5 else 102)
-    escala = 1.0 if n <= 4 else (0.92 if n == 5 else 0.82)
+    if n <= 2:
+        alto, escala = 210, 1.35
+    elif n == 3:
+        alto, escala = 165, 1.15
+    else:
+        alto = 132 if n == 4 else (118 if n == 5 else 102)
+        escala = 1.0 if n == 4 else (0.92 if n == 5 else 0.82)
 
     filas = ''.join(
         '<div class="p"><div class="hora">%s</div><div class="cruce">'
@@ -240,12 +261,12 @@ body{width:760px;height:950px;font-family:'Barlow Condensed',sans-serif;color:#f
         _logo_datauri(), torneo, titulo, sub, filas)
 
 
-def generar(partidos, fecha, titulo, outdir):
+def generar(partidos, fecha, titulo, outdir, nombre=None):
     from playwright.sync_api import sync_playwright
     import os
     exe = os.environ.get('PLAYWRIGHT_CHROMIUM') or None
     Path(outdir).mkdir(parents=True, exist_ok=True)
-    path = Path(outdir) / f'fecha-{fecha}.png'
+    path = Path(outdir) / (nombre or f'fecha-{fecha}.png')
     html = (_html_uno(partidos[0], fecha, titulo) if len(partidos) == 1
             else _html(partidos, fecha, titulo))
     html = aplicar_fondo_tribuna(html)
@@ -264,6 +285,8 @@ def main():
     ap.add_argument('--date', help='YYYY-MM-DD (hora argentina). Default: hoy')
     ap.add_argument('--titulo', default='PARTIDOS DE HOY')
     ap.add_argument('--out', default=str(PREVIEW))
+    ap.add_argument('--cada-uno', action='store_true',
+                    help='una placa por partido (layout de escudos grandes) en vez de la lista del dia')
     args = ap.parse_args()
 
     fecha = args.date or datetime.now(AR).strftime('%Y-%m-%d')
@@ -273,6 +296,11 @@ def main():
         return 1
     for m in partidos:
         print(f"  {m['ko'].strftime('%H:%M')}  {m['home']} vs {m['away']}  ({m['comp']})")
+    if args.cada_uno:
+        for m in partidos:
+            print('imagen:', generar([m], fecha, args.titulo.upper(), args.out,
+                                    nombre=f"fecha-{fecha}-{m['home']}-{m['away']}.png"))
+        return 0
     print('imagen:', generar(partidos, fecha, args.titulo.upper(), args.out))
     return 0
 

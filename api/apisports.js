@@ -72,9 +72,15 @@ export default async function handler(req) {
   // Datos en vivo (marcador/estado de un partido en curso): nunca cachear, o el CDN
   // sirve una respuesta vieja (ej. live=all de hace rato, sin el partido de hoy).
   // El resto (standings, teams, players, listados de fixtures) sí puede cachear 60s.
+  // Detalle de UN partido (lineups/events/statistics?fixture=): cambia poco en
+  // 30 s y lo piden todos los que miran la ficha en vivo (cada 60 s por usuario),
+  // así que se comparte 30 s en el CDN y no en el navegador (max-age=0).
+  const isFixtureDetail = seg === 'fixtures' && url.searchParams.has('fixture');
   const isLive = seg === 'fixtures' &&
-    (url.searchParams.has('live') || url.searchParams.has('id') || url.searchParams.has('fixture'));
-  const cacheControl = isLive ? 'no-store' : 'public, max-age=60';
+    (url.searchParams.has('live') || url.searchParams.has('id'));
+  const cacheControl = isLive ? 'no-store'
+    : isFixtureDetail ? 'public, max-age=0, s-maxage=30'
+    : 'public, max-age=60';
 
   const qs = url.searchParams.toString();
   const upstream = UPSTREAM + normPath + (qs ? '?' + qs : '');

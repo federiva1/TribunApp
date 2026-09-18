@@ -27,19 +27,19 @@
   "top_stats": [
     {
       "label": "Posesion",
-      "local": 49,
-      "visitante": 51,
+      "local": 48,
+      "visitante": 52,
       "tipo": "posesion",
-      "local_val": 49,
-      "visitante_val": 51
+      "local_val": 48,
+      "visitante_val": 52
     },
     {
       "label": "xG",
-      "local": 0.59,
-      "visitante": 0.11,
+      "local": 0.53,
+      "visitante": 0.13,
       "tipo": "numero",
-      "local_val": 0.59,
-      "visitante_val": 0.11
+      "local_val": 0.53,
+      "visitante_val": 0.13
     },
     {
       "label": "Tiros totales",
@@ -59,11 +59,11 @@
     },
     {
       "label": "Toques en area rival",
-      "local": 9,
-      "visitante": 1,
+      "local": 26,
+      "visitante": 7,
       "tipo": "numero",
-      "local_val": 9,
-      "visitante_val": 1
+      "local_val": 26,
+      "visitante_val": 7
     },
     {
       "label": "Corners",
@@ -90,12 +90,20 @@
       "visitante_val": 3
     },
     {
+      "label": "Tarjetas rojas",
+      "local": 0,
+      "visitante": 0,
+      "tipo": "numero",
+      "local_val": 0,
+      "visitante_val": 0
+    },
+    {
       "label": "Pases precisos",
-      "local": "324 (79%)",
-      "visitante": "350 (78%)",
+      "local": "319 (79%)",
+      "visitante": "345 (77%)",
       "tipo": "texto",
       "local_val": 79,
-      "visitante_val": 78
+      "visitante_val": 77
     }
   ],
   "jugadores": {
@@ -1575,5 +1583,6 @@
         "portero_stats": null
       }
     ]
-  }
+  },
+  "top_stats_fuente": "fotmob"
 }

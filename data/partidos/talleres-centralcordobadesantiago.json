@@ -9,7 +9,7 @@
     "fecha": "2026-08-30",
     "fecha_num": 7,
     "ronda": null,
-    "estadio": "Mario Alberto Kempes, Cordoba",
+    "estadio": "Estadio Mario Alberto Kempes, Ciudad de Córdoba",
     "competicion": "Clausura 2026",
     "api_id": "1493104",
     "goles_detalle": {
@@ -17,7 +17,7 @@
       "visitante": []
     },
     "formacion": {
-      "talleres": "3-4-3",
+      "talleres": "4-4-2",
       "centralcordobadesantiago": "5-4-1"
     }
   },
@@ -32,11 +32,11 @@
     },
     {
       "label": "xG",
-      "local": 0.97,
-      "visitante": 1.19,
+      "local": 0.98,
+      "visitante": 1.2,
       "tipo": "numero",
-      "local_val": 0.97,
-      "visitante_val": 1.19
+      "local_val": 0.98,
+      "visitante_val": 1.2
     },
     {
       "label": "Tiros totales",
@@ -56,11 +56,11 @@
     },
     {
       "label": "Toques en area rival",
-      "local": 13,
-      "visitante": 9,
+      "local": 30,
+      "visitante": 14,
       "tipo": "numero",
-      "local_val": 13,
-      "visitante_val": 9
+      "local_val": 30,
+      "visitante_val": 14
     },
     {
       "label": "Corners",
@@ -87,9 +87,17 @@
       "visitante_val": 1
     },
     {
+      "label": "Tarjetas rojas",
+      "local": 0,
+      "visitante": 0,
+      "tipo": "numero",
+      "local_val": 0,
+      "visitante_val": 0
+    },
+    {
       "label": "Pases precisos",
-      "local": "539 (89%)",
-      "visitante": "279 (79%)",
+      "local": "549 (89%)",
+      "visitante": "278 (79%)",
       "tipo": "texto",
       "local_val": 89,
       "visitante_val": 79
@@ -98,8 +106,8 @@
   "jugadores": {
     "talleres": [
       {
-        "nombre": "Ezequiel Unsaín",
-        "id": 5932,
+        "nombre": "Ezequiel Unsain",
+        "id": 618946,
         "tipo": "titular",
         "portero": true,
         "mvp": false,
@@ -107,8 +115,6 @@
         "min": 90,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "acc_defensivas": 2,
           "pases_precisos": 22
@@ -140,7 +146,7 @@
       },
       {
         "nombre": "Augusto Schott",
-        "id": 129883,
+        "id": 1200762,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -148,8 +154,6 @@
         "min": 90,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "tiros_totales": 2,
           "disparos_puerta": 0,
@@ -182,12 +186,12 @@
         "portero_stats": null,
         "pos": {
           "x": 35.7,
-          "y": 79.0
+          "y": 87.5
         }
       },
       {
         "nombre": "Matías Catalán",
-        "id": 36035,
+        "id": 427912,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -195,8 +199,6 @@
         "min": 90,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "tiros_totales": 1,
           "disparos_puerta": 1,
@@ -228,12 +230,12 @@
         "portero_stats": null,
         "pos": {
           "x": 35.7,
-          "y": 50.0
+          "y": 62.5
         }
       },
       {
         "nombre": "Valentín Fascendini",
-        "id": 425741,
+        "id": 1606009,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -241,8 +243,6 @@
         "min": 90,
         "goles": 0,
         "asist": 0,
-        "amarilla": true,
-        "roja": false,
         "top": {
           "oport_creadas": 0,
           "acc_defensivas": 4,
@@ -273,12 +273,12 @@
         "portero_stats": null,
         "pos": {
           "x": 35.7,
-          "y": 21.0
+          "y": 37.5
         }
       },
       {
         "nombre": "Gabriel Báez",
-        "id": 36194,
+        "id": 647991,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -286,8 +286,6 @@
         "min": 90,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "tiros_totales": 3,
           "disparos_puerta": 0,
@@ -321,13 +319,13 @@
         },
         "portero_stats": null,
         "pos": {
-          "x": 61.3,
+          "x": 35.7,
           "y": 12.5
         }
       },
       {
         "nombre": "Timoteo Chamorro",
-        "id": 514291,
+        "id": 1732523,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -335,8 +333,6 @@
         "min": 82,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "tiros_totales": 3,
           "disparos_puerta": 1,
@@ -372,17 +368,15 @@
         }
       },
       {
-        "nombre": "Lautaro Ortiz",
-        "id": 636310,
+        "nombre": "Lautaro Ortíz",
+        "id": 1897272,
         "tipo": "titular",
         "portero": false,
         "mvp": true,
         "num": "39",
-        "min": 90,
+        "min": 79,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "tiros_totales": 2,
           "disparos_puerta": 0,
@@ -420,8 +414,8 @@
         }
       },
       {
-        "nombre": "Matias Galarza",
-        "id": 306548,
+        "nombre": "Matías Galarza",
+        "id": 1277340,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -429,8 +423,6 @@
         "min": 90,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "tiros_totales": 2,
           "disparos_puerta": 0,
@@ -471,7 +463,7 @@
       },
       {
         "nombre": "Rick",
-        "id": 119666,
+        "id": 1044317,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -479,8 +471,6 @@
         "min": 60,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "tiros_totales": 3,
           "disparos_puerta": 0,
@@ -515,13 +505,13 @@
         },
         "portero_stats": null,
         "pos": {
-          "x": 87.0,
-          "y": 21.0
+          "x": 61.3,
+          "y": 12.5
         }
       },
       {
-        "nombre": "Valentin Depietri",
-        "id": 133621,
+        "nombre": "Valentín Depietri",
+        "id": 1088084,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -529,8 +519,6 @@
         "min": 79,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "tiros_totales": 3,
           "disparos_puerta": 2,
@@ -565,12 +553,12 @@
         "portero_stats": null,
         "pos": {
           "x": 87.0,
-          "y": 79.0
+          "y": 70.0
         }
       },
       {
         "nombre": "Agustín Álvarez",
-        "id": 278190,
+        "id": 1192576,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -578,8 +566,6 @@
         "min": 60,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "tiros_totales": 4,
           "disparos_puerta": 1,
@@ -612,12 +598,12 @@
         "portero_stats": null,
         "pos": {
           "x": 87.0,
-          "y": 50.0
+          "y": 30.0
         }
       },
       {
         "nombre": "Franco Cristaldo",
-        "id": 6546,
+        "id": 543317,
         "tipo": "suplente",
         "portero": false,
         "mvp": false,
@@ -625,8 +611,6 @@
         "min": 30,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "oport_creadas": 1,
           "acc_defensivas": 0,
@@ -657,8 +641,8 @@
         "portero_stats": null
       },
       {
-        "nombre": "Valentin Davila",
-        "id": 501779,
+        "nombre": "Valentín Dávila",
+        "id": 1695460,
         "tipo": "suplente",
         "portero": false,
         "mvp": false,
@@ -666,8 +650,6 @@
         "min": 30,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "oport_creadas": 1,
           "acc_defensivas": 5,
@@ -698,16 +680,14 @@
       },
       {
         "nombre": "Juan Sforza",
-        "id": 237089,
+        "id": 1200743,
         "tipo": "suplente",
         "portero": false,
         "mvp": false,
-        "num": "",
+        "num": "13",
         "min": 11,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "tiros_totales": 1,
           "disparos_puerta": 0,
@@ -741,7 +721,7 @@
       },
       {
         "nombre": "Emiliano Chiavassa",
-        "id": 516785,
+        "id": 1739039,
         "tipo": "suplente",
         "portero": false,
         "mvp": false,
@@ -749,8 +729,6 @@
         "min": 11,
         "goles": 0,
         "asist": 0,
-        "amarilla": true,
-        "roja": false,
         "top": {
           "oport_creadas": 0,
           "acc_defensivas": 1,
@@ -781,16 +759,14 @@
       },
       {
         "nombre": "Giovanni Baroni",
-        "id": 516787,
+        "id": 1783366,
         "tipo": "suplente",
         "portero": false,
         "mvp": false,
-        "num": "30",
+        "num": "10",
         "min": 8,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "oport_creadas": 1,
           "acc_defensivas": 1,
@@ -823,7 +799,7 @@
       },
       {
         "nombre": "Jorge Sampaoli",
-        "id": 127,
+        "id": null,
         "tipo": "dt",
         "portero": false,
         "mvp": false,
@@ -831,8 +807,6 @@
         "min": null,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": null,
         "ataque": null,
         "defensa": null,
@@ -843,7 +817,7 @@
     "centralcordobadesantiago": [
       {
         "nombre": "Alan Aguerre",
-        "id": 6330,
+        "id": 246172,
         "tipo": "titular",
         "portero": true,
         "mvp": false,
@@ -851,8 +825,6 @@
         "min": 90,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "acc_defensivas": 0,
           "pases_precisos": 22
@@ -886,54 +858,8 @@
         }
       },
       {
-        "nombre": "Fernando Martínez",
-        "id": 309827,
-        "tipo": "titular",
-        "portero": false,
-        "mvp": false,
-        "num": "20",
-        "min": 83,
-        "goles": 0,
-        "asist": 0,
-        "amarilla": false,
-        "roja": false,
-        "top": {
-          "oport_creadas": 1,
-          "acc_defensivas": 6,
-          "pases_precisos": 13
-        },
-        "ataque": {
-          "toques": 35,
-          "toques_area": 2,
-          "regates": 1,
-          "pases_ultimo_tercio": 2,
-          "tiros_largos": 0,
-          "perdida_balon": 1
-        },
-        "defensa": {
-          "acc_defensivas": 6,
-          "entradas": 3,
-          "interceptaciones": 2,
-          "recuperaciones": 7,
-          "despejes": 1,
-          "regateado": 2
-        },
-        "duelos": {
-          "ganados": 4,
-          "perdidos": 4,
-          "terrestres": 4,
-          "aereos": 0,
-          "faltas": 0
-        },
-        "portero_stats": null,
-        "pos": {
-          "x": 37.1,
-          "y": 89.0
-        }
-      },
-      {
         "nombre": "Santiago Moyano",
-        "id": 5796,
+        "id": 856317,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -941,8 +867,6 @@
         "min": 90,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "oport_creadas": 0,
           "acc_defensivas": 4,
@@ -979,7 +903,7 @@
       },
       {
         "nombre": "Alejandro Maciel",
-        "id": 5810,
+        "id": 907957,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -987,8 +911,6 @@
         "min": 90,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "tiros_totales": 1,
           "disparos_puerta": 0,
@@ -1025,8 +947,8 @@
         }
       },
       {
-        "nombre": "Facundo Mansilla",
-        "id": 290806,
+        "nombre": "Facundo Mansilla Zahir",
+        "id": 1205837,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -1034,8 +956,6 @@
         "min": 90,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "tiros_totales": 1,
           "disparos_puerta": 0,
@@ -1070,8 +990,52 @@
         }
       },
       {
+        "nombre": "Fernando Martínez",
+        "id": 1243610,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "20",
+        "min": 83,
+        "goles": 0,
+        "asist": 0,
+        "top": {
+          "oport_creadas": 1,
+          "acc_defensivas": 6,
+          "pases_precisos": 13
+        },
+        "ataque": {
+          "toques": 35,
+          "toques_area": 2,
+          "regates": 1,
+          "pases_ultimo_tercio": 2,
+          "tiros_largos": 0,
+          "perdida_balon": 1
+        },
+        "defensa": {
+          "acc_defensivas": 6,
+          "entradas": 3,
+          "interceptaciones": 2,
+          "recuperaciones": 7,
+          "despejes": 1,
+          "regateado": 2
+        },
+        "duelos": {
+          "ganados": 4,
+          "perdidos": 4,
+          "terrestres": 4,
+          "aereos": 0,
+          "faltas": 0
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 37.1,
+          "y": 89.0
+        }
+      },
+      {
         "nombre": "Darío Cáceres",
-        "id": 6198,
+        "id": 922919,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -1079,8 +1043,6 @@
         "min": 90,
         "goles": 0,
         "asist": 0,
-        "amarilla": true,
-        "roja": false,
         "top": {
           "oport_creadas": 2,
           "acc_defensivas": 11,
@@ -1117,7 +1079,7 @@
       },
       {
         "nombre": "Marco Iacobellis",
-        "id": 59201,
+        "id": 1097396,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -1125,8 +1087,6 @@
         "min": 90,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "tiros_totales": 7,
           "disparos_puerta": 1,
@@ -1163,12 +1123,12 @@
         "portero_stats": null,
         "pos": {
           "x": 61.3,
-          "y": 37.5
+          "y": 87.5
         }
       },
       {
         "nombre": "Matías Vera",
-        "id": 51094,
+        "id": 629749,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -1176,8 +1136,6 @@
         "min": 90,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "oport_creadas": 1,
           "acc_defensivas": 5,
@@ -1215,7 +1173,7 @@
       },
       {
         "nombre": "Lucas González",
-        "id": 126671,
+        "id": 1088057,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -1223,8 +1181,6 @@
         "min": 90,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "tiros_totales": 2,
           "disparos_puerta": 0,
@@ -1259,12 +1215,12 @@
         "portero_stats": null,
         "pos": {
           "x": 61.3,
-          "y": 87.5
+          "y": 37.5
         }
       },
       {
         "nombre": "Diego Barrera",
-        "id": 405310,
+        "id": 1435861,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -1272,8 +1228,6 @@
         "min": 81,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "tiros_totales": 3,
           "disparos_puerta": 2,
@@ -1312,7 +1266,7 @@
       },
       {
         "nombre": "Ezequiel Naya",
-        "id": 322308,
+        "id": 1276035,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -1320,8 +1274,6 @@
         "min": 90,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "tiros_totales": 2,
           "disparos_puerta": 1,
@@ -1360,8 +1312,8 @@
         }
       },
       {
-        "nombre": "Joaquin Flores",
-        "id": 634731,
+        "nombre": "Joaquín Flores",
+        "id": 1895783,
         "tipo": "suplente",
         "portero": false,
         "mvp": false,
@@ -1369,8 +1321,6 @@
         "min": 9,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "oport_creadas": 0,
           "acc_defensivas": 0,
@@ -1397,8 +1347,8 @@
         "portero_stats": null
       },
       {
-        "nombre": "José Goméz",
-        "id": 289436,
+        "nombre": "José Gómez",
+        "id": 1312178,
         "tipo": "suplente",
         "portero": false,
         "mvp": false,
@@ -1406,8 +1356,6 @@
         "min": 7,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "oport_creadas": 0,
           "acc_defensivas": 0,
@@ -1437,8 +1385,8 @@
         "portero_stats": null
       },
       {
-        "nombre": "Sebastian Dominguez",
-        "id": 28357,
+        "nombre": "Sebastián Dominguez",
+        "id": null,
         "tipo": "dt",
         "portero": false,
         "mvp": false,
@@ -1446,8 +1394,6 @@
         "min": null,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": null,
         "ataque": null,
         "defensa": null,
@@ -1455,5 +1401,6 @@
         "portero_stats": null
       }
     ]
-  }
+  },
+  "top_stats_fuente": "fotmob"
 }

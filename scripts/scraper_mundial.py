@@ -17,6 +17,15 @@ import sys, os, json, time, argparse
 import urllib.request
 import urllib.error
 
+# La consola de Windows usa cp1252: sin esto, un print con "→" o "✗" corta el
+# script a mitad de camino (pasó al cerrar Est. Río Cuarto - Sarmiento el 4/9).
+# En los runners de CI la salida ya es UTF-8, así que allá no cambia nada.
+try:
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+except (AttributeError, ValueError):   # stdout redirigido a algo sin reconfigure
+    pass
+
 # ── Rutas ────────────────────────────────────────────────────────────────────
 BASE_DIR   = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DIR_ESCUDOS  = os.path.join(BASE_DIR, "escudos")

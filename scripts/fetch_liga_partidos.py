@@ -22,6 +22,7 @@ import json
 import re
 import sys
 import time
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -80,6 +81,11 @@ def resolve_fotmob_url(fotmob_id: int, date_str: str):
     return None
 
 
+# Dias tras los cuales un partido sin stats individuales se da por cerrado y no se
+# vuelve a escribir (FotMob ya no las va a publicar).
+VENTANA_REPROCESO_DIAS = 5
+
+
 def already_enriched(out_id: str) -> bool:
     f = fmm.PARTIDOS_DIR / f'{out_id}.json'
     if not f.exists():
@@ -89,7 +95,24 @@ def already_enriched(out_id: str) -> bool:
     except Exception:
         return False
     jugs = [j for jj in d.get('jugadores', {}).values() for j in jj if j.get('tipo') != 'dt']
-    return any(j.get('top') is not None for j in jugs)
+    if not any(j.get('top') is not None for j in jugs):
+        # Sin stats individuales: se reprocesa solo si el partido es RECIENTE (FotMob
+        # suele publicarlas con demora). Pasados VENTANA_REPROCESO_DIAS ya no las va a
+        # traer, y volver a escribir el archivo solo degrada los datos: el lineup de
+        # api-sports abrevia los nombres ("S. Ascacibar" por "Santiago Ascacibar") y
+        # pisa los completos que dejo FotMob. Casos reales: Torque-Tigre (20/8) y
+        # Recoleta-Boca (18/8), que se re-degradaban en cada corrida de copas.
+        fecha = (d.get('partido') or {}).get('fecha') or ''
+        try:
+            dias = (datetime.now(timezone.utc).date() - date.fromisoformat(fecha[:10])).days
+        except Exception:
+            dias = 0          # sin fecha legible: comportamiento previo (reprocesar)
+        return dias > VENTANA_REPROCESO_DIAS
+    # Partidos escritos antes de la política "top_stats siempre FotMob" (o por
+    # un camino que no la aplicó) no llevan el flag de procedencia → el cron los
+    # reprocesa para re-derivar las stats. 'apisports' también cuenta como
+    # procesado: significa que FotMob no tenía stats de equipo y ya se intentó.
+    return d.get('top_stats_fuente') in ('fotmob', 'apisports')
 
 
 def competicion_de(round_str: str) -> str:
@@ -105,6 +128,17 @@ def _norm_nombre(s):
     import unicodedata
     s = unicodedata.normalize('NFD', str(s or '')).encode('ascii', 'ignore').decode().lower()
     return ' '.join(s.split())
+
+
+def _dias(a: str, b: str) -> int:
+    """Diferencia en días entre dos 'YYYY-MM-DD' (0 si alguna no parsea)."""
+    from datetime import date
+    try:
+        pa = date(*map(int, a.split('-')[:3]))
+        pb = date(*map(int, b.split('-')[:3]))
+        return (pa - pb).days
+    except Exception:
+        return 0
 
 
 def completar_nums_desde_plantel(payload):
@@ -125,31 +159,159 @@ def completar_nums_desde_plantel(payload):
             k = _norm_nombre(j.get('nombre'))
             n = by.get(k)
             if not n:
-                toks = k.split()
-                c = [v for nm, v in by.items() if toks and toks[-1] in nm.split()]
-                if len(c) != 1:
-                    c = [v for nm, v in by.items()
-                         if len(toks) > 1 and toks[0] in nm.split() and toks[-1] in nm.split()]
-                n = c[0] if len(c) == 1 else None
+                # El nombre del partido suele venir abreviado ("L. Beltran") y el
+                # del plantel completo ("Lucas Beltran"): la inicial se compara como
+                # PREFIJO, no por igualdad. Sin esto, dos hermanos de apellido
+                # (Santiago y Lucas Beltran) se anulaban entre si y quedaba sin dorsal.
+                toks = k.replace('.', ' ').split()
+                ape = toks[-1] if toks else ''
+                ini = toks[0][0] if len(toks) > 1 and toks[0] else ''
+                c = [(nm, v) for nm, v in by.items()
+                     if ape and ape in nm.replace('.', ' ').split()]
+                if len(c) > 1 and ini:
+                    c = [(nm, v) for nm, v in c
+                         if nm.replace('.', ' ').split()[0].startswith(ini)]
+                n = c[0][1] if len(c) == 1 else None
             if n:
                 j['num'] = n
     return payload
 
 
-def _top_stats_incompletas(ts) -> bool:
-    """¿Las stats globales parecen un snapshot de los primeros minutos?
-    En 90' reales los pases precisos suman cientos; el snapshot con lag de
-    api-sports trae un puñado (caso real: "2 (67%) | 7 (88%)")."""
-    if not ts:
-        return True
-    for s in ts:
-        if s.get('label') == 'Pases precisos':
-            total = 0
-            for lado in ('local', 'visitante'):
-                m = re.match(r'\s*(\d+)', str(s.get(lado) or ''))
-                total += int(m.group(1)) if m else 0
-            return total < 150
-    return True   # sin entrada de pases: api-sports mandó statistics vacío/parcial
+def _faltan_titulares(payload, slugs) -> bool:
+    """¿Algún equipo se quedó sin XI? Pasa cuando api-sports nunca publica
+    /fixtures/lineups (caso real: IndRiv-Racing F7 — el payload quedó con los 4
+    suplentes que asomaron por los eventos de cambio y ningún titular)."""
+    for slug in slugs:
+        js = (payload.get('jugadores') or {}).get(slug) or []
+        if len([j for j in js if j.get('tipo') == 'titular']) < 11:
+            return True
+    return False
+
+
+def reconstruir_jugadores_desde_fotmob(nd, payload, ls, vs) -> bool:
+    """Arma los planteles del partido desde el lineup de FotMob.
+
+    Sin el lineup de api-sports el JSON queda sin jugadores, y de ahí salen el
+    gate de puntajes, la placa y las stats individuales. FotMob tiene el XI, el
+    banco y los minutos, así que se reconstruye con él (misma regla de siempre:
+    hueco de api-sports ⇒ lo tapa FotMob). Devuelve True si reconstruyó algo.
+    """
+    content = ((nd.get('props') or {}).get('pageProps') or {}).get('content') or {}
+    lu = content.get('lineup') or {}
+    if not lu:
+        return False
+    home_id = sfm.fotmob_home_id(nd)
+    fid_loc = (CLUBES.get(ls) or {}).get('fotmob')
+    fid_vis = (CLUBES.get(vs) or {}).get('fotmob')
+    if home_id not in (fid_loc, fid_vis):
+        return False                      # orientación no confiable: no tocar
+
+    # stats por jugador (minutos/goles/asistencias) indexadas por id de FotMob
+    ps = content.get('playerStats') or {}
+    flat_by_id = {}
+    for p in ps.values():
+        if p.get('id') is not None:
+            flat_by_id[p['id']] = (sfm.flatten_stats(p.get('stats', [])),
+                                   p.get('isGoalkeeper', False))
+
+    goles = payload.get('partido', {})
+    hecho = False
+    for side in ('homeTeam', 'awayTeam'):
+        t = lu.get(side) or {}
+        if not t.get('starters'):
+            continue
+        es_local = (t.get('id') == fid_loc) if fid_loc else (t.get('id') != fid_vis)
+        slug = ls if es_local else vs
+        recibidos = goles.get('goles_visitante' if es_local else 'goles_local') or 0
+
+        def armar(p, tipo):
+            flat, is_gk = flat_by_id.get(p.get('id'), ({}, False))
+            mins = sfm.to_int(flat.get('Minutes played'))
+            if tipo == 'suplente' and not mins:
+                return None               # suplentes que no ingresaron: fuera
+            h = p.get('horizontalLayout') or {}
+            pos = ({'x': round(h['x'] * 100, 1), 'y': round(h['y'] * 100, 1)}
+                   if tipo == 'titular' and h.get('x') is not None and h.get('y') is not None
+                   else None)
+            j = {
+                'nombre': p.get('name') or '', 'id': p.get('id'), 'tipo': tipo,
+                'portero': bool(is_gk), 'mvp': False,
+                'num': str(p.get('shirtNumber') or ''),
+                'min': mins, 'goles': sfm.to_int(flat.get('Goals')) or 0,
+                'asist': sfm.to_int(flat.get('Assists')) or 0,
+                'top': None, 'ataque': None, 'defensa': None, 'duelos': None,
+                'portero_stats': ({'paradas': None, 'goles_contra': recibidos,
+                                   'goles_evitados': None} if is_gk else None),
+            }
+            if pos:
+                j['pos'] = pos
+            return j
+
+        jugs = [j for j in (armar(p, 'titular') for p in t['starters']) if j]
+        jugs += [j for j in (armar(p, 'suplente') for p in (t.get('subs') or [])) if j]
+        coach = t.get('coach') or {}
+        nombre_dt = coach.get('name') if isinstance(coach, dict) else None
+        if isinstance(coach, list) and coach:
+            nombre_dt = (coach[0] or {}).get('name')
+        # api-sports tarda en registrar los cambios de DT (caso real: seguia dando
+        # Israel Damonte en Aldosivi con Sanguinetti ya dirigiendo). data/dt_overrides.json
+        # corrige por club y sobrevive a cualquier reproceso del partido.
+        nombre_dt = _dt_override(slug, (payload.get('partido') or {}).get('fecha')) or nombre_dt
+        if nombre_dt:
+            jugs.append({'nombre': nombre_dt, 'id': None, 'tipo': 'dt', 'portero': False,
+                         'mvp': False, 'num': '', 'min': None, 'goles': 0, 'asist': 0,
+                         'top': None, 'ataque': None, 'defensa': None, 'duelos': None,
+                         'portero_stats': None})
+        if len([j for j in jugs if j['tipo'] == 'titular']) >= 11:
+            _sincronizar_goles(jugs, goles.get('goles_detalle', {}).get(
+                'local' if es_local else 'visitante') or [])
+            payload.setdefault('jugadores', {})[slug] = jugs
+            payload.setdefault('partido', {}).setdefault('formacion', {})[slug] = \
+                t.get('formation') or ''
+            hecho = True
+    return hecho
+
+
+def _match_por_nombre(nombre, jugs):
+    """"M. Pellegrini" (api-sports) ↔ "Matías Pellegrini" (FotMob): mismo último
+    token y primer token igual o inicial. Solo vale si identifica a uno solo."""
+    a = _norm_nombre(str(nombre).replace('.', ' ')).split()
+    if not a:
+        return None
+    cand = []
+    for j in jugs:
+        n = _norm_nombre(j.get('nombre')).split()
+        if not n or n[-1] != a[-1]:
+            continue
+        if len(a) < 2 or n[0] == a[0] or (len(a[0]) == 1 and n[0].startswith(a[0])):
+            cand.append(j)
+    return cand[0] if len(cand) == 1 else None
+
+
+
+def _dt_override(slug, fecha=None):
+    """Delegado: una sola implementacion, en fetch_mundial_match."""
+    return fmm._dt_override(slug, fecha)
+
+def _sincronizar_goles(jugs, detalle):
+    """Los playerStats de FotMob a veces no acreditan un gol que su propio
+    timeline sí registra (caso real: Pellegrini en Riestra-Vélez F7, events lo
+    daba 76' y playerStats 0). `goles_detalle` es la fuente verificada — si la
+    suma no coincide, manda el detalle."""
+    reales = [g for g in detalle if not g.get('en_contra')]
+    if sum(j.get('goles') or 0 for j in jugs) == len(reales):
+        return
+    for j in jugs:
+        j['goles'] = 0
+        j['asist'] = 0
+    for g in reales:
+        j = _match_por_nombre(g.get('jugador') or '', jugs)
+        if j:
+            j['goles'] = (j.get('goles') or 0) + 1
+        if g.get('asist'):
+            a = _match_por_nombre(g['asist'], jugs)
+            if a:
+                a['asist'] = (a.get('asist') or 0) + 1
 
 
 def main() -> int:
@@ -237,22 +399,72 @@ def main() -> int:
             out_file = fmm.PARTIDOS_DIR / f"{m['oid']}.json"
             payload = json.loads(out_file.read_text(encoding='utf-8'))
             nd = sfm._fetch_next_data(url)
+
+            # 3b. Si api-sports nunca publicó los lineups, el payload viene sin
+            #     XI (de ahí salen puntajes, placa y stats individuales): se
+            #     reconstruyen los planteles desde el lineup de FotMob ANTES de
+            #     enriquecer, así el enrich tiene a quién pegarle las stats.
+            if _faltan_titulares(payload, (m['ls'], m['vs'])):
+                if reconstruir_jugadores_desde_fotmob(nd, payload, m['ls'], m['vs']):
+                    print('   planteles reconstruidos con FotMob (api-sports no dio lineups)')
+
             payload = sfm._enrich_payload_from_nd(nd, payload)
 
-            # 4. Fallback de top_stats: api-sports a veces sirve las estadísticas
-            #    congeladas en los primeros minutos aunque el partido esté FT
-            #    (pasó con ERC-San Lorenzo F6: "2 vs 7 pases precisos"). Si las
-            #    stats parecen de un partido a medio jugar, se reconstruyen desde
-            #    las stats de equipo de FotMob que vienen en el mismo nd.
-            if _top_stats_incompletas(payload.get('top_stats')):
-                home_id = str(sfm.fotmob_home_id(nd) or '')
-                fid_loc = str((CLUBES.get(m['ls']) or {}).get('fotmob') or '')
-                fid_vis = str((CLUBES.get(m['vs']) or {}).get('fotmob') or '')
-                if home_id in (fid_loc, fid_vis):
-                    ts = sfm.team_stats_from_nd(nd, home_es_local=(home_id == fid_loc))
-                    if ts:
-                        payload['top_stats'] = ts
-                        print('   top_stats reemplazadas con FotMob (api-sports venía incompleto)')
+            # 4. top_stats: SIEMPRE FotMob cuando están disponibles. api-sports
+            #    sirvió dos veces un snapshot congelado de mitad de partido que
+            #    pasaba el detector de "incompletas" (ERC-San Lorenzo F6: "2 vs 7
+            #    pases"; Boca-Lanús F7: xG 0.36-0.17 cuando el real era
+            #    1.16-0.91, con 8 tiros que eran 19). No hay forma barata de
+            #    distinguir un snapshot "creíble" de datos reales, y FotMob es la
+            #    misma fuente de las stats individuales → consistencia total
+            #    (la suma de xG por jugador cuadra con el xG del equipo).
+            #    api-sports queda solo como fallback si FotMob no trae stats.
+            home_id = str(sfm.fotmob_home_id(nd) or '')
+            away_id = str(sfm.fotmob_away_id(nd) or '')
+            fid_loc = str((CLUBES.get(m['ls']) or {}).get('fotmob') or '')
+            fid_vis = str((CLUBES.get(m['vs']) or {}).get('fotmob') or '')
+            # Orientación de los arrays de FotMob. Alcanza con reconocer UNO de los
+            # dos equipos: en copa el rival es extranjero y no está en clubes_map,
+            # así que exigir que el fotmob_id del LOCAL estuviera en el mapa dejaba
+            # todos los partidos de local-extranjero con las stats de api-sports
+            # (sin xG y con "toques en área rival" distinto). Se pide igual que el
+            # club conocido aparezca en el partido de FotMob, para no orientar mal
+            # si la URL resolvió a otro partido.
+            home_es_local = None
+            if fid_loc and fid_loc in (home_id, away_id):
+                home_es_local = (home_id == fid_loc)
+            elif fid_vis and fid_vis in (home_id, away_id):
+                home_es_local = (away_id == fid_vis)
+            # Guarda de fecha: el resolver de FotMob busca por equipo y puede
+            # devolver OTRO partido contra el mismo rival. En las series de copa
+            # ida/vuelta eso hacía que la IDA se quedara con las stats de la
+            # VUELTA (confirmado: Boca-Recoleta 11/08 mostraba 18 tiros y 48% de
+            # posesión, que son los de la revancha del 18/08). Si el día no
+            # coincide, se conservan las de api-sports, que sí son por fixture.
+            fm_dia = sfm.fotmob_match_date(nd)
+            dia_ok = (not fm_dia) or abs(_dias(fm_dia, m['date'])) <= 1
+            if not dia_ok:
+                print(f'   OJO: FotMob devolvio el partido del {fm_dia} y este es del {m["date"]}'
+                      f' -> se conservan las stats de api-sports')
+            if home_es_local is not None and dia_ok:
+                ts = sfm.team_stats_from_nd(nd, home_es_local=home_es_local)
+                ven = sfm.venue_from_nd(nd)
+                if ven and not (payload.get('partido') or {}).get('estadio', '').split(',')[0].strip():
+                    payload['partido']['estadio'] = ven
+                    print('   estadio desde FotMob:', ven)
+                if ts:
+                    # Partidos viejos de FotMob pueden venir sin xG (caso real:
+                    # Instituto-Platense 30/7): se conserva el de api-sports para
+                    # no dejar al partido fuera de la tabla xG.
+                    if not any(s.get('label') == 'xG' for s in ts):
+                        prev = next((s for s in (payload.get('top_stats') or [])
+                                     if s.get('label') == 'xG'), None)
+                        if prev:
+                            ts.insert(1, prev)
+                    payload['top_stats'] = ts
+                    payload['top_stats_fuente'] = 'fotmob'
+                    print('   top_stats desde FotMob')
+            payload.setdefault('top_stats_fuente', 'apisports')
 
             completar_nums_desde_plantel(payload)
             out_file.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')

@@ -38,11 +38,11 @@
     },
     {
       "label": "xG",
-      "local": 0.62,
-      "visitante": 0.38,
+      "local": 0.64,
+      "visitante": 0.37,
       "tipo": "numero",
-      "local_val": 0.62,
-      "visitante_val": 0.38
+      "local_val": 0.64,
+      "visitante_val": 0.37
     },
     {
       "label": "Tiros totales",
@@ -62,18 +62,18 @@
     },
     {
       "label": "Toques en area rival",
-      "local": 3,
-      "visitante": 4,
+      "local": 6,
+      "visitante": 18,
       "tipo": "numero",
-      "local_val": 3,
-      "visitante_val": 4
+      "local_val": 6,
+      "visitante_val": 18
     },
     {
       "label": "Corners",
-      "local": 1,
+      "local": 2,
       "visitante": 4,
       "tipo": "numero",
-      "local_val": 1,
+      "local_val": 2,
       "visitante_val": 4
     },
     {
@@ -93,9 +93,17 @@
       "visitante_val": 3
     },
     {
+      "label": "Tarjetas rojas",
+      "local": 0,
+      "visitante": 0,
+      "tipo": "numero",
+      "local_val": 0,
+      "visitante_val": 0
+    },
+    {
       "label": "Pases precisos",
-      "local": "203 (68%)",
-      "visitante": "562 (87%)",
+      "local": "205 (68%)",
+      "visitante": "566 (87%)",
       "tipo": "texto",
       "local_val": 68,
       "visitante_val": 87
@@ -1449,5 +1457,6 @@
         "portero_stats": null
       }
     ]
-  }
+  },
+  "top_stats_fuente": "fotmob"
 }

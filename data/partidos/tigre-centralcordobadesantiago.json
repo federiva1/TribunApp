@@ -41,27 +41,27 @@
   "top_stats": [
     {
       "label": "Posesion",
-      "local": 40,
-      "visitante": 60,
+      "local": 39,
+      "visitante": 61,
       "tipo": "posesion",
-      "local_val": 40,
-      "visitante_val": 60
+      "local_val": 39,
+      "visitante_val": 61
     },
     {
       "label": "xG",
-      "local": 2.41,
-      "visitante": 1.45,
+      "local": 2.26,
+      "visitante": 1.26,
       "tipo": "numero",
-      "local_val": 2.41,
-      "visitante_val": 1.45
+      "local_val": 2.26,
+      "visitante_val": 1.26
     },
     {
       "label": "Tiros totales",
-      "local": 15,
-      "visitante": 12,
+      "local": 14,
+      "visitante": 11,
       "tipo": "numero",
-      "local_val": 15,
-      "visitante_val": 12
+      "local_val": 14,
+      "visitante_val": 11
     },
     {
       "label": "Tiros al arco",
@@ -73,11 +73,11 @@
     },
     {
       "label": "Toques en area rival",
-      "local": 12,
-      "visitante": 8,
+      "local": 21,
+      "visitante": 21,
       "tipo": "numero",
-      "local_val": 12,
-      "visitante_val": 8
+      "local_val": 21,
+      "visitante_val": 21
     },
     {
       "label": "Corners",
@@ -90,23 +90,31 @@
     {
       "label": "Faltas",
       "local": 12,
-      "visitante": 11,
+      "visitante": 14,
       "tipo": "numero",
       "local_val": 12,
-      "visitante_val": 11
+      "visitante_val": 14
     },
     {
       "label": "Tarjetas amarillas",
       "local": 3,
-      "visitante": 1,
+      "visitante": 2,
       "tipo": "numero",
       "local_val": 3,
-      "visitante_val": 1
+      "visitante_val": 2
+    },
+    {
+      "label": "Tarjetas rojas",
+      "local": 0,
+      "visitante": 0,
+      "tipo": "numero",
+      "local_val": 0,
+      "visitante_val": 0
     },
     {
       "label": "Pases precisos",
       "local": "218 (71%)",
-      "visitante": "372 (83%)",
+      "visitante": "398 (83%)",
       "tipo": "texto",
       "local_val": 71,
       "visitante_val": 83
@@ -1557,5 +1565,6 @@
         "portero_stats": null
       }
     ]
-  }
+  },
+  "top_stats_fuente": "fotmob"
 }

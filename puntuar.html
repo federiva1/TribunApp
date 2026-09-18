@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-0DN9D9L127"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-0DN9D9L127');
+</script>
+<meta charset="UTF-8">
+<!-- Las URLs amigables /puntuar/{a}-{b} y /armar/{a}-{b} tienen dos niveles: sin <base> las rutas relativas
+     (escudos, js, data, index.html) se resuelven contra /puntuar/ y dan 404. Misma
+     condición que club.html (no aplica al abrir el archivo suelto con file://). -->
+<script>
+  if (/(^|\.)tribunapp\.com\.ar$|\.vercel\.app$|^localhost$|^127\.0\.0\.1$/.test(location.hostname)) document.write('<base href="/">');
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TribunApp — El partido</title>
+<meta name="description" content="Armá tu formación antes del partido y puntuá a los jugadores cuando termina. Elegí tu equipo y participá.">
+<meta property="og:title" content="TribunApp — Armá tu formación y puntuá a los jugadores">
+<meta property="og:description" content="Armá tu formación antes del partido y puntuá a los jugadores cuando termina. Elegí tu equipo y participá.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="es_AR">
+<meta property="og:image" content="https://www.tribunapp.com.ar/Logo.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root { --dark: #0d0d1a; --dark2: #13131f; --celeste: #4fc3f7; --verde: #2ad572; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: var(--dark); color: #fff; overflow-x: hidden; }
+
+/* ===== HEADER (mismo que fixture.html) ===== */
+#site-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 18px 10px; gap: 12px;
+  background: linear-gradient(180deg, rgba(79,195,247,0.12) 0%, transparent 100%);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  position: sticky; top: 0; z-index: 50; backdrop-filter: blur(10px);
+}
+.logo-wrap { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+/* Logo del header — MISMO tamaño en todas las páginas de la web (si se cambia, cambiarlo en todas). */
+.logo-wrap img { height: 72px; object-fit: contain; }
+@media (max-width: 430px) { .logo-wrap img { height: 60px; } }
+.header-actions { display: flex; gap: 8px; align-items: center; }
+.header-pill {
+  display: flex; align-items: center; gap: 7px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px; padding: 7px 13px;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 0.5px;
+  color: rgba(255,255,255,0.85); cursor: pointer; text-decoration: none;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+.header-pill svg { width: 15px; height: 15px; flex-shrink: 0; }
+.header-pill:hover { background: rgba(79,195,247,0.16); border-color: rgba(79,195,247,0.45); color: #fff; }
+.header-pill-label { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 0.5px; }
+@media (max-width: 560px) {
+  .header-pill-label { display: none; }
+  .header-pill { width: 36px; height: 36px; padding: 0; gap: 0; justify-content: center; }
+  .header-actions { gap: 6px; }
+}
+
+/* ===== LANDING ===== */
+#main { padding: 26px 16px 60px; max-width: 520px; margin: 0 auto; }
+.comp { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--celeste); text-align: center; }
+.estado-partido { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.4); text-align: center; margin-top: 4px; }
+.score { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; margin: 22px 0 6px; }
+.score .team { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; }
+.score .team img { width: 72px; height: 72px; object-fit: contain; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5)); }
+.score .team .nom { font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 600; letter-spacing: 0.5px; text-align: center; }
+.score .res { font-family: 'Bebas Neue', sans-serif; font-size: 44px; letter-spacing: 3px; color: #fff; white-space: nowrap; }
+.estadio { font-size: 11px; color: rgba(255,255,255,0.35); text-align: center; }
+
+.pregunta { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 2px; text-align: center; margin: 34px 0 4px; }
+.sub { font-size: 12px; color: rgba(255,255,255,0.5); text-align: center; line-height: 1.5; }
+.opts { display: flex; justify-content: center; gap: 14px; margin-top: 18px; }
+.opt {
+  flex: 1; max-width: 200px; display: flex; flex-direction: column; align-items: center; gap: 10px;
+  padding: 18px 10px 14px; border-radius: 16px; text-decoration: none; color: #fff;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+  transition: background .15s, border-color .15s, transform .15s;
+}
+.opt:hover { background: rgba(79,195,247,0.1); border-color: var(--celeste); transform: translateY(-2px); }
+.opt img { width: 64px; height: 64px; object-fit: contain; }
+.opt .nom { font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 600; letter-spacing: 0.5px; text-align: center; }
+.opt .cta { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--celeste); }
+.opt.cerrado .cta { color: rgba(255,255,255,0.4); }
+
+.estado { margin-top: 18px; text-align: center; font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; }
+.estado .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+.estado.abierto { color: var(--verde); }  .estado.abierto .dot { background: var(--verde); }
+.estado.cerrado { color: rgba(255,255,255,0.4); }  .estado.cerrado .dot { background: rgba(255,255,255,0.3); }
+
+.links { display: flex; flex-direction: column; gap: 8px; margin-top: 30px; }
+.link-sec {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 11px; border-radius: 10px; text-decoration: none; cursor: pointer;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 1px; text-transform: uppercase;
+  color: rgba(255,255,255,0.75); background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
+}
+.link-sec:hover { color: #fff; border-color: rgba(255,255,255,0.3); }
+.link-sec svg { width: 14px; height: 14px; }
+.msg { text-align: center; color: rgba(255,255,255,0.5); font-size: 13px; padding: 50px 10px; line-height: 1.6; }
+.msg a { color: var(--celeste); }
+#toast { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%) translateY(20px); background: #222; color: #fff; padding: 10px 18px; border-radius: 10px; font-size: 13px; opacity: 0; transition: all .25s; pointer-events: none; z-index: 100; }
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<header id="site-header">
+  <a class="logo-wrap" href="index.html">
+    <img src="Logo.png" alt="TribunApp">
+  </a>
+  <div class="header-actions">
+    <a class="header-pill" href="fixture.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span class="header-pill-label">Fixture</span>
+    </a>
+    <a class="header-pill" href="tablas.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      <span class="header-pill-label">Tablas</span>
+    </a>
+    <a class="header-pill" href="estadisticas-torneo.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span class="header-pill-label">Estadísticas</span>
+    </a>
+    <a class="header-pill" href="estadisticas-tribunapp.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span class="header-pill-label">TribunApp</span>
+    </a>
+  </div>
+</header>
+
+<main id="main">
+  <div class="msg" id="loading">Cargando el partido…</div>
+</main>
+<div id="toast"></div>
+
+<script src="js/clubes.js"></script>
+<script>
+// ============================================================
+// Landing de UN partido — la URL que se comparte en redes. Dos entradas:
+//   /armar/independiente-sanlorenzo   → antes del partido: "Armá tu formación"
+//   /puntuar/newells-velez            → después: "Puntuá a los jugadores"
+// (rewrites de Vercel → puntuar.html?p=…&modo=armar|puntuar; desde el fixture
+// llega como puntuar.html?p={slugs}&modo=…; acepta alias o slugs).
+// La página decide sola qué mostrar según el ESTADO del partido (el link de la
+// mañana se abre también a la noche): pre → armar formación (solo si es el
+// próximo partido de ese club, que es para el que club.html guarda el voto);
+// en juego → ficha en vivo; post → puntajes (24 h desde el kickoff, igual que el
+// gate de club.html) y después estadísticas. El modo de la URL solo cambia el
+// título/copy del compartir; el contenido lo manda el estado.
+// ============================================================
+const ESC = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const $main = document.getElementById('main');
+const EN_CURSO = new Set(['1H', 'HT', '2H', 'ET', 'BT', 'P', 'SUSP']);
+const FIN = new Set(['FT', 'AET', 'PEN']);
+function toast(m) { const t = document.getElementById('toast'); t.textContent = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500); }
+
+// ---- Identificar el partido desde la URL ----
+// Con el rewrite de Vercel el ?p= del destino no llega al navegador: se lee del path.
+const _qs = new URLSearchParams(location.search);
+const _segs = location.pathname.split('/').filter(Boolean);
+const _seg0 = (_segs[0] || '').toLowerCase();
+const _raw = ((_qs.get('p') || '') || ((_seg0 === 'puntuar' || _seg0 === 'armar') ? (_segs[1] || '') : '')).toLowerCase().replace(/[^a-z0-9-]/g, '');
+const _tok = _raw.split('-').filter(Boolean);
+const resolveSlug = t => URL_ALIAS[t] || t;
+const A = _tok.length >= 2 ? resolveSlug(_tok[0]) : '';
+const B = _tok.length >= 2 ? resolveSlug(_tok.slice(1).join('-')) : '';
+const alias = s => (typeof SLUG_ALIAS !== 'undefined' && SLUG_ALIAS[s]) || s;
+// Override de prueba: ?testestado=pre|vivo|post fuerza el estado (como ?testpuntajes=1 en club.html).
+const TEST_ESTADO = ['pre', 'vivo', 'post'].includes(_qs.get('testestado')) ? _qs.get('testestado') : '';
+
+const nomCorto = (slug, fallback) => (CLUBES_CONFIG[slug] && CLUBES_CONFIG[slug].nombreCorto) || fallback || slug;
+const esArg = slug => !!CLUBES_CONFIG[slug];
+const norm = t => t.slug || (t.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+async function getJSON(url) { try { const r = await fetch(url, { cache: 'no-store' }); return r.ok ? await r.json() : null; } catch (e) { return null; } }
+
+function fmtHoraAR(d) { const h = new Date(d.getTime() - 3 * 3600e3); return `${String(h.getUTCHours()).padStart(2, '0')}:${String(h.getUTCMinutes()).padStart(2, '0')}`; }
+function fmtDiaAR(d) {
+  const h = new Date(d.getTime() - 3 * 3600e3);
+  const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+  const hoy = new Date(Date.now() - 3 * 3600e3);
+  const mismoDia = h.getUTCDate() === hoy.getUTCDate() && h.getUTCMonth() === hoy.getUTCMonth();
+  const man = new Date(hoy.getTime() + 86400e3);
+  const esManiana = h.getUTCDate() === man.getUTCDate() && h.getUTCMonth() === man.getUTCMonth();
+  return mismoDia ? 'hoy' : esManiana ? 'mañana' : `el ${DIAS[h.getUTCDay()]} ${h.getUTCDate()}`;
+}
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+// Todos los partidos de este cruce (liga.json + copas.json), normalizados y en orden cronológico.
+function partidosCruce(liga, copas) {
+  const out = [];
+  (liga || []).forEach(p => {
+    if (!p.home || !p.away || !p.status || !p.status.utcTime) return;
+    const h = p.home.slug, a = p.away.slug;
+    if (!((h === A && a === B) || (h === B && a === A))) return;
+    out.push({ home: h, away: a, homeName: p.home.name, awayName: p.away.name, utc: p.status.utcTime, short: p.status.short,
+               finished: !!p.status.finished, round: p.round || '', fecha_num: p.fecha, copa: '', hs: p.home_score, as: p.away_score, logos: {} });
+  });
+  for (const k of ['libertadores', 'sudamericana']) {
+    const lista = (((copas || {})[k] || {}).partidos || []);
+    for (const p of lista) {
+      if (!p.utcTime) continue;
+      // Ida/Vuelta: hay otro partido del mismo cruce en la lista (misma ronda).
+      const par = [p.home.name, p.away.name].sort().join('|');
+      const otros = lista.filter(q => q !== p && q.utcTime && [q.home.name, q.away.name].sort().join('|') === par);
+      const leg = !otros.length ? '' : otros.every(q => q.utcTime > p.utcTime) ? 'Ida' : 'Vuelta';
+      const h = norm(p.home), a = norm(p.away);
+      if (!((h === A && a === B) || (h === B && a === A))) continue;
+      out.push({ home: h, away: a, homeName: p.home.name, awayName: p.away.name, utc: p.utcTime, short: p.short, finished: FIN.has(p.short),
+                 round: '', fecha_num: null, ronda: p.ronda, leg, copa: k, hs: p.home_score, as: p.away_score, logos: { [h]: p.home.logo, [a]: p.away.logo } });
+    }
+  }
+  return out.sort((x, y) => x.utc.localeCompare(y.utc));
+}
+// Partido relevante del cruce: el último jugado si fue hace menos de 30 h (ventana de
+// puntajes); si no, el próximo; si no hay próximo, el último (ida/vuelta de copa).
+function elegir(ms) {
+  const now = Date.now();
+  const pasados = ms.filter(m => Date.parse(m.utc) <= now), futuros = ms.filter(m => Date.parse(m.utc) > now);
+  const ult = pasados[pasados.length - 1];
+  if (ult && now - Date.parse(ult.utc) < 30 * 3600e3) return ult;
+  return futuros[0] || ult || null;
+}
+// 'pre' | 'vivo' | 'post'. En juego = api-sports lo marca en curso, o pasó el kickoff
+// sin FT y todavía no pasaron 2 h 15 (liga.json puede atrasarse).
+function estadoDe(m) {
+  if (TEST_ESTADO) return TEST_ESTADO;
+  const ko = Date.parse(m.utc), now = Date.now();
+  if (now < ko) return 'pre';
+  if (EN_CURSO.has(m.short) || (!m.finished && now < ko + 2.25 * 3600e3)) return 'vivo';
+  return 'post';
+}
+// ¿Es el PRÓXIMO partido del club en esa competición? club.html arma la formación para
+// el próximo partido, así que el deep-link solo sirve si este es ese partido.
+function esProximo(slug, m, liga, copas) {
+  const now = Date.now();
+  let utcs;
+  if (!m.copa) {
+    utcs = (liga || []).filter(p => p.home && p.away && p.status && p.status.utcTime && !p.status.finished
+      && (p.home.slug === slug || p.away.slug === slug)).map(p => p.status.utcTime);
+  } else {
+    utcs = (((copas || {})[m.copa] || {}).partidos || []).filter(p => p.utcTime && !FIN.has(p.short)
+      && (norm(p.home) === slug || norm(p.away) === slug)).map(p => p.utcTime);
+  }
+  utcs = utcs.filter(u => Date.parse(u) > now - 2.5 * 3600e3).sort();
+  return utcs.length ? utcs[0] === m.utc : false;
+}
+const ICO = {
+  stats: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`,
+  share: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>`,
+  cal: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
+  live: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>`,
+};
+
+async function init() {
+  if (!A || !B) return sinPartido('Falta indicar el partido.');
+  const [idx, liga, copas, hastaMap] = await Promise.all([getJSON('data/partidos/index.json'), getJSON('data/fixtures/liga.json'), getJSON('data/fixtures/copas.json'), getJSON('data/puntajes_abiertos.json')]);
+  const m = elegir(partidosCruce(liga, copas));
+  if (!m) return sinPartido(`No encontramos el partido <b>${ESC(nomCorto(A))} vs ${ESC(nomCorto(B))}</b>.`);
+  const estado = estadoDe(m);
+  const ko = new Date(m.utc);
+  const copa = m.copa;
+  const nomL = nomCorto(m.home, m.homeName), nomV = nomCorto(m.away, m.awayName);
+  const equipos = [m.home, m.away].filter(esArg);
+  const pathModo = estado === 'pre' ? 'armar' : 'puntuar';
+  const shareUrl = `https://www.tribunapp.com.ar/${pathModo}/${alias(m.home)}-${alias(m.away)}`;
+
+  // URL amigable en la barra (solo en el dominio con rewrites); refleja el estado real.
+  const host = location.hostname;
+  if (host === 'tribunapp.com.ar' || host.endsWith('.tribunapp.com.ar') || host.endsWith('.vercel.app')) {
+    try { history.replaceState(null, '', `/${pathModo}/${alias(m.home)}-${alias(m.away)}${TEST_ESTADO ? '?testestado=' + TEST_ESTADO : ''}`); } catch (e) {}
+  }
+
+  // Ficha procesada (post): data/partidos/index.json, mismo cruce, mismo día (±36 h por UTC vs AR).
+  const koDia = new Date(ko.getTime() - 3 * 3600e3).toISOString().slice(0, 10);
+  const entry = (idx || []).filter(e => ((e.local === m.home && e.visitante === m.away) || (e.local === m.away && e.visitante === m.home))
+    && e.fecha && Math.abs(Date.parse(e.fecha + 'T12:00:00Z') - Date.parse(koDia + 'T12:00:00Z')) <= 36 * 3600e3)
+    .sort((a, b) => (a.fecha || '').localeCompare(b.fecha || '')).pop() || null;
+
+  const compLbl = copa
+    ? `${copa === 'libertadores' ? 'Copa Libertadores' : 'Copa Sudamericana'}${m.ronda ? ' · ' + m.ronda.replace(/\s+de\s+Final$/i, '') : ''}${m.leg ? ' · ' + m.leg : ''}`
+    : (m.round ? m.round.replace(/\s*-\s*/, ' · Fecha ') : (m.fecha_num ? 'Fecha ' + m.fecha_num : 'Liga Profesional'));
+  const escudo = s => esArg(s) ? `escudos/${s}.png` : (m.logos[s] || `escudos/${s}.png`);
+  const hs = entry ? entry.goles_local : m.hs, as = entry ? entry.goles_visitante : m.as;
+  const jugado = estado !== 'pre' && hs != null && as != null;
+  const hrefClub = (s, sec) => `club.html?c=${s}${copa ? '&copa=' + copa : ''}${sec ? '&s=' + sec : ''}`;
+  const estadio = entry && entry.estadio ? `<div class="estadio">${ESC(entry.estadio)}</div>` : '';
+
+  let subHdr, pregunta, sub, opts = '', estadoHtml = '', links = '', title, shareText;
+  const resultado = jugado ? `${hs}-${as}` : 'vs';
+
+  if (estado === 'pre') {
+    const ok = Object.fromEntries(equipos.map(s => [s, esProximo(s, m, liga, copas)]));
+    const todosOk = equipos.length && equipos.every(s => ok[s]);
+    subHdr = `${cap(fmtDiaAR(ko))} · ${fmtHoraAR(ko)} hs`;
+    pregunta = equipos.length > 1 ? '¿Qué equipo armás?' : 'Armá tu formación';
+    sub = 'Elegí tu equipo, armá tu 11 ideal y mandalo a la encuesta.<br>Después ves cómo lo armó el resto de la gente.';
+    opts = equipos.map(s => `
+      <a class="opt${ok[s] ? '' : ' cerrado'}" href="${hrefClub(s, ok[s] ? 'formacion' : '')}">
+        <img src="escudos/${s}.png" alt="">
+        <span class="nom">${ESC(nomCorto(s))}</span>
+        <span class="cta">${ok[s] ? 'Armar mi 11 →' : 'Ver club →'}</span>
+      </a>`).join('');
+    estadoHtml = todosOk
+      ? `<div class="estado abierto"><span class="dot"></span>Formaciones abiertas hasta el inicio del partido</div>`
+      : `<div class="estado cerrado"><span class="dot"></span>Se habilita cuando sea el próximo partido del club</div>`;
+    links = `<a class="link-sec" href="fixture.html">${ICO.cal} Ver el fixture</a>`;
+    title = `${nomL} vs ${nomV} — Armá tu formación`;
+    shareText = `${nomL} vs ${nomV}: armá tu 11 ideal en TribunApp`;
+  } else if (estado === 'vivo') {
+    subHdr = 'En juego';
+    pregunta = 'El partido se está jugando';
+    sub = 'Al terminar se abren los puntajes por 24 horas.<br>Mientras tanto, seguilo en la ficha en vivo.';
+    links = `<a class="link-sec" href="fixture.html">${ICO.live} Ver la ficha en vivo</a>`;
+    title = `${nomL} ${resultado} ${nomV} — En juego`;
+    shareText = `${nomL} vs ${nomV} en vivo en TribunApp`;
+  } else {
+    // Ventana: 24 h desde el kickoff, o la extensión manual de data/puntajes_abiertos.json si es posterior.
+    const hasta = entry && hastaMap && hastaMap[entry.id] ? Date.parse(hastaMap[entry.id]) : 0;
+    const vence = new Date(Math.max(ko.getTime() + 24 * 3600e3, hasta || 0));
+    const abierto = !!entry && Date.now() < vence.getTime();
+    subHdr = 'Final del partido';
+    if (!entry) {
+      pregunta = 'Terminó el partido';
+      sub = 'Estamos procesando la ficha del partido.<br>En unos minutos se abren los puntajes por 24 horas.';
+      opts = equipos.map(s => `<a class="opt cerrado" href="${hrefClub(s, 'puntajes')}"><img src="escudos/${s}.png" alt=""><span class="nom">${ESC(nomCorto(s))}</span><span class="cta">Ir al club →</span></a>`).join('');
+      estadoHtml = `<div class="estado cerrado"><span class="dot"></span>Puntajes en preparación</div>`;
+      links = `<a class="link-sec" href="fixture.html">${ICO.cal} Ver el fixture</a>`;
+    } else {
+      pregunta = equipos.length > 1 ? '¿A quién puntuás?' : 'Puntuá a los jugadores';
+      sub = 'Elegí tu equipo y ponele puntaje a cada jugador que jugó.<br>Después ves el promedio de todos los hinchas.';
+      opts = equipos.map(s => `
+        <a class="opt${abierto ? '' : ' cerrado'}" href="${hrefClub(s, 'puntajes')}">
+          <img src="escudos/${s}.png" alt="">
+          <span class="nom">${ESC(nomCorto(s))}</span>
+          <span class="cta">${abierto ? 'Puntuar →' : 'Ver estadísticas →'}</span>
+        </a>`).join('');
+      estadoHtml = abierto
+        ? `<div class="estado abierto"><span class="dot"></span>Puntajes abiertos hasta ${fmtDiaAR(vence)} a las ${fmtHoraAR(vence)}</div>`
+        : `<div class="estado cerrado"><span class="dot"></span>Puntajes cerrados · se abren 24 h al terminar cada partido</div>`;
+      links = `<a class="link-sec" href="estadisticas.html?p=${encodeURIComponent(entry.id)}&tab=tabla">${ICO.stats} Ver estadísticas del partido</a>`;
+    }
+    title = `${nomL} ${resultado} ${nomV} — Puntuá a los jugadores`;
+    shareText = `${nomL} ${resultado} ${nomV} — Puntuá a los jugadores en TribunApp`;
+  }
+  document.title = title;
+
+  $main.innerHTML = `
+    <div class="comp">${ESC(compLbl)}</div>
+    <div class="estado-partido">${ESC(subHdr)}</div>
+    <div class="score">
+      <div class="team"><img src="${ESC(escudo(m.home))}" alt="" onerror="this.style.opacity=0.15"><span class="nom">${ESC(nomL)}</span></div>
+      <div class="res">${jugado ? `${hs} - ${as}` : 'VS'}</div>
+      <div class="team"><img src="${ESC(escudo(m.away))}" alt="" onerror="this.style.opacity=0.15"><span class="nom">${ESC(nomV)}</span></div>
+    </div>
+    ${estadio}
+    <div class="pregunta">${pregunta}</div>
+    <div class="sub">${sub}</div>
+    ${opts ? `<div class="opts">${opts}</div>` : ''}
+    ${estadoHtml}
+    <div class="links">
+      ${links}
+      <button class="link-sec" id="share-btn" type="button">${ICO.share} Compartir este link</button>
+    </div>`;
+
+  document.getElementById('share-btn').addEventListener('click', async () => {
+    try {
+      if (navigator.share) { await navigator.share({ title: shareText, text: shareText, url: shareUrl }); return; }
+      await navigator.clipboard.writeText(shareUrl); toast('Link copiado');
+    } catch (e) { try { await navigator.clipboard.writeText(shareUrl); toast('Link copiado'); } catch (e2) { toast(shareUrl); } }
+  });
+}
+function sinPartido(html) {
+  $main.innerHTML = `<div class="msg">${html}<br><br><a href="fixture.html">Ir al fixture →</a></div>`;
+}
+init();
+</script>
+<script src="js/ui-help.js"></script>
+</body>
+</html>

@@ -63,6 +63,7 @@
     + '.fc-st-poss{margin-bottom:9px}'
     + '.fc-st-poss-bar{display:flex;height:22px;border-radius:4px;overflow:hidden}'
     + ".fc-st-poss-bar>div{display:flex;align-items:center;font-family:'Bebas Neue',sans-serif;font-size:13px;padding:0 7px;box-sizing:border-box}"
+    + '.fc-st-poss-bar>div.fc-st-light{text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000,0 0 2px #000}'
     + '.fc-st-poss-bar>div:first-child{justify-content:flex-start}'
     + '.fc-st-poss-bar>div:last-child{justify-content:flex-end}'
     + ".fc-st-poss-lbl{text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.35);margin-top:3px}"
@@ -210,20 +211,32 @@
     var r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
     return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.62 ? '#15202b' : '#ffffff';
   }
+  // Número de la barra: si va en blanco (fondo oscuro) lleva contorno negro para
+  // que se lea igual sobre azul, rojo o verde; en oscuro (fondo blanco/amarillo) no.
+  function _barCls(hex) { return _textOn(hex) === '#ffffff' ? 'fc-st-light' : 'fc-st-dark'; }
   function _colDist(h1, h2) {
     var p = function (h) { return [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)]; };
     var a = p(h1), b = p(h2);
     return Math.sqrt(Math.pow(a[0] - b[0], 2) + Math.pow(a[1] - b[1], 2) + Math.pow(a[2] - b[2], 2));
   }
+  // Rivales de copa sin escudo local (no están en js/club-colors.js, que se genera
+  // de los escudos de los 30 clubes). Colores de camiseta, a mano.
+  var _COPA_COLORS = {
+    saopaulo:    { primary: '#ffffff', alt: '#e2231a' },
+    corinthians: { primary: '#ffffff', alt: '#141414' },
+    fluminense:  { primary: '#7a1330', alt: '#1a6b3a' },
+  };
   function _matchColors(local, visit) {
     var CC = window.CLUB_COLORS || {};
-    var cl = (CC[local] && CC[local].primary) || '#38bdf8';
-    var cv = (CC[visit] && CC[visit].primary) || '#fb923c';
+    var col = function (slug) { return CC[slug] || _COPA_COLORS[slug] || null; };
+    var CL = col(local), CV = col(visit);
+    var cl = (CL && CL.primary) || '#38bdf8';
+    var cv = (CV && CV.primary) || '#fb923c';
     if (_colDist(cl, cv) < 70) {
-      var altV = CC[visit] && CC[visit].alt;
+      var altV = CV && CV.alt;
       if (altV && _colDist(cl, altV) >= 70) cv = altV;
       else {
-        var altL = CC[local] && CC[local].alt;
+        var altL = CL && CL.alt;
         if (altL && _colDist(cv, altL) >= 70) cl = altL;
         else cv = '#fb923c';
       }
@@ -242,8 +255,8 @@
     var rows = (data.top_stats || []).map(function (s) {
       if (s.tipo === 'posesion') {
         return '<div class="fc-st-poss"><div class="fc-st-poss-bar">'
-          + '<div style="width:' + s.local_val + '%;background:' + cl + ';color:' + _textOn(cl) + '">' + esc(s.local) + '</div>'
-          + '<div style="width:' + s.visitante_val + '%;background:' + cv + ';color:' + _textOn(cv) + '">' + esc(s.visitante) + '</div>'
+          + '<div class="' + _barCls(cl) + '" style="width:' + s.local_val + '%;background:' + cl + ';color:' + _textOn(cl) + '">' + esc(s.local) + '</div>'
+          + '<div class="' + _barCls(cv) + '" style="width:' + s.visitante_val + '%;background:' + cv + ';color:' + _textOn(cv) + '">' + esc(s.visitante) + '</div>'
           + '</div><div class="fc-st-poss-lbl">' + esc(s.label) + '</div></div>';
       }
       return '<div class="fc-st-row"><span class="fc-st-val" style="color:' + al + '">' + esc(s.local) + '</span>'

@@ -9,7 +9,7 @@
     "fecha": "2026-08-29",
     "fecha_num": 7,
     "ronda": null,
-    "estadio": "Estadio Guillermo Laza, Buenos Aires",
+    "estadio": "Estadio Guillermo Laza, Capital Federal",
     "competicion": "Clausura 2026",
     "api_id": "1493097",
     "goles_detalle": {
@@ -43,6 +43,14 @@
       "visitante_val": 76
     },
     {
+      "label": "xG",
+      "local": 0.65,
+      "visitante": 0.59,
+      "tipo": "numero",
+      "local_val": 0.65,
+      "visitante_val": 0.59
+    },
+    {
       "label": "Tiros totales",
       "local": 7,
       "visitante": 13,
@@ -60,11 +68,11 @@
     },
     {
       "label": "Toques en area rival",
-      "local": 3,
-      "visitante": 6,
+      "local": 14,
+      "visitante": 20,
       "tipo": "numero",
-      "local_val": 3,
-      "visitante_val": 6
+      "local_val": 14,
+      "visitante_val": 20
     },
     {
       "label": "Corners",
@@ -110,8 +118,8 @@
   "jugadores": {
     "deportivoriestra": [
       {
-        "nombre": "I. Arce",
-        "id": 5774,
+        "nombre": "Ignacio Arce",
+        "id": 306529,
         "tipo": "titular",
         "portero": true,
         "mvp": true,
@@ -119,8 +127,6 @@
         "min": 90,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "acc_defensivas": 2,
           "pases_precisos": 16
@@ -154,54 +160,8 @@
         }
       },
       {
-        "nombre": "M. Bracamonte",
-        "id": 5570,
-        "tipo": "titular",
-        "portero": false,
-        "mvp": false,
-        "num": "36",
-        "min": 90,
-        "goles": 0,
-        "asist": 1,
-        "amarilla": false,
-        "roja": false,
-        "top": {
-          "oport_creadas": 2,
-          "grandes_oport": 1,
-          "acc_defensivas": 5,
-          "pases_precisos": 12
-        },
-        "ataque": {
-          "toques": 51,
-          "toques_area": 2,
-          "pases_ultimo_tercio": 12,
-          "tiros_largos": 3,
-          "perdida_balon": 1
-        },
-        "defensa": {
-          "acc_defensivas": 5,
-          "entradas": 3,
-          "interceptaciones": 0,
-          "recuperaciones": 9,
-          "despejes": 2,
-          "regateado": 0
-        },
-        "duelos": {
-          "ganados": 3,
-          "perdidos": 2,
-          "terrestres": 3,
-          "aereos": 0,
-          "faltas": 1
-        },
-        "portero_stats": null,
-        "pos": {
-          "x": 37.1,
-          "y": 89.0
-        }
-      },
-      {
-        "nombre": "F. Miño",
-        "id": 294447,
+        "nombre": "Facundo Miño",
+        "id": 1380869,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -209,8 +169,6 @@
         "min": 90,
         "goles": 0,
         "asist": 0,
-        "amarilla": true,
-        "roja": false,
         "top": {
           "oport_creadas": 0,
           "acc_defensivas": 8,
@@ -246,8 +204,8 @@
         }
       },
       {
-        "nombre": "C. Paz",
-        "id": 5545,
+        "nombre": "Cristian Paz",
+        "id": 615905,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -255,8 +213,6 @@
         "min": 90,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "oport_creadas": 0,
           "acc_defensivas": 5,
@@ -292,8 +248,8 @@
         }
       },
       {
-        "nombre": "I. Gariglio",
-        "id": 289420,
+        "nombre": "Ignacio Gariglio",
+        "id": 1201809,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -301,8 +257,6 @@
         "min": 90,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "oport_creadas": 0,
           "acc_defensivas": 17,
@@ -338,8 +292,52 @@
         }
       },
       {
-        "nombre": "N. Sansotre",
-        "id": 5526,
+        "nombre": "Mariano Bracamonte",
+        "id": 1441888,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "36",
+        "min": 90,
+        "goles": 0,
+        "asist": 1,
+        "top": {
+          "oport_creadas": 2,
+          "grandes_oport": 1,
+          "acc_defensivas": 5,
+          "pases_precisos": 12
+        },
+        "ataque": {
+          "toques": 51,
+          "toques_area": 2,
+          "pases_ultimo_tercio": 12,
+          "tiros_largos": 3,
+          "perdida_balon": 1
+        },
+        "defensa": {
+          "acc_defensivas": 5,
+          "entradas": 3,
+          "interceptaciones": 0,
+          "recuperaciones": 9,
+          "despejes": 2,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 3,
+          "perdidos": 2,
+          "terrestres": 3,
+          "aereos": 0,
+          "faltas": 1
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 37.1,
+          "y": 89.0
+        }
+      },
+      {
+        "nombre": "Nicolás Sansotre",
+        "id": 752875,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -347,8 +345,6 @@
         "min": 90,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "oport_creadas": 0,
           "acc_defensivas": 10,
@@ -383,8 +379,8 @@
         }
       },
       {
-        "nombre": "B. Sánchez",
-        "id": 59357,
+        "nombre": "Braian Sánchez",
+        "id": 848187,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -392,8 +388,6 @@
         "min": 60,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "tiros_totales": 1,
           "disparos_puerta": 0,
@@ -431,8 +425,8 @@
         }
       },
       {
-        "nombre": "M. Céliz",
-        "id": 59200,
+        "nombre": "Milton Céliz",
+        "id": 394125,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -440,8 +434,6 @@
         "min": 90,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "tiros_totales": 2,
           "disparos_puerta": 0,
@@ -481,8 +473,8 @@
         }
       },
       {
-        "nombre": "J. Goitía",
-        "id": 59338,
+        "nombre": "Yonatan Goitía",
+        "id": 902983,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -490,8 +482,6 @@
         "min": 81,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "oport_creadas": 0,
           "acc_defensivas": 4,
@@ -527,8 +517,8 @@
         }
       },
       {
-        "nombre": "N. Benegas",
-        "id": 5415,
+        "nombre": "Nicolás Benegas",
+        "id": 742643,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -536,8 +526,6 @@
         "min": 72,
         "goles": 0,
         "asist": 0,
-        "amarilla": true,
-        "roja": false,
         "top": {
           "tiros_totales": 1,
           "disparos_puerta": 1,
@@ -574,8 +562,8 @@
         }
       },
       {
-        "nombre": "Antony Daniel Alonso Espinoza",
-        "id": 106319,
+        "nombre": "Antony Alonso",
+        "id": 1021588,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -583,8 +571,6 @@
         "min": 45,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "tiros_totales": 2,
           "disparos_puerta": 1,
@@ -618,8 +604,8 @@
         }
       },
       {
-        "nombre": "T. González",
-        "id": 355276,
+        "nombre": "Tomás González",
+        "id": 1347380,
         "tipo": "suplente",
         "portero": false,
         "mvp": false,
@@ -627,41 +613,39 @@
         "min": 45,
         "goles": 1,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "tiros_totales": 1,
           "disparos_puerta": 1,
           "oport_creadas": 1,
-          "acc_defensivas": 2,
+          "acc_defensivas": 1,
           "pases_precisos": 7
         },
         "ataque": {
-          "toques": 21,
+          "toques": 20,
           "toques_area": 2,
           "regates": 0,
           "perdida_balon": 1
         },
         "defensa": {
-          "acc_defensivas": 2,
-          "entradas": 2,
+          "acc_defensivas": 1,
+          "entradas": 1,
           "interceptaciones": 0,
           "recuperaciones": 4,
           "despejes": 0,
-          "regateado": 0
+          "regateado": 1
         },
         "duelos": {
-          "ganados": 3,
-          "perdidos": 3,
-          "terrestres": 2,
+          "ganados": 2,
+          "perdidos": 4,
+          "terrestres": 1,
           "aereos": 1,
           "faltas": 0
         },
         "portero_stats": null
       },
       {
-        "nombre": "Nicolas Watson",
-        "id": 5800,
+        "nombre": "Nicólas Watson",
+        "id": 1432908,
         "tipo": "suplente",
         "portero": false,
         "mvp": false,
@@ -669,8 +653,6 @@
         "min": 30,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "oport_creadas": 0,
           "acc_defensivas": 4,
@@ -701,8 +683,8 @@
         "portero_stats": null
       },
       {
-        "nombre": "P. Monje",
-        "id": 294454,
+        "nombre": "Pablo Monje",
+        "id": 1605853,
         "tipo": "suplente",
         "portero": false,
         "mvp": false,
@@ -710,8 +692,6 @@
         "min": 18,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "oport_creadas": 0,
           "acc_defensivas": 1,
@@ -742,8 +722,8 @@
         "portero_stats": null
       },
       {
-        "nombre": "A. Díaz",
-        "id": 6617,
+        "nombre": "Alexander Díaz",
+        "id": 962674,
         "tipo": "suplente",
         "portero": false,
         "mvp": false,
@@ -751,8 +731,6 @@
         "min": 9,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "oport_creadas": 0,
           "acc_defensivas": 0,
@@ -784,7 +762,7 @@
       },
       {
         "nombre": "Guillermo Duró",
-        "id": 0,
+        "id": null,
         "tipo": "dt",
         "portero": false,
         "mvp": false,
@@ -792,8 +770,6 @@
         "min": null,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": null,
         "ataque": null,
         "defensa": null,
@@ -803,8 +779,8 @@
     ],
     "velezsarsfield": [
       {
-        "nombre": "T. Marchiori",
-        "id": 5343,
+        "nombre": "Tomás Marchiori",
+        "id": 886331,
         "tipo": "titular",
         "portero": true,
         "mvp": false,
@@ -812,8 +788,6 @@
         "min": 90,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "acc_defensivas": 0,
           "pases_precisos": 13
@@ -846,8 +820,8 @@
         }
       },
       {
-        "nombre": "J. García",
-        "id": 129896,
+        "nombre": "Joaquín García",
+        "id": 1200718,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -855,8 +829,6 @@
         "min": 90,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "tiros_totales": 1,
           "disparos_puerta": 1,
@@ -893,8 +865,52 @@
         }
       },
       {
-        "nombre": "E. Mammana",
-        "id": 1201,
+        "nombre": "Thiago Silvero",
+        "id": 1662972,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "32",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 13,
+          "pases_precisos": 76
+        },
+        "ataque": {
+          "toques": 105,
+          "toques_area": 1,
+          "pases_ultimo_tercio": 17,
+          "tiros_largos": 2,
+          "perdida_balon": 1
+        },
+        "defensa": {
+          "acc_defensivas": 13,
+          "entradas": 2,
+          "interceptaciones": 3,
+          "recuperaciones": 1,
+          "despejes": 8,
+          "regateado": 1
+        },
+        "duelos": {
+          "ganados": 3,
+          "perdidos": 3,
+          "terrestres": 3,
+          "aereos": 0,
+          "faltas": 0,
+          "faltas_recibidas": 1
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 29.2,
+          "y": 62.5
+        }
+      },
+      {
+        "nombre": "Emanuel Mammana",
+        "id": 523417,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -902,8 +918,6 @@
         "min": 90,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "oport_creadas": 0,
           "acc_defensivas": 11,
@@ -939,7 +953,7 @@
       },
       {
         "nombre": "Elías Gómez",
-        "id": 6704,
+        "id": 509189,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -947,8 +961,6 @@
         "min": 90,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "oport_creadas": 1,
           "acc_defensivas": 7,
@@ -985,8 +997,8 @@
         }
       },
       {
-        "nombre": "R. Aliendro",
-        "id": 6028,
+        "nombre": "Rodrigo Aliendro",
+        "id": 618716,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -994,8 +1006,6 @@
         "min": 90,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "tiros_totales": 5,
           "disparos_puerta": 0,
@@ -1035,8 +1045,8 @@
         }
       },
       {
-        "nombre": "L. Robertone",
-        "id": 6065,
+        "nombre": "Lucas Robertone",
+        "id": 787440,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -1044,8 +1054,6 @@
         "min": 69,
         "goles": 0,
         "asist": 0,
-        "amarilla": true,
-        "roja": false,
         "top": {
           "tiros_totales": 1,
           "disparos_puerta": 0,
@@ -1083,8 +1091,8 @@
         }
       },
       {
-        "nombre": "M. Pellegrini",
-        "id": 6411,
+        "nombre": "Matías Pellegrini",
+        "id": 954660,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -1092,8 +1100,6 @@
         "min": 90,
         "goles": 1,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "tiros_totales": 2,
           "disparos_puerta": 1,
@@ -1132,8 +1138,8 @@
         }
       },
       {
-        "nombre": "M. Lanzini",
-        "id": 2473,
+        "nombre": "Manuel Lanzini",
+        "id": 210276,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -1141,8 +1147,6 @@
         "min": 90,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "tiros_totales": 1,
           "disparos_puerta": 1,
@@ -1181,8 +1185,8 @@
         }
       },
       {
-        "nombre": "A. Verón",
-        "id": 472576,
+        "nombre": "Álex Verón",
+        "id": 1782368,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -1190,8 +1194,6 @@
         "min": 69,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "tiros_totales": 2,
           "disparos_puerta": 1,
@@ -1231,8 +1233,8 @@
         }
       },
       {
-        "nombre": "D. Godoy",
-        "id": 516770,
+        "nombre": "Dilan Godoy",
+        "id": 1765407,
         "tipo": "titular",
         "portero": false,
         "mvp": false,
@@ -1240,8 +1242,6 @@
         "min": 90,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "tiros_totales": 1,
           "disparos_puerta": 1,
@@ -1279,7 +1279,7 @@
       },
       {
         "nombre": "Luca Feler",
-        "id": 642900,
+        "id": 1911034,
         "tipo": "suplente",
         "portero": false,
         "mvp": false,
@@ -1287,8 +1287,6 @@
         "min": 21,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "oport_creadas": 2,
           "grandes_oport": 1,
@@ -1320,17 +1318,15 @@
         "portero_stats": null
       },
       {
-        "nombre": "T. Aguirre",
-        "id": 650878,
+        "nombre": "Thiago Aguirre",
+        "id": 1981156,
         "tipo": "suplente",
         "portero": false,
         "mvp": false,
         "num": "39",
-        "min": 21,
+        "min": 20,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "oport_creadas": 0,
           "acc_defensivas": 0,
@@ -1359,17 +1355,15 @@
         "portero_stats": null
       },
       {
-        "nombre": "L. Piola",
-        "id": 665052,
+        "nombre": "Lautaro Piola",
+        "id": 2114925,
         "tipo": "suplente",
         "portero": false,
         "mvp": false,
         "num": "30",
-        "min": 0,
+        "min": 1,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": {
           "oport_creadas": 0,
           "acc_defensivas": 0,
@@ -1396,7 +1390,7 @@
       },
       {
         "nombre": "Guillermo Barros Schelotto",
-        "id": 1972,
+        "id": null,
         "tipo": "dt",
         "portero": false,
         "mvp": false,
@@ -1404,8 +1398,6 @@
         "min": null,
         "goles": 0,
         "asist": 0,
-        "amarilla": false,
-        "roja": false,
         "top": null,
         "ataque": null,
         "defensa": null,
@@ -1413,5 +1405,6 @@
         "portero_stats": null
       }
     ]
-  }
+  },
+  "top_stats_fuente": "fotmob"
 }

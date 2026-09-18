@@ -49,11 +49,11 @@
     },
     {
       "label": "xG",
-      "local": 0.45,
-      "visitante": 1.04,
+      "local": 0.49,
+      "visitante": 1.1,
       "tipo": "numero",
-      "local_val": 0.45,
-      "visitante_val": 1.04
+      "local_val": 0.49,
+      "visitante_val": 1.1
     },
     {
       "label": "Tiros totales",
@@ -73,11 +73,11 @@
     },
     {
       "label": "Toques en area rival",
-      "local": 4,
-      "visitante": 4,
+      "local": 14,
+      "visitante": 15,
       "tipo": "numero",
-      "local_val": 4,
-      "visitante_val": 4
+      "local_val": 14,
+      "visitante_val": 15
     },
     {
       "label": "Corners",
@@ -89,11 +89,11 @@
     },
     {
       "label": "Faltas",
-      "local": 7,
-      "visitante": 8,
+      "local": 6,
+      "visitante": 7,
       "tipo": "numero",
-      "local_val": 7,
-      "visitante_val": 8
+      "local_val": 6,
+      "visitante_val": 7
     },
     {
       "label": "Tarjetas amarillas",
@@ -104,12 +104,20 @@
       "visitante_val": 3
     },
     {
+      "label": "Tarjetas rojas",
+      "local": 0,
+      "visitante": 0,
+      "tipo": "numero",
+      "local_val": 0,
+      "visitante_val": 0
+    },
+    {
       "label": "Pases precisos",
-      "local": "236 (71%)",
-      "visitante": "395 (83%)",
+      "local": "238 (70%)",
+      "visitante": "410 (82%)",
       "tipo": "texto",
-      "local_val": 71,
-      "visitante_val": 83
+      "local_val": 70,
+      "visitante_val": 82
     }
   ],
   "jugadores": {
@@ -1558,5 +1566,6 @@
         "portero_stats": null
       }
     ]
-  }
+  },
+  "top_stats_fuente": "fotmob"
 }

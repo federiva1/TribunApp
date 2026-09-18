@@ -195,6 +195,15 @@ a.ficha-toggle { text-decoration: none; box-sizing: border-box; }
 .ficha-caret { font-size: 9px; transition: transform .18s; flex-shrink: 0; }
 .ficha-toggle.open .ficha-caret { transform: rotate(180deg); }
 .ficha-panel { margin-top: 2px; padding-top: 12px; animation: fichaIn .18s ease; }
+/* Con tres pestañas en pantalla chica el texto no entra en una línea: se deja
+   bajar a dos (antes quedaba "PUNTUAR JUGA…" con elipsis). */
+.ficha-toggle .txt-s { display: none; }   /* label corto, solo mobile */
+@media (max-width: 480px) {
+  .ficha-toggle { font-size: 10.5px; gap: 4px; padding: 7px 3px; }
+  .ficha-toggle .txt { white-space: normal; line-height: 1.15; text-align: center; }
+  .ficha-toggle .txt-l { display: none; }
+  .ficha-toggle .txt-s { display: inline; }
+}
 @keyframes fichaIn { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: none; } }
 .ficha-loading { text-align: center; padding: 12px; font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 1px; color: rgba(255,255,255,0.3); }
 .ficha-goles { display: flex; flex-wrap: wrap; gap: 3px 16px; justify-content: center; padding: 6px 4px 9px; border-bottom: 1px solid rgba(255,255,255,0.06); margin-bottom: 8px; }
@@ -309,13 +318,16 @@ function fechaAR(utc) { const d = new Date(utc); d.setHours(d.getHours()-3); ret
 
 async function cargar() {
   try {
-    const [rl, rc, ri] = await Promise.all([
+    const [rl, rc, ri, rh] = await Promise.all([
       fetch(`data/fixtures/liga.json?t=${Date.now()}`),
       fetch(`data/fixtures/copas.json?t=${Date.now()}`).catch(() => null),
       fetch(`data/partidos/index.json?t=${Date.now()}`).catch(() => null),
+      fetch(`data/puntajes_abiertos.json?t=${Date.now()}`).catch(() => null),
     ]);
     LIGA = await rl.json();
     COPAS = rc && rc.ok ? await rc.json() : {};
+    // Extensión manual de la ventana de puntajes por partido (misma fuente que club.html).
+    try { PUNTAJES_HASTA = rh && rh.ok ? await rh.json() : {}; } catch (e) { PUNTAJES_HASTA = {}; }
     // Índice de partidos con estadísticas cargadas: clave local|visitante|fecha → id
     const idx = ri && ri.ok ? await ri.json() : [];
     STATS_RAW = idx;
@@ -390,7 +402,15 @@ async function actualizarEnVivo() {
         if (fx) { _mergeCopa(p, fx); cambio = true; }
       } catch (e) {}
     })));
-    if (cambio) render();
+    // Panel desplegado (ficha o stats) de un partido EN CURSO: descartar la carga
+    // cacheada para que el poll lo vuelva a pedir. Antes _fichaCache guardaba la
+    // primera carga para siempre y las estadísticas quedaban congeladas en el
+    // minuto en que se abrió el panel (caso real: San Pablo-Boca, Sudamericana).
+    // El index ya refresca su ficha en cada poll; acá es lo mismo.
+    const abiertosEnVivo = Object.keys(_secOpen).filter(fid => byId[fid]);
+    abiertosEnVivo.forEach(fid => { delete _fichaCache[fid]; });
+    if (cambio) render();               // render() reabre el panel → vuelve a pedir
+    else if (abiertosEnVivo.length) _restoreSections();
     return hayEnVivo;
   } catch (e) { return false; }
 }
@@ -668,23 +688,25 @@ function cardLiga(p, etiqueta) {
   // JSON procesado llevan a la pantalla completa del partido (tabla FotMob de
   // los dos equipos + stats globales + jugadores).
   const statsAccion = (finLink && sid)
-    ? `<a class="ficha-toggle" href="estadisticas.html?p=${sid}&tab=tabla">${icoStats}<span class="txt">Ver estadísticas del partido</span> <span class="ficha-caret">→</span></a>`
-    : `<button class="ficha-toggle" type="button" data-sec="stats">${icoStats}<span class="txt">Ver estadísticas del partido</span> <span class="ficha-caret">▾</span></button>`;
+    ? `<a class="ficha-toggle" href="estadisticas.html?p=${sid}&tab=tabla">${icoStats}<span class="txt txt-l">Ver estadísticas del partido</span><span class="txt txt-s">Estadísticas</span> <span class="ficha-caret">→</span></a>`
+    : `<button class="ficha-toggle" type="button" data-sec="stats">${icoStats}<span class="txt txt-l">Ver estadísticas del partido</span><span class="txt txt-s">Estadísticas</span> <span class="ficha-caret">▾</span></button>`;
+  const puntuar = puntuarAccion(fid, sid, p.status && p.status.utcTime, finLink);
   const acciones = started
     ? `<div class="ficha-btns">
          <button class="ficha-toggle" type="button" data-sec="ficha">${icoUsers}<span class="txt">Ficha del partido</span> <span class="ficha-caret">▾</span></button>
-         ${statsAccion}
+         ${statsAccion}${puntuar}
        </div>`
     : '';
   card.innerHTML =
     `<div class="partido-meta">${etq}${metaHora(p)}</div>
      <div class="partido-fila">${ladoLiga(p.home, clsH)}${marcador(p.home_score, p.away_score, p.home_pen, p.away_pen)}${ladoLiga(p.away, clsA)}</div>
-     ${started ? `<div class="partido-acciones">${acciones}<div class="ficha-panel" data-fid="${fid}" hidden></div></div>` : ''}`;
+     ${started ? `<div class="partido-acciones">${acciones}<div class="ficha-panel" data-fid="${fid}" hidden></div></div>`
+               : `<div class="partido-acciones">${armarAccion(p.home, p.away, p.status && p.status.utcTime, '')}</div>`}`;
   if (started) {
     const cont = card.querySelector('.partido-acciones');
     cont.querySelectorAll('button.ficha-toggle').forEach(btn =>
       btn.addEventListener('click', () => toggleSection(cont, fid, btn.dataset.sec)));
-  }
+  } else if (!card.querySelector('.ficha-btns')) card.querySelector('.partido-acciones').remove();
   return card;
 }
 
@@ -692,6 +714,58 @@ function cardLiga(p, etiqueta) {
 function _fEsc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
 const _fichaCache = {};   // fid -> payload de api-sports ya armado (compartido por ficha + stats)
 const _secOpen = {};      // fid -> 'ficha' | 'stats' (sección desplegada; para restaurar tras re-render)
+// ⓪ "Armá tu formación" (ANTES del partido): link a la landing en modo armar
+// (puntuar.html?modo=armar → /armar/…), que manda a club.html?s=formacion. Solo
+// si el partido es el PRÓXIMO de los dos clubes argentinos (club.html arma la
+// formación para el próximo partido; para uno de dos fechas más adelante el voto
+// iría al rival equivocado). Al empezar el partido la card pasa a Ficha/Stats.
+function _esProximoDe(slug, utc, lista, getUtc, getFin, getSlugs) {
+  const now = Date.now();
+  const utcs = (lista || []).filter(p => getSlugs(p).includes(slug) && getUtc(p) && !getFin(p))
+    .map(getUtc).filter(u => Date.parse(u) > now - 2.5 * 3600e3).sort();
+  return utcs.length ? utcs[0] === utc : false;
+}
+function armarAccion(home, away, utc, copa) {
+  if (!utc || Date.parse(utc) <= Date.now()) return '';
+  const cfg = (typeof CLUBES_CONFIG !== 'undefined') ? CLUBES_CONFIG : {};
+  const args = [home, away].filter(t => t && t.slug && cfg[t.slug]);
+  if (!args.length) return '';
+  const ok = copa
+    ? args.every(t => _esProximoDe(t.slug, utc, ((COPAS[copa] || {}).partidos) || [], p => p.utcTime, p => ['FT', 'AET', 'PEN'].includes(p.short), p => [p.home.slug, p.away.slug]))
+    : args.every(t => _esProximoDe(t.slug, utc, LIGA, p => p.status && p.status.utcTime, p => !!(p.status && p.status.finished), p => [p.home.slug, p.away.slug]));
+  if (!ok) return '';
+  const hs = home.slug || (home.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const as = away.slug || (away.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const ico = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="3" x2="12" y2="21"/><circle cx="12" cy="12" r="3"/></svg>`;
+  return `<div class="ficha-btns"><a class="ficha-toggle" href="puntuar.html?p=${hs}-${as}&modo=armar">${ico}<span class="txt">Armá tu formación</span> <span class="ficha-caret">→</span></a></div>`;
+}
+// ③ "Puntuar jugadores": link a la landing del partido (puntuar.html — la misma
+// URL que se comparte en redes), que ofrece los dos escudos y manda a los
+// puntajes del club. Se muestra con la MISMA regla que el gate de club.html
+// (applyGating): partido con JSON procesado y menos de 24 h desde el kickoff.
+let PUNTAJES_HASTA = {};  // data/puntajes_abiertos.json: id de partido -> ISO hasta (extensión manual)
+const _puntuarVence = {}; // fid -> ms en que vence la pestaña visible (para retirarla sola)
+function puntuarAccion(fid, sid, utc, tieneDatos) {
+  if (!fid || !sid || !tieneDatos || !utc) return '';
+  // Override de prueba: ?testpuntuar=1 ignora la ventana de 24 h (como ?testpuntajes=1 en club.html).
+  const testOverride = new URLSearchParams(location.search).get('testpuntuar') === '1';
+  const hasta = PUNTAJES_HASTA[sid] ? Date.parse(PUNTAJES_HASTA[sid]) : 0;
+  const vence = Math.max(new Date(utc).getTime() + 24 * 3600 * 1000, hasta || 0);
+  if (!testOverride && Date.now() > vence) { delete _puntuarVence[fid]; return ''; }
+  _puntuarVence[fid] = testOverride ? Infinity : vence;
+  const ico = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+  return `<a class="ficha-toggle" href="puntuar.html?p=${encodeURIComponent(sid)}&modo=puntuar">${ico}<span class="txt">Puntuar jugadores</span> <span class="ficha-caret">→</span></a>`;
+}
+// Con la página abierta, la pestaña se retira sola al cumplirse las 24 h: el poll
+// en vivo solo redibuja cuando cambia un partido en curso, así que acá se vigila
+// el vencimiento aparte y se fuerza un render (que ya no la genera).
+setInterval(() => {
+  const ahora = Date.now();
+  const vencidos = Object.keys(_puntuarVence).filter(f => _puntuarVence[f] <= ahora);
+  if (!vencidos.length || document.hidden) return;
+  vencidos.forEach(f => delete _puntuarVence[f]);
+  render();
+}, 60000);
 async function _sectionData(fid) {
   if (_fichaCache[fid]) return _fichaCache[fid];
   let built = null;
@@ -825,23 +899,25 @@ function cardCopa(p, copaCls, leg) {
   const icoUsers = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
   const icoStats = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`;
   const statsAccion = (finished && sid)
-    ? `<a class="ficha-toggle" href="estadisticas.html?p=${sid}&tab=tabla">${icoStats}<span class="txt">Ver estadísticas del partido</span> <span class="ficha-caret">→</span></a>`
-    : `<button class="ficha-toggle" type="button" data-sec="stats">${icoStats}<span class="txt">Ver estadísticas del partido</span> <span class="ficha-caret">▾</span></button>`;
+    ? `<a class="ficha-toggle" href="estadisticas.html?p=${sid}&tab=tabla">${icoStats}<span class="txt txt-l">Ver estadísticas del partido</span><span class="txt txt-s">Estadísticas</span> <span class="ficha-caret">→</span></a>`
+    : `<button class="ficha-toggle" type="button" data-sec="stats">${icoStats}<span class="txt txt-l">Ver estadísticas del partido</span><span class="txt txt-s">Estadísticas</span> <span class="ficha-caret">▾</span></button>`;
+  const puntuar = puntuarAccion(fid, sid, p.utcTime, finished);
   const acciones = started
     ? `<div class="ficha-btns">
          <button class="ficha-toggle" type="button" data-sec="ficha">${icoUsers}<span class="txt">Ficha del partido</span> <span class="ficha-caret">▾</span></button>
-         ${statsAccion}
+         ${statsAccion}${puntuar}
        </div>`
     : '';
   card.innerHTML =
     `<div class="partido-meta"><span class="etq leg">${leg}</span>${metaHora(pseudo)}</div>
      <div class="partido-fila">${ladoCopa(p.home, clsH)}${marcador(hs, as, p.home_pen, p.away_pen)}${ladoCopa(p.away, clsA)}</div>
-     ${started ? `<div class="partido-acciones">${acciones}<div class="ficha-panel" data-fid="${fid}" hidden></div></div>` : ''}`;
+     ${started ? `<div class="partido-acciones">${acciones}<div class="ficha-panel" data-fid="${fid}" hidden></div></div>`
+               : `<div class="partido-acciones">${armarAccion(p.home, p.away, p.utcTime, copaActiva)}</div>`}`;
   if (started) {
     const cont = card.querySelector('.partido-acciones');
     cont.querySelectorAll('button.ficha-toggle').forEach(btn =>
       btn.addEventListener('click', () => toggleSection(cont, fid, btn.dataset.sec)));
-  }
+  } else if (!card.querySelector('.ficha-btns')) card.querySelector('.partido-acciones').remove();
   return card;
 }
 
