@@ -1563,6 +1563,12 @@ function _shRotar(j) {
 // Referencias de la cancha, en % del ancho: área chica 7,1 · penal 10,6 ·
 // área 15 · mitad 50 · área rival 85.
 const SH_X_GK = 5;    // arquero (dentro del área chica)
+// Tope de profundidad en la placa vertical. El de campo se corta en 89 para que
+// el cartel con el apellido no toque el borde. El arquero llega más abajo: con 89
+// quedaba POR ENCIMA del área chica (que va de 91% a 100%) y se veía despegado
+// del arco, dejando 41px muertos. A 93 entra en el área chica y al cartel le
+// quedan ~11px hasta el borde.
+const SH_Y_MAX = 89, SH_Y_MAX_GK = 93;
 const SH_X_DEF = 21;  // línea más retrasada de campo, pegada al área propia
 const SH_X_FWD = 80;  // línea más adelantada, apenas afuera del área rival
 
@@ -1588,7 +1594,7 @@ function _shPosiciones(jugadores) {
   const esArq = j => j.portero || j.pos.x < 20;
   const campo = conPos.filter(j => !esArq(j));
   const mapX = campo.length ? _shEscalaX(campo) : (x => x);
-  const ubicados = conPos.map(j => ({ ...j,
+  const ubicados = conPos.map(j => ({ ...j, arq: esArq(j),
     sx: cl(esArq(j) ? SH_X_GK : mapX(j.pos.x), 4, 93), sy: cl(j.pos.y, 12, 88) }));
   const resto = jugadores.filter(j => !(j.pos && j.pos.x != null && j.pos.y != null));
   return ubicados.concat(resto.length ? _shPorLineas(resto) : []);
@@ -1601,7 +1607,7 @@ function _shPorLineas(jugadores) {
   const out = [];
   GRUPOS.forEach(([grupo, sx]) => {
     const linea = jugadores.filter(j => j.grupo === grupo);
-    linea.forEach((j, i) => out.push({ ...j, sx, sy: ((i + 1) / (linea.length + 1)) * 100 }));
+    linea.forEach((j, i) => out.push({ ...j, arq: grupo === 'keepers', sx, sy: ((i + 1) / (linea.length + 1)) * 100 }));
   });
   // Cualquiera sin puesto reconocido va al medio, para no perderlo.
   jugadores.filter(j => !GRUPOS.some(g => g[0] === j.grupo))
@@ -2832,7 +2838,8 @@ function _shOptsPuntajes(valorPorId, fmt, titulo, pie) {
     vertical: true,
     // _shPosiciones ubica en apaisado (arco propio a la izquierda); la placa
     // vertical lo gira: profundidad -> alto (arco propio abajo), lateral -> ancho.
-    jugadores: _shPosiciones(titulares).map(j => ({ ...j, xPct: j.sy, yPct: Math.min(89, 100 - j.sx) })),
+    jugadores: _shPosiciones(titulares).map(j => ({ ...j, xPct: j.sy,
+      yPct: Math.min(j.arq ? SH_Y_MAX_GK : SH_Y_MAX, 100 - j.sx) })),
     sup,
     dt: dtj ? { name: dtj.name, val: conVal(dtj) } : null,
   };
