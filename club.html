@@ -383,6 +383,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .score-avatar-wrap .av-fb { font-family: 'Bebas Neue', sans-serif; font-size: 13px; color: #fff; }
 .score-player-info { flex: 1; }
 .score-player-name { font-size: 13px; color: #fff; }
+.score-player-sub { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 1px; }
 .score-btns { display: flex; gap: 3px; flex-wrap: wrap; justify-content: flex-end; }
 .score-btn {
   width: 26px; height: 26px; border-radius: 4px;
@@ -2597,6 +2598,17 @@ function _scoresDispNum(p) {
   return m ? m.num : '';
 }
 
+// S/P (sin puntaje) se ofrece a los jugadores que no se pueden evaluar con
+// justicia: los suplentes que ingresaron y el TITULAR QUE NO COMPLETÓ EL PRIMER
+// TIEMPO — salió lesionado o expulsado antes del 45' (caso River-Huracán F10:
+// Almada salió a los 6' y Andrada a los 36'). El voto se guarda como null y los
+// promedios lo descartan, igual que el S/P de los suplentes.
+const SP_MIN_TITULAR = 45;
+function _scoresPermiteSP(p) {
+  if (p.tipo === 'suplente') return true;
+  return p.tipo === 'titular' && p.min != null && p.min < SP_MIN_TITULAR;
+}
+
 function renderScores() {
   const list = document.getElementById('scores-list');
   list.innerHTML = '';
@@ -2615,7 +2627,15 @@ function renderScores() {
       // Sin línea "#dorsal": ya está en el kit chip. Al DT lo identifica su título de grupo.
       const info = document.createElement('div'); info.className = 'score-player-info';
       const nameEl = document.createElement('div'); nameEl.className = 'score-player-name'; nameEl.textContent = p.name;
-      info.appendChild(nameEl); row.appendChild(info);
+      info.appendChild(nameEl);
+      // Al titular que salió antes del 45' se le aclara el minuto, así se entiende
+      // por qué tiene S/P y los demás titulares no.
+      if (p.tipo === 'titular' && _scoresPermiteSP(p)) {
+        const sub = document.createElement('div'); sub.className = 'score-player-sub';
+        sub.textContent = `salió ${p.min}'`;
+        info.appendChild(sub);
+      }
+      row.appendChild(info);
       const btns = document.createElement('div'); btns.className = 'score-btns';
       if (p.id in userScores) row.classList.add('voted');
       for (let i = 1; i <= 10; i++) {
@@ -2625,7 +2645,7 @@ function renderScores() {
         btn.addEventListener('click', () => { if (already) return; userScores[p.id] = i; btns.querySelectorAll('.score-btn').forEach((b, idx) => b.classList.toggle('selected', idx + 1 === i)); row.classList.add('voted'); checkScoresReady(); });
         btns.appendChild(btn);
       }
-      if (p.tipo === 'suplente') {
+      if (_scoresPermiteSP(p)) {
         // S/P = sin puntaje (jugó muy poco para evaluarlo). Se guarda null, la misma
         // convención que el Mundial (equipo.html); los promedios lo descartan.
         const sp = document.createElement('button'); sp.className = 'score-btn sp'; sp.textContent = 'S/P'; sp.title = 'Sin puntaje';
