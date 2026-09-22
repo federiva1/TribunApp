@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/campanas",
+      "destination": "/campanas.html"
+    },
+    {
       "source": "/api/apisports/:path*",
       "destination": "/api/apisports"
     },
