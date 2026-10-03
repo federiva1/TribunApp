@@ -117,6 +117,31 @@ python scripts/social_resultado.py           # genera
 
 ---
 
+## 4. Tabla anual — los primeros puestos
+
+`social_tabla.py`. Posición, escudo, PJ, diferencia de gol y puntos, con el líder
+destacado.
+
+```bash
+python scripts/social_tabla.py              # top 6
+python scripts/social_tabla.py --top 10
+python scripts/social_tabla.py --sub "FECHA 11"
+```
+
+- Sale en `data/social/preview/tabla-anual.png`.
+- **Los números NO se recalculan acá**: abre `tablas.html` en el browser y lee su
+  `DATA.anual`, que es lo que ve el hincha en la web. Misma idea que
+  `social_xi_cruce.py` con la cancha — una sola lógica para mantener. Eso incluye
+  `sfCorregirConLiga()`, que completa los FT que /standings todavía no contabilizó.
+- El browser del entorno en la nube no llega a api-sports, así que el JSON de
+  /standings se baja con urllib y se le sirve a la página interceptando
+  `/api/apisports/**`. La página no hace red hacia afuera.
+- El alto de la placa es fijo: **las filas se achican solas** según cuántos puestos
+  se pidan. Si se cambian esos tamaños, verificar que la última fila no se salga
+  (pasó con 6 filas de 112px).
+
+---
+
 ## Detalles que ya costaron una corrección
 
 - **`env -u PYTHONIOENCODING`** al correr los scripts de social: algunos imprimen
