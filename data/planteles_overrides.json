@@ -1,5 +1,5 @@
 {
-  "_comentario": "Ajustes manuales que se aplican DESPUES de scrapear FotMob, para casos que FotMob no refleja bien (pases recientes, dorsales viejos). Los aplica scripts/fetch_planteles_liga.py, asi sobreviven a cada refresco. 'agregar' = jugadores que faltan; 'quitar' = nombres a sacar (substring, sin tildes); 'numeros' = corregir dorsal {nombre: num} (num '' = sin numero).",
+  "_comentario": "Ajustes manuales que se aplican DESPUES de scrapear FotMob, para casos que FotMob no refleja bien (pases recientes, dorsales viejos). Los aplica scripts/fetch_planteles_liga.py, asi sobreviven a cada refresco. 'agregar' = jugadores que faltan; 'quitar' = nombres a sacar (substring, sin tildes); 'numeros' = corregir dorsal {nombre: num} (num '' = sin numero); 'nombres' = corregir la grafia {substring actual: nombre correcto}.",
   "barracascentral": {
     "agregar": [
       {
@@ -211,6 +211,9 @@
       "Federico Mancuello": "18",
       "Gabriel Florentín": "10",
       "Diego Porcel": "7"
+    },
+    "nombres": {
+      "Kida": "Ryouga Kida"
     }
   },
   "rosariocentral": {
