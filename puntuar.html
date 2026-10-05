@@ -150,7 +150,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 // La página decide sola qué mostrar según el ESTADO del partido (el link de la
 // mañana se abre también a la noche): pre → armar formación (solo si es el
 // próximo partido de ese club, que es para el que club.html guarda el voto);
-// en juego → ficha en vivo; post → puntajes (24 h desde el kickoff, igual que el
+// en juego → ficha en vivo; post → puntajes (PUNTAJES_VENTANA_H h desde el kickoff, igual que el
 // gate de club.html) y después estadísticas. El modo de la URL solo cambia el
 // título/copy del compartir; el contenido lo manda el estado.
 // ============================================================
@@ -316,19 +316,20 @@ async function init() {
   } else if (estado === 'vivo') {
     subHdr = 'En juego';
     pregunta = 'El partido se está jugando';
-    sub = 'Al terminar se abren los puntajes por 24 horas.<br>Mientras tanto, seguilo en la ficha en vivo.';
+    sub = `Al terminar se abren los puntajes por ${PUNTAJES_VENTANA_H} horas.<br>Mientras tanto, seguilo en la ficha en vivo.`;
     links = `<a class="link-sec" href="fixture.html">${ICO.live} Ver la ficha en vivo</a>`;
     title = `${nomL} ${resultado} ${nomV} — En juego`;
     shareText = `${nomL} vs ${nomV} en vivo en TribunApp`;
   } else {
-    // Ventana: 24 h desde el kickoff, o la extensión manual de data/puntajes_abiertos.json si es posterior.
+    // Ventana: PUNTAJES_VENTANA_H h (js/clubes.js) desde el kickoff, o la extensión manual de
+    // data/puntajes_abiertos.json si es posterior.
     const hasta = entry && hastaMap && hastaMap[entry.id] ? Date.parse(hastaMap[entry.id]) : 0;
-    const vence = new Date(Math.max(ko.getTime() + 24 * 3600e3, hasta || 0));
+    const vence = new Date(Math.max(ko.getTime() + PUNTAJES_VENTANA_H * 3600e3, hasta || 0));
     const abierto = !!entry && Date.now() < vence.getTime();
     subHdr = 'Final del partido';
     if (!entry) {
       pregunta = 'Terminó el partido';
-      sub = 'Estamos procesando la ficha del partido.<br>En unos minutos se abren los puntajes por 24 horas.';
+      sub = `Estamos procesando la ficha del partido.<br>En unos minutos se abren los puntajes por ${PUNTAJES_VENTANA_H} horas.`;
       opts = equipos.map(s => `<a class="opt cerrado" href="${hrefClub(s, 'puntajes')}"><img src="escudos/${s}.png" alt=""><span class="nom">${ESC(nomCorto(s))}</span><span class="cta">Ir al club →</span></a>`).join('');
       estadoHtml = `<div class="estado cerrado"><span class="dot"></span>Puntajes en preparación</div>`;
       links = `<a class="link-sec" href="fixture.html">${ICO.cal} Ver el fixture</a>`;
@@ -343,7 +344,7 @@ async function init() {
         </a>`).join('');
       estadoHtml = abierto
         ? `<div class="estado abierto"><span class="dot"></span>Puntajes abiertos hasta ${fmtDiaAR(vence)} a las ${fmtHoraAR(vence)}</div>`
-        : `<div class="estado cerrado"><span class="dot"></span>Puntajes cerrados · se abren 24 h al terminar cada partido</div>`;
+        : `<div class="estado cerrado"><span class="dot"></span>Puntajes cerrados · se abren ${PUNTAJES_VENTANA_H} h al terminar cada partido</div>`;
       links = `<a class="link-sec" href="estadisticas.html?p=${encodeURIComponent(entry.id)}&tab=tabla">${ICO.stats} Ver estadísticas del partido</a>`;
     }
     title = `${nomL} ${resultado} ${nomV} — Puntuá a los jugadores`;
