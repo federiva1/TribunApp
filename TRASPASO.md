@@ -1,6 +1,6 @@
 # TRASPASO — TribunApp
 
-Notas de traspaso al **27/09/2026**. Cubre lo que **no** está en `CLAUDE.md` ni en
+Notas de traspaso al **27/09/2026**, actualizadas el **05/10/2026**. Cubre lo que **no** está en `CLAUDE.md` ni en
 `PROYECTO.md`: decisiones tomadas sobre la marcha, pendientes, problemas conocidos y
 procedimientos que no son obvios. Para entender el proyecto, leer primero `PROYECTO.md`
 (la foto completa) y `CLAUDE.md` (la guía técnica). Esto es el delta.
@@ -12,13 +12,17 @@ No contiene claves ni credenciales. La key de api-sports sale de `scripts/apikey
 
 ## 1. Estado al momento del traspaso
 
-- **`master` limpio y publicado.** No hay cambios sin subir ni commits sin pushear. El
-  último commit es `248dd82` (cierre Lanús 2-1 Estudiantes), del 22/09.
-- **Producción al día**: `liga.json` marca **150 partidos finalizados** de 240, y los
-  30 clubes tienen 10 PJ en la tabla xG, o sea que la **fecha 10 está cerrada completa**.
-- **No hay partidos pendientes de cerrar.** Verificado contra api-sports: no hubo
-  partidos de liga entre el 22/09 y hoy. **La liga vuelve el 2/10** con Independiente -
-  Instituto (19:15), primera de la fecha 11.
+- **`master` limpio y publicado.** No hay cambios sin subir ni commits sin pushear.
+- **Producción al día**: `liga.json` marca **160 partidos finalizados** de 240. La
+  **fecha 10 está cerrada completa** y de la **fecha 11** están cerrados los 10 partidos
+  que se jugaron hasta el sábado 4.
+- **Pendiente de la fecha 11** (al 05/10 19:30 AR): los cuatro partidos del domingo 5
+  (Riestra - Cen. Córdoba 16:45, Vélez - Platense 19:00, Estudiantes LP - Gimnasia M.
+  19:00, Banfield - Rosario Central 21:15) y **Sarmiento - River, postergado**.
+- **Sarmiento - River** sigue en `liga.json` como `NS` con la fecha original
+  (04/10 14:45 AR) porque api-sports todavía no cargó la reprogramación. Entra solo en el
+  próximo `fetch_liga_fixtures.py`; hasta entonces **no se puede cerrar** y no hay que
+  forzarlo a mano.
 
 ---
 
@@ -85,6 +89,31 @@ La posición **no** sale de ninguna fuente: la confirmó Fede (defensor central,
 Godoy Cruz). Si algún día FotMob lo incorpora con otra posición, **el override sigue
 ganando** — hay que decidir a mano si se lo deja seguir a FotMob.
 
+### 2.7 La ventana de puntajes es 48 h y vive en una sola constante
+
+`PUNTAJES_VENTANA_H` en **`js/clubes.js`** (hoy `48`). Era 24 h hasta el 2026-10-05, cuando
+Fede la subió a 48 ("desde ahora pongamos ventana de 48 Hs en lugar de 24") para que el
+hincha tenga el fin de semana entero para puntuar.
+
+Lo importante no es el número sino **dónde está**: antes el `24` estaba escrito a mano en
+los tres lugares que lo aplican —`club.html` (`applyGating`), `fixture.html`
+(`puntuarAccion`) y `puntuar.html`— más los textos que se lo cuentan al hincha ("se abren
+los puntajes por 24 horas"). Cambiarlo implicaba acordarse de los seis y era cuestión de
+tiempo que quedaran desfasados: el gate abierto y el cartel diciendo otra cosa. Ahora la
+constante vive en el único archivo que cargan las tres páginas y los textos la interpolan,
+así que **para cambiar la ventana se toca solo `js/clubes.js`**.
+
+`js/partido-card.js` tiene todavía su propio `24` hardcodeado: **ninguna página lo carga**
+(es código muerto, ver §3), así que se dejó como estaba a propósito.
+
+La extensión puntual de un partido sigue siendo `data/puntajes_abiertos.json`
+(`{"{local}-{visitante}": "ISO hasta"}`) y se aplica cuando es **posterior** al
+vencimiento de la ventana. Con 48 h hizo falta menos: el caso que disparó el cambio
+(Argentinos-Tigre, F11) se reabrió solo, sin entrada manual.
+
+El Mundial **no** usa esta constante: tiene su propio gate por archivo
+(`data/estado_mundial.json`, 24 h desde el FT, en `fetch_mundial_estado.py`).
+
 ---
 
 ## 3. Pendientes
@@ -125,6 +154,13 @@ Ordenados por lo que más rinde primero.
    ya toda mergeada), `feature/auth`, `feature/automation`, `stats`, `test`, `campanas`.
    `pizarra` y `video` **sí siguen existiendo** y están documentadas en `CLAUDE.md`
    (`video` es la que nunca hay que mergear). Borrar ramas necesita OK de Fede.
+
+7. **Código muerto con la ventana de puntajes vieja.** `js/partido-card.js` tiene su
+   propio `24 * 3600 * 1000` hardcodeado, pero **ninguna página lo carga** (lo dice
+   `CLAUDE.md` en la sección del index). Al centralizar la ventana en
+   `PUNTAJES_VENTANA_H` (§2.7) se lo dejó intacto a propósito: si alguna vez se vuelve a
+   usar ese módulo, hay que acordarse de pasarlo a la constante o borrar el archivo.
+   Lo mismo vale para `js/auth.js` / `js/auth-ui.js`, que tampoco carga nadie.
 
 ---
 
