@@ -23,7 +23,7 @@ Lo que puede hacer un hincha:
 
 | Antes del partido | Durante | Después |
 |---|---|---|
-| **Armar su formación** para el próximo partido y votarla en la encuesta de su club | Seguir el **partido en vivo**: marcador, formaciones en cancha y estadísticas | **Puntuar a los jugadores** que jugaron (ventana de 24 h) |
+| **Armar su formación** para el próximo partido y votarla en la encuesta de su club | Seguir el **partido en vivo**: marcador, formaciones en cancha y estadísticas | **Puntuar a los jugadores** que jugaron (ventana de 48 h) |
 | Ver qué equipos armó la gente | | Ver los **promedios de la gente** y el ranking acumulado |
 | Descargar/compartir la placa de su formación | | Ver **estadísticas FotMob** del partido y del torneo, tablas y "tabla xG" |
 
@@ -132,7 +132,7 @@ Alias de los 30 clubes: `/river /boca /racing /independiente /sanlorenzo /huraca
 - Se vota siempre para el **próximo partido** del club.
 
 ### Puntajes
-- Se abren cuando el partido tiene su ficha procesada y se cierran **24 h después del kickoff**.
+- Se abren cuando el partido tiene su ficha procesada y se cierran **48 h después del kickoff** (`PUNTAJES_VENTANA_H` en `js/clubes.js` — único lugar donde se cambia; era 24 h hasta el 2026-10-05).
 - Se puntúa a los que **jugaron** (titulares, suplentes que entraron y DT), 1 a 10. Los suplentes
   pueden ir con **S/P** (sin puntaje), que no cuenta para ningún promedio.
 - Extensión manual: `data/puntajes_abiertos.json` (`{"local-visitante": "fecha ISO hasta"}`).
@@ -150,7 +150,7 @@ Alias de los 30 clubes: `/river /boca /racing /independiente /sanlorenzo /huraca
 Por cada partido, según el momento:
 - **Antes**: ⓪ *Armá tu formación* → landing `/armar/…` (solo si es el próximo de los dos clubes).
 - **Arrancado**: ① *Ficha del partido* y ② *Estadísticas*, desplegables en la misma tarjeta.
-- **Terminado (24 h)**: ③ *Puntuar jugadores* → landing `/puntuar/…`. Se retira sola al vencer.
+- **Terminado (48 h)**: ③ *Puntuar jugadores* → landing `/puntuar/…`. Se retira sola al vencer.
 
 ### Estadísticas
 - **Del partido** (`estadisticas.html`): stats de equipo, cancha con las formaciones reales y tabla
@@ -275,7 +275,7 @@ desde el SQL Editor del dashboard.
 | **En juego** | Nada: el vivo es automático (proxy + FotMob de respaldo) | — |
 | **Al final** | **Cerrar el partido**: FT en `liga.json`, ficha en `data/partidos`, tabla xG, link `/puntuar/…` | "cerrá X" → `/actualizar-fecha` (parte A) + publicar |
 | **Al final** | Placa "final del partido" | `/placas` → `social_resultado.py --test-partido {id}` |
-| **24 h después** | Los puntajes se cierran solos | — |
+| **48 h después** | Los puntajes se cierran solos | — |
 | **Cada 1-3 fechas** | Planteles (altas, bajas, dorsales) | `/actualizar-planteles` |
 
 Detalles del cierre:
