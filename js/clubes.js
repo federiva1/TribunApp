@@ -275,3 +275,10 @@ var URL_ALIAS = {
 };
 // slug → alias (para armar URLs amigables desde el código)
 var SLUG_ALIAS = Object.fromEntries(Object.entries(URL_ALIAS).map(([a, s]) => [s, a]));
+
+// Ventana de puntajes: horas desde el kickoff durante las que se puede puntuar.
+// Vive acá porque es el único archivo que cargan las tres páginas que la aplican:
+// club.html (applyGating), fixture.html (puntuarAccion) y puntuar.html. Antes el
+// número estaba escrito a mano en los tres y podían quedar desfasados.
+// Extensión puntual de un partido: data/puntajes_abiertos.json.
+var PUNTAJES_VENTANA_H = 48;

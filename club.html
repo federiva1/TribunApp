@@ -1190,7 +1190,8 @@ let RIVAL_INSTANCIA = '', SCORES_INSTANCIA = '';
 // Formación real del partido (ej. '5-3-2'), de data/partidos/{id}.json.
 let SCORES_FORMACION = '';
 
-// Gate coordinado: 24 hs de puntajes desde el FT, después se cierran y se abre la formación
+// Gate coordinado: los puntajes duran PUNTAJES_VENTANA_H hs (js/clubes.js) desde el FT;
+// después se cierran y se abre la formación
 // de la fecha siguiente. Se calcula client-side en applyGating() (no hay archivo de estado).
 let PUNTAJES_OPEN = false, FORMACION_OPEN = true;
 
@@ -1312,7 +1313,7 @@ function openSection(section) {
     document.getElementById('scores-results-screen').style.display = 'none';
     if (!PUNTAJES_OPEN) {
       list.innerHTML = ''; btn.style.display = 'none'; closedMsg.style.display = 'block';
-      closedMsg.textContent = 'Los puntajes se abren cuando termina el partido (ventana de 24 hs).';
+      closedMsg.textContent = `Los puntajes se abren cuando termina el partido (ventana de ${PUNTAJES_VENTANA_H} hs).`;
       return;
     }
     closedMsg.style.display = 'none';
@@ -4099,7 +4100,7 @@ async function resolveMatchContext() {
       return;
     }
     // Copa: mismo esquema que la liga — formación para el próximo partido y
-    // puntajes para el último jugado, con el gate de 24 h.
+    // puntajes para el último jugado, con el mismo gate de la ventana.
     const suffix = `_${COPA}`;
     const r = await fetch(`data/fixtures/${CLUB_SLUG}${suffix}.json?t=${Date.now()}`);
     if (r.ok) {
@@ -4287,7 +4288,7 @@ async function resolveScoresContext(ultimo) {
   } catch(e) {}
 }
 
-// Gate: puntajes 24 hs desde el FT. La formación está SIEMPRE abierta mientras
+// Gate: puntajes durante PUNTAJES_VENTANA_H hs (js/clubes.js) desde el FT. La formación está SIEMPRE abierta mientras
 // haya próximo rival (conviven con los puntajes durante la ventana post-partido;
 // el voto va al próximo partido, que ya es el de la fecha siguiente porque
 // cierre-rapido actualiza liga.json antes de abrir los puntajes). Se cierra solo
@@ -4304,10 +4305,10 @@ function applyGating() {
   const override  = qs.get('testpuntajes')  === '1';
   const fOverride = qs.get('testformacion') === '1';
   const hasData = scoresSquad.length > 0;
-  const within24h = SCORES_FT ? (Date.now() - SCORES_FT.getTime()) < 24 * 3600 * 1000 : false;
+  const dentroVentana = SCORES_FT ? (Date.now() - SCORES_FT.getTime()) < PUNTAJES_VENTANA_H * 3600 * 1000 : false;
   const hasta = scoresMatchId && PUNTAJES_HASTA[scoresMatchId];
   const extendido = !!hasta && Date.now() < Date.parse(hasta);
-  PUNTAJES_OPEN = override || (hasData && (within24h || extendido));
+  PUNTAJES_OPEN = override || (hasData && (dentroVentana || extendido));
   FORMACION_OPEN = fOverride || !!(RIVAL && RIVAL !== 'Por definir');
 }
 

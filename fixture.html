@@ -742,21 +742,22 @@ function armarAccion(home, away, utc, copa) {
 // ③ "Puntuar jugadores": link a la landing del partido (puntuar.html — la misma
 // URL que se comparte en redes), que ofrece los dos escudos y manda a los
 // puntajes del club. Se muestra con la MISMA regla que el gate de club.html
-// (applyGating): partido con JSON procesado y menos de 24 h desde el kickoff.
+// (applyGating): partido con JSON procesado y menos de PUNTAJES_VENTANA_H h (js/clubes.js)
+// desde el kickoff.
 let PUNTAJES_HASTA = {};  // data/puntajes_abiertos.json: id de partido -> ISO hasta (extensión manual)
 const _puntuarVence = {}; // fid -> ms en que vence la pestaña visible (para retirarla sola)
 function puntuarAccion(fid, sid, utc, tieneDatos) {
   if (!fid || !sid || !tieneDatos || !utc) return '';
-  // Override de prueba: ?testpuntuar=1 ignora la ventana de 24 h (como ?testpuntajes=1 en club.html).
+  // Override de prueba: ?testpuntuar=1 ignora la ventana (como ?testpuntajes=1 en club.html).
   const testOverride = new URLSearchParams(location.search).get('testpuntuar') === '1';
   const hasta = PUNTAJES_HASTA[sid] ? Date.parse(PUNTAJES_HASTA[sid]) : 0;
-  const vence = Math.max(new Date(utc).getTime() + 24 * 3600 * 1000, hasta || 0);
+  const vence = Math.max(new Date(utc).getTime() + PUNTAJES_VENTANA_H * 3600 * 1000, hasta || 0);
   if (!testOverride && Date.now() > vence) { delete _puntuarVence[fid]; return ''; }
   _puntuarVence[fid] = testOverride ? Infinity : vence;
   const ico = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
   return `<a class="ficha-toggle" href="puntuar.html?p=${encodeURIComponent(sid)}&modo=puntuar">${ico}<span class="txt">Puntuar jugadores</span> <span class="ficha-caret">→</span></a>`;
 }
-// Con la página abierta, la pestaña se retira sola al cumplirse las 24 h: el poll
+// Con la página abierta, la pestaña se retira sola al vencer la ventana: el poll
 // en vivo solo redibuja cuando cambia un partido en curso, así que acá se vigila
 // el vencimiento aparte y se fuerza un render (que ya no la genera).
 setInterval(() => {
