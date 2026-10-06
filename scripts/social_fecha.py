@@ -24,6 +24,10 @@ PREVIEW = ROOT / 'data' / 'social' / 'preview'
 sys.path.insert(0, str(ROOT / 'scripts'))
 from social_lineups import NOM, _b64, esc_placa, aplicar_fondo_tribuna  # noqa: E402
 from social_resultado import _logo_datauri, ESTADIO_ICO   # noqa: E402
+from clubes_map import ALIAS                           # noqa: E402
+
+# alias/slug -> slug, para resolver lo que llega por --solo
+SLUG_POR_ALIAS = {a: sl for sl, a in ALIAS.items()}
 
 AR = timezone(timedelta(hours=-3))
 DIAS = ['LUNES', 'MARTES', 'MIÉRCOLES', 'JUEVES', 'VIERNES', 'SÁBADO', 'DOMINGO']
@@ -69,6 +73,34 @@ def partidos_del_dia(fecha):
                         'home_logo': p['home'].get('logo'), 'away_logo': p['away'].get('logo')})
     out.sort(key=lambda m: m['ko'])
     return out
+
+
+def filtrar(partidos, cruces):
+    """Deja solo los cruces pedidos (--solo). Cada uno es 'local-visitante' con
+    slug o alias ('instituto-boca'), en el orden que quiera: el cruce se compara
+    como par, así que no hay que acordarse de quién es local."""
+    def slug(x):
+        x = (x or '').strip().lower().replace(' ', '')
+        return SLUG_POR_ALIAS.get(x, x)
+
+    pedidos, faltan = [], []
+    for c in cruces:
+        partes = [x for x in c.split('-') if x]
+        if len(partes) != 2:
+            faltan.append((c, 'no tiene forma local-visitante'))
+            continue
+        pedidos.append((c, frozenset(slug(x) for x in partes)))
+
+    out = []
+    for c, par in pedidos:
+        m = next((m for m in partidos if {m['home'], m['away']} == set(par)), None)
+        if m:
+            out.append(m)
+        else:
+            faltan.append((c, 'no hay partido de ese cruce ese día'))
+    for c, por_que in faltan:
+        print(f'  OJO: {c} -> {por_que}')
+    return out, [c for c, _ in faltan]
 
 
 def _copa_esc(logo_url):
@@ -287,6 +319,9 @@ def main():
     ap.add_argument('--out', default=str(PREVIEW))
     ap.add_argument('--cada-uno', action='store_true',
                     help='una placa por partido (layout de escudos grandes) en vez de la lista del dia')
+    ap.add_argument('--solo', nargs='+', metavar='LOCAL-VISITANTE',
+                    help='solo estos cruces, por slug o alias (ej: instituto-boca racing-belgrano). '
+                         'Implica --cada-uno.')
     args = ap.parse_args()
 
     fecha = args.date or datetime.now(AR).strftime('%Y-%m-%d')
@@ -294,13 +329,19 @@ def main():
     if not partidos:
         print(f'No hay partidos nuestros el {fecha}')
         return 1
+    sin_resolver = []
+    if args.solo:
+        partidos, sin_resolver = filtrar(partidos, args.solo)
+        if not partidos:
+            print(f'Ninguno de los cruces pedidos juega el {fecha}')
+            return 1
     for m in partidos:
         print(f"  {m['ko'].strftime('%H:%M')}  {m['home']} vs {m['away']}  ({m['comp']})")
-    if args.cada_uno:
+    if args.cada_uno or args.solo:
         for m in partidos:
             print('imagen:', generar([m], fecha, args.titulo.upper(), args.out,
                                     nombre=f"fecha-{fecha}-{m['home']}-{m['away']}.png"))
-        return 0
+        return 1 if sin_resolver else 0
     print('imagen:', generar(partidos, fecha, args.titulo.upper(), args.out))
     return 0
 
