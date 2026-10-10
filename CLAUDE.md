@@ -248,12 +248,17 @@ el celular. Sin archivo de mapas la cancha queda como siempre.
   `python scripts/fetch_mapas.py <id> [--force]`; sin ids procesa los partidos que faltan.
 - **Orientación**: FotMob normaliza a los dos equipos atacando hacia x=105 (los arqueros
   promedian x≈9); y=0 es la banda izquierda del equipo, igual que `j.pos`. El panel espeja
-  al visitante para que el mapa coincida con el lado de la cancha donde está su chip.
-- **Dibujo — `js/mapa-calor.js`** (`mcCanvas(puntos, {espejado, ancho})`): propio, con la
-  estética de la página — cancha azul noche, líneas tenues y una escala de una sola tinta
-  (el celeste de la marca, de transparente a casi blanco). Kernel gaussiano σ=4,2 m sobre
-  grilla de medio metro, normalizado al máximo del jugador con un **piso** (`PISO`) para
-  que el que entró y tocó 6 pelotas no se vea tan "caliente" como el que tocó 80.
+  al visitante para que el mapa coincida con el lado de la cancha donde está su chip, y
+  debajo de la cancha una **flecha "ATAQUE" a todo el ancho** marca hacia dónde ataca.
+- **Dibujo — `js/mapa-calor.js`** (`mcCanvas(puntos, {espejado, ancho})`): propio. Cancha
+  azul noche con líneas tenues y el calor en **amarillo → naranja → rojo** (decisión de
+  Fede: el celeste "parecía un mapa de frío"). Los cálidos van **casi opacos** con una
+  transición corta desde la cancha: semitransparentes sobre el azul se mezclaban en un
+  verde oliva sucio. Kernel gaussiano σ=4,2 m sobre grilla de medio metro, normalizado al
+  máximo del jugador con un **piso** (`PISO` = 3,5) para que el que entró y tocó 6 pelotas
+  quede en amarillo y no se vea tan "caliente" como el que tocó 80. Sin leyenda de escala.
+- La barra "← Volver" de arriba (`#subbar`) acompaña el ancho del contenido: 480 px en
+  Estadísticas, 860 px en Formaciones y Tabla.
 - Hoy el script se corre **a mano** después de cerrar un partido; todavía no está metido
   en `cierre_rapido.py` / `fetch_liga_partidos.py`.
 

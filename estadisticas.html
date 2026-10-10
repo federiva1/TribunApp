@@ -30,6 +30,9 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
 /* En el tab Tabla conviene más ancho: la tabla scrollea horizontal igual, pero
    en desktop entran más columnas sin scrollear. */
 #app.wide{max-width:860px;}
+/* La barra "← Volver" va al mismo ancho que el contenido de abajo. */
+#subbar{max-width:480px;}
+#subbar.wide{max-width:860px;}
 
 /* HEADER */
 #site-header{
@@ -159,12 +162,12 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
 .mc-sec{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;
   color:rgba(255,255,255,.38);margin-bottom:6px;}
 .mc-map{border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,.08);}
-.mc-pie{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;
-  font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:.6px;color:rgba(255,255,255,.45);}
-.mc-ataca{text-transform:uppercase;letter-spacing:1.2px;}
-.mc-esc{display:flex;align-items:center;gap:6px;}
-.mc-esc i{display:block;width:74px;height:7px;border-radius:4px;
-  background:linear-gradient(90deg,rgba(14,116,144,.35),#06b6d4 40%,#38bdf8 70%,#e0f2fe);}
+/* Flecha de ataque: ocupa todo el ancho de la cancha, con la punta hacia el arco rival. */
+.mc-flecha{position:relative;margin-top:10px;height:22px;color:rgba(255,255,255,.62);}
+.mc-flecha svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;}
+.mc-flecha span{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);padding:0 10px;
+  background:var(--dark2);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;
+  letter-spacing:2.5px;text-transform:uppercase;line-height:1;}
 .mc-vacio{padding:34px 12px;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:13px;
   letter-spacing:.8px;color:rgba(255,255,255,.4);border:1px dashed rgba(255,255,255,.1);border-radius:8px;}
 @media (max-width:560px){
@@ -402,7 +405,7 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
     </a>
   </div>
 </header>
-<div style="max-width:480px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid rgba(255,255,255,0.06);background:var(--dark2,#0d111f);">
+<div id="subbar" style="margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid rgba(255,255,255,0.06);background:var(--dark2,#0d111f);">
   <a id="back-btn" href="index.html" style="font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:1px;color:rgba(255,255,255,.5);text-decoration:none;display:flex;align-items:center;gap:4px;">← Volver</a>
   <div id="h-comp" style="font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1.5px;color:rgba(255,255,255,.4);text-transform:uppercase;"></div>
 </div>
@@ -922,7 +925,9 @@ async function init(){
       t.classList.add('active');
       document.getElementById('tab-'+t.dataset.tab).classList.add('active');
       // Tabla y Formaciones se benefician de una página más ancha (desktop).
-      document.getElementById('app').classList.toggle('wide', t.dataset.tab==='tabla' || t.dataset.tab==='forma');
+      const ancha = t.dataset.tab==='tabla' || t.dataset.tab==='forma';
+      document.getElementById('app').classList.toggle('wide', ancha);
+      document.getElementById('subbar').classList.toggle('wide', ancha);
       if(t.dataset.tab==='tabla') renderMatchTable();
     });
   });
@@ -1000,9 +1005,16 @@ function mcAbrir(slug, num){
       </div>
       <div class="mc-sec">Mapa de calor</div>
       <div class="mc-map"></div>
-      <div class="mc-pie">
-        <span class="mc-ataca">${visit ? '← Ataca' : 'Ataca →'}</span>
-        <span class="mc-esc">menos <i></i> más acciones</span>
+      <div class="mc-flecha" aria-label="${visit ? 'Ataca hacia la izquierda' : 'Ataca hacia la derecha'}">
+        <svg aria-hidden="true">
+          <line x1="${visit ? '100%' : '0'}" y1="50%" x2="${visit ? '0' : '100%'}" y2="50%"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <svg aria-hidden="true" viewBox="0 0 14 22" preserveAspectRatio="${visit ? 'xMinYMid' : 'xMaxYMid'} meet">
+          <path d="${visit ? 'M14 3 L1 11 L14 19' : 'M0 3 L13 11 L0 19'}" fill="none" stroke="currentColor"
+                stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>Ataque</span>
       </div>
     </div>`;
   sheet.setAttribute('aria-label', `Mapa de calor de ${nombre}`);

@@ -3,10 +3,11 @@
 // Entra una lista de acciones [[x, y], ...] en METROS sobre una cancha de 105×68
 // (data/mapas/{id}.json, ver scripts/fetch_mapas.py: x=0 es el arco propio, el
 // equipo ataca hacia x=105; y=0 es su banda izquierda) y sale un <canvas>:
-// cancha oscura con líneas tenues y la densidad de acciones en la escala celeste
-// de la página (una sola tinta, de transparente a casi blanco: más claro = más
-// acciones). La densidad es un kernel gaussiano sobre una grilla de medio metro,
-// normalizada al máximo de ese jugador.
+// cancha azul noche con líneas tenues y la densidad de acciones en escala de
+// calor: amarillo (pocas) → naranja → rojo (muchas). Sobre el azul, los cálidos
+// dan el contraste máximo y se leen como "calor" sin explicación. La densidad es
+// un kernel gaussiano sobre una grilla de medio metro, normalizada al máximo de
+// ese jugador.
 //
 // API: window.mcCanvas(puntos, { espejado, ancho }) → HTMLCanvasElement
 //   espejado: rota 180° (el visitante en la cancha apaisada de Formaciones, que
@@ -20,17 +21,19 @@
   // Piso de la normalización. Una acción aislada vale 1 en su centro; sin piso,
   // un jugador que entró y tocó 6 pelotas se vería tan "caliente" como el que tocó
   // 80. Con piso, lo poco queda celeste tenue y el blanco exige acciones repetidas.
-  var PISO = 2.5;
+  var PISO = 3.5;
 
-  // Escala secuencial de una sola tinta (celeste de la marca) sobre fondo oscuro:
-  // [posición 0..1, r, g, b, alfa]. Lo poco denso queda casi transparente para que
-  // se vea la cancha; lo más denso, casi blanco.
+  // Escala de calor: [posición 0..1, r, g, b, alfa]. Amarillo (pocas) → naranja →
+  // rojo (muchas). Los cálidos van casi opacos: semitransparentes sobre el azul se
+  // mezclaban en un verde oliva sucio. Por eso la transición desde la cancha es
+  // corta (0.08→0.18) y por debajo de 0.08 no se pinta nada.
   var RAMPA = [
-    [0.00,  14, 116, 144, 0.00],
-    [0.12,  14, 116, 144, 0.30],
-    [0.35,   6, 182, 212, 0.58],
-    [0.65,  56, 189, 248, 0.82],
-    [1.00, 224, 242, 254, 0.96],
+    [0.00, 250, 204,  21, 0.00],
+    [0.08, 250, 204,  21, 0.00],
+    [0.18, 250, 204,  21, 0.80],
+    [0.40, 251, 146,  60, 0.90],
+    [0.70, 239,  68,  68, 0.93],
+    [1.00, 220,  38,  38, 0.96],
   ];
   function color(t) {
     for (var i = 1; i < RAMPA.length; i++) {
