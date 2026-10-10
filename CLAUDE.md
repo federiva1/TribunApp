@@ -245,21 +245,41 @@ el celular. Sin archivo de mapas la cancha queda como siempre.
   de FotMob (`/api/data/heatmap/match/{matchId}/heatmaps`, GET común, sin navegador) trae
   a todos los jugadores, indexados por **optaId**. Guardamos solo las **coordenadas** de
   cada acción (`heat: [[x, y], ...]`, metros sobre 105×68) y los tiros, por equipo y
-  dorsal. **No** se guarda el dibujo de FotMob: su `template.svg` ya no se usa.
+  dorsal. **No** se guarda el dibujo de FotMob; `data/mapas/template.svg` (su plantilla) queda
+  como referencia de los números que replica `js/mapa-calor.js`.
   `python scripts/fetch_mapas.py <id> [--force]`; sin ids procesa los partidos que faltan.
 - **Orientación**: FotMob normaliza a los dos equipos atacando hacia x=105 (los arqueros
   promedian x≈9); y=0 es la banda izquierda del equipo, igual que `j.pos`. El panel espeja
   al visitante para que el mapa coincida con el lado de la cancha donde está su chip, y
   debajo de la cancha una **flecha "ATAQUE" a todo el ancho** marca hacia dónde ataca.
-- **Dibujo — `js/mapa-calor.js`** (`mcCanvas(puntos, {espejado, ancho})`): propio. Cancha
-  azul noche con líneas tenues y el calor en **amarillo → naranja → rojo** (decisión de
-  Fede: el celeste "parecía un mapa de frío"). Los cálidos van **casi opacos** con una
-  transición corta desde la cancha: semitransparentes sobre el azul se mezclaban en un
-  verde oliva sucio. Kernel gaussiano σ=4,2 m sobre grilla de medio metro, normalizado al
-  máximo del jugador con un **piso** (`PISO` = 3,5) para que el que entró y tocó 6 pelotas
-  quede en amarillo y no se vea tan "caliente" como el que tocó 80. Sin leyenda de escala.
+- **Dibujo — `js/mapa-calor.js`** (`mcCanvas(puntos, {espejado, ancho})`, devuelve un
+  `div`): **la imagen de FotMob con nuestro césped** (decisión de Fede, 2026-10-10:
+  "descargá la imagen y modificá el césped"). FotMob la arma con dos capas y acá están las
+  dos copiadas de su página: la **cancha** (SVG 105×68, `CANCHA`) con los colores cambiados
+  — césped `#FAFAFA` → `#132036` (azul noche), líneas `#DDDDDD`/`#B9B9B9` →
+  `#3b4a66`/`#56658a` — y encima el **calor**, un `<img>` con su plantilla SVG
+  (`PLANTILLA`, igual a `data/mapas/template.svg`) y un `<circle r="7.5">` por acción con
+  nuestras coordenadas; el navegador lo desenfoca y lo colorea con sus filtros (menta →
+  verde → amarillo → rojo, intensidad absoluta: un toque aislado es una mancha verde chica).
+  El visitante rota solo la capa de calor. Historia: antes hubo un dibujo propio en canvas
+  (kernel normalizado por jugador, amarillo/naranja/rojo) y una réplica de los colores de
+  FotMob sobre esa cancha; a Fede no lo convencieron. Como el dibujo es del navegador,
+  cualquier ajuste rige para todos los partidos sin regenerar datos. Sin leyenda.
 - La barra "← Volver" de arriba (`#subbar`) acompaña el ancho del contenido: 480 px en
   Estadísticas, 860 px en Formaciones y Tabla.
+- **Estadísticas del jugador** debajo del mapa (`mcStatsHTML`): las de la ficha
+  (`top/ataque/defensa/duelos` + `portero_stats`), con **las mismas etiquetas y el mismo
+  orden que la Tabla** (`MT_COLS` / `MT_GROUP_ORDER`), solo las que tienen valor (goles y
+  asistencias, solo si hubo). Los duelos van en un grupo **Duelos** propio, como FotMob
+  (`_mcDuelos`): ganados/perdidos en total y por tipo (terrestres, aéreos). En la ficha,
+  `duelos.terrestres`/`aereos` son los **ganados** y `terrestres_tot`/`aereos_tot` los
+  disputados (los guarda el enrich desde 2026-10-10; las fichas anteriores se completaron
+  con `scripts/backfill_duelos.py`, que solo agrega esos dos campos). Arriba cuatro destacados (`MC_DESTACADOS`: toques, pases
+  precisos, duelos ganados, recuperaciones; arquero: paradas, goles evitados, pases, toques)
+  (que también se repiten en su grupo, como en FotMob) y abajo los grupos en dos columnas que se balancean solas (una en el celular). Un chip es
+  tocable si tiene mapa **o** estadísticas: en los partidos sin mapa de FotMob el panel abre
+  solo con las estadísticas y el aviso dice "Tocá un jugador para ver sus estadísticas".
+  El jugador de la ficha se busca por el nombre del chip (`mcJugador`), no por dorsal.
 - **Se genera solo en cada cierre**: `fetch_liga_partidos.py` (el que usan
   `cierre_rapido.py` y el camino largo `--date`) llama a `fetch_mapas.generar()` después de
   escribir la ficha, **reusando el `__NEXT_DATA__` ya bajado** (un pedido más por partido);

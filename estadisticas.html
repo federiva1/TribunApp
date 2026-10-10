@@ -149,7 +149,8 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
   background:rgba(5,8,16,.74);backdrop-filter:blur(2px);padding:16px;}
 #mc-sheet.open{display:flex;}
 .mc-card{width:100%;max-width:600px;background:var(--dark2);border:1px solid rgba(255,255,255,.09);
-  border-radius:14px;padding:16px 16px 14px;box-shadow:0 18px 50px rgba(0,0,0,.55);}
+  border-radius:14px;padding:16px 16px 14px;box-shadow:0 18px 50px rgba(0,0,0,.55);
+  max-height:calc(100vh - 32px);overflow-y:auto;overscroll-behavior:contain;}
 .mc-head{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
 .mc-head .mc-kit{flex-shrink:0;}
 .mc-tit{min-width:0;flex:1;}
@@ -168,11 +169,36 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
 .mc-flecha span{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);padding:0 10px;
   background:var(--dark2);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;
   letter-spacing:2.5px;text-transform:uppercase;line-height:1;}
+/* Estadísticas del jugador (debajo del mapa) */
+.mc-sec-st{margin-top:18px;}
+.mc-tiles{display:grid;grid-template-columns:repeat(var(--n,4),1fr);gap:8px;margin-bottom:14px;}
+.mc-tile{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;
+  padding:9px 6px 8px;text-align:center;min-width:0;}
+.mc-tile b{display:block;font-family:'Bebas Neue',sans-serif;font-size:26px;font-weight:400;line-height:1;letter-spacing:.5px;}
+.mc-tile span{display:block;margin-top:4px;font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:.6px;
+  text-transform:uppercase;color:rgba(255,255,255,.5);line-height:1.15;}
+/* columnas que se balancean solas (un grupo corto no deja hueco al lado de uno largo) */
+.mc-grupos{columns:2;column-gap:22px;}
+.mc-grupo{min-width:0;margin-bottom:12px;break-inside:avoid;}
+.mc-gtit{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:1.5px;
+  text-transform:uppercase;color:#38bdf8;padding-bottom:4px;border-bottom:1px solid rgba(56,189,248,.25);margin-bottom:2px;}
+.mc-fila{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:5px 0;
+  border-bottom:1px solid rgba(255,255,255,.05);}
+.mc-fila span{font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:.3px;color:rgba(255,255,255,.62);
+  min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.mc-fila b{font-family:'Bebas Neue',sans-serif;font-size:17px;font-weight:400;letter-spacing:.5px;flex-shrink:0;}
+@media (max-width:560px){
+  .mc-grupos{columns:1;}
+  .mc-tile b{font-size:22px;}
+  .mc-tile{padding:9px 4px 8px;}
+  .mc-tile span{font-size:10px;letter-spacing:.2px;overflow-wrap:anywhere;}
+}
+@media (max-width:380px){ .mc-tiles{grid-template-columns:repeat(2,1fr);} }
 .mc-vacio{padding:34px 12px;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:13px;
   letter-spacing:.8px;color:rgba(255,255,255,.4);border:1px dashed rgba(255,255,255,.1);border-radius:8px;}
 @media (max-width:560px){
   #mc-sheet{align-items:flex-end;padding:0;}
-  .mc-card{max-width:none;border-radius:16px 16px 0 0;border-bottom:none;padding:14px 14px 18px;}
+  .mc-card{max-width:none;border-radius:16px 16px 0 0;border-bottom:none;padding:14px 14px 18px;max-height:90vh;}
   .mc-nom{font-size:21px;}
 }
 
@@ -954,27 +980,47 @@ async function init(){
 const _mc = { p: null, jugs: {}, mapas: null };
 
 async function mcCargar(){
+  // Sin data/mapas el panel igual se abre con las estadísticas del jugador.
   try {
     const r = await fetch(`data/mapas/${matchId}.json?v=${Date.now()}`);
-    if (!r.ok) return;
-    _mc.mapas = (await r.json()).jugadores || {};
-  } catch (e) { return; }
+    if (r.ok) _mc.mapas = (await r.json()).jugadores || {};
+  } catch (e) {}
+  _mc.mapas = _mc.mapas || {};
   const cont = document.getElementById('forma-container');
-  let n = 0;
+  let n = 0, nMapa = 0;
   cont.querySelectorAll('[data-slug][data-num]').forEach(el => {
-    const nombre = el.getAttribute('title') || (el.querySelector('.fc-in-nm') || {}).textContent || '';
+    const nombre = _mcNombreChip(el);
     const clave = mcClave(el.dataset.slug, el.dataset.num, nombre);
-    if (clave != null) { el.setAttribute('data-mc', clave); n++; }
+    const j = mcJugador(el.dataset.slug, nombre, el.dataset.num);
+    if (clave == null && !_mcTieneStats(j)) return;
+    el.setAttribute('data-mc', clave == null ? '' : clave);   // '' = sin mapa, solo estadísticas
+    n++; if (clave != null) nMapa++;
   });
   if (!n) return;
   const hint = document.createElement('div');
   hint.className = 'mc-hint';
-  hint.innerHTML = 'Tocá un jugador para ver su <b>mapa de calor</b>';
+  hint.innerHTML = nMapa ? 'Tocá un jugador para ver su <b>mapa de calor</b> y sus estadísticas'
+                         : 'Tocá un jugador para ver sus <b>estadísticas</b>';
   cont.prepend(hint);
   cont.addEventListener('click', e => {
     const el = e.target.closest('[data-mc]');
-    if (el) mcAbrir(el.dataset.slug, el.dataset.num, el.getAttribute('data-mc'));
+    if (el) mcAbrir(el.dataset.slug, el.dataset.num, el.getAttribute('data-mc') || null, _mcNombreChip(el));
   });
+}
+// El chip lleva el nombre de la ficha (title en la cancha, texto en "Ingresaron").
+function _mcNombreChip(el){
+  return el.getAttribute('title') || (el.querySelector('.fc-in-nm') || {}).textContent || '';
+}
+// Jugador de la ficha que corresponde al chip: por nombre exacto (es el de la
+// ficha), si no por dorsal.
+function mcJugador(slug, nombre, num){
+  const js = _mc.jugs[slug] || [];
+  return js.find(x => x.nombre === nombre)
+      || (num ? js.find(x => String(x.num) === String(num)) : null) || null;
+}
+function _mcTieneStats(j){
+  return !!j && ['top', 'ataque', 'defensa', 'duelos', 'portero_stats']
+    .some(sec => j[sec] && Object.values(j[sec]).some(v => v != null && v !== ''));
 }
 
 // Qué entrada de data/mapas le corresponde a un chip. Primero por dorsal (el mapa
@@ -1005,11 +1051,80 @@ function mcClave(slug, num, nombre){
   return (num && util(num)) ? num : null;
 }
 
-function mcAbrir(slug, num, clave){
-  const m = (_mc.mapas[slug] || {})[clave != null ? clave : num];
-  if (!m) return;
-  const j = (_mc.jugs[slug] || []).find(x => String(x.num) === String(num) && x.num !== '' && x.num != null)
-         || (_mc.jugs[slug] || []).find(x => _mcMismoJugador(x.nombre, m.nombre)) || {};
+// Estadísticas del jugador en el partido: las mismas etiquetas y el mismo orden
+// que la Tabla (MT_COLS / MT_GROUP_ORDER), solo las que tienen valor. Arriba,
+// cuatro números destacados; para el arquero, un bloque propio.
+const MC_DESTACADOS = ['toques', 'pases_precisos', 'ganados', 'recuperaciones'];
+const MC_DESTACADOS_ARQ = ['paradas', 'goles_evitados', 'pases_precisos', 'toques'];
+const MC_ARQ = [
+  { key: 'paradas',        label: 'Paradas' },
+  { key: 'goles_contra',   label: 'Goles recibidos' },
+  { key: 'goles_evitados', label: 'Goles evitados', fmt: v => (v > 0 ? '+' : '') + Number(v).toFixed(2) },
+];
+const _mcVacio = v => v == null || v === '';
+const MC_DUELOS_KEYS = new Set(['ganados', 'aereos', 'terrestres']);
+// terrestres/aereos = ganados de cada tipo; *_tot = disputados (fichas desde el
+// 2026-10-10 y backfill). Sin el total, solo se muestran los ganados.
+function _mcDuelos(r){
+  const filas = [];
+  const par = (lab, g, tot) => {
+    if (_mcVacio(g)) return;
+    filas.push([`${lab} ganados`, g]);
+    if (!_mcVacio(tot)) filas.push([`${lab} perdidos`, Math.max(0, tot - g)]);
+  };
+  if (!_mcVacio(r.ganados)) filas.push(['Duelos ganados', r.ganados]);
+  if (!_mcVacio(r.perdidos)) filas.push(['Duelos perdidos', r.perdidos]);
+  par('Terrestres', r.terrestres, r.terrestres_tot);
+  par('Aéreos', r.aereos, r.aereos_tot);
+  return filas;
+}
+function mcStatsHTML(j){
+  const r = { min: j.min || 0, goles: j.goles || 0, asist: j.asist || 0 };
+  ['top', 'ataque', 'defensa', 'duelos'].forEach(sec => Object.assign(r, j[sec] || {}));
+  const arq = j.portero && j.portero_stats ? j.portero_stats : null;
+  const col = k => MT_COLS.find(c => c.key === k);
+  const val = c => c.custom ? c.custom(r) : r[c.key];
+  // Destacados
+  const tiles = (arq ? MC_DESTACADOS_ARQ : MC_DESTACADOS).map(k => {
+    const a = MC_ARQ.find(x => x.key === k);
+    if (a) { const v = arq[k]; return _mcVacio(v) ? null : [a.label, a.fmt ? a.fmt(v) : v]; }
+    const c = col(k); if (!c) return null;
+    const v = c.key === 'ganados' ? r.ganados : r[c.key];
+    return _mcVacio(v) ? null : [k === 'ganados' ? 'Duelos ganados' : c.label, v];
+  }).filter(Boolean).slice(0, 4);
+  // Grupos completos (los destacados se repiten, como en FotMob). Sin minutos:
+  // ya están arriba; goles y asistencias solo si hubo. Los duelos van en un
+  // grupo propio, ganados y perdidos por tipo como en FotMob.
+  const grupos = [];
+  if (arq) {
+    const filas = MC_ARQ.filter(a => !_mcVacio(arq[a.key]))
+      .map(a => [a.label, a.fmt ? a.fmt(arq[a.key]) : arq[a.key]]);
+    if (filas.length) grupos.push(['Arquero', filas]);
+  }
+  MT_GROUP_ORDER.forEach(g => {
+    const filas = MT_COLS.filter(c => c.group === g && !MC_DUELOS_KEYS.has(c.key))
+      .filter(c => !((c.key === 'goles' || c.key === 'asist') && !r[c.key]))
+      .map(c => [c.label, val(c)]).filter(f => !_mcVacio(f[1]) && f[1] !== '—');
+    if (filas.length) grupos.push([g, filas]);
+    if (g === 'Defensivas') {
+      const du = _mcDuelos(r);
+      if (du.length) grupos.push(['Duelos', du]);
+    }
+  });
+  const e = x => String(x).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+  return `<div class="mc-sec mc-sec-st">Estadísticas del partido</div>`
+    + (tiles.length ? `<div class="mc-tiles" style="--n:${tiles.length}">${tiles.map(t => `<div class="mc-tile"><b>${e(t[1])}</b><span>${e(t[0])}</span></div>`).join('')}</div>` : '')
+    + `<div class="mc-grupos">${grupos.map(([g, filas]) => `<div class="mc-grupo"><div class="mc-gtit">${e(g)}</div>`
+        + filas.map(f => `<div class="mc-fila"><span>${e(f[0])}</span><b>${e(f[1])}</b></div>`).join('') + '</div>').join('')}</div>`;
+}
+
+function mcAbrir(slug, num, clave, nombreChip){
+  const m = clave != null ? (_mc.mapas[slug] || {})[clave] : null;
+  const j = mcJugador(slug, nombreChip, num)
+         || (m && (_mc.jugs[slug] || []).find(x => _mcMismoJugador(x.nombre, m.nombre))) || {};
+  const conMapa = !!(m && Array.isArray(m.heat) && m.heat.length);
+  const conStats = _mcTieneStats(j);
+  if (!conMapa && !conStats) return;
   const visit = _mc.p && slug === _mc.p.visitante;
   let sheet = document.getElementById('mc-sheet');
   if (!sheet) {
@@ -1021,18 +1136,12 @@ function mcAbrir(slug, num, clave){
     document.addEventListener('keydown', e => { if (e.key === 'Escape') mcCerrar(); });
     document.body.appendChild(sheet);
   }
-  const nombre = j.nombre || m.nombre || '';
+  const nombre = j.nombre || (m && m.nombre) || nombreChip || '';
   const marcas = '⚽'.repeat(j.goles || 0) + (j.asist > 0 ? ' 🅰'.repeat(j.asist) : '');
   const min = j.min ? `${j.min}'` : '';
   const rol = j.tipo === 'suplente' ? 'Ingresó' : '';
   const sub = [nb(slug), rol, min].filter(Boolean).join(' · ') + (marcas ? ` · ${marcas}` : '');
-  sheet.innerHTML = `
-    <div class="mc-card">
-      <div class="mc-head">
-        <span class="mc-kit"></span>
-        <div class="mc-tit"><div class="mc-nom"></div><div class="mc-sub"></div></div>
-        <button class="mc-x" type="button" aria-label="Cerrar">×</button>
-      </div>
+  const mapa = !conMapa ? '' : `
       <div class="mc-sec">Mapa de calor</div>
       <div class="mc-map"></div>
       <div class="mc-flecha" aria-label="${visit ? 'Ataca hacia la izquierda' : 'Ataca hacia la derecha'}">
@@ -1045,16 +1154,27 @@ function mcAbrir(slug, num, clave){
                 stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
         <span>Ataque</span>
-      </div>
+      </div>`;
+  sheet.innerHTML = `
+    <div class="mc-card">
+      <div class="mc-head">
+        <span class="mc-kit"></span>
+        <div class="mc-tit"><div class="mc-nom"></div><div class="mc-sub"></div></div>
+        <button class="mc-x" type="button" aria-label="Cerrar">×</button>
+      </div>${mapa}
+      ${conStats ? `<div class="mc-stats">${mcStatsHTML(j)}</div>` : ''}
     </div>`;
-  sheet.setAttribute('aria-label', `Mapa de calor de ${nombre}`);
+  sheet.setAttribute('aria-label', `${conMapa ? 'Mapa de calor y estadísticas' : 'Estadísticas'} de ${nombre}`);
   sheet.querySelector('.mc-nom').textContent = nombre;
   sheet.querySelector('.mc-sub').textContent = sub;
-  sheet.querySelector('.mc-kit').appendChild(_mtKitChip(slug, num || clave, 40));
-  const caja = sheet.querySelector('.mc-map');
-  const ancho = Math.min(568, (caja.parentElement.clientWidth || window.innerWidth) - 32);
-  caja.appendChild(mcCanvas(m.heat, { espejado: visit, ancho: Math.max(260, ancho) }));
+  sheet.querySelector('.mc-kit').appendChild(_mtKitChip(slug, num || clave || '', 40));
+  if (conMapa) {
+    const caja = sheet.querySelector('.mc-map');
+    const ancho = Math.min(568, (caja.parentElement.clientWidth || window.innerWidth) - 32);
+    caja.appendChild(mcCanvas(m.heat, { espejado: visit, ancho: Math.max(260, ancho) }));
+  }
   sheet.classList.add('open');
+  sheet.querySelector('.mc-card').scrollTop = 0;
   document.body.style.overflow = 'hidden';
   sheet.querySelector('.mc-x').addEventListener('click', mcCerrar);
   sheet.querySelector('.mc-x').focus();

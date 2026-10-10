@@ -1,127 +1,48 @@
-// Mapa de calor de un jugador — dibujo propio de TribunApp.
+// Mapa de calor de un jugador — la imagen de FotMob con nuestra cancha.
+//
+// Decisión de Fede (2026-10-10): "descargá la imagen de FotMob y cambiale el
+// césped". La imagen de FotMob son dos capas: la cancha (un SVG 105×68) y encima
+// el calor (otro SVG: su plantilla con un círculo por acción, que el navegador
+// desenfoca y colorea con sus filtros). Acá están las dos tal cual, copiadas de su
+// página; lo único cambiado son los colores de la cancha: el césped (#FAFAFA en
+// FotMob) pasa al azul noche del sitio y las líneas (#DDDDDD / #B9B9B9) a tonos
+// que se lean sobre el azul.
 //
 // Entra una lista de acciones [[x, y], ...] en METROS sobre una cancha de 105×68
 // (data/mapas/{id}.json, ver scripts/fetch_mapas.py: x=0 es el arco propio, el
-// equipo ataca hacia x=105; y=0 es su banda izquierda) y sale un <canvas>:
-// cancha azul noche con líneas tenues y la densidad de acciones en escala de
-// calor: amarillo (pocas) → naranja → rojo (muchas). Sobre el azul, los cálidos
-// dan el contraste máximo y se leen como "calor" sin explicación. La densidad es
-// un kernel gaussiano sobre una grilla de medio metro, normalizada al máximo de
-// ese jugador.
+// equipo ataca hacia x=105; y=0 es su banda izquierda): las mismas coordenadas que
+// usa FotMob para sus círculos.
 //
-// API: window.mcCanvas(puntos, { espejado, ancho }) → HTMLCanvasElement
-//   espejado: rota 180° (el visitante en la cancha apaisada de Formaciones, que
-//             ataca hacia la izquierda) para que el mapa coincida con donde está
-//             el chip que se tocó.
-//   ancho:    ancho CSS en px (el alto sale de 105×68).
+// API: window.mcCanvas(puntos, { espejado, ancho }) → HTMLElement
+//   espejado: rota el calor 180° (el visitante en la cancha apaisada de
+//             Formaciones, que ataca hacia la izquierda) para que el mapa coincida
+//             con donde está el chip que se tocó.
+//   ancho:    ancho máximo CSS en px (el alto sale de 105×68).
 (function () {
-  var L = 105, A = 68;          // cancha en metros
-  var CELDA = 0.5;              // grilla de densidad (m)
-  var SIGMA = 4.2;              // radio del kernel (m)
-  // Piso de la normalización. Una acción aislada vale 1 en su centro; sin piso,
-  // un jugador que entró y tocó 6 pelotas se vería tan "caliente" como el que tocó
-  // 80. Con piso, lo poco queda celeste tenue y el blanco exige acciones repetidas.
-  var PISO = 3.5;
-
-  // Escala de calor: [posición 0..1, r, g, b, alfa]. Amarillo (pocas) → naranja →
-  // rojo (muchas). Los cálidos van casi opacos: semitransparentes sobre el azul se
-  // mezclaban en un verde oliva sucio. Por eso la transición desde la cancha es
-  // corta (0.08→0.18) y por debajo de 0.08 no se pinta nada.
-  var RAMPA = [
-    [0.00, 250, 204,  21, 0.00],
-    [0.08, 250, 204,  21, 0.00],
-    [0.18, 250, 204,  21, 0.80],
-    [0.40, 251, 146,  60, 0.90],
-    [0.70, 239,  68,  68, 0.93],
-    [1.00, 220,  38,  38, 0.96],
-  ];
-  function color(t) {
-    for (var i = 1; i < RAMPA.length; i++) {
-      if (t <= RAMPA[i][0]) {
-        var a = RAMPA[i - 1], b = RAMPA[i], f = (t - a[0]) / (b[0] - a[0]);
-        return [a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f,
-                a[3] + (b[3] - a[3]) * f, a[4] + (b[4] - a[4]) * f];
-      }
-    }
-    var u = RAMPA[RAMPA.length - 1];
-    return [u[1], u[2], u[3], u[4]];
-  }
-
-  // Densidad → canvas chico (una celda = un píxel); después se escala con suavizado.
-  function capaCalor(puntos) {
-    var W = Math.round(L / CELDA), H = Math.round(A / CELDA);
-    var dens = new Float32Array(W * H), max = 0;
-    var r = Math.ceil(3 * SIGMA / CELDA), k2 = 2 * SIGMA * SIGMA;
-    puntos.forEach(function (p) {
-      var cx = p[0] / CELDA, cy = p[1] / CELDA;
-      var x0 = Math.max(0, Math.floor(cx - r)), x1 = Math.min(W - 1, Math.ceil(cx + r));
-      var y0 = Math.max(0, Math.floor(cy - r)), y1 = Math.min(H - 1, Math.ceil(cy + r));
-      for (var y = y0; y <= y1; y++) {
-        for (var x = x0; x <= x1; x++) {
-          var dx = (x + 0.5 - cx) * CELDA, dy = (y + 0.5 - cy) * CELDA;
-          var v = (dens[y * W + x] += Math.exp(-(dx * dx + dy * dy) / k2));
-          if (v > max) max = v;
-        }
-      }
-    });
-    max = Math.max(max, PISO);
-    var cv = document.createElement('canvas');
-    cv.width = W; cv.height = H;
-    var ctx = cv.getContext('2d'), img = ctx.createImageData(W, H), d = img.data;
-    for (var i = 0; i < W * H; i++) {
-      if (!dens[i]) continue;
-      var c = color(Math.min(1, dens[i] / max));
-      d[i * 4] = c[0]; d[i * 4 + 1] = c[1]; d[i * 4 + 2] = c[2]; d[i * 4 + 3] = Math.round(c[3] * 255);
-    }
-    ctx.putImageData(img, 0, 0);
-    return cv;
-  }
-
-  // Líneas reglamentarias (medidas FIFA), en metros.
-  function lineas(ctx, s) {
-    ctx.strokeStyle = 'rgba(255,255,255,.22)';
-    ctx.lineWidth = Math.max(1, s * 0.22);
-    var R = function (x, y, w, h) { ctx.strokeRect(x * s, y * s, w * s, h * s); };
-    R(0, 0, L, A);
-    ctx.beginPath(); ctx.moveTo(L / 2 * s, 0); ctx.lineTo(L / 2 * s, A * s); ctx.stroke();
-    ctx.beginPath(); ctx.arc(L / 2 * s, A / 2 * s, 9.15 * s, 0, 2 * Math.PI); ctx.stroke();
-    var ya = (A - 40.32) / 2, yc = (A - 18.32) / 2;
-    R(0, ya, 16.5, 40.32); R(L - 16.5, ya, 16.5, 40.32);   // áreas grandes
-    R(0, yc, 5.5, 18.32);  R(L - 5.5, yc, 5.5, 18.32);     // áreas chicas
-    // medialunas: solo el arco fuera del área
-    var ang = Math.acos((16.5 - 11) / 9.15);
-    ctx.beginPath(); ctx.arc(11 * s, A / 2 * s, 9.15 * s, -ang, ang); ctx.stroke();
-    ctx.beginPath(); ctx.arc((L - 11) * s, A / 2 * s, 9.15 * s, Math.PI - ang, Math.PI + ang); ctx.stroke();
-    ctx.fillStyle = 'rgba(255,255,255,.3)';
-    [[L / 2, A / 2], [11, A / 2], [L - 11, A / 2]].forEach(function (p) {
-      ctx.beginPath(); ctx.arc(p[0] * s, p[1] * s, Math.max(1.2, s * 0.3), 0, 2 * Math.PI); ctx.fill();
-    });
-  }
+  var CANCHA = "<svg viewBox=\"0 0 105 68\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><g clip-path=\"url(#clip0)\"><path d=\"M3.15205 0.399981H102.058C102.742 0.397536 103.401 0.657361 103.899 1.12598C104.138 1.3512 104.329 1.62276 104.46 1.92413C104.591 2.2255 104.66 2.55037 104.661 2.87898V65.179C104.66 65.5076 104.591 65.8325 104.46 66.1338C104.329 66.4352 104.138 66.7068 103.899 66.932C103.401 67.4006 102.742 67.6604 102.058 67.658H3.15205C2.46839 67.6605 1.80981 67.4006 1.31205 66.932C1.07271 66.7068 0.881724 66.4352 0.75072 66.1339C0.619716 65.8325 0.551439 65.5076 0.550049 65.179V2.87898C0.551498 2.55037 0.619801 2.2255 0.750801 1.92413C0.881801 1.62276 1.07276 1.3512 1.31205 1.12598C1.80981 0.657336 2.46839 0.397486 3.15205 0.399981V0.399981Z\" fill=\"#132036\"></path><path d=\"M102.038 0H2.96198C2.1764 0 1.42304 0.312071 0.867554 0.867554C0.312071 1.42304 0 2.17643 0 2.96201V65.038C0 65.8236 0.312071 66.577 0.867554 67.1324C1.42304 67.6879 2.1764 68 2.96198 68H102.038C102.824 68 103.577 67.6879 104.132 67.1324C104.688 66.577 105 65.8236 105 65.038V2.96201C105 2.17643 104.688 1.42304 104.132 0.867554C103.577 0.312071 102.824 0 102.038 0V0ZM102.038 0.740997C102.627 0.741791 103.191 0.976049 103.608 1.3924C104.024 1.80874 104.258 2.3732 104.259 2.96201V65.038C104.258 65.6268 104.024 66.1913 103.608 66.6076C103.191 67.024 102.627 67.2582 102.038 67.259H2.96198C2.37317 67.2582 1.80874 67.024 1.3924 66.6076C0.976049 66.1913 0.741822 65.6268 0.741028 65.038V2.96201C0.741822 2.3732 0.976049 1.80874 1.3924 1.3924C1.80874 0.976049 2.37317 0.741791 2.96198 0.740997\" fill=\"#3b4a66\"></path><path d=\"M0.862961766,25.733 L0.862961766,42.257 L4.9263644,42.257 C5.06223018,42.256452 5.17223563,42.1461867 5.17278238,42.01 L5.17278238,25.984 C5.17223563,25.8478133 5.06223018,25.737548 4.9263644,25.737 L0.862961766,25.737 M0.123707814,24.997 L4.9263644,24.997 C5.47018499,24.997 5.91103869,25.438895 5.91103869,25.984 L5.91103869,42.015 C5.91103869,42.2767687 5.80729652,42.527816 5.62263427,42.7129144 C5.43797202,42.8980128 5.18751626,43.002 4.9263644,43.002 L0.123707814,43.002 L0.123707814,24.997 Z\" fill=\"#3b4a66\"></path><path d=\"M104.137038,42.261 L104.137038,25.733 L100.073636,25.733 C99.9375427,25.733 99.8272176,25.8435857 99.8272176,25.98 L99.8272176,42.011 C99.8272176,42.1474143 99.9375427,42.258 100.073636,42.258 L104.137038,42.258 M104.876292,42.998 L100.073636,42.998 C99.529815,42.998 99.0889613,42.556105 99.0889613,42.011 L99.0889613,25.984 C99.0889613,25.438895 99.529815,24.997 100.073636,24.997 L104.876292,24.997 L104.876292,42.998 Z\" fill=\"#3b4a66\"></path><path d=\"M0.741 14.741V53.622H15.552C15.6175 53.622 15.6803 53.596 15.7267 53.5497C15.773 53.5033 15.799 53.4405 15.799 53.375V14.987C15.799 14.9215 15.773 14.8587 15.7267 14.8123C15.6803 14.766 15.6175 14.74 15.552 14.74H0.741V14.741ZM0 14H15.552C15.8138 14 16.0648 14.104 16.2499 14.2891C16.435 14.4742 16.539 14.7252 16.539 14.987V53.375C16.539 53.5046 16.5135 53.633 16.4639 53.7527C16.4143 53.8725 16.3416 53.9813 16.2499 54.0729C16.1583 54.1646 16.0495 54.2373 15.9297 54.2869C15.81 54.3365 15.6816 54.362 15.552 54.362H0V14Z\" fill=\"#3b4a66\"></path><path d=\"M16.3511 41.171V40.219C17.2214 39.4721 17.92 38.5458 18.3989 37.5038C18.8778 36.4617 19.1257 35.3284 19.1257 34.1815C19.1257 33.0346 18.8778 31.9013 18.3989 30.8592C17.92 29.8171 17.2214 28.8909 16.3511 28.144V27.191C17.4427 28.0002 18.3295 29.0539 18.9406 30.2675C19.5517 31.4812 19.87 32.8212 19.87 34.18C19.87 35.5388 19.5517 36.8787 18.9406 38.0924C18.3295 39.3061 17.4427 40.3598 16.3511 41.169V41.171Z\" fill=\"#3b4a66\"></path><path d=\"M104.26 14.741V53.622H89.447C89.3815 53.622 89.3186 53.596 89.2723 53.5497C89.226 53.5033 89.2 53.4405 89.2 53.375V14.987C89.2002 14.9217 89.2264 14.8591 89.2727 14.813C89.319 14.7669 89.3816 14.741 89.447 14.741H104.26ZM105 14H89.447C89.1852 14 88.9341 14.104 88.749 14.2891C88.5639 14.4742 88.46 14.7252 88.46 14.987V53.375C88.46 53.6368 88.5639 53.8878 88.749 54.0729C88.9341 54.258 89.1852 54.362 89.447 54.362H105V14Z\" fill=\"#3b4a66\"></path><path d=\"M88.648 41.171V40.219C87.7777 39.4721 87.0791 38.5458 86.6002 37.5038C86.1213 36.4617 85.8734 35.3284 85.8734 34.1815C85.8734 33.0346 86.1213 31.9013 86.6002 30.8592C87.0791 29.8171 87.7777 28.8909 88.648 28.144V27.191C87.5564 28.0002 86.6695 29.0539 86.0585 30.2675C85.4474 31.4812 85.1292 32.8212 85.1292 34.18C85.1292 35.5388 85.4474 36.8787 86.0585 38.0924C86.6695 39.3061 87.5564 40.3598 88.648 41.169V41.171Z\" fill=\"#3b4a66\"></path><path d=\"M52.4 25.741C50.8254 25.7414 49.2864 26.2087 47.9774 27.0838C46.6684 27.9589 45.6484 29.2025 45.0462 30.6573C44.444 32.1121 44.2867 33.7129 44.5943 35.2571C44.9019 36.8013 45.6604 38.2196 46.7741 39.3327C47.8877 40.4458 49.3064 41.2036 50.8508 41.5104C52.3952 41.8172 53.9958 41.6592 55.4503 41.0562C56.9049 40.4533 58.148 39.4326 59.0224 38.1232C59.8968 36.8138 60.3633 35.2745 60.363 33.7C60.36 31.5893 59.52 29.566 58.0272 28.0739C56.5343 26.5819 54.5106 25.7429 52.4 25.741V25.741ZM52.4 25C54.1206 25 55.8027 25.5102 57.2334 26.4662C58.6641 27.4222 59.7792 28.7809 60.4377 30.3707C61.0962 31.9604 61.2685 33.7097 60.9328 35.3973C60.5971 37.0849 59.7685 38.6351 58.5518 39.8518C57.3351 41.0685 55.7849 41.8971 54.0972 42.2328C52.4096 42.5685 50.6603 42.3962 49.0706 41.7378C47.4809 41.0793 46.1221 39.9642 45.1662 38.5335C44.2102 37.1028 43.7 35.4207 43.7 33.7C43.7 31.3926 44.6166 29.1797 46.2481 27.5482C47.8797 25.9166 50.0926 25 52.4 25V25Z\" fill=\"#3b4a66\"></path><path d=\"M0 30H0.138C0.285344 29.9868 0.432025 30.0317 0.546738 30.1251C0.661451 30.2185 0.735112 30.353 0.752 30.5V36.818C0.735112 36.965 0.661451 37.0995 0.546738 37.1929C0.432025 37.2864 0.285344 37.3312 0.138 37.318H0V30Z\" fill=\"#56658a\"></path><path d=\"M105 30H104.862C104.715 29.9868 104.568 30.0317 104.453 30.1251C104.339 30.2185 104.265 30.353 104.248 30.5V36.818C104.265 36.965 104.339 37.0995 104.453 37.1929C104.568 37.2864 104.715 37.3312 104.862 37.318H105V30Z\" fill=\"#56658a\"></path><path d=\"M52 0H52.741L52.746 67.306H52.006L52 0Z\" fill=\"#3b4a66\"></path></g><defs><clipPath><rect width=\"105\" height=\"68\" fill=\"white\"></rect></clipPath></defs></svg>";
+  // Plantilla del calor de FotMob (la misma que data/mapas/template.svg).
+  var PLANTILLA = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 105 68\"><defs><radialGradient id=\"g\"><stop offset=\"0%\" stop-color=\"#fff\" stop-opacity=\"0.54\"/><stop offset=\"20%\" stop-color=\"#fff\" stop-opacity=\"0.378\"/><stop offset=\"40%\" stop-color=\"#fff\" stop-opacity=\"0.24300000000000002\"/><stop offset=\"60%\" stop-color=\"#fff\" stop-opacity=\"0.135\"/><stop offset=\"80%\" stop-color=\"#fff\" stop-opacity=\"0.054000000000000006\"/><stop offset=\"100%\" stop-color=\"#fff\" stop-opacity=\"0\"/></radialGradient><filter id=\"h\" x=\"-50%\" y=\"-50%\" width=\"200%\" height=\"200%\" color-interpolation-filters=\"sRGB\"><feGaussianBlur in=\"SourceGraphic\" stdDeviation=\"1.5\" result=\"b\"/><feComponentTransfer in=\"b\" result=\"d\"><feFuncA type=\"linear\" slope=\"1.0000\" intercept=\"0.0000\"/></feComponentTransfer><feColorMatrix in=\"d\" type=\"matrix\" result=\"m\" values=\"0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0\"/><feComponentTransfer in=\"m\"><feFuncR type=\"table\" tableValues=\"0.706 0.706 0.706 0.706 0.706 0.706 0.706 0.706 0.706 0.706 0.706 0.706 0.706 0.706 0.706 0.706 0.706 0.706 0.706 0.706 0.706 0.701 0.694 0.687 0.679 0.672 0.665 0.657 0.650 0.643 0.635 0.628 0.621 0.613 0.606 0.598 0.591 0.584 0.576 0.569 0.562 0.554 0.547 0.540 0.532 0.525 0.518 0.510 0.503 0.496 0.488 0.481 0.473 0.466 0.459 0.451 0.444 0.437 0.429 0.422 0.415 0.407 0.400 0.393 0.385 0.378 0.370 0.363 0.356 0.348 0.341 0.334 0.326 0.319 0.312 0.304 0.297 0.290 0.282 0.275 0.284 0.293 0.302 0.312 0.321 0.331 0.340 0.350 0.359 0.369 0.378 0.388 0.397 0.407 0.416 0.426 0.435 0.445 0.454 0.464 0.473 0.483 0.492 0.502 0.511 0.521 0.530 0.540 0.549 0.559 0.568 0.578 0.587 0.596 0.606 0.615 0.625 0.634 0.644 0.653 0.663 0.672 0.682 0.691 0.701 0.710 0.720 0.729 0.739 0.748 0.758 0.767 0.777 0.786 0.796 0.805 0.815 0.824 0.834 0.843 0.853 0.862 0.871 0.881 0.890 0.900 0.909 0.919 0.928 0.938 0.947 0.957 0.966 0.976 0.985 0.995 1.000 0.999 0.998 0.997 0.996 0.995 0.994 0.993 0.992 0.991 0.990 0.989 0.988 0.987 0.986 0.985 0.984 0.982 0.981 0.980 0.979 0.978 0.977 0.976 0.975 0.974 0.973 0.972 0.971 0.970 0.969 0.968 0.967 0.966 0.965 0.964 0.963 0.962 0.961 0.960 0.959 0.958 0.957 0.956 0.955 0.954 0.953 0.952 0.951 0.950 0.949 0.948 0.947 0.946 0.945 0.944 0.943 0.942 0.941 0.938 0.935 0.931 0.927 0.924 0.920 0.916 0.913 0.909 0.905 0.902 0.898 0.894 0.891 0.887 0.883 0.880 0.876 0.873 0.869 0.867 0.867 0.867 0.867 0.867 0.867 0.867 0.867 0.867 0.867 0.867 0.867 0.867 0.867 0.867 0.867 0.867 0.867 0.867 0.867 0.867\"/><feFuncG type=\"table\" tableValues=\"0.961 0.961 0.961 0.961 0.961 0.961 0.961 0.961 0.961 0.961 0.961 0.961 0.961 0.961 0.961 0.961 0.961 0.961 0.961 0.961 0.961 0.960 0.960 0.959 0.958 0.958 0.957 0.956 0.956 0.955 0.954 0.954 0.953 0.952 0.952 0.951 0.950 0.950 0.949 0.948 0.948 0.947 0.946 0.946 0.945 0.944 0.944 0.943 0.942 0.942 0.941 0.940 0.940 0.939 0.938 0.938 0.937 0.936 0.936 0.935 0.934 0.934 0.933 0.932 0.932 0.931 0.930 0.930 0.929 0.928 0.928 0.927 0.926 0.926 0.925 0.924 0.924 0.923 0.922 0.922 0.922 0.923 0.923 0.924 0.924 0.925 0.925 0.926 0.927 0.927 0.928 0.928 0.929 0.929 0.930 0.931 0.931 0.932 0.932 0.933 0.933 0.934 0.935 0.935 0.936 0.936 0.937 0.937 0.938 0.938 0.939 0.940 0.940 0.941 0.941 0.942 0.942 0.943 0.944 0.944 0.945 0.945 0.946 0.946 0.947 0.947 0.948 0.949 0.949 0.950 0.950 0.951 0.951 0.952 0.953 0.953 0.954 0.954 0.955 0.955 0.956 0.957 0.957 0.958 0.958 0.959 0.959 0.960 0.960 0.961 0.962 0.962 0.963 0.963 0.964 0.964 0.961 0.953 0.945 0.937 0.930 0.922 0.914 0.906 0.898 0.890 0.882 0.874 0.866 0.859 0.851 0.843 0.835 0.827 0.819 0.811 0.803 0.795 0.788 0.780 0.772 0.764 0.756 0.748 0.740 0.732 0.724 0.717 0.709 0.701 0.693 0.685 0.677 0.669 0.661 0.653 0.646 0.638 0.630 0.622 0.614 0.606 0.598 0.590 0.582 0.575 0.567 0.559 0.551 0.543 0.535 0.527 0.519 0.511 0.504 0.491 0.476 0.462 0.448 0.434 0.419 0.405 0.391 0.377 0.363 0.348 0.334 0.320 0.306 0.291 0.277 0.263 0.249 0.235 0.220 0.212 0.212 0.212 0.212 0.212 0.212 0.212 0.212 0.212 0.212 0.212 0.212 0.212 0.212 0.212 0.212 0.212 0.212 0.212 0.212 0.212\"/><feFuncB type=\"table\" tableValues=\"0.863 0.863 0.863 0.863 0.863 0.863 0.863 0.863 0.863 0.863 0.863 0.863 0.863 0.863 0.863 0.863 0.863 0.863 0.863 0.863 0.863 0.860 0.854 0.849 0.843 0.838 0.833 0.827 0.822 0.817 0.811 0.806 0.801 0.795 0.790 0.785 0.779 0.774 0.769 0.763 0.758 0.753 0.747 0.742 0.737 0.731 0.726 0.720 0.715 0.710 0.704 0.699 0.694 0.688 0.683 0.678 0.672 0.667 0.662 0.656 0.651 0.646 0.640 0.635 0.630 0.624 0.619 0.613 0.608 0.603 0.597 0.592 0.587 0.581 0.576 0.571 0.565 0.560 0.555 0.549 0.543 0.537 0.531 0.525 0.519 0.513 0.507 0.501 0.495 0.489 0.483 0.477 0.471 0.465 0.459 0.453 0.446 0.440 0.434 0.428 0.422 0.416 0.410 0.404 0.398 0.392 0.386 0.380 0.374 0.368 0.362 0.356 0.350 0.344 0.338 0.332 0.326 0.319 0.313 0.307 0.301 0.295 0.289 0.283 0.277 0.271 0.265 0.259 0.253 0.247 0.241 0.235 0.229 0.223 0.217 0.211 0.205 0.198 0.192 0.186 0.180 0.174 0.168 0.162 0.156 0.150 0.144 0.138 0.132 0.126 0.120 0.114 0.108 0.102 0.096 0.090 0.087 0.087 0.088 0.089 0.090 0.091 0.091 0.092 0.093 0.094 0.095 0.095 0.096 0.097 0.098 0.099 0.099 0.100 0.101 0.102 0.103 0.103 0.104 0.105 0.106 0.107 0.107 0.108 0.109 0.110 0.111 0.112 0.112 0.113 0.114 0.115 0.116 0.116 0.117 0.118 0.119 0.120 0.120 0.121 0.122 0.123 0.124 0.124 0.125 0.126 0.127 0.128 0.128 0.129 0.130 0.131 0.132 0.132 0.133 0.136 0.140 0.144 0.148 0.152 0.156 0.159 0.163 0.167 0.171 0.175 0.179 0.183 0.186 0.190 0.194 0.198 0.202 0.206 0.209 0.212 0.212 0.212 0.212 0.212 0.212 0.212 0.212 0.212 0.212 0.212 0.212 0.212 0.212 0.212 0.212 0.212 0.212 0.212 0.212 0.212\"/><feFuncA type=\"table\" tableValues=\"0 1 1 1 1 1 1 1 1\"/></feComponentTransfer></filter></defs><g filter=\"url(#h)\" fill=\"url(#g)\" opacity=\".85\">{{circles__placeholder}}</g></svg>";
 
   window.mcCanvas = function (puntos, opts) {
     opts = opts || {};
-    var ancho = opts.ancho || 420, alto = ancho * A / L;
-    var dpr = Math.min(window.devicePixelRatio || 1, 3);
-    var cv = document.createElement('canvas');
-    cv.width = Math.round(ancho * dpr); cv.height = Math.round(alto * dpr);
-    cv.style.width = '100%'; cv.style.maxWidth = ancho + 'px'; cv.style.aspectRatio = L + '/' + A;
-    cv.style.display = 'block';
-    var ctx = cv.getContext('2d'), s = cv.width / L;
-
-    // césped: azul noche con franjas apenas marcadas
-    var g = ctx.createLinearGradient(0, 0, cv.width, cv.height);
-    g.addColorStop(0, '#13213a'); g.addColorStop(1, '#0c1628');
-    ctx.fillStyle = g; ctx.fillRect(0, 0, cv.width, cv.height);
-    ctx.fillStyle = 'rgba(255,255,255,.025)';
-    for (var i = 0; i < 10; i += 2) ctx.fillRect(i * L / 10 * s, 0, L / 10 * s, cv.height);
-
-    if (opts.espejado) { ctx.save(); ctx.translate(cv.width, cv.height); ctx.rotate(Math.PI); }
+    var caja = document.createElement('div');
+    caja.style.cssText = 'position:relative;width:100%;max-width:' + (opts.ancho || 420) +
+      'px;aspect-ratio:105/68;border-radius:10px;overflow:hidden;line-height:0';
+    caja.innerHTML = CANCHA;
+    var svg = caja.firstChild;
+    svg.setAttribute('preserveAspectRatio', 'none');
+    svg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%';
     if (puntos && puntos.length) {
-      ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
-      ctx.drawImage(capaCalor(puntos), 0, 0, cv.width, cv.height);
+      var circulos = puntos.map(function (p) {
+        return '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="7.5"/>';
+      }).join('');
+      var img = document.createElement('img');
+      img.alt = '';
+      img.src = 'data:image/svg+xml,' + encodeURIComponent(PLANTILLA.replace('{{circles__placeholder}}', circulos));
+      img.style.cssText = 'position:absolute;inset:0;width:100%;height:100%' +
+        (opts.espejado ? ';transform:rotate(180deg)' : '');
+      caja.appendChild(img);
     }
-    if (opts.espejado) ctx.restore();
-    lineas(ctx, s);                      // las líneas van encima del calor
-    return cv;
+    return caja;
   };
 })();
