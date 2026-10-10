@@ -142,15 +142,21 @@
   // izquierda, ataca a la derecha) o 'visitante' (espejado). La col 1 del grid
   // (izquierda de la placa vertical) queda arriba para el local y abajo para el
   // visitante, así los mismos carriles reales quedan enfrentados.
-  function spotH(slug, j, x, y) {
+  // data-slug / data-num: identifican al jugador para el detalle con su mapa de
+  // calor (estadisticas.html). kitPx: el kit se REGENERA al tamaño pedido (escalarlo
+  // por CSS deforma bastones y franjas), así una cancha más ancha lleva chips más grandes.
+  function _dataJ(slug, j) {
+    return ' data-slug="' + esc(slug) + '" data-num="' + esc(j.num == null ? '' : j.num) + '"';
+  }
+  function spotH(slug, j, x, y, kitPx) {
     var sale = j.min_sale ? '<span class="fc-out">▼' + j.min_sale + "'</span>" : '';
     var mk = marks(j);
-    return '<div class="fc-spot" title="' + esc(j.nombre) + '" style="left:' + x + '%;top:' + y + '%">' + kitChip(slug, j.num, 24)
+    return '<div class="fc-spot"' + _dataJ(slug, j) + ' title="' + esc(j.nombre) + '" style="left:' + x + '%;top:' + y + '%">' + kitChip(slug, j.num, kitPx || 24)
       + '<span class="fc-nm"><i>' + esc(shortName(j.nombre)) + '</i>' + sale + '</span>'
       + (mk ? '<span class="fc-mk">' + mk + '</span>' : '') + '</div>';
   }
 
-  function chipsHorizontales(slug, tit, lado) {
+  function chipsHorizontales(slug, tit, lado, kitPx) {
     var rows = {};
     tit.forEach(function (j) {
       var m = /^(\d+):(\d+)$/.exec(j.grid || '');
@@ -165,7 +171,7 @@
       return tit.filter(function (j) { return j.pos; }).map(function (j) {
         var x = lado === 'local' ? 2.5 + j.pos.x * 0.465 : 97.5 - j.pos.x * 0.465;
         var y = lado === 'local' ? j.pos.y : 100 - j.pos.y;
-        return spotH(slug, j, x, Math.max(8, Math.min(92, y)));
+        return spotH(slug, j, x, Math.max(8, Math.min(92, y)), kitPx);
       }).join('');
     }
     var maxF = filas[filas.length - 1];
@@ -177,7 +183,7 @@
       arr.forEach(function (e, i) {
         var frac = (i + 1) / (arr.length + 1);
         var y = lado === 'local' ? frac * 100 : (1 - frac) * 100;
-        chips.push(spotH(slug, e.j, x, y));
+        chips.push(spotH(slug, e.j, x, y, kitPx));
       });
     });
     return chips.join('');
@@ -187,7 +193,7 @@
     if (!sub.length) return '';
     return '<div><div class="fc-subhdr">Ingresaron</div><div class="fc-in">' + sub.map(function (j) {
       var mk = marks(j);
-      return '<div class="fc-in-row">' + kitChip(slug, j.num, 20)
+      return '<div class="fc-in-row"' + _dataJ(slug, j) + '>' + kitChip(slug, j.num, 20)
         + '<span class="fc-in-tag">▲ ' + (j.min_in ? j.min_in + "'" : '') + '</span>'
         + '<span class="fc-in-nm">' + esc(j.nombre) + '</span>'
         + (mk ? '<span class="fc-mk">' + mk + '</span>' : '') + '</div>';
@@ -269,6 +275,7 @@
   // opts.layout: 'vertical' (default — una cancha por equipo, como las placas) |
   // 'horizontal' (una sola cancha apaisada con los dos equipos enfrentados; ocupa
   // mucho menos alto — la usa la tira EN JUEGO del index).
+  // opts.kitPx: tamaño de los kit chips de la cancha apaisada (default 24).
   window.fcCanchaHTML = function (data, opts) {
     inject();
     opts = opts || {};
@@ -293,8 +300,8 @@
     if (opts.layout === 'horizontal') {
       var cancha = '<div class="fc-pitch-h"><i class="fc-l fc-l-line"></i><i class="fc-l fc-l-circle"></i>'
         + '<i class="fc-l fc-l-area-l"></i><i class="fc-l fc-l-area-r"></i>'
-        + chipsHorizontales(teams[0][0], titDe(teams[0]), 'local')
-        + chipsHorizontales(teams[1][0], titDe(teams[1]), 'visitante') + '</div>';
+        + chipsHorizontales(teams[0][0], titDe(teams[0]), 'local', opts.kitPx)
+        + chipsHorizontales(teams[1][0], titDe(teams[1]), 'visitante', opts.kitPx) + '</div>';
       // Cada equipo conserva SU columna aunque el otro no tenga cambios (sin el
       // placeholder, el bloque del visitante se corría a la columna del local).
       var insL = ingresaronHTML(teams[0][0], subDe(teams[0]));

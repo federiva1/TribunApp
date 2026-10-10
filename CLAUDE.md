@@ -231,6 +231,32 @@ devolvían `response: []` con el partido en pleno 2T, y la ficha del index queda
   nombre** contra `goles_detalle`/`fixtures/events` (el XI de FotMob no tiene ids api-sports).
   Si FotMob falla, la ficha queda como antes.
 
+### Mapas de calor (Formaciones → tocar un jugador)
+
+En `estadisticas.html`, el tab **Formaciones** usa el ancho de `#app.wide` (860 px, igual
+que la Tabla; antes la cancha apaisada quedaba apretada en 480) con kit chips de 30 px en
+desktop (`fcCanchaHTML(..., { kitPx })`: el kit se regenera a ese tamaño, no se escala).
+Si el partido tiene `data/mapas/{id}.json`, cada chip (titulares y "Ingresaron") se toca y
+abre un panel con el **mapa de calor** del jugador — modal en desktop, hoja desde abajo en
+el celular. Sin archivo de mapas la cancha queda como siempre.
+
+- **Datos — `scripts/fetch_mapas.py`**: un solo pedido por partido al endpoint de heatmaps
+  de FotMob (`/api/data/heatmap/match/{matchId}/heatmaps`, GET común, sin navegador) trae
+  a todos los jugadores, indexados por **optaId**. Guardamos solo las **coordenadas** de
+  cada acción (`heat: [[x, y], ...]`, metros sobre 105×68) y los tiros, por equipo y
+  dorsal. **No** se guarda el dibujo de FotMob: su `template.svg` ya no se usa.
+  `python scripts/fetch_mapas.py <id> [--force]`; sin ids procesa los partidos que faltan.
+- **Orientación**: FotMob normaliza a los dos equipos atacando hacia x=105 (los arqueros
+  promedian x≈9); y=0 es la banda izquierda del equipo, igual que `j.pos`. El panel espeja
+  al visitante para que el mapa coincida con el lado de la cancha donde está su chip.
+- **Dibujo — `js/mapa-calor.js`** (`mcCanvas(puntos, {espejado, ancho})`): propio, con la
+  estética de la página — cancha azul noche, líneas tenues y una escala de una sola tinta
+  (el celeste de la marca, de transparente a casi blanco). Kernel gaussiano σ=4,2 m sobre
+  grilla de medio metro, normalizado al máximo del jugador con un **piso** (`PISO`) para
+  que el que entró y tocó 6 pelotas no se vea tan "caliente" como el que tocó 80.
+- Hoy el script se corre **a mano** después de cerrar un partido; todavía no está metido
+  en `cierre_rapido.py` / `fetch_liga_partidos.py`.
+
 ### Posiciones con lag (`js/standings-fix.js`)
 
 `/standings` se actualiza tarde (tras IndRiv 3-1 Racing seguía dando 6 PJ / 8 pts horas

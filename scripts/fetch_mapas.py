@@ -1,20 +1,27 @@
 #!/usr/bin/env python3
 """Mapas por jugador (calor + tiros) → data/mapas/{id}.json.
 
-Para el detalle de jugador del tab Formaciones (estadisticas.html): FotMob
-publica el heatmap de cada jugador YA renderizado como fragmento SVG (endpoint
-/api/data/heatmap/match/{matchId}/heatmaps, template con {{circles__placeholder}})
-y el shotmap viene en el mismo __NEXT_DATA__ del que sacamos los playerStats.
+Para el detalle de jugador del tab Formaciones (estadisticas.html). Guardamos
+DATOS, no dibujos: las coordenadas de cada acción del jugador y sus tiros. El
+mapa de calor lo pinta la página con la estética de TribunApp (js/mapa-calor.js).
+
+De dónde sale: FotMob publica las acciones de cada jugador en un endpoint por
+partido (/api/data/heatmap/match/{matchId}/heatmaps, un solo pedido trae a todos)
+como círculos SVG listos para su propia plantilla; de ahí se extraen solo los
+centros (cx, cy). El shotmap viene en el mismo __NEXT_DATA__ de los playerStats.
 
     python scripts/fetch_mapas.py                 # partidos sin data/mapas aún
     python scripts/fetch_mapas.py --force         # regenera todos
     python scripts/fetch_mapas.py bocajuniors-lanus [otro-id ...]
 
-Escribe:
-  data/mapas/template.svg  — el SVG del heatmap (una sola vez, es igual para todos)
-  data/mapas/{id}.json     — { matchId, jugadores: { slug: { num: {nombre, pid,
-                             heat: "<circle.../>...", shots: [{x,y,min,xg,tipo,gol}] }}}}
+Escribe data/mapas/{id}.json:
+  { matchId, cancha: [105, 68], jugadores: { slug: { num: {nombre, pid, rating,
+    heat: [[x, y], ...], shots: [{x, y, min, xg, tipo, gol, arco}] }}}}
 Indexado por dorsal (único dentro de un partido) con el nombre para desambiguar.
+
+Coordenadas en METROS sobre una cancha de 105×68, normalizadas por FotMob: los
+dos equipos atacan de izquierda a derecha (x=0 es el arco propio; los arqueros
+promedian x≈9). y=0 es la banda izquierda del equipo, igual que j.pos.
 """
 from __future__ import annotations
 
@@ -43,6 +50,14 @@ def _http_json(url):
     req = urllib.request.Request(url, headers={'User-Agent': UA, 'Accept': 'application/json'})
     with urllib.request.urlopen(req, timeout=30) as r:
         return json.loads(r.read().decode('utf-8', 'replace'))
+
+
+_CIRCULO = re.compile(r'cx="(-?[\d.]+)"\s+cy="(-?[\d.]+)"')
+
+
+def _puntos(svg: str) -> list:
+    """'<circle cx="52.7" cy="34.2" r="7.5"/>...' → [[52.7, 34.2], ...]"""
+    return [[round(float(x), 1), round(float(y), 1)] for x, y in _CIRCULO.findall(svg or '')]
 
 
 def resolver_url(fid, date):
@@ -109,13 +124,9 @@ def procesar(oid: str, force: bool = False) -> str:
     except Exception as e:
         print(f'   heatmap no disponible ({e})')
         hm = {}
-    heat_por_pid = {int(k[1:]): v for k, v in (hm.get('players') or {}).items()
+    # Solo los centros de los círculos: la plantilla de dibujo de FotMob no se usa.
+    heat_por_pid = {int(k[1:]): _puntos(v) for k, v in (hm.get('players') or {}).items()
                     if k.startswith('p')}
-    template = hm.get('template') or ''
-    tpl_file = MAPAS / 'template.svg'
-    if template and not tpl_file.exists():
-        MAPAS.mkdir(parents=True, exist_ok=True)
-        tpl_file.write_text(template, encoding='utf-8')
 
     jugadores: dict = {}
     for pid_s, pdata in ps.items():
@@ -132,9 +143,9 @@ def procesar(oid: str, force: bool = False) -> str:
         } for s in (pdata.get('shotmap') or []) if not s.get('isOwnGoal')]
         # el endpoint de heatmaps indexa por optaId (p{optaId}), no por el id FotMob
         try:
-            heat = heat_por_pid.get(int(pdata.get('optaId'))) or ''
+            heat = heat_por_pid.get(int(pdata.get('optaId'))) or []
         except (TypeError, ValueError):
-            heat = ''
+            heat = []
         rating = None
         flat = sfm.flatten_stats(pdata.get('stats', []))
         try:
@@ -151,8 +162,8 @@ def procesar(oid: str, force: bool = False) -> str:
     if not jugadores:
         return 'sin mapas'
     MAPAS.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps({'matchId': match_id, 'jugadores': jugadores},
-                              ensure_ascii=False), encoding='utf-8')
+    out.write_text(json.dumps({'matchId': match_id, 'cancha': [105, 68], 'jugadores': jugadores},
+                              ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
     return 'ok'
 
 
