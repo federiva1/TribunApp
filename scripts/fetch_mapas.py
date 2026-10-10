@@ -13,6 +13,12 @@ centros (cx, cy). El shotmap viene en el mismo __NEXT_DATA__ de los playerStats.
     python scripts/fetch_mapas.py                 # partidos sin data/mapas aún
     python scripts/fetch_mapas.py --force         # regenera todos
     python scripts/fetch_mapas.py bocajuniors-lanus [otro-id ...]
+    python scripts/fetch_mapas.py --pausa 1.5     # más espaciado entre partidos (backfill)
+
+En el cierre de cada partido corre solo: fetch_liga_partidos.py (lo usa
+cierre_rapido.py) y cerrar_partido_fotmob.py llaman a generar() después de
+escribir la ficha. Ahí se reusa el __NEXT_DATA__ ya bajado, así que es UN pedido
+más por partido, y un error en los mapas nunca frena el cierre.
 
 Escribe data/mapas/{id}.json:
   { matchId, cancha: [105, 68], jugadores: { slug: { num: {nombre, pid, rating,
@@ -35,7 +41,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / 'scripts'))
-import fetch_liga_partidos as flp        # noqa: E402
 import scrape_fotmob_mundial as sfm      # noqa: E402
 from clubes_map import CLUBES            # noqa: E402
 
@@ -78,27 +83,33 @@ def resolver_url(fid, date):
     return None
 
 
-def procesar(oid: str, force: bool = False) -> str:
+def procesar(oid: str, force: bool = False, url: str | None = None, nd: dict | None = None) -> str:
+    """url/nd: los del partido si el que llama ya los tiene (el cierre), así no se
+    vuelve a resolver la URL ni a bajar la página."""
     out = MAPAS / f'{oid}.json'
     if out.exists() and not force:
         return 'skip'
     d = json.loads((ROOT / 'data' / 'partidos' / f'{oid}.json').read_text(encoding='utf-8'))
     p = d.get('partido') or {}
     ls, vs = p.get('local'), p.get('visitante')
-    fid = (CLUBES.get(ls) or {}).get('fotmob') or (CLUBES.get(vs) or {}).get('fotmob')
-    if not fid:
-        return 'sin fotmob id'
-    url = resolver_url(fid, p.get('fecha') or '')
     if not url:
-        return 'sin URL fotmob'
-    m = re.search(r'#(\d+)', url)
-    if not m:
-        return 'sin match id'
-    match_id = int(m.group(1))
-
-    nd = sfm._next_data_http(url)
+        fid = (CLUBES.get(ls) or {}).get('fotmob') or (CLUBES.get(vs) or {}).get('fotmob')
+        if not fid:
+            return 'sin fotmob id'
+        url = resolver_url(fid, p.get('fecha') or '')
+        if not url:
+            return 'sin URL fotmob'
+    if nd is None:
+        nd = sfm._next_data_http(url)
     if not nd:
         return 'sin nd'
+    match_id = (nd.get('props', {}).get('pageProps', {}).get('general') or {}).get('matchId')
+    if not match_id:
+        m = re.search(r'#(\d+)', url)
+        if not m:
+            return 'sin match id'
+        match_id = m.group(1)
+    match_id = int(match_id)
     content = nd['props']['pageProps']['content']
     ps = content.get('playerStats') or {}
     if not ps:
@@ -167,10 +178,22 @@ def procesar(oid: str, force: bool = False) -> str:
     return 'ok'
 
 
+def generar(oid: str, url: str | None = None, nd: dict | None = None) -> str:
+    """Para el circuito de cierre: (re)genera el mapa del partido y NUNCA levanta
+    excepción — si FotMob no tiene heatmaps o falla, el cierre sigue igual."""
+    try:
+        r = procesar(oid, force=True, url=url, nd=nd)
+    except Exception as e:  # noqa: BLE001
+        r = f'error ({e})'
+    print(f'   mapas de calor: {r}')
+    return r
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument('ids', nargs='*', help='ids puntuales (default: todos los de liga/copas)')
     ap.add_argument('--force', action='store_true')
+    ap.add_argument('--pausa', type=float, default=0.3, help='segundos entre partidos (default 0.3)')
     args = ap.parse_args()
 
     if args.ids:
@@ -198,7 +221,7 @@ def main() -> int:
             err += 1
             print(f'{oid}: {r}')
         if r != 'skip':
-            time.sleep(0.3)
+            time.sleep(args.pausa)
     print(f'ok={ok} skip={skip} sin_mapas/err={err}')
     return 0
 

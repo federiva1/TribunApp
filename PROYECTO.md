@@ -154,7 +154,9 @@ Por cada partido, según el momento:
 
 ### Estadísticas
 - **Del partido** (`estadisticas.html`): stats de equipo, cancha con las formaciones reales y tabla
-  de jugadores de los dos equipos.
+  de jugadores de los dos equipos. En **Formaciones** (más ancha en la compu) se toca un jugador y
+  sale su **mapa de calor**: dibujo propio (cancha azul, calor amarillo → naranja → rojo, flecha de
+  ataque) sobre las coordenadas de sus acciones, que bajamos de FotMob.
 - **Del club** (`equipo.html`): tabla ancha tipo FotMob que **suma** los partidos tildados, con
   filtros de jugadores y columnas y export a Excel. Si queda **un solo partido** tildado, al segundo
   se arma su ficha (Estadísticas / Formaciones / Tabla); al tildar otro se vuelve a la suma.
@@ -203,7 +205,7 @@ número de fecha (las postergaciones rompen el orden).
 | `tabla_xg.json` | Tabla xG | `build_tabla_xg.py` |
 | `equipos.json` | Los 30 clubes (slug + nombre) | a mano |
 | `estadisticas/` | Formato viejo de stats por club (AAAJ y copas) | legacy |
-| `mapas/` | Mapas de calor/tiros por jugador (experimental, ninguna página los usa todavía) | `fetch_mapas.py` |
+| `mapas/` | Mapas de calor por jugador: coordenadas de cada acción y tiros (los usa Formaciones en `estadisticas.html`) | `fetch_mapas.py` (solo, en cada cierre) |
 | `social/` | Estado anti-duplicados de placas automáticas; `preview/` = placas generadas (no se commitea) | scripts `social_*` |
 
 Mundial 2026 (terminado, se conserva): `fixtures/mundial.json`, `estado_mundial.json`, fichas de selecciones.
@@ -228,6 +230,7 @@ desde el SQL Editor del dashboard.
 | `kits.js` | Kits de camiseta (kit chips) — fuente única |
 | `club-colors.js` | Color de identidad de cada club (sacado del escudo) |
 | `ficha-cancha.js` | Dibuja la cancha con las dos formaciones y el bloque de estadísticas (`fcCanchaHTML`, `fcStatsHTML`) |
+| `mapa-calor.js` | Dibuja el mapa de calor de un jugador (`mcCanvas`) a partir de `data/mapas` |
 | `match-live.js` | Arma la ficha en vivo desde api-sports (+ fallback FotMob) con el mismo formato que `data/partidos` |
 | `standings-fix.js` | Completa la tabla con los partidos que api-sports todavía no contó |
 | `partido-card.js` | Widget viejo de partido en vivo — **sin uso** (ninguna página lo carga) |
@@ -273,7 +276,7 @@ desde el SQL Editor del dashboard.
 | **Día del partido** | Placa "partidos de hoy" | `/placas` → `social_fecha.py` |
 | **~30 min antes** | Placa de formaciones confirmadas (los 22 en una cancha) | `/placas` → `social_xi_cruce.py` (si api-sports no las tiene, desde capturas de los clubes) |
 | **En juego** | Nada: el vivo es automático (proxy + FotMob de respaldo) | — |
-| **Al final** | **Cerrar el partido**: FT en `liga.json`, ficha en `data/partidos`, tabla xG, link `/puntuar/…` | "cerrá X" → `/actualizar-fecha` (parte A) + publicar |
+| **Al final** | **Cerrar el partido**: FT en `liga.json`, ficha en `data/partidos`, mapas de calor en `data/mapas`, tabla xG, link `/puntuar/…` | "cerrá X" → `/actualizar-fecha` (parte A) + publicar |
 | **Al final** | Placa "final del partido" | `/placas` → `social_resultado.py --test-partido {id}` |
 | **48 h después** | Los puntajes se cierran solos | — |
 | **Cada 1-3 fechas** | Planteles (altas, bajas, dorsales) | `/actualizar-planteles` |

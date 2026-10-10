@@ -962,8 +962,9 @@ async function mcCargar(){
   const cont = document.getElementById('forma-container');
   let n = 0;
   cont.querySelectorAll('[data-slug][data-num]').forEach(el => {
-    const m = ((_mc.mapas[el.dataset.slug] || {})[el.dataset.num]);
-    if (m && Array.isArray(m.heat) && m.heat.length) { el.setAttribute('data-mc', ''); n++; }
+    const nombre = el.getAttribute('title') || (el.querySelector('.fc-in-nm') || {}).textContent || '';
+    const clave = mcClave(el.dataset.slug, el.dataset.num, nombre);
+    if (clave != null) { el.setAttribute('data-mc', clave); n++; }
   });
   if (!n) return;
   const hint = document.createElement('div');
@@ -972,14 +973,43 @@ async function mcCargar(){
   cont.prepend(hint);
   cont.addEventListener('click', e => {
     const el = e.target.closest('[data-mc]');
-    if (el) mcAbrir(el.dataset.slug, el.dataset.num);
+    if (el) mcAbrir(el.dataset.slug, el.dataset.num, el.getAttribute('data-mc'));
   });
 }
 
-function mcAbrir(slug, num){
-  const m = (_mc.mapas[slug] || {})[num];
+// Qué entrada de data/mapas le corresponde a un chip. Primero por dorsal (el mapa
+// está indexado así), pero la ficha y FotMob no siempre coinciden: a veces la ficha
+// no tiene el número de un suplente, o tiene otro (Gastón González: 22 en la ficha,
+// 11 en FotMob). Entonces se confirma con el apellido y, si no cierra, se busca por
+// nombre dentro del equipo. Devuelve la clave en _mc.mapas[slug] o null.
+const _mcNorm = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  .toLowerCase().replace(/[^a-z ]/g, ' ').trim().split(/\s+/).filter(Boolean);
+function _mcMismoJugador(a, b){
+  const A = _mcNorm(a), B = _mcNorm(b);
+  if (!A.length || !B.length) return false;
+  // mismo nombre con el apellido junto o separado: "Ronaldo De Jesus" / "Ronaldo Dejesús"
+  if (A.length > 1 && B.length > 1 && A[0] === B[0] && A.slice(1).join('') === B.slice(1).join('')) return true;
+  const ultA = A[A.length - 1], ultB = B[B.length - 1];
+  if (ultA === ultB) return A[0][0] === B[0][0] || A.length === 1 || B.length === 1;
+  // apellidos compuestos: "Hernán López Muñoz" vs "Hernán López"
+  return A[0] === B[0] && (A.includes(ultB) || B.includes(ultA));
+}
+function mcClave(slug, num, nombre){
+  const eq = (_mc.mapas || {})[slug] || {};
+  const util = k => eq[k] && Array.isArray(eq[k].heat) && eq[k].heat.length;
+  if (num && util(num) && (!nombre || _mcMismoJugador(eq[num].nombre, nombre))) return num;
+  if (nombre) {
+    const k = Object.keys(eq).find(k => util(k) && _mcMismoJugador(eq[k].nombre, nombre));
+    if (k != null) return k;
+  }
+  return (num && util(num)) ? num : null;
+}
+
+function mcAbrir(slug, num, clave){
+  const m = (_mc.mapas[slug] || {})[clave != null ? clave : num];
   if (!m) return;
-  const j = (_mc.jugs[slug] || []).find(x => String(x.num) === String(num)) || {};
+  const j = (_mc.jugs[slug] || []).find(x => String(x.num) === String(num) && x.num !== '' && x.num != null)
+         || (_mc.jugs[slug] || []).find(x => _mcMismoJugador(x.nombre, m.nombre)) || {};
   const visit = _mc.p && slug === _mc.p.visitante;
   let sheet = document.getElementById('mc-sheet');
   if (!sheet) {
@@ -1020,7 +1050,7 @@ function mcAbrir(slug, num){
   sheet.setAttribute('aria-label', `Mapa de calor de ${nombre}`);
   sheet.querySelector('.mc-nom').textContent = nombre;
   sheet.querySelector('.mc-sub').textContent = sub;
-  sheet.querySelector('.mc-kit').appendChild(_mtKitChip(slug, num, 40));
+  sheet.querySelector('.mc-kit').appendChild(_mtKitChip(slug, num || clave, 40));
   const caja = sheet.querySelector('.mc-map');
   const ancho = Math.min(568, (caja.parentElement.clientWidth || window.innerWidth) - 32);
   caja.appendChild(mcCanvas(m.heat, { espejado: visit, ancho: Math.max(260, ancho) }));

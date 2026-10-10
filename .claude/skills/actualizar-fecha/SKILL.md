@@ -34,8 +34,14 @@ git status --short        # tiene que estar limpio antes de empezar
 ## A) "Terminó el partido" — cierre rápido (abre los puntajes)
 ```bash
 python scripts/cierre_rapido.py --check     # ¿hay candidatos? (100–210 min desde el kickoff, sin API)
-python scripts/cierre_rapido.py             # FT en liga.json + data/partidos/{id}.json + tabla xG
+python scripts/cierre_rapido.py             # FT en liga.json + data/partidos/{id}.json + mapas de calor + tabla xG
 ```
+- **Mapas de calor**: salen solos con cada cierre, por cualquiera de los tres caminos
+  (`cierre_rapido`, `fetch_liga_partidos --date`, `cerrar_partido_fotmob`). Escriben
+  `data/mapas/{id}.json`, que hay que **commitear junto con la ficha**: sin ese archivo el
+  tab Formaciones no deja tocar a los jugadores. En la salida aparece
+  `mapas de calor: ok`; si dice otra cosa (`sin URL fotmob`, `error ...`) el cierre igual
+  vale, y se reintenta con `python scripts/fetch_mapas.py <id> --force`.
 - Imprime el **link para compartir** de cada partido cerrado
   (`https://www.tribunapp.com.ar/puntuar/newells-velez`): pasárselo al usuario con el resultado.
 - Si FotMob todavía no tiene `playerStats`, la ficha sale con la base de api-sports. Se

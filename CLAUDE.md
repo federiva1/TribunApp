@@ -86,6 +86,7 @@ python scripts/cierre_rapido.py                  # FT en liga.json + data/partid
 python scripts/fetch_liga_partidos.py --torneo clausura --date YYYY-MM-DD   # pasadas las 3,5 h del kickoff (cierre_rapido ya no lo toma)
 python scripts/fetch_liga_partidos.py --competicion copas                   # partidos de copa
 python scripts/cerrar_partido_fotmob.py --api-id <api_id>                   # si api-sports está caído (solo FotMob)
+python scripts/fetch_mapas.py <id> [--force]     # mapas de calor de un partido (salen solos al cerrar; esto es para reintentar)
 python scripts/build_tabla_xg.py
 python scripts/fetch_liga_fixtures.py            # liga.json (1 llamada)
 python scripts/fetch_copas_fixtures.py           # copas.json
@@ -259,8 +260,14 @@ el celular. Sin archivo de mapas la cancha queda como siempre.
   quede en amarillo y no se vea tan "caliente" como el que tocó 80. Sin leyenda de escala.
 - La barra "← Volver" de arriba (`#subbar`) acompaña el ancho del contenido: 480 px en
   Estadísticas, 860 px en Formaciones y Tabla.
-- Hoy el script se corre **a mano** después de cerrar un partido; todavía no está metido
-  en `cierre_rapido.py` / `fetch_liga_partidos.py`.
+- **Se genera solo en cada cierre**: `fetch_liga_partidos.py` (el que usan
+  `cierre_rapido.py` y el camino largo `--date`) llama a `fetch_mapas.generar()` después de
+  escribir la ficha, **reusando el `__NEXT_DATA__` ya bajado** (un pedido más por partido);
+  `cerrar_partido_fotmob.py` hace lo mismo. `generar()` nunca levanta excepción: si FotMob
+  no tiene heatmaps, el cierre sigue y el partido queda sin chips tocables. Si la guarda de
+  fecha de `fetch_liga_partidos` detecta que FotMob devolvió OTRO partido, no se le pasa la
+  página y `fetch_mapas` resuelve el partido por el día exacto. `data/mapas/{id}.json` se
+  commitea con la ficha. Backfill de todos los jugados: 2026-10-10.
 
 ### Posiciones con lag (`js/standings-fix.js`)
 
