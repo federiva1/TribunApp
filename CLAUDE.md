@@ -260,6 +260,15 @@ el celular. Sin archivo de mapas la cancha queda como siempre.
   quede en amarillo y no se vea tan "caliente" como el que tocó 80. Sin leyenda de escala.
 - La barra "← Volver" de arriba (`#subbar`) acompaña el ancho del contenido: 480 px en
   Estadísticas, 860 px en Formaciones y Tabla.
+- **Estadísticas del jugador** debajo del mapa (`mcStatsHTML`): las de la ficha
+  (`top/ataque/defensa/duelos` + `portero_stats`), con **las mismas etiquetas y el mismo
+  orden que la Tabla** (`MT_COLS` / `MT_GROUP_ORDER`), solo las que tienen valor (goles y
+  asistencias, solo si hubo). Arriba cuatro destacados (`MC_DESTACADOS`: toques, pases
+  precisos, duelos ganados, recuperaciones; arquero: paradas, goles evitados, pases, toques)
+  y abajo los grupos en dos columnas que se balancean solas (una en el celular). Un chip es
+  tocable si tiene mapa **o** estadísticas: en los partidos sin mapa de FotMob el panel abre
+  solo con las estadísticas y el aviso dice "Tocá un jugador para ver sus estadísticas".
+  El jugador de la ficha se busca por el nombre del chip (`mcJugador`), no por dorsal.
 - **Se genera solo en cada cierre**: `fetch_liga_partidos.py` (el que usan
   `cierre_rapido.py` y el camino largo `--date`) llama a `fetch_mapas.generar()` después de
   escribir la ficha, **reusando el `__NEXT_DATA__` ya bajado** (un pedido más por partido);
