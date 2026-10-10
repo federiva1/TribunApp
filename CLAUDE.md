@@ -255,17 +255,26 @@ el celular. Sin archivo de mapas la cancha queda como siempre.
   azul noche con líneas tenues y el calor en **amarillo → naranja → rojo** (decisión de
   Fede: el celeste "parecía un mapa de frío"). Los cálidos van **casi opacos** con una
   transición corta desde la cancha: semitransparentes sobre el azul se mezclaban en un
-  verde oliva sucio. Kernel gaussiano σ=4,2 m sobre grilla de medio metro, normalizado al
-  máximo del jugador con un **piso** (`PISO` = 3,5) para que el que entró y tocó 6 pelotas
-  quede en amarillo y no se vea tan "caliente" como el que tocó 80. Sin leyenda de escala.
+  verde oliva sucio. La **intensidad se calcula igual que FotMob** (2026-10-10, tras
+  comparar a Cordero lado a lado: el nuestro "parecía que la tocó muchísimo más"): cada
+  acción es un disco de 7,5 m con degradé radial (0,54 en el centro → 0), los discos se
+  apilan como capas (`1 − Π(1 − a)`, satura), desenfoque σ=1,5 m, y el color sale de esa
+  intensidad **absoluta** con los mismos cortes que la escala de FotMob (crema → amarillo
+  → naranja → rojo). **No** se normaliza por jugador: un toque aislado es una mancha chica
+  amarilla clara y el rojo exige varias acciones en el mismo lugar. Como el dibujo es del
+  navegador, cualquier ajuste rige para todos los partidos sin regenerar datos. Sin leyenda.
 - La barra "← Volver" de arriba (`#subbar`) acompaña el ancho del contenido: 480 px en
   Estadísticas, 860 px en Formaciones y Tabla.
 - **Estadísticas del jugador** debajo del mapa (`mcStatsHTML`): las de la ficha
   (`top/ataque/defensa/duelos` + `portero_stats`), con **las mismas etiquetas y el mismo
   orden que la Tabla** (`MT_COLS` / `MT_GROUP_ORDER`), solo las que tienen valor (goles y
-  asistencias, solo si hubo). Arriba cuatro destacados (`MC_DESTACADOS`: toques, pases
+  asistencias, solo si hubo). Los duelos van en un grupo **Duelos** propio, como FotMob
+  (`_mcDuelos`): ganados/perdidos en total y por tipo (terrestres, aéreos). En la ficha,
+  `duelos.terrestres`/`aereos` son los **ganados** y `terrestres_tot`/`aereos_tot` los
+  disputados (los guarda el enrich desde 2026-10-10; las fichas anteriores se completaron
+  con `scripts/backfill_duelos.py`, que solo agrega esos dos campos). Arriba cuatro destacados (`MC_DESTACADOS`: toques, pases
   precisos, duelos ganados, recuperaciones; arquero: paradas, goles evitados, pases, toques)
-  y abajo los grupos en dos columnas que se balancean solas (una en el celular). Un chip es
+  (que también se repiten en su grupo, como en FotMob) y abajo los grupos en dos columnas que se balancean solas (una en el celular). Un chip es
   tocable si tiene mapa **o** estadísticas: en los partidos sin mapa de FotMob el panel abre
   solo con las estadísticas y el aviso dice "Tocá un jugador para ver sus estadísticas".
   El jugador de la ficha se busca por el nombre del chip (`mcJugador`), no por dorsal.

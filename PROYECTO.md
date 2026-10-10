@@ -243,7 +243,7 @@ desde el SQL Editor del dashboard.
 |---|---|
 | **Cierre de partidos** | `cierre_rapido.py` (el principal), `fetch_liga_partidos.py`, `cerrar_partido_fotmob.py` (si api-sports está caído), `build_tabla_xg.py` |
 | **Fixtures** | `fetch_liga_fixtures.py`, `fetch_copas_fixtures.py`, `fetch_fixtures.py`, `fetch_proximos_partidos.py`, `fetch_escudos_copa.py` |
-| **FotMob / stats** | `scrape_fotmob_mundial.py` (motor del enrich), `backfill_formaciones.py`, `fetch_mapas.py`, `fetch_match_stats.py` + `scrape_fotmob_partidos.py` (formato viejo) |
+| **FotMob / stats** | `scrape_fotmob_mundial.py` (motor del enrich), `backfill_formaciones.py`, `fetch_mapas.py`, `backfill_duelos.py` (one-shot: duelos disputados por tipo en fichas viejas), `fetch_match_stats.py` + `scrape_fotmob_partidos.py` (formato viejo) |
 | **Planteles** | `fetch_planteles_liga.py`, `backfill_plantel_nums.py`, `scraper_planteles.py` (legacy) |
 | **Placas** | `social_fecha.py`, `social_club.py`, `social_xi_cruce.py`, `social_resultado.py`, `social_lineups.py`, `social_comparativa.py` |
 | **Datos / utilidades** | `check_datos.py` (red de seguridad), `exportar_datos.py`, `clubes_map.py`, `apikey.py`, `extract_club_colors.py` |
