@@ -86,6 +86,7 @@ python scripts/cierre_rapido.py                  # FT en liga.json + data/partid
 python scripts/fetch_liga_partidos.py --torneo clausura --date YYYY-MM-DD   # pasadas las 3,5 h del kickoff (cierre_rapido ya no lo toma)
 python scripts/fetch_liga_partidos.py --competicion copas                   # partidos de copa
 python scripts/cerrar_partido_fotmob.py --api-id <api_id>                   # si api-sports está caído (solo FotMob)
+python scripts/fetch_mapas.py <id> [--force]     # mapas de calor de un partido (salen solos al cerrar; esto es para reintentar)
 python scripts/build_tabla_xg.py
 python scripts/fetch_liga_fixtures.py            # liga.json (1 llamada)
 python scripts/fetch_copas_fixtures.py           # copas.json
@@ -230,6 +231,43 @@ devolvían `response: []` con el partido en pleno 2T, y la ficha del index queda
   rellena las `pos`, y toma las stats. Goles, asistencias, tarjetas y ▼min se cruzan **por
   nombre** contra `goles_detalle`/`fixtures/events` (el XI de FotMob no tiene ids api-sports).
   Si FotMob falla, la ficha queda como antes.
+
+### Mapas de calor (Formaciones → tocar un jugador)
+
+En `estadisticas.html`, el tab **Formaciones** usa el ancho de `#app.wide` (860 px, igual
+que la Tabla; antes la cancha apaisada quedaba apretada en 480) con kit chips de 30 px en
+desktop (`fcCanchaHTML(..., { kitPx })`: el kit se regenera a ese tamaño, no se escala).
+Si el partido tiene `data/mapas/{id}.json`, cada chip (titulares y "Ingresaron") se toca y
+abre un panel con el **mapa de calor** del jugador — modal en desktop, hoja desde abajo en
+el celular. Sin archivo de mapas la cancha queda como siempre.
+
+- **Datos — `scripts/fetch_mapas.py`**: un solo pedido por partido al endpoint de heatmaps
+  de FotMob (`/api/data/heatmap/match/{matchId}/heatmaps`, GET común, sin navegador) trae
+  a todos los jugadores, indexados por **optaId**. Guardamos solo las **coordenadas** de
+  cada acción (`heat: [[x, y], ...]`, metros sobre 105×68) y los tiros, por equipo y
+  dorsal. **No** se guarda el dibujo de FotMob: su `template.svg` ya no se usa.
+  `python scripts/fetch_mapas.py <id> [--force]`; sin ids procesa los partidos que faltan.
+- **Orientación**: FotMob normaliza a los dos equipos atacando hacia x=105 (los arqueros
+  promedian x≈9); y=0 es la banda izquierda del equipo, igual que `j.pos`. El panel espeja
+  al visitante para que el mapa coincida con el lado de la cancha donde está su chip, y
+  debajo de la cancha una **flecha "ATAQUE" a todo el ancho** marca hacia dónde ataca.
+- **Dibujo — `js/mapa-calor.js`** (`mcCanvas(puntos, {espejado, ancho})`): propio. Cancha
+  azul noche con líneas tenues y el calor en **amarillo → naranja → rojo** (decisión de
+  Fede: el celeste "parecía un mapa de frío"). Los cálidos van **casi opacos** con una
+  transición corta desde la cancha: semitransparentes sobre el azul se mezclaban en un
+  verde oliva sucio. Kernel gaussiano σ=4,2 m sobre grilla de medio metro, normalizado al
+  máximo del jugador con un **piso** (`PISO` = 3,5) para que el que entró y tocó 6 pelotas
+  quede en amarillo y no se vea tan "caliente" como el que tocó 80. Sin leyenda de escala.
+- La barra "← Volver" de arriba (`#subbar`) acompaña el ancho del contenido: 480 px en
+  Estadísticas, 860 px en Formaciones y Tabla.
+- **Se genera solo en cada cierre**: `fetch_liga_partidos.py` (el que usan
+  `cierre_rapido.py` y el camino largo `--date`) llama a `fetch_mapas.generar()` después de
+  escribir la ficha, **reusando el `__NEXT_DATA__` ya bajado** (un pedido más por partido);
+  `cerrar_partido_fotmob.py` hace lo mismo. `generar()` nunca levanta excepción: si FotMob
+  no tiene heatmaps, el cierre sigue y el partido queda sin chips tocables. Si la guarda de
+  fecha de `fetch_liga_partidos` detecta que FotMob devolvió OTRO partido, no se le pasa la
+  página y `fetch_mapas` resuelve el partido por el día exacto. `data/mapas/{id}.json` se
+  commitea con la ficha. Backfill de todos los jugados: 2026-10-10.
 
 ### Posiciones con lag (`js/standings-fix.js`)
 

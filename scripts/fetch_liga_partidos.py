@@ -469,6 +469,14 @@ def main() -> int:
             completar_nums_desde_plantel(payload)
             out_file.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
             print(f'   enriquecido ({url.split("#")[0]})')
+
+            # 5. Mapas de calor por jugador → data/mapas/{id}.json (los usa el
+            #    tab Formaciones de estadisticas.html). Reusa la página ya bajada:
+            #    un pedido más. Si FotMob devolvió OTRO partido (guarda de fecha),
+            #    no se le pasa: fetch_mapas lo resuelve solo por el día exacto.
+            #    Nunca frena el cierre.
+            import fetch_mapas
+            fetch_mapas.generar(m['oid'], url=url if dia_ok else None, nd=nd if dia_ok else None)
             ok += 1
         except Exception as e:
             err += 1

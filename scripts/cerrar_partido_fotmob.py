@@ -224,7 +224,10 @@ def main() -> int:
         return 0
     for m in objetivo:
         oid = f"{m['home']['slug']}-{m['away']['slug']}"
-        print(f'{oid}: {cerrar(m, args.force)}')
+        r = cerrar(m, args.force)
+        print(f'{oid}: {r}')
+        if str(r).startswith('ok'):
+            fm.generar(oid)          # mapas de calor (data/mapas); nunca frena el cierre
     return 0
 
 
