@@ -25,7 +25,7 @@ Lo que puede hacer un hincha:
 |---|---|---|
 | **Armar su formación** para el próximo partido y votarla en la encuesta de su club | Seguir el **partido en vivo**: marcador, formaciones en cancha y estadísticas | **Puntuar a los jugadores** que jugaron (ventana de 48 h) |
 | Ver qué equipos armó la gente | | Ver los **promedios de la gente** y el ranking acumulado |
-| Descargar/compartir la placa de su formación | | Ver **estadísticas FotMob** del partido y del torneo, tablas y "tabla xG" |
+| Descargar/compartir la placa de su formación | | Ver **estadísticas FotMob** del partido y del torneo y las tablas |
 
 ### Objetivos
 
@@ -109,7 +109,7 @@ Referrer-Policy, Permissions-Policy, CSP). **`.vercelignore`** decide qué NO se
 | `equipo.html?c={slug}&s=estadisticas` | — | Estadísticas del club: tabla FotMob sumada por partidos, filtros, Excel. Con **un solo partido tildado** arma la ficha de ese partido |
 | `estadisticas-tribunapp.html` | — | Landing de la comunidad: los 30 clubes con datos de votos |
 | `tribunapp-equipo.html?c={slug}` | — | Votos de la gente de un club: formaciones y puntajes por partido real y acumulado |
-| `tablas.html` | — | Torneo actual (zonas), Anual, Promedios (descenso) y **Tabla xG** |
+| `tablas.html` | — | Torneo actual (zonas), Anual y Promedios (descenso). La Tabla xG se sacó de la web el 2026-10-11 |
 | `kits-preview.html` | — | Herramienta interna: los 30 kits de camiseta para revisarlos |
 
 Alias de los 30 clubes: `/river /boca /racing /independiente /sanlorenzo /huracan /velez
@@ -167,7 +167,7 @@ Por cada partido, según el momento:
 - Zonas A y B del torneo actual, Anual y Promedios salen de `standings` de api-sports,
   **corregido** con los partidos terminados que la API todavía no contó (`js/standings-fix.js`).
 - Promedios usa totales históricos 2024-2025 fijos (`PROMEDIO_HIST`, **recalcular en 2027**).
-- **Tabla xG** ("tabla moral"): cada partido se define por la parte entera del xG de cada equipo.
+- **Tabla xG** ("tabla moral"): cada partido se define por la parte entera del xG de cada equipo. **Fuera de la web desde el 2026-10-11** (pedido de Fede); el archivo se sigue generando.
 
 ### Ayuda e idioma
 - Íconos de ayuda por sección (`data-help`, `js/ui-help.js`).
@@ -202,7 +202,7 @@ número de fecha (las postergaciones rompen el orden).
 | `planteles_overrides.json` | Altas, bajas y dorsales a mano que sobreviven al refresco | a mano |
 | `dt_overrides.json` | DT correcto cuando api-sports está atrasado | a mano |
 | `puntajes_abiertos.json` | Extensión manual de la ventana de puntajes | a mano |
-| `tabla_xg.json` | Tabla xG | `build_tabla_xg.py` |
+| `tabla_xg.json` | Tabla xG (hoy no la muestra ninguna página) | `build_tabla_xg.py` |
 | `equipos.json` | Los 30 clubes (slug + nombre) | a mano |
 | `estadisticas/` | Formato viejo de stats por club (AAAJ y copas) | legacy |
 | `mapas/` | Mapas de calor por jugador: coordenadas de cada acción y tiros (los usa Formaciones en `estadisticas.html`) | `fetch_mapas.py` (solo, en cada cierre) |
