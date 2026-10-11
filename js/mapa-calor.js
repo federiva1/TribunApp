@@ -4,9 +4,10 @@
 // (data/mapas/{id}.json, ver scripts/fetch_mapas.py: x=0 es el arco propio, el
 // equipo ataca hacia x=105; y=0 es su banda izquierda) y sale un <canvas>:
 // cancha azul noche con líneas tenues y la densidad de acciones en escala de
-// calor: crema/amarillo (pocas) → naranja → rojo (muchas). Sobre el azul, los
-// cálidos dan el contraste máximo y se leen como "calor" sin explicación. La
-// intensidad se calcula como la de FotMob (ver abajo), en absoluto.
+// calor: amarillo (pocas) → naranja → rojo (muchas). Sobre el azul, los cálidos
+// dan el contraste máximo y se leen como "calor" sin explicación. La densidad es
+// un kernel gaussiano sobre una grilla de medio metro, normalizada al máximo de
+// ese jugador.
 //
 // API: window.mcCanvas(puntos, { espejado, ancho }) → HTMLCanvasElement
 //   espejado: rota 180° (el visitante en la cancha apaisada de Formaciones, que
@@ -16,81 +17,41 @@
 (function () {
   var L = 105, A = 68;          // cancha en metros
   var CELDA = 0.5;              // grilla de densidad (m)
+  var SIGMA = 4.2;              // radio del kernel (m)
+  // Piso de la normalización. Una acción aislada vale 1 en su centro; sin piso,
+  // un jugador que entró y tocó 6 pelotas se vería tan "caliente" como el que tocó
+  // 80. Con piso, lo poco queda celeste tenue y el blanco exige acciones repetidas.
+  var PISO = 3.5;
 
-  // Mismo modelo que el mapa de FotMob, para que la intensidad cuente lo mismo:
-  // cada acción es un disco de RADIO metros con un degradé radial (opacidad 0.54
-  // en el centro → 0 en el borde), los discos se APILAN como capas semitransparentes
-  // (1 − Π(1 − a), así la intensidad satura y no crece sin techo), se desenfoca la
-  // capa (σ = BLUR m) y el color sale de esa intensidad ABSOLUTA. No se normaliza
-  // al máximo de cada jugador: un toque aislado queda como una mancha amarilla
-  // chica y el rojo exige varias acciones en el mismo lugar. Antes normalizábamos
-  // por jugador con un kernel más ancho, y un delantero con 19 toques se veía
-  // tan "caliente" como un volante con 80.
-  var RADIO = 7.5, BLUR = 1.5;
-  var DEGRADE = [[0, 0.54], [0.2, 0.378], [0.4, 0.243], [0.6, 0.135], [0.8, 0.054], [1, 0]];
-  var OPACIDAD = 0.88;          // de toda la capa, sobre la cancha
-
-  // Escala de calor por intensidad 0..1: [posición, r, g, b]. Los cortes son los
-  // de la escala de FotMob (su menta→verde es nuestro crema→amarillo claro; su
-  // amarillo, naranja y rojo caen en el mismo lugar): un toque aislado queda
-  // amarillo claro y el rojo exige varias acciones en el mismo lugar.
+  // Escala de calor: [posición 0..1, r, g, b, alfa]. Amarillo (pocas) → naranja →
+  // rojo (muchas). Los cálidos van casi opacos: semitransparentes sobre el azul se
+  // mezclaban en un verde oliva sucio. Por eso la transición desde la cancha es
+  // corta (0.08→0.18) y por debajo de 0.08 no se pinta nada.
   var RAMPA = [
-    [0.00, 254, 243, 199],
-    [0.31, 253, 230, 138],
-    [0.63, 250, 204,  21],
-    [0.78, 251, 146,  60],
-    [0.92, 239,  68,  68],
-    [1.00, 220,  38,  38],
+    [0.00, 250, 204,  21, 0.00],
+    [0.08, 250, 204,  21, 0.00],
+    [0.18, 250, 204,  21, 0.80],
+    [0.40, 251, 146,  60, 0.90],
+    [0.70, 239,  68,  68, 0.93],
+    [1.00, 220,  38,  38, 0.96],
   ];
-  // La mancha aparece entre DESDE y HASTA y de ahí es opaca: semitransparentes
-  // sobre el azul daban un verde oliva sucio. El halo tenue de FotMob (menta
-  // sobre césped verde) casi no se ve; sobre el azul sí, por eso el corte es
-  // más adentro y las manchas miden lo mismo que en FotMob.
-  var DESDE = 0.10, HASTA = 0.22;
   function color(t) {
     for (var i = 1; i < RAMPA.length; i++) {
       if (t <= RAMPA[i][0]) {
         var a = RAMPA[i - 1], b = RAMPA[i], f = (t - a[0]) / (b[0] - a[0]);
-        return [a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f, a[3] + (b[3] - a[3]) * f];
+        return [a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f,
+                a[3] + (b[3] - a[3]) * f, a[4] + (b[4] - a[4]) * f];
       }
     }
     var u = RAMPA[RAMPA.length - 1];
-    return [u[1], u[2], u[3]];
-  }
-  function degrade(f) {
-    for (var i = 1; i < DEGRADE.length; i++) {
-      if (f <= DEGRADE[i][0]) {
-        var a = DEGRADE[i - 1], b = DEGRADE[i];
-        return a[1] + (b[1] - a[1]) * (f - a[0]) / (b[0] - a[0]);
-      }
-    }
-    return 0;
+    return [u[1], u[2], u[3], u[4]];
   }
 
-  // Desenfoque gaussiano separable sobre la grilla.
-  function desenfocar(v, W, H, sigma) {
-    var r = Math.ceil(3 * sigma), k = [], s = 0, i, x, y;
-    for (i = -r; i <= r; i++) { k.push(Math.exp(-i * i / (2 * sigma * sigma))); s += k[k.length - 1]; }
-    for (i = 0; i < k.length; i++) k[i] /= s;
-    var tmp = new Float32Array(W * H), out = new Float32Array(W * H);
-    for (y = 0; y < H; y++) for (x = 0; x < W; x++) {
-      var acc = 0;
-      for (i = -r; i <= r; i++) { var xx = x + i; if (xx >= 0 && xx < W) acc += v[y * W + xx] * k[i + r]; }
-      tmp[y * W + x] = acc;
-    }
-    for (y = 0; y < H; y++) for (x = 0; x < W; x++) {
-      var acc2 = 0;
-      for (i = -r; i <= r; i++) { var yy = y + i; if (yy >= 0 && yy < H) acc2 += tmp[yy * W + x] * k[i + r]; }
-      out[y * W + x] = acc2;
-    }
-    return out;
-  }
-
-  // Intensidad → canvas chico (una celda = un píxel); después se escala con suavizado.
+  // Densidad → canvas chico (una celda = un píxel); después se escala con suavizado.
   function capaCalor(puntos) {
     var W = Math.round(L / CELDA), H = Math.round(A / CELDA);
-    var trans = new Float32Array(W * H).fill(1);      // Π(1 − a)
-    var r = Math.ceil(RADIO / CELDA);
+    var dens = new Float32Array(W * H), max = 0;
+    var r = Math.ceil(3 * SIGMA / CELDA), k2 = 2 * SIGMA * SIGMA;
     puntos.forEach(function (p) {
       var cx = p[0] / CELDA, cy = p[1] / CELDA;
       var x0 = Math.max(0, Math.floor(cx - r)), x1 = Math.min(W - 1, Math.ceil(cx + r));
@@ -98,21 +59,19 @@
       for (var y = y0; y <= y1; y++) {
         for (var x = x0; x <= x1; x++) {
           var dx = (x + 0.5 - cx) * CELDA, dy = (y + 0.5 - cy) * CELDA;
-          var f = Math.sqrt(dx * dx + dy * dy) / RADIO;
-          if (f < 1) trans[y * W + x] *= 1 - degrade(f);
+          var v = (dens[y * W + x] += Math.exp(-(dx * dx + dy * dy) / k2));
+          if (v > max) max = v;
         }
       }
     });
-    for (var i = 0; i < W * H; i++) trans[i] = 1 - trans[i];
-    var inten = desenfocar(trans, W, H, BLUR / CELDA);
+    max = Math.max(max, PISO);
     var cv = document.createElement('canvas');
     cv.width = W; cv.height = H;
     var ctx = cv.getContext('2d'), img = ctx.createImageData(W, H), d = img.data;
-    for (i = 0; i < W * H; i++) {
-      var t = Math.min(1, inten[i]);
-      if (t <= DESDE) continue;
-      var c = color(t), al = Math.min(1, (t - DESDE) / (HASTA - DESDE)) * OPACIDAD;
-      d[i * 4] = c[0]; d[i * 4 + 1] = c[1]; d[i * 4 + 2] = c[2]; d[i * 4 + 3] = Math.round(al * 255);
+    for (var i = 0; i < W * H; i++) {
+      if (!dens[i]) continue;
+      var c = color(Math.min(1, dens[i] / max));
+      d[i * 4] = c[0]; d[i * 4 + 1] = c[1]; d[i * 4 + 2] = c[2]; d[i * 4 + 3] = Math.round(c[3] * 255);
     }
     ctx.putImageData(img, 0, 0);
     return cv;
