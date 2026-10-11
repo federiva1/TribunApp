@@ -245,26 +245,24 @@ el celular. Sin archivo de mapas la cancha queda como siempre.
   de FotMob (`/api/data/heatmap/match/{matchId}/heatmaps`, GET común, sin navegador) trae
   a todos los jugadores, indexados por **optaId**. Guardamos solo las **coordenadas** de
   cada acción (`heat: [[x, y], ...]`, metros sobre 105×68) y los tiros, por equipo y
-  dorsal. **No** se guarda el dibujo de FotMob; `data/mapas/template.svg` (su plantilla) queda
-  como referencia de los números que replica `js/mapa-calor.js`.
+  dorsal. **No** se guarda el dibujo de FotMob: su `template.svg` ya no se usa.
   `python scripts/fetch_mapas.py <id> [--force]`; sin ids procesa los partidos que faltan.
 - **Orientación**: FotMob normaliza a los dos equipos atacando hacia x=105 (los arqueros
   promedian x≈9); y=0 es la banda izquierda del equipo, igual que `j.pos`. El panel espeja
   al visitante para que el mapa coincida con el lado de la cancha donde está su chip, y
   debajo de la cancha una **flecha "ATAQUE" a todo el ancho** marca hacia dónde ataca.
-- **Dibujo — `js/mapa-calor.js`** (`mcCanvas(puntos, {espejado, ancho})`): la cancha es
-  nuestra (azul noche, líneas tenues) y el calor es **el de FotMob replicado tal cual**
-  (decisión de Fede, 2026-10-10: "copiá la imagen de FotMob y cambiale el césped por el
-  azul"). Mismo cálculo que su plantilla (`data/mapas/template.svg`, de donde salen los
-  números): cada acción es un disco de 7,5 m con degradé radial (0,54 en el centro → 0),
-  los discos se apilan como capas (`1 − Π(1 − a)`, satura), desenfoque σ=1,5 m, y el color
-  sale de esa intensidad **absoluta** con su tabla de 256 colores (`TABLA`: menta → verde
-  → amarillo → rojo), alfa 0→1 en el primer octavo y la capa al 85 %. **No** se normaliza
-  por jugador: un toque aislado es una mancha verde chica y el rojo exige varias acciones
-  en el mismo lugar. Historia: primero hubo un kernel propio normalizado por jugador en
-  amarillo/naranja/rojo (descartado: "parecía que la tocó muchísimo más" que en FotMob).
-  Como el dibujo es del navegador, cualquier ajuste rige para todos los partidos sin
-  regenerar datos. Sin leyenda.
+- **Dibujo — `js/mapa-calor.js`** (`mcCanvas(puntos, {espejado, ancho})`): propio. Cancha
+  azul noche con líneas tenues y el calor en **amarillo → naranja → rojo** (decisión de
+  Fede: el celeste "parecía un mapa de frío"). Los cálidos van **casi opacos** con una
+  transición corta desde la cancha: semitransparentes sobre el azul se mezclaban en un
+  verde oliva sucio. La **intensidad se calcula igual que FotMob** (2026-10-10, tras
+  comparar a Cordero lado a lado: el nuestro "parecía que la tocó muchísimo más"): cada
+  acción es un disco de 7,5 m con degradé radial (0,54 en el centro → 0), los discos se
+  apilan como capas (`1 − Π(1 − a)`, satura), desenfoque σ=1,5 m, y el color sale de esa
+  intensidad **absoluta** con los mismos cortes que la escala de FotMob (crema → amarillo
+  → naranja → rojo). **No** se normaliza por jugador: un toque aislado es una mancha chica
+  amarilla clara y el rojo exige varias acciones en el mismo lugar. Como el dibujo es del
+  navegador, cualquier ajuste rige para todos los partidos sin regenerar datos. Sin leyenda.
 - La barra "← Volver" de arriba (`#subbar`) acompaña el ancho del contenido: 480 px en
   Estadísticas, 860 px en Formaciones y Tabla.
 - **Estadísticas del jugador** debajo del mapa (`mcStatsHTML`): las de la ficha
