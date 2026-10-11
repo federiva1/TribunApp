@@ -1062,22 +1062,6 @@ const MC_ARQ = [
   { key: 'goles_evitados', label: 'Goles evitados', fmt: v => (v > 0 ? '+' : '') + Number(v).toFixed(2) },
 ];
 const _mcVacio = v => v == null || v === '';
-const MC_DUELOS_KEYS = new Set(['ganados', 'aereos', 'terrestres']);
-// terrestres/aereos = ganados de cada tipo; *_tot = disputados (fichas desde el
-// 2026-10-10 y backfill). Sin el total, solo se muestran los ganados.
-function _mcDuelos(r){
-  const filas = [];
-  const par = (lab, g, tot) => {
-    if (_mcVacio(g)) return;
-    filas.push([`${lab} ganados`, g]);
-    if (!_mcVacio(tot)) filas.push([`${lab} perdidos`, Math.max(0, tot - g)]);
-  };
-  if (!_mcVacio(r.ganados)) filas.push(['Duelos ganados', r.ganados]);
-  if (!_mcVacio(r.perdidos)) filas.push(['Duelos perdidos', r.perdidos]);
-  par('Terrestres', r.terrestres, r.terrestres_tot);
-  par('Aéreos', r.aereos, r.aereos_tot);
-  return filas;
-}
 function mcStatsHTML(j){
   const r = { min: j.min || 0, goles: j.goles || 0, asist: j.asist || 0 };
   ['top', 'ataque', 'defensa', 'duelos'].forEach(sec => Object.assign(r, j[sec] || {}));
@@ -1092,24 +1076,19 @@ function mcStatsHTML(j){
     const v = c.key === 'ganados' ? r.ganados : r[c.key];
     return _mcVacio(v) ? null : [k === 'ganados' ? 'Duelos ganados' : c.label, v];
   }).filter(Boolean).slice(0, 4);
-  // Grupos completos (los destacados se repiten, como en FotMob). Sin minutos:
-  // ya están arriba; goles y asistencias solo si hubo. Los duelos van en un
-  // grupo propio, ganados y perdidos por tipo como en FotMob.
+  const usados = new Set((arq ? MC_DESTACADOS_ARQ : MC_DESTACADOS).filter(k => k !== 'ganados'));
+  // Grupos (sin minutos: ya están arriba; goles y asistencias solo si hubo)
   const grupos = [];
   if (arq) {
-    const filas = MC_ARQ.filter(a => !_mcVacio(arq[a.key]))
+    const filas = MC_ARQ.filter(a => !usados.has(a.key) && !_mcVacio(arq[a.key]))
       .map(a => [a.label, a.fmt ? a.fmt(arq[a.key]) : arq[a.key]]);
     if (filas.length) grupos.push(['Arquero', filas]);
   }
   MT_GROUP_ORDER.forEach(g => {
-    const filas = MT_COLS.filter(c => c.group === g && !MC_DUELOS_KEYS.has(c.key))
+    const filas = MT_COLS.filter(c => c.group === g && !usados.has(c.key))
       .filter(c => !((c.key === 'goles' || c.key === 'asist') && !r[c.key]))
       .map(c => [c.label, val(c)]).filter(f => !_mcVacio(f[1]) && f[1] !== '—');
     if (filas.length) grupos.push([g, filas]);
-    if (g === 'Defensivas') {
-      const du = _mcDuelos(r);
-      if (du.length) grupos.push(['Duelos', du]);
-    }
   });
   const e = x => String(x).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
   return `<div class="mc-sec mc-sec-st">Estadísticas del partido</div>`
