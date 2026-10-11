@@ -186,7 +186,6 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
     <div class="tab active" data-tab="actual" onclick="switchTab('actual', this)">Torneo actual</div>
     <div class="tab" data-tab="anual" onclick="switchTab('anual', this)">Anual</div>
     <div class="tab" data-tab="promedios" onclick="switchTab('promedios', this)">Promedios</div>
-    <div class="tab" data-tab="xg" onclick="switchTab('xg', this)" data-help="Tabla alternativa: el resultado de cada partido se decide por la parte entera del xG de cada equipo. El gol hay que merecerlo.">Tabla xG</div>
   </div>
 
   <!-- Zona A / Zona B (solo en tab actual) -->
@@ -248,30 +247,8 @@ const PROMEDIO_HIST = {
 
 // Estado del módulo
 let DATA = null;          // { zonaA, zonaB, anual, promedios, torneoLabel }
-let tab = 'actual';       // 'actual' | 'anual' | 'promedios' | 'xg'
-let zona = 'A';           // 'A' | 'B' — aplica a los tabs actual y xg
-let XG = null;            // data/tabla_xg.json (generado por los workflows; estático)
-
-// Tabla xG ("moral"): resultado por parte entera del xG de cada partido.
-// Se precomputa en scripts/build_tabla_xg.py y llega como archivo estático —
-// acá solo se adapta cada fila al shape que espera renderTable (como standings).
-async function loadXG() {
-  try {
-    const r = await fetch(`data/tabla_xg.json?t=${Date.now()}`);
-    if (!r.ok) return;
-    const d = await r.json();
-    const filas = rows => (rows || []).map((t, i) => ({
-      rank: i + 1,
-      team: { id: t.id, name: t.slug },
-      points: t.pts, goalsDiff: t.dif,
-      xgf: t.xgf, xgc: t.xgc,
-      all: { played: t.pj, win: t.g, draw: t.e, lose: t.p,
-             goals: { for: t.gf, against: t.gc } },
-    }));
-    XG = { A: filas(d.zonaA), B: filas(d.zonaB), fecha: d.ultima_fecha };
-  } catch (e) {}
-}
-
+let tab = 'actual';       // 'actual' | 'anual' | 'promedios'
+let zona = 'A';           // 'A' | 'B' — aplica al tab actual
 // ---- Helpers ----
 function slugFromId(id) { return (typeof ESCUDO_MAP !== 'undefined' && ESCUDO_MAP[id]) || null; }
 function nombreCorto(id, fallback) { return (typeof NOMBRE_CORTO_T !== 'undefined' && NOMBRE_CORTO_T[id]) || fallback || ('#' + id); }
@@ -374,7 +351,6 @@ async function loadAll() {
 const LAYOUTS = {
   actual:    { cols: '26px 26px 1fr 26px 24px 24px 24px 34px 78px 34px', cut: 8, cutType: 'playoff' },
   anual:     { cols: '26px 26px 1fr 26px 24px 24px 24px 34px 34px',       cut: 0, cutType: null },
-  xg:        { cols: '26px 26px 1fr 26px 24px 24px 24px 36px 36px 34px', cut: 0, cutType: null },
   promedios: { cols: '26px 26px 1fr 34px 34px 60px',                       cut: 0, cutType: null }
 };
 
@@ -384,8 +360,7 @@ function renderTable() {
   cont.innerHTML = '';
 
   let teams, kind;
-  if (tab === 'xg') { teams = XG ? (zona === 'A' ? XG.A : XG.B) : null; kind = 'xg'; }
-  else if (tab === 'actual') { teams = DATA && (zona === 'A' ? DATA.zonaA : DATA.zonaB); kind = 'actual'; }
+  if (tab === 'actual') { teams = DATA && (zona === 'A' ? DATA.zonaA : DATA.zonaB); kind = 'actual'; }
   else if (tab === 'anual') { teams = DATA && DATA.anual; kind = 'anual'; }
   else { teams = DATA && DATA.promedios; kind = 'promedios'; }
 
@@ -412,9 +387,7 @@ function renderTable() {
     head.innerHTML =
       '<div class="col-rank">#</div><div></div><div>Equipo</div>' +
       '<div class="col-num">PJ</div><div class="col-num">G</div><div class="col-num">E</div><div class="col-num">P</div>' +
-      (kind === 'xg'
-        ? '<div class="col-num">xGF</div><div class="col-num">xGC</div>'
-        : '<div class="col-num">DG</div>') +
+      '<div class="col-num">DG</div>' +
       (kind === 'actual' ? '<div class="col-num col-hide-sm">Forma</div>' : '') +
       '<div style="text-align:right">Pts</div>';
   }
@@ -467,29 +440,16 @@ function renderTable() {
       row.appendChild(mk(a.draw));
       row.appendChild(mk(a.lose));
 
-      if (kind === 'xg') {
-        // Solo xG acumulado: los goles morales y su diferencia siguen ordenando la
-        // tabla pero no se muestran — con ambas métricas juntas la tabla confundía.
-        const mkXg = v => {
-          const d = document.createElement('div');
-          d.className = 'col-num';
-          d.textContent = (v == null) ? '—' : String(Math.round(Number(v)));
-          return d;
-        };
-        row.appendChild(mkXg(t.xgf));
-        row.appendChild(mkXg(t.xgc));
-      } else {
-        const dg = t.goalsDiff != null ? t.goalsDiff : 0;
-        const dgEl = document.createElement('div');
-        dgEl.className = 'col-dg ' + (dg > 0 ? 'dg-pos' : dg < 0 ? 'dg-neg' : 'dg-zero');
-        dgEl.textContent = dg > 0 ? '+' + dg : dg;
-        row.appendChild(dgEl);
+      const dg = t.goalsDiff != null ? t.goalsDiff : 0;
+      const dgEl = document.createElement('div');
+      dgEl.className = 'col-dg ' + (dg > 0 ? 'dg-pos' : dg < 0 ? 'dg-neg' : 'dg-zero');
+      dgEl.textContent = dg > 0 ? '+' + dg : dg;
+      row.appendChild(dgEl);
 
-        if (kind === 'actual') {
-          const formEl = document.createElement('div'); formEl.className = 'col-form col-hide-sm';
-          (t.form || '').slice(-5).split('').forEach(c => formEl.appendChild(formChip(c)));
-          row.appendChild(formEl);
-        }
+      if (kind === 'actual') {
+        const formEl = document.createElement('div'); formEl.className = 'col-form col-hide-sm';
+        (t.form || '').slice(-5).split('').forEach(c => formEl.appendChild(formChip(c)));
+        row.appendChild(formEl);
       }
 
       const ptsEl = document.createElement('div'); ptsEl.className = 'col-pts'; ptsEl.textContent = t.points;
@@ -505,7 +465,6 @@ function renderTable() {
   const items = [];
   items.push({ color: 'var(--gold)', txt: 'Líderes' });
   if (kind === 'actual') items.push({ color: 'rgba(79,195,247,0.7)', txt: 'Clasifican a playoffs (línea)' });
-  if (tab === 'xg') items.push({ color: 'rgba(79,195,247,0.7)', txt: 'Resultados por parte entera del xG de cada partido' + (XG && XG.fecha ? ` · hasta F${XG.fecha}` : '') });
   if (kind === 'promedios') items.push({ color: 'var(--rojo)', txt: 'Zona de descenso' });
   leyenda.innerHTML = items.map(it =>
     `<div class="item"><span class="dot" style="background:${it.color}"></span>${it.txt}</div>`
@@ -520,7 +479,7 @@ function switchTab(t, btn) {
   tab = t;
   document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
-  document.getElementById('zona-subtabs').style.display = (t === 'actual' || t === 'xg') ? 'flex' : 'none';
+  document.getElementById('zona-subtabs').style.display = t === 'actual' ? 'flex' : 'none';
   renderTable();
 }
 function switchZona(z) {
@@ -532,7 +491,6 @@ function switchZona(z) {
 
 // ---- Init ----
 (async () => {
-  const xgReady = loadXG();
   try {
     DATA = await loadAll();
     document.getElementById('page-sub').textContent =
@@ -545,16 +503,7 @@ function switchZona(z) {
     document.getElementById('loading-state').innerHTML =
       '<div class="loading-msg">No se pudo cargar la tabla en vivo.</div>' +
       '<div style="font-family:Barlow Condensed,sans-serif;font-size:12px;color:rgba(255,255,255,0.3);margin-top:8px;letter-spacing:1px;">Probá de nuevo en unos segundos.</div>';
-    // La tabla xG es un archivo estático: si cargó, la página sigue sirviendo.
-    await xgReady;
-    if (XG) {
-      document.getElementById('loading-state').style.display = 'none';
-      document.getElementById('tabla-container').style.display = '';
-      renderTable();
-    }
   }
-  await xgReady;
-  if (tab === 'xg') renderTable();
 })();
 </script>
 </body>
