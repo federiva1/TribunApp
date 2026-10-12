@@ -3,10 +3,9 @@
 // Entra una lista de acciones [[x, y], ...] en METROS sobre una cancha de 105×68
 // (data/mapas/{id}.json, ver scripts/fetch_mapas.py: x=0 es el arco propio, el
 // equipo ataca hacia x=105; y=0 es su banda izquierda) y sale un <canvas>:
-// cancha azul noche con líneas tenues y la densidad de acciones en escala de
-// calor: crema/amarillo (pocas) → naranja → rojo (muchas). Sobre el azul, los
-// cálidos dan el contraste máximo y se leen como "calor" sin explicación. La
-// intensidad se calcula como la de FotMob (ver abajo), en absoluto.
+// cancha azul noche con líneas tenues y encima el mapa de calor de FotMob
+// replicado tal cual (mismo cálculo y mismos colores: menta → verde → amarillo →
+// rojo); lo único propio es la cancha.
 //
 // API: window.mcCanvas(puntos, { espejado, ancho }) → HTMLCanvasElement
 //   espejado: rota 180° (el visitante en la cancha apaisada de Formaciones, que
@@ -22,40 +21,45 @@
   // en el centro → 0 en el borde), los discos se APILAN como capas semitransparentes
   // (1 − Π(1 − a), así la intensidad satura y no crece sin techo), se desenfoca la
   // capa (σ = BLUR m) y el color sale de esa intensidad ABSOLUTA. No se normaliza
-  // al máximo de cada jugador: un toque aislado queda como una mancha amarilla
-  // chica y el rojo exige varias acciones en el mismo lugar. Antes normalizábamos
+  // al máximo de cada jugador: un toque aislado queda como una mancha verde chica
+  // y el rojo exige varias acciones en el mismo lugar. Antes normalizábamos
   // por jugador con un kernel más ancho, y un delantero con 19 toques se veía
   // tan "caliente" como un volante con 80.
   var RADIO = 7.5, BLUR = 1.5;
   var DEGRADE = [[0, 0.54], [0.2, 0.378], [0.4, 0.243], [0.6, 0.135], [0.8, 0.054], [1, 0]];
-  var OPACIDAD = 0.88;          // de toda la capa, sobre la cancha
+  var OPACIDAD = 0.85;          // de toda la capa, sobre la cancha (igual que FotMob)
 
-  // Escala de calor por intensidad 0..1: [posición, r, g, b]. Los cortes son los
-  // de la escala de FotMob (su menta→verde es nuestro crema→amarillo claro; su
-  // amarillo, naranja y rojo caen en el mismo lugar): un toque aislado queda
-  // amarillo claro y el rojo exige varias acciones en el mismo lugar.
-  var RAMPA = [
-    [0.00, 254, 243, 199],
-    [0.31, 253, 230, 138],
-    [0.63, 250, 204,  21],
-    [0.78, 251, 146,  60],
-    [0.92, 239,  68,  68],
-    [1.00, 220,  38,  38],
-  ];
-  // La mancha aparece entre DESDE y HASTA y de ahí es opaca: semitransparentes
-  // sobre el azul daban un verde oliva sucio. El halo tenue de FotMob (menta
-  // sobre césped verde) casi no se ve; sobre el azul sí, por eso el corte es
-  // más adentro y las manchas miden lo mismo que en FotMob.
-  var DESDE = 0.10, HASTA = 0.22;
+  // Colores: la tabla de FotMob tal cual (la de su plantilla de heatmaps, 256
+  // entradas por intensidad: menta → verde → amarillo → rojo), así el mapa se ve
+  // igual que el suyo, solo que sobre nuestra cancha azul. Cada entrada es RRGGBB.
+  var TABLA = (
+    'b4f5dcb4f5dcb4f5dcb4f5dcb4f5dcb4f5dcb4f5dcb4f5dcb4f5dcb4f5dcb4f5dcb4f5dcb4f5dcb4f5dcb4f5dcb4f5dc' +
+    'b4f5dcb4f5dcb4f5dcb4f5dcb4f5dcb3f5dbb1f5daaff5d8adf4d7abf4d6aaf4d4a8f4d3a6f4d2a4f4d0a2f3cfa0f3ce' +
+    '9ef3cc9cf3cb9bf3c998f3c897f2c795f2c593f2c491f2c38ff2c18df1c08bf1be8af1bd88f1bc86f1ba84f1b982f0b8' +
+    '80f0b67ef0b57cf0b47bf0b279f0b177efaf75efae73efad71efab6fefaa6defa96ceea76aeea668eea566eea364eea2' +
+    '62eea160ed9f5eed9e5ded9c5bed9b59ed9a57ed9855ec9753ec9651ec9450ec934eec924cec904aeb8f48eb8e46eb8c' +
+    '48eb8a4beb894deb8750ec8652ec8454ec8357ec8159ec805cec7e5eec7d60ed7b63ed7a65ed7868ed776aed756ded74' +
+    '6fed7271ee7074ee6f76ee6d79ee6c7bee6a7dee6980ee6782ef6585ef6487ef628aef618cef5f8fef5e91ef5c93f05b' +
+    '96f05998f0589bf0569df0559ff053a2f051a4f150a7f14ea9f14dabf14baef14ab0f148b3f147b5f145b8f244baf242' +
+    'bcf241bff23fc1f23dc4f33cc6f33ac8f339cbf337cdf336d0f334d2f332d5f431d7f42fdaf42edcf42cdef42be1f429' +
+    'e3f428e6f526e8f525eaf523edf522eff520f1f51ff4f51df6f61cf9f61afbf618fef617fff516fff316fef116feef17' +
+    'feed17feeb17fde917fde717fde518fde318fce118fcdf18fcdd18fcdb19fbd919fbd719fbd519fad31afad11afacf1a' +
+    'facd1af9cb1af9c91bf9c71bf9c51bf8c31bf8c11bf8bf1cf8bd1cf7bb1cf7b91cf7b71df7b51df6b31df6b11df6af1d' +
+    'f6ad1ef5ab1ef5a91ef5a71ef5a51ef4a31ff4a11ff49f1ff49d1ff39b1ff39820f39620f39420f29320f29120f28f21' +
+    'f18d21f18a21f18821f18621f08422f08222f08122ef7d23ee7924ed7625ec7226ec6f27eb6b28ea6729e9642ae8602b' +
+    'e75d2ce6592de5552ee4522fe34e2fe24a30e14731e04332df3f34df3c35de3835dd3636dd3636dd3636dd3636dd3636' +
+    'dd3636dd3636dd3636dd3636dd3636dd3636dd3636dd3636dd3636dd3636dd3636dd3636dd3636dd3636dd3636dd3636');
+  // La mancha aparece entre 0 y BORDE de intensidad y de ahí es opaca (la tabla de
+  // alfa de FotMob: 0 → 1 en el primer octavo); toda la capa va al 85 %.
+  var BORDE = 0.125;
   function color(t) {
-    for (var i = 1; i < RAMPA.length; i++) {
-      if (t <= RAMPA[i][0]) {
-        var a = RAMPA[i - 1], b = RAMPA[i], f = (t - a[0]) / (b[0] - a[0]);
-        return [a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f, a[3] + (b[3] - a[3]) * f];
-      }
+    var x = t * 255, i = Math.min(254, Math.floor(x)), f = x - i, c = [];
+    for (var k = 0; k < 3; k++) {
+      var a = parseInt(TABLA.substr(i * 6 + k * 2, 2), 16);
+      var b = parseInt(TABLA.substr((i + 1) * 6 + k * 2, 2), 16);
+      c.push(a + (b - a) * f);
     }
-    var u = RAMPA[RAMPA.length - 1];
-    return [u[1], u[2], u[3]];
+    return c;
   }
   function degrade(f) {
     for (var i = 1; i < DEGRADE.length; i++) {
@@ -110,8 +114,8 @@
     var ctx = cv.getContext('2d'), img = ctx.createImageData(W, H), d = img.data;
     for (i = 0; i < W * H; i++) {
       var t = Math.min(1, inten[i]);
-      if (t <= DESDE) continue;
-      var c = color(t), al = Math.min(1, (t - DESDE) / (HASTA - DESDE)) * OPACIDAD;
+      if (t <= 0) continue;
+      var c = color(t), al = Math.min(1, t / BORDE) * OPACIDAD;
       d[i * 4] = c[0]; d[i * 4 + 1] = c[1]; d[i * 4 + 2] = c[2]; d[i * 4 + 3] = Math.round(al * 255);
     }
     ctx.putImageData(img, 0, 0);
