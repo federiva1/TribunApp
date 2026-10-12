@@ -23,7 +23,8 @@ Stats por jugador que extraemos:
   top:     tiros_totales, disparos_puerta, oport_creadas, grandes_oport, acc_defensivas, pases_precisos
   ataque:  toques, toques_area, regates, pases_ultimo_tercio, perdida_balon
   defensa: acc_defensivas, entradas, interceptaciones, recuperaciones, despejes, bloqueos, regateado
-  duelos:  ganados, perdidos, terrestres, aereos, faltas, faltas_recibidas
+  duelos:  ganados, perdidos, terrestres, aereos, faltas, faltas_recibidas,
+           terrestres_tot, aereos_tot (disputados de cada tipo; ganados = terrestres/aereos)
   portero_stats: paradas, goles_evitados  (goles_contra ya viene del API)
 """
 from __future__ import annotations
@@ -121,6 +122,27 @@ def flatten_stats(sections: list) -> dict:
             if label not in flat:
                 flat[label] = val
     return flat
+
+
+# Duelos terrestres/aéreos: FotMob da 'ganados/total' (fractionWithPercentage) y
+# flatten_stats solo guarda los ganados. El total permite mostrar los perdidos de
+# cada tipo, como en el detalle de jugador de FotMob.
+DUELOS_TOT_MAP = {
+    'Ground duels won': 'terrestres_tot',
+    'Aerial duels won': 'aereos_tot',
+}
+
+
+def duelos_totales(sections: list) -> dict:
+    out = {}
+    for sec in (sections or []):
+        for label, data in (sec.get('stats') or {}).items():
+            field = DUELOS_TOT_MAP.get(label)
+            if field and field not in out and isinstance(data, dict):
+                tot = to_int((data.get('stat') or {}).get('total'))
+                if tot is not None:
+                    out[field] = tot
+    return out
 
 
 def build_section(flat: dict, field_map: dict) -> dict | None:
@@ -227,6 +249,8 @@ def enrich_players(players: list, ps_by_name: dict) -> list:
         p['ataque']  = build_section(flat, ATAQUE_MAP)
         p['defensa'] = build_section(flat, DEFENSA_MAP)
         p['duelos']  = build_section(flat, DUELOS_MAP)
+        if p['duelos']:
+            p['duelos'].update(duelos_totales(pd.get('stats', [])))
 
         if is_gk:
             saves = to_int(flat.get('Saves'))
