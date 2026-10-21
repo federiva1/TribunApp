@@ -51,7 +51,7 @@
     ]
   },
   "sudamericana": {
-    "ronda": "Semifinales",
+    "ronda": "Final",
     "partidos": [
       {
         "api_id": "1639863",
@@ -78,8 +78,8 @@
       },
       {
         "api_id": "1639864",
-        "utcTime": "2026-10-21T20:00:00+00:00",
-        "short": "NS",
+        "utcTime": "2026-10-21T00:30:00+00:00",
+        "short": "FT",
         "home": {
           "name": "Vasco DA Gama",
           "slug": null,
@@ -92,12 +92,35 @@
           "logo": null,
           "arg": true
         },
+        "home_score": 1,
+        "away_score": 3,
+        "home_pen": null,
+        "away_pen": null,
+        "winner": "away",
+        "ronda": "Semifinales"
+      },
+      {
+        "api_id": null,
+        "utcTime": "2026-11-22T23:00:00+00:00",
+        "short": "NS",
+        "home": {
+          "name": "Boca Juniors",
+          "slug": "bocajuniors",
+          "logo": null,
+          "arg": true
+        },
+        "away": {
+          "name": "Atletico Mineiro",
+          "slug": null,
+          "logo": "https://media.api-sports.io/football/teams/128.png",
+          "arg": false
+        },
         "home_score": null,
         "away_score": null,
         "home_pen": null,
         "away_pen": null,
         "winner": null,
-        "ronda": "Semifinales"
+        "ronda": "Final"
       }
     ]
   }

@@ -26,7 +26,7 @@ const CLUBES_CONFIG = {
     color: '#003087', colorSecundario: '#f5c518',
     colores: ['#003087', '#f5c518'],
     rivalLibertadores: 'Cruzeiro',
-    rivalSudamericana: 'Deportivo Recoleta',
+    rivalSudamericana: 'Atletico Mineiro',
     rivalActual: 'Def. Justicia',
     squad: []
   },
