@@ -71,6 +71,10 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .score .team { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; }
 .score .team img { width: 72px; height: 72px; object-fit: contain; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5)); }
 .score .team .nom { font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 600; letter-spacing: 0.5px; text-align: center; }
+.score a.team { text-decoration: none; color: #fff; border-radius: 14px; padding: 8px 4px 6px; transition: background .15s, transform .15s; }
+.score a.team:hover { background: rgba(79,195,247,0.08); transform: translateY(-2px); }
+.score .team .cta { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--celeste); }
+.score a.team.cerrado .cta { color: rgba(255,255,255,0.4); }
 .score .res { font-family: 'Bebas Neue', sans-serif; font-size: 44px; letter-spacing: 3px; color: #fff; white-space: nowrap; }
 .estadio { font-size: 11px; color: rgba(255,255,255,0.35); text-align: center; }
 
@@ -105,14 +109,16 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .mp-nom { font-size: 8.5px; line-height: 1.25; color: #fff; background: rgba(0,0,0,0.55); border-radius: 4px; padding: 0 3px; margin-top: 1px;
   max-width: 50px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .gente-n { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.45); text-align: center; margin-bottom: 8px; }
-.pg-list { border-radius: 10px; overflow: hidden; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); }
-.pg-row { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-top: 1px solid rgba(255,255,255,0.06); }
-.pg-row:first-child { border-top: none; }
-.pg-pos { width: 14px; flex: none; font-family: 'Bebas Neue', sans-serif; font-size: 12px; color: rgba(255,255,255,0.3); text-align: right; }
-.pg-chip { width: 24px; height: 24px; flex: none; border-radius: 50%; border: 1.5px solid #fff; display: flex; align-items: center; justify-content: center;
-  font-family: 'Bebas Neue', sans-serif; font-size: 12px; color: #fff; }
-.pg-nom { flex: 1; min-width: 0; font-size: 12px; color: #ddd; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pg-avg { flex: none; font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 0.5px; color: #fff; }
+.pg-card { border-radius: 10px; overflow: hidden; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); }
+.mp-nota { width: 26px; height: 26px; font-size: 13px; }
+.mp-nota.sin { opacity: .45; }
+.mp-n { background: rgba(0,0,0,0.62); border-radius: 6px; padding: 0 3px; line-height: 1.15; letter-spacing: 0.3px; }
+.pg-banco { padding: 8px 8px 6px; border-top: 1px solid rgba(255,255,255,0.08); }
+.pg-banco-tit { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.4); margin-bottom: 5px; }
+.pg-banco-lista { display: flex; flex-wrap: wrap; gap: 6px 4px; }
+.pg-b { width: calc(50% - 2px); display: flex; align-items: center; gap: 5px; min-width: 0; }
+.pg-b .mp-chip { width: 22px; height: 22px; font-size: 11.5px; flex: none; }
+.pg-b span.n { font-size: 10.5px; color: #ddd; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .gente-foot { display: flex; justify-content: flex-end; padding: 4px 8px; font-size: 11px; color: rgba(255,255,255,0.5); }
 
 .estado { margin-top: 18px; text-align: center; font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; }
@@ -297,6 +303,11 @@ async function init() {
   const copa = m.copa;
   const nomL = nomCorto(m.home, m.homeName), nomV = nomCorto(m.away, m.awayName);
   const equipos = [m.home, m.away].filter(esArg);
+  const equipoHtml = (slug, nom) => {
+    const l = teamLinks[slug];
+    const inner = `<img src="${ESC(escudo(slug))}" alt="" onerror="this.style.opacity=0.15"><span class="nom">${ESC(nom)}</span>${l ? `<span class="cta">${l.cta}</span>` : ''}`;
+    return l ? `<a class="team${l.cerrado ? ' cerrado' : ''}" href="${l.href}">${inner}</a>` : `<div class="team">${inner}</div>`;
+  };
   const genteHtml = titulo => `<div id="gente-wrap" hidden><div class="gente-tit">${titulo}</div>
     <div class="gente-row">${equipos.map(s => `<div class="gente" data-club="${s}"></div>`).join('')}</div></div>`;
   const pathModo = estado === 'pre' ? 'armar' : 'puntuar';
@@ -320,6 +331,7 @@ async function init() {
   const escudo = s => esArg(s) ? `escudos/${s}.png` : (m.logos[s] || `escudos/${s}.png`);
   const hs = entry ? entry.goles_local : m.hs, as = entry ? entry.goles_visitante : m.as;
   const jugado = estado !== 'pre' && hs != null && as != null;
+  const teamLinks = {};   // post: el escudo del marcador es el botón de cada club
   const hrefClub = (s, sec) => `club.html?c=${s}${copa ? '&copa=' + copa : ''}${sec ? '&s=' + sec : ''}`;
   const estadio = entry && entry.estadio ? `<div class="estadio">${ESC(entry.estadio)}</div>` : '';
 
@@ -360,18 +372,13 @@ async function init() {
     if (!entry) {
       pregunta = 'Terminó el partido';
       sub = `Estamos procesando la ficha del partido.<br>En unos minutos se abren los puntajes por ${PUNTAJES_VENTANA_H} horas.`;
-      opts = equipos.map(s => `<a class="opt cerrado" href="${hrefClub(s, 'puntajes')}"><img src="escudos/${s}.png" alt=""><span class="nom">${ESC(nomCorto(s))}</span><span class="cta">Ir al club →</span></a>`).join('');
+      equipos.forEach(s => teamLinks[s] = { href: hrefClub(s, 'puntajes'), cta: 'Ir al club →', cerrado: true });
       estadoHtml = `<div class="estado cerrado"><span class="dot"></span>Puntajes en preparación</div>`;
       links = `<a class="link-sec" href="fixture.html">${ICO.cal} Ver el fixture</a>`;
     } else {
       pregunta = equipos.length > 1 ? '¿A quién puntuás?' : 'Puntuá a los jugadores';
       sub = 'Elegí tu equipo y ponele puntaje a cada jugador que jugó.<br>Después ves el promedio de todos los hinchas.';
-      opts = equipos.map(s => `
-        <a class="opt${abierto ? '' : ' cerrado'}" href="${hrefClub(s, 'puntajes')}">
-          <img src="escudos/${s}.png" alt="">
-          <span class="nom">${ESC(nomCorto(s))}</span>
-          <span class="cta">${abierto ? 'Puntuar →' : 'Ver estadísticas →'}</span>
-        </a>`).join('');
+      equipos.forEach(s => teamLinks[s] = { href: hrefClub(s, 'puntajes'), cta: abierto ? 'Puntuar →' : 'Ver estadísticas →', cerrado: !abierto });
       estadoHtml = abierto
         ? `<div class="estado abierto"><span class="dot"></span>Puntajes abiertos hasta ${fmtDiaAR(vence)} a las ${fmtHoraAR(vence)}</div>`
         : `<div class="estado cerrado"><span class="dot"></span>Puntajes cerrados · se abren ${PUNTAJES_VENTANA_H} h al terminar cada partido</div>`;
@@ -386,9 +393,9 @@ async function init() {
     <div class="comp">${ESC(compLbl)}</div>
     <div class="estado-partido">${ESC(subHdr)}</div>
     ${estado === 'pre' ? '' : `<div class="score">
-      <div class="team"><img src="${ESC(escudo(m.home))}" alt="" onerror="this.style.opacity=0.15"><span class="nom">${ESC(nomL)}</span></div>
+      ${equipoHtml(m.home, nomL)}
       <div class="res">${jugado ? `${hs} - ${as}` : 'VS'}</div>
-      <div class="team"><img src="${ESC(escudo(m.away))}" alt="" onerror="this.style.opacity=0.15"><span class="nom">${ESC(nomV)}</span></div>
+      ${equipoHtml(m.away, nomV)}
     </div>`}
     ${estadio}
     <div class="pregunta">${pregunta}</div>
@@ -453,8 +460,26 @@ async function cargarGente(slug, fecha) {
   document.getElementById('gente-wrap').hidden = false;
   cont.innerHTML = rows.map(x => miniCancha(x, slug)).join('');
 }
-// ---- Puntajes de la gente (estado post): promedio por jugador de los votos ya enviados ----
+// ---- Puntajes de la gente (estado post): cancha con la nota promedio de cada jugador ----
 // club.html guarda {id de jugador del archivo del partido: puntaje | null (S/P)} con match_date = día AR del kickoff.
+// Titulares en su posición real (pos: x = profundidad con el arco propio en 0, y = lateral); se gira a vertical
+// como la placa de club.html (lateral → ancho, profundidad → alto, arco propio abajo).
+function posTitulares(tit, formacion) {
+  const conPos = tit.filter(j => j.pos && j.pos.x != null && j.pos.y != null);
+  if (conPos.length >= 8) return tit.map(j => j.pos && j.pos.x != null ? { j, x: j.pos.y, y: 100 - j.pos.x } : null).filter(Boolean);
+  // Sin posiciones: por líneas según la formación ("4-3-3"), arquero abajo.
+  const lineas = String(formacion || '').split('-').map(Number).filter(Boolean);
+  const out = []; const arq = tit.find(j => j.portero) || tit[0];
+  const campo = tit.filter(j => j !== arq);
+  out.push({ j: arq, x: 50, y: 88 });
+  let k = 0;
+  (lineas.length ? lineas : [4, 4, 2]).forEach((n, li, arr) => {
+    for (let c = 0; c < n && k < campo.length; c++, k++) out.push({ j: campo[k], x: ((c + 1) / (n + 1)) * 100, y: 70 - li * (50 / Math.max(1, arr.length - 1)) });
+  });
+  return out;
+}
+const fmtNota = v => v == null ? '–' : (Math.round(v * 10) / 10).toFixed(1);
+
 async function cargarPuntajesGente(slug, fecha, fichaP) {
   const cont = document.querySelector(`.gente[data-club="${slug}"]`);
   if (!cont || typeof SUPABASE_URL === 'undefined') return;
@@ -474,19 +499,22 @@ async function cargarPuntajesGente(slug, fecha, fichaP) {
     const n = Number(val); if (isNaN(n)) return;
     sum[id] = (sum[id] || 0) + n; cnt[id] = (cnt[id] || 0) + 1;
   }));
-  const bg = kitBackground(clubKit(slug), 24);
-  const ranked = jug.filter(j => cnt[String(j.id)])
-    .map(j => ({ j, avg: sum[String(j.id)] / cnt[String(j.id)] }))
-    .sort((a, b) => b.avg - a.avg);
-  if (!ranked.length) return;
+  const nota = j => cnt[String(j.id)] ? sum[String(j.id)] / cnt[String(j.id)] : null;
+  if (!jug.some(j => nota(j) != null)) return;
+  const bg = kitBackground(clubKit(slug), 26);
+  const tit = jug.filter(j => j.tipo === 'titular');
+  const chip = (j, cls) => { const v = nota(j); return `<div class="mp-chip ${cls}${v == null ? ' sin' : ''}" style="background:${ESC(bg)}"><span class="mp-n">${fmtNota(v)}</span></div>`; };
+  const enCancha = posTitulares(tit, ((ficha.partido || {}).formacion || {})[slug]).map(({ j, x, y }) => `
+    <div class="mp-j" style="left:${Math.min(92, Math.max(8, x))}%;top:${Math.min(90, Math.max(8, y))}%">
+      ${chip(j, 'mp-nota')}<div class="mp-nom">${ESC(apellido(j.nombre))}</div>
+    </div>`).join('');
+  const banco = jug.filter(j => (j.tipo === 'suplente' && j.min != null && j.min > 0) || j.tipo === 'dt')
+    .sort((a, b) => (nota(b) ?? -1) - (nota(a) ?? -1));
+  const bancoHtml = banco.length ? `<div class="pg-banco"><div class="pg-banco-tit">Suplentes y DT</div><div class="pg-banco-lista">${banco.map(j => `
+      <div class="pg-b">${chip(j, '')}<span class="n">${ESC(j.tipo === 'dt' ? 'DT ' + apellido(j.nombre) : apellido(j.nombre))}</span></div>`).join('')}</div></div>` : '';
   document.getElementById('gente-wrap').hidden = false;
-  cont.innerHTML = `<div class="gente-n">${rows.length} ${rows.length === 1 ? 'hincha puntuó' : 'hinchas puntuaron'}</div><div class="pg-list">`
-    + ranked.map(({ j, avg }, i) => `<div class="pg-row">
-        <span class="pg-pos">${i + 1}</span>
-        <span class="pg-chip" style="background:${ESC(bg)};text-shadow:${NUM_OUTLINE}">${ESC(j.tipo === 'dt' ? 'DT' : (j.num || ''))}</span>
-        <span class="pg-nom">${ESC(apellido(j.nombre))}</span>
-        <span class="pg-avg">${avg.toFixed(1)}</span>
-      </div>`).join('') + '</div>';
+  cont.innerHTML = `<div class="gente-n">${rows.length} ${rows.length === 1 ? 'hincha puntuó' : 'hinchas puntuaron'}</div>
+    <div class="pg-card"><div class="mini-pitch">${_LINEAS_CANCHA}${enCancha}</div>${bancoHtml}</div>`;
 }
 function sinPartido(html) {
   $main.innerHTML = `<div class="msg">${html}<br><br><a href="fixture.html">Ir al fixture →</a></div>`;
