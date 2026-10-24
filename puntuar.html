@@ -104,6 +104,15 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 12.5px; color: #fff; }
 .mp-nom { font-size: 8.5px; line-height: 1.25; color: #fff; background: rgba(0,0,0,0.55); border-radius: 4px; padding: 0 3px; margin-top: 1px;
   max-width: 50px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gente-n { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.45); text-align: center; margin-bottom: 8px; }
+.pg-list { border-radius: 10px; overflow: hidden; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); }
+.pg-row { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-top: 1px solid rgba(255,255,255,0.06); }
+.pg-row:first-child { border-top: none; }
+.pg-pos { width: 14px; flex: none; font-family: 'Bebas Neue', sans-serif; font-size: 12px; color: rgba(255,255,255,0.3); text-align: right; }
+.pg-chip { width: 24px; height: 24px; flex: none; border-radius: 50%; border: 1.5px solid #fff; display: flex; align-items: center; justify-content: center;
+  font-family: 'Bebas Neue', sans-serif; font-size: 12px; color: #fff; }
+.pg-nom { flex: 1; min-width: 0; font-size: 12px; color: #ddd; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pg-avg { flex: none; font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 0.5px; color: #fff; }
 .gente-foot { display: flex; justify-content: flex-end; padding: 4px 8px; font-size: 11px; color: rgba(255,255,255,0.5); }
 
 .estado { margin-top: 18px; text-align: center; font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; }
@@ -288,6 +297,8 @@ async function init() {
   const copa = m.copa;
   const nomL = nomCorto(m.home, m.homeName), nomV = nomCorto(m.away, m.awayName);
   const equipos = [m.home, m.away].filter(esArg);
+  const genteHtml = titulo => `<div id="gente-wrap" hidden><div class="gente-tit">${titulo}</div>
+    <div class="gente-row">${equipos.map(s => `<div class="gente" data-club="${s}"></div>`).join('')}</div></div>`;
   const pathModo = estado === 'pre' ? 'armar' : 'puntuar';
   const shareUrl = `https://www.tribunapp.com.ar/${pathModo}/${alias(m.home)}-${alias(m.away)}`;
 
@@ -384,8 +395,8 @@ async function init() {
     <div class="sub">${sub}</div>
     ${estado === 'pre' ? estadoHtml : ''}
     ${opts ? `<div class="opts">${opts}</div>` : ''}
-    ${estado === 'pre' ? `<div id="gente-wrap" hidden><div class="gente-tit">Equipos de la gente</div>
-      <div class="gente-row">${equipos.map(s => `<div class="gente" data-club="${s}"></div>`).join('')}</div></div>` : `${estadoHtml}
+    ${estado === 'pre' ? genteHtml('Equipos de la gente') : `${estadoHtml}
+    ${estado === 'post' && entry ? genteHtml('Puntajes de la gente') : ''}
     <div class="links">
       ${links}
       <button class="link-sec" id="share-btn" type="button">${ICO.share} Compartir este link</button>
@@ -400,6 +411,10 @@ async function init() {
 
   // club.html guarda el voto con match_date = día AR del kickoff (koDia).
   if (estado === 'pre') equipos.forEach(s => cargarGente(s, koDia));
+  if (estado === 'post' && entry) {
+    const ficha = getJSON(`data/partidos/${encodeURIComponent(entry.id)}.json`);
+    equipos.forEach(s => cargarPuntajesGente(s, koDia, ficha));
+  }
 }
 
 // ---- Equipos de la gente (estado pre): formaciones ya enviadas para este partido ----
@@ -437,6 +452,41 @@ async function cargarGente(slug, fecha) {
   if (!rows.length) return;
   document.getElementById('gente-wrap').hidden = false;
   cont.innerHTML = rows.map(x => miniCancha(x, slug)).join('');
+}
+// ---- Puntajes de la gente (estado post): promedio por jugador de los votos ya enviados ----
+// club.html guarda {id de jugador del archivo del partido: puntaje | null (S/P)} con match_date = día AR del kickoff.
+async function cargarPuntajesGente(slug, fecha, fichaP) {
+  const cont = document.querySelector(`.gente[data-club="${slug}"]`);
+  if (!cont || typeof SUPABASE_URL === 'undefined') return;
+  let rows;
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/puntajes?select=puntajes&limit=5000&club=eq.${encodeURIComponent(slug)}&match_date=eq.${fecha}`,
+      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } });
+    if (!r.ok) return;
+    rows = await r.json();
+  } catch (e) { return; }
+  const ficha = await fichaP;
+  const jug = ficha && ficha.jugadores && ficha.jugadores[slug];
+  if (!rows.length || !jug) return;
+  const sum = {}, cnt = {};
+  rows.forEach(row => Object.entries(row.puntajes || {}).forEach(([id, val]) => {
+    if (val === null || val === undefined || val === '') return;   // S/P no cuenta
+    const n = Number(val); if (isNaN(n)) return;
+    sum[id] = (sum[id] || 0) + n; cnt[id] = (cnt[id] || 0) + 1;
+  }));
+  const bg = kitBackground(clubKit(slug), 24);
+  const ranked = jug.filter(j => cnt[String(j.id)])
+    .map(j => ({ j, avg: sum[String(j.id)] / cnt[String(j.id)] }))
+    .sort((a, b) => b.avg - a.avg);
+  if (!ranked.length) return;
+  document.getElementById('gente-wrap').hidden = false;
+  cont.innerHTML = `<div class="gente-n">${rows.length} ${rows.length === 1 ? 'hincha puntuó' : 'hinchas puntuaron'}</div><div class="pg-list">`
+    + ranked.map(({ j, avg }, i) => `<div class="pg-row">
+        <span class="pg-pos">${i + 1}</span>
+        <span class="pg-chip" style="background:${ESC(bg)};text-shadow:${NUM_OUTLINE}">${ESC(j.tipo === 'dt' ? 'DT' : (j.num || ''))}</span>
+        <span class="pg-nom">${ESC(apellido(j.nombre))}</span>
+        <span class="pg-avg">${avg.toFixed(1)}</span>
+      </div>`).join('') + '</div>';
 }
 function sinPartido(html) {
   $main.innerHTML = `<div class="msg">${html}<br><br><a href="fixture.html">Ir al fixture →</a></div>`;
