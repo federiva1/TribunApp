@@ -89,6 +89,27 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .opt .cta { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--celeste); }
 .opt.cerrado .cta { color: rgba(255,255,255,0.4); }
 
+/* Equipos de la gente debajo de cada club (estado pre) */
+.opts.con-gente { align-items: flex-start; }
+.col { flex: 1; max-width: 200px; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.col .opt { max-width: none; }
+.gente:empty { display: none; }
+.gente-lbl { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.45); text-align: center; }
+.gente-card { margin-top: 8px; border-radius: 10px; overflow: hidden; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); }
+.mini-pitch { width: 100%; aspect-ratio: 0.82; background: #2d7a3a; position: relative; overflow: hidden; }
+.mini-pitch .stripe { position: absolute; top: 0; bottom: 0; width: 12.5%; }
+.mini-pitch .stripe:nth-child(odd) { background: rgba(0,0,0,0.07); }
+.mini-pitch .pl { position: absolute; border: 1px solid rgba(255,255,255,0.45); }
+.mini-pitch .pc { position: absolute; border-radius: 50%; border: 1px solid rgba(255,255,255,0.45); }
+.mp-j { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; z-index: 2; }
+.mp-chip { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 11px; color: #fff; }
+.mp-nom { font-size: 7.5px; line-height: 1.25; color: #fff; background: rgba(0,0,0,0.55); border-radius: 4px; padding: 0 3px; margin-top: 1px;
+  max-width: 42px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gente-foot { display: flex; justify-content: flex-end; padding: 4px 8px; font-size: 11px; color: rgba(255,255,255,0.5); }
+.gente-mas { margin-top: 8px; width: 100%; padding: 7px; border-radius: 8px; cursor: pointer; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.7); font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; }
+
 .estado { margin-top: 18px; text-align: center; font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; }
 .estado .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
 .estado.abierto { color: var(--verde); }  .estado.abierto .dot { background: var(--verde); }
@@ -140,6 +161,9 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 <div id="toast"></div>
 
 <script src="js/clubes.js"></script>
+<script src="js/config.js"></script>
+<script src="js/club-colors.js"></script>
+<script src="js/kits.js"></script>
 <script>
 // ============================================================
 // Landing de UN partido — la URL que se comparte en redes. Dos entradas:
@@ -301,12 +325,13 @@ async function init() {
     subHdr = `${cap(fmtDiaAR(ko))} · ${fmtHoraAR(ko)} hs`;
     pregunta = equipos.length > 1 ? '¿Qué equipo armás?' : 'Armá tu formación';
     sub = 'Elegí tu equipo, armá tu 11 ideal y mandalo a la encuesta.<br>Después ves cómo lo armó el resto de la gente.';
-    opts = equipos.map(s => `
+    opts = equipos.map(s => `<div class="col">
       <a class="opt${ok[s] ? '' : ' cerrado'}" href="${hrefClub(s, ok[s] ? 'formacion' : '')}">
         <img src="escudos/${s}.png" alt="">
         <span class="nom">${ESC(nomCorto(s))}</span>
         <span class="cta">${ok[s] ? 'Armar mi 11 →' : 'Ver club →'}</span>
-      </a>`).join('');
+      </a>
+      <div class="gente" data-club="${s}"></div></div>`).join('');
     estadoHtml = todosOk
       ? `<div class="estado abierto"><span class="dot"></span>Formaciones abiertas hasta el inicio del partido</div>`
       : `<div class="estado cerrado"><span class="dot"></span>Se habilita cuando sea el próximo partido del club</div>`;
@@ -363,8 +388,9 @@ async function init() {
     ${estadio}
     <div class="pregunta">${pregunta}</div>
     <div class="sub">${sub}</div>
-    ${opts ? `<div class="opts">${opts}</div>` : ''}
-    ${estadoHtml}
+    ${estado === 'pre' ? estadoHtml : ''}
+    ${opts ? `<div class="opts${estado === 'pre' ? ' con-gente' : ''}">${opts}</div>` : ''}
+    ${estado === 'pre' ? '' : estadoHtml}
     <div class="links">
       ${links}
       <button class="link-sec" id="share-btn" type="button">${ICO.share} Compartir este link</button>
@@ -376,6 +402,54 @@ async function init() {
       await navigator.clipboard.writeText(shareUrl); toast('Link copiado');
     } catch (e) { try { await navigator.clipboard.writeText(shareUrl); toast('Link copiado'); } catch (e2) { toast(shareUrl); } }
   });
+
+  // club.html guarda el voto con match_date = día AR del kickoff (koDia).
+  if (estado === 'pre') equipos.forEach(s => cargarGente(s, koDia));
+}
+
+// ---- Equipos de la gente (estado pre): formaciones ya enviadas para este partido ----
+const GENTE_VISIBLES = 2;
+const _LINEAS_CANCHA = '<div class="stripe" style="left:0%"></div><div class="stripe" style="left:12.5%"></div><div class="stripe" style="left:25%"></div><div class="stripe" style="left:37.5%"></div><div class="stripe" style="left:50%"></div><div class="stripe" style="left:62.5%"></div><div class="stripe" style="left:75%"></div><div class="stripe" style="left:87.5%"></div>'
+  + '<div class="pl" style="left:5%;right:5%;top:0;bottom:0"></div>'
+  + '<div class="pl" style="left:5%;right:5%;top:50%;height:0;border-width:1px 0 0 0"></div>'
+  + '<div class="pc" style="left:50%;top:50%;width:18%;padding-top:18%;transform:translate(-50%,-50%)"></div>'
+  + '<div class="pl" style="left:21%;right:21%;top:0;height:18%;border-top:none"></div>'
+  + '<div class="pl" style="left:21%;right:21%;bottom:0;height:18%;border-bottom:none"></div>'
+  + '<div class="pl" style="left:33%;right:33%;top:0;height:9%;border-top:none"></div>'
+  + '<div class="pl" style="left:33%;right:33%;bottom:0;height:9%;border-bottom:none"></div>';
+const apellido = n => { const t = String(n || '').trim().split(/\s+/); return t[t.length - 1] || ''; };
+
+function miniCancha(row, slug) {
+  const bg = kitBackground(clubKit(slug), 20);
+  const js = (row.jugadores || []).filter(j => j && isFinite(j.x) && isFinite(j.y)).map(j => `
+    <div class="mp-j" style="left:${Math.min(94, Math.max(6, +j.x))}%;top:${Math.min(92, Math.max(6, +j.y))}%">
+      <div class="mp-chip" style="background:${ESC(bg)};text-shadow:${NUM_OUTLINE}">${ESC(j.num != null ? j.num : '')}</div>
+      <div class="mp-nom">${ESC(apellido(j.name))}</div>
+    </div>`).join('');
+  return `<div class="gente-card"><div class="mini-pitch">${_LINEAS_CANCHA}${js}</div>
+    <div class="gente-foot">❤️ ${row.likes || 0}</div></div>`;
+}
+
+async function cargarGente(slug, fecha) {
+  const cont = document.querySelector(`.gente[data-club="${slug}"]`);
+  if (!cont || typeof SUPABASE_URL === 'undefined') return;
+  let rows;
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/formaciones?select=id,jugadores,likes&order=likes.desc,created_at.desc&limit=50&club=eq.${encodeURIComponent(slug)}&match_date=eq.${fecha}`,
+      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } });
+    if (!r.ok) return;
+    rows = (await r.json()).filter(x => Array.isArray(x.jugadores) && x.jugadores.length);
+  } catch (e) { return; }
+  if (!rows.length) return;
+  const lbl = rows.length === 1 ? '1 equipo de la gente' : `${rows.length >= 50 ? '50+' : rows.length} equipos de la gente`;
+  cont.innerHTML = `<div class="gente-lbl">${lbl}</div>` + rows.slice(0, GENTE_VISIBLES).map(x => miniCancha(x, slug)).join('');
+  if (rows.length > GENTE_VISIBLES) {
+    const resto = rows.slice(GENTE_VISIBLES, 12);
+    const btn = document.createElement('button');
+    btn.className = 'gente-mas'; btn.type = 'button'; btn.textContent = `Ver ${resto.length} más`;
+    btn.addEventListener('click', () => { btn.insertAdjacentHTML('beforebegin', resto.map(x => miniCancha(x, slug)).join('')); btn.remove(); });
+    cont.appendChild(btn);
+  }
 }
 function sinPartido(html) {
   $main.innerHTML = `<div class="msg">${html}<br><br><a href="fixture.html">Ir al fixture →</a></div>`;
