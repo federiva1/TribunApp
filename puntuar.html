@@ -90,24 +90,22 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .opt.cerrado .cta { color: rgba(255,255,255,0.4); }
 
 /* Equipos de la gente debajo de cada club (estado pre) */
-.opts.con-gente { align-items: flex-start; }
-.col { flex: 1; max-width: 200px; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
-.col .opt { max-width: none; }
-.gente:empty { display: none; }
-.gente-lbl { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.45); text-align: center; }
-.gente-card { margin-top: 8px; border-radius: 10px; overflow: hidden; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); }
+.gente-tit { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; text-align: center; margin: 40px 0 14px; }
+.gente-row { display: flex; gap: 22px; margin: 0 -8px; align-items: flex-start; }
+.gente { flex: 1; min-width: 0; }
+.gente-card { margin-bottom: 12px; border-radius: 10px; overflow: hidden; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); }
 .mini-pitch { width: 100%; aspect-ratio: 0.82; background: #2d7a3a; position: relative; overflow: hidden; }
 .mini-pitch .stripe { position: absolute; top: 0; bottom: 0; width: 12.5%; }
 .mini-pitch .stripe:nth-child(odd) { background: rgba(0,0,0,0.07); }
 .mini-pitch .pl { position: absolute; border: 1px solid rgba(255,255,255,0.45); }
 .mini-pitch .pc { position: absolute; border-radius: 50%; border: 1px solid rgba(255,255,255,0.45); }
 .mp-j { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; z-index: 2; }
-.mp-chip { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.5);
-  display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 11px; color: #fff; }
-.mp-nom { font-size: 7.5px; line-height: 1.25; color: #fff; background: rgba(0,0,0,0.55); border-radius: 4px; padding: 0 3px; margin-top: 1px;
-  max-width: 42px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mp-chip { width: 23px; height: 23px; border-radius: 50%; border: 1.5px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 12.5px; color: #fff; }
+.mp-nom { font-size: 8.5px; line-height: 1.25; color: #fff; background: rgba(0,0,0,0.55); border-radius: 4px; padding: 0 3px; margin-top: 1px;
+  max-width: 50px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .gente-foot { display: flex; justify-content: flex-end; padding: 4px 8px; font-size: 11px; color: rgba(255,255,255,0.5); }
-.gente-mas { margin-top: 8px; width: 100%; padding: 7px; border-radius: 8px; cursor: pointer; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
+.gente-mas { width: 100%; padding: 7px; border-radius: 8px; cursor: pointer; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
   color: rgba(255,255,255,0.7); font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; }
 
 .estado { margin-top: 18px; text-align: center; font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; }
@@ -325,17 +323,15 @@ async function init() {
     subHdr = `${cap(fmtDiaAR(ko))} · ${fmtHoraAR(ko)} hs`;
     pregunta = equipos.length > 1 ? '¿Qué equipo armás?' : 'Armá tu formación';
     sub = 'Elegí tu equipo, armá tu 11 ideal y mandalo a la encuesta.<br>Después ves cómo lo armó el resto de la gente.';
-    opts = equipos.map(s => `<div class="col">
+    opts = equipos.map(s => `
       <a class="opt${ok[s] ? '' : ' cerrado'}" href="${hrefClub(s, ok[s] ? 'formacion' : '')}">
         <img src="escudos/${s}.png" alt="">
         <span class="nom">${ESC(nomCorto(s))}</span>
         <span class="cta">${ok[s] ? 'Armar mi 11 →' : 'Ver club →'}</span>
-      </a>
-      <div class="gente" data-club="${s}"></div></div>`).join('');
+      </a>`).join('');
     estadoHtml = todosOk
       ? `<div class="estado abierto"><span class="dot"></span>Formaciones abiertas hasta el inicio del partido</div>`
       : `<div class="estado cerrado"><span class="dot"></span>Se habilita cuando sea el próximo partido del club</div>`;
-    links = `<a class="link-sec" href="fixture.html">${ICO.cal} Ver el fixture</a>`;
     title = `${nomL} vs ${nomV} — Armá tu formación`;
     shareText = `${nomL} vs ${nomV}: armá tu 11 ideal en TribunApp`;
   } else if (estado === 'vivo') {
@@ -389,14 +385,15 @@ async function init() {
     <div class="pregunta">${pregunta}</div>
     <div class="sub">${sub}</div>
     ${estado === 'pre' ? estadoHtml : ''}
-    ${opts ? `<div class="opts${estado === 'pre' ? ' con-gente' : ''}">${opts}</div>` : ''}
-    ${estado === 'pre' ? '' : estadoHtml}
+    ${opts ? `<div class="opts">${opts}</div>` : ''}
+    ${estado === 'pre' ? `<div id="gente-wrap" hidden><div class="gente-tit">Equipos de la gente</div>
+      <div class="gente-row">${equipos.map(s => `<div class="gente" data-club="${s}"></div>`).join('')}</div></div>` : `${estadoHtml}
     <div class="links">
       ${links}
       <button class="link-sec" id="share-btn" type="button">${ICO.share} Compartir este link</button>
-    </div>`;
+    </div>`}`;
 
-  document.getElementById('share-btn').addEventListener('click', async () => {
+  if (estado !== 'pre') document.getElementById('share-btn').addEventListener('click', async () => {
     try {
       if (navigator.share) { await navigator.share({ title: shareText, text: shareText, url: shareUrl }); return; }
       await navigator.clipboard.writeText(shareUrl); toast('Link copiado');
@@ -441,8 +438,8 @@ async function cargarGente(slug, fecha) {
     rows = (await r.json()).filter(x => Array.isArray(x.jugadores) && x.jugadores.length);
   } catch (e) { return; }
   if (!rows.length) return;
-  const lbl = rows.length === 1 ? '1 equipo de la gente' : `${rows.length >= 50 ? '50+' : rows.length} equipos de la gente`;
-  cont.innerHTML = `<div class="gente-lbl">${lbl}</div>` + rows.slice(0, GENTE_VISIBLES).map(x => miniCancha(x, slug)).join('');
+  document.getElementById('gente-wrap').hidden = false;
+  cont.innerHTML = rows.slice(0, GENTE_VISIBLES).map(x => miniCancha(x, slug)).join('');
   if (rows.length > GENTE_VISIBLES) {
     const resto = rows.slice(GENTE_VISIBLES, 12);
     const btn = document.createElement('button');
