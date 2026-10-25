@@ -378,9 +378,6 @@ async function init() {
           <span class="nom">${ESC(nomCorto(s))}</span>
           <span class="cta">${abierto ? 'Puntuar →' : 'Ver estadísticas →'}</span>
         </a>`).join('');
-      estadoHtml = abierto
-        ? `<div class="estado abierto"><span class="dot"></span>Puntajes abiertos</div>`
-        : `<div class="estado cerrado"><span class="dot"></span>Puntajes cerrados</div>`;
       links = `<a class="link-sec" href="estadisticas.html?p=${encodeURIComponent(entry.id)}&tab=tabla">${ICO.stats} Ver estadísticas del partido</a>`;
     }
     title = `${nomL} ${resultado} ${nomV} — Puntuá a los jugadores`;
