@@ -403,13 +403,12 @@ async function init() {
     <div class="sub">${sub}</div>
     ${estadoHtml}
     ${opts ? `<div class="opts">${opts}</div>` : ''}
-    ${estado === 'pre' ? genteHtml('Equipos de la gente') : `${estado === 'post' && entry ? genteHtml('Puntajes de la gente') : ''}
-    <div class="links">
+    ${estado === 'pre' ? genteHtml('Equipos de la gente') : estado === 'post' ? (entry ? genteHtml('Puntajes de la gente') : '') : `<div class="links">
       ${links}
       <button class="link-sec" id="share-btn" type="button">${ICO.share} Compartir este link</button>
     </div>`}`;
 
-  if (estado !== 'pre') document.getElementById('share-btn').addEventListener('click', async () => {
+  if (estado === 'vivo') document.getElementById('share-btn').addEventListener('click', async () => {
     try {
       if (navigator.share) { await navigator.share({ title: shareText, text: shareText, url: shareUrl }); return; }
       await navigator.clipboard.writeText(shareUrl); toast('Link copiado');
