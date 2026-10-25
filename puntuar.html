@@ -371,12 +371,16 @@ async function init() {
       links = `<a class="link-sec" href="fixture.html">${ICO.cal} Ver el fixture</a>`;
     } else {
       pregunta = equipos.length > 1 ? '¿A quién puntuás?' : 'Puntuá a los jugadores';
+      sub = 'Elegí tu equipo y ponele puntaje a cada jugador que jugó.<br>Después ves el promedio de todos los hinchas.';
       opts = equipos.map(s => `
         <a class="opt${abierto ? '' : ' cerrado'}" href="${hrefClub(s, 'puntajes')}">
           <img src="escudos/${s}.png" alt="">
           <span class="nom">${ESC(nomCorto(s))}</span>
           <span class="cta">${abierto ? 'Puntuar →' : 'Ver estadísticas →'}</span>
         </a>`).join('');
+      estadoHtml = abierto
+        ? `<div class="estado abierto"><span class="dot"></span>Puntajes abiertos</div>`
+        : `<div class="estado cerrado"><span class="dot"></span>Puntajes cerrados</div>`;
       links = `<a class="link-sec" href="estadisticas.html?p=${encodeURIComponent(entry.id)}&tab=tabla">${ICO.stats} Ver estadísticas del partido</a>`;
     }
     title = `${nomL} ${resultado} ${nomV} — Puntuá a los jugadores`;
