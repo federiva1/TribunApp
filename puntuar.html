@@ -71,11 +71,11 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .score .team { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; }
 .score .team img { width: 72px; height: 72px; object-fit: contain; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5)); }
 .score .team .nom { font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 600; letter-spacing: 0.5px; text-align: center; }
-.score a.team { text-decoration: none; color: #fff; border-radius: 14px; padding: 8px 4px 6px; transition: background .15s, transform .15s; }
-.score a.team:hover { background: rgba(79,195,247,0.08); transform: translateY(-2px); }
-.score .team .cta { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--celeste); }
-.score a.team.cerrado .cta { color: rgba(255,255,255,0.4); }
 .score .res { font-family: 'Bebas Neue', sans-serif; font-size: 44px; letter-spacing: 3px; color: #fff; white-space: nowrap; }
+.marcador { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 14px; margin: 18px 0 2px; }
+.marcador .m-nom { font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 600; letter-spacing: 0.5px; min-width: 0; overflow-wrap: anywhere; }
+.marcador .m-l { text-align: right; }
+.marcador .m-res { font-family: 'Bebas Neue', sans-serif; font-size: 52px; letter-spacing: 3px; line-height: 1; white-space: nowrap; }
 .estadio { font-size: 11px; color: rgba(255,255,255,0.35); text-align: center; }
 
 .pregunta { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 2px; text-align: center; margin: 34px 0 4px; }
@@ -303,11 +303,6 @@ async function init() {
   const copa = m.copa;
   const nomL = nomCorto(m.home, m.homeName), nomV = nomCorto(m.away, m.awayName);
   const equipos = [m.home, m.away].filter(esArg);
-  const equipoHtml = (slug, nom) => {
-    const l = teamLinks[slug];
-    const inner = `<img src="${ESC(escudo(slug))}" alt="" onerror="this.style.opacity=0.15"><span class="nom">${ESC(nom)}</span>${l ? `<span class="cta">${l.cta}</span>` : ''}`;
-    return l ? `<a class="team${l.cerrado ? ' cerrado' : ''}" href="${l.href}">${inner}</a>` : `<div class="team">${inner}</div>`;
-  };
   const genteHtml = titulo => `<div id="gente-wrap" hidden><div class="gente-tit">${titulo}</div>
     <div class="gente-row">${equipos.map(s => `<div class="gente" data-club="${s}"></div>`).join('')}</div></div>`;
   const pathModo = estado === 'pre' ? 'armar' : 'puntuar';
@@ -331,7 +326,6 @@ async function init() {
   const escudo = s => esArg(s) ? `escudos/${s}.png` : (m.logos[s] || `escudos/${s}.png`);
   const hs = entry ? entry.goles_local : m.hs, as = entry ? entry.goles_visitante : m.as;
   const jugado = estado !== 'pre' && hs != null && as != null;
-  const teamLinks = {};   // post: el escudo del marcador es el botón de cada club
   const hrefClub = (s, sec) => `club.html?c=${s}${copa ? '&copa=' + copa : ''}${sec ? '&s=' + sec : ''}`;
   const estadio = entry && entry.estadio ? `<div class="estadio">${ESC(entry.estadio)}</div>` : '';
 
@@ -372,13 +366,18 @@ async function init() {
     if (!entry) {
       pregunta = 'Terminó el partido';
       sub = `Estamos procesando la ficha del partido.<br>En unos minutos se abren los puntajes por ${PUNTAJES_VENTANA_H} horas.`;
-      equipos.forEach(s => teamLinks[s] = { href: hrefClub(s, 'puntajes'), cta: 'Ir al club →', cerrado: true });
+      opts = equipos.map(s => `<a class="opt cerrado" href="${hrefClub(s, 'puntajes')}"><img src="escudos/${s}.png" alt=""><span class="nom">${ESC(nomCorto(s))}</span><span class="cta">Ir al club →</span></a>`).join('');
       estadoHtml = `<div class="estado cerrado"><span class="dot"></span>Puntajes en preparación</div>`;
       links = `<a class="link-sec" href="fixture.html">${ICO.cal} Ver el fixture</a>`;
     } else {
       pregunta = equipos.length > 1 ? '¿A quién puntuás?' : 'Puntuá a los jugadores';
       sub = 'Elegí tu equipo y ponele puntaje a cada jugador que jugó.<br>Después ves el promedio de todos los hinchas.';
-      equipos.forEach(s => teamLinks[s] = { href: hrefClub(s, 'puntajes'), cta: abierto ? 'Puntuar →' : 'Ver estadísticas →', cerrado: !abierto });
+      opts = equipos.map(s => `
+        <a class="opt${abierto ? '' : ' cerrado'}" href="${hrefClub(s, 'puntajes')}">
+          <img src="escudos/${s}.png" alt="">
+          <span class="nom">${ESC(nomCorto(s))}</span>
+          <span class="cta">${abierto ? 'Puntuar →' : 'Ver estadísticas →'}</span>
+        </a>`).join('');
       estadoHtml = abierto
         ? `<div class="estado abierto"><span class="dot"></span>Puntajes abiertos hasta ${fmtDiaAR(vence)} a las ${fmtHoraAR(vence)}</div>`
         : `<div class="estado cerrado"><span class="dot"></span>Puntajes cerrados · se abren ${PUNTAJES_VENTANA_H} h al terminar cada partido</div>`;
@@ -392,18 +391,19 @@ async function init() {
   $main.innerHTML = `
     <div class="comp">${ESC(compLbl)}</div>
     <div class="estado-partido">${ESC(subHdr)}</div>
-    ${estado === 'pre' ? '' : `<div class="score">
-      ${equipoHtml(m.home, nomL)}
+    ${estado === 'vivo' ? `<div class="score">
+      <div class="team"><img src="${ESC(escudo(m.home))}" alt="" onerror="this.style.opacity=0.15"><span class="nom">${ESC(nomL)}</span></div>
       <div class="res">${jugado ? `${hs} - ${as}` : 'VS'}</div>
-      ${equipoHtml(m.away, nomV)}
-    </div>`}
+      <div class="team"><img src="${ESC(escudo(m.away))}" alt="" onerror="this.style.opacity=0.15"><span class="nom">${ESC(nomV)}</span></div>
+    </div>` : estado === 'post' ? `<div class="marcador">
+      <span class="m-nom m-l">${ESC(nomL)}</span><span class="m-res">${jugado ? `${hs} - ${as}` : 'VS'}</span><span class="m-nom m-v">${ESC(nomV)}</span>
+    </div>` : ''}
     ${estadio}
     <div class="pregunta">${pregunta}</div>
     <div class="sub">${sub}</div>
-    ${estado === 'pre' ? estadoHtml : ''}
+    ${estadoHtml}
     ${opts ? `<div class="opts">${opts}</div>` : ''}
-    ${estado === 'pre' ? genteHtml('Equipos de la gente') : `${estadoHtml}
-    ${estado === 'post' && entry ? genteHtml('Puntajes de la gente') : ''}
+    ${estado === 'pre' ? genteHtml('Equipos de la gente') : `${estado === 'post' && entry ? genteHtml('Puntajes de la gente') : ''}
     <div class="links">
       ${links}
       <button class="link-sec" id="share-btn" type="button">${ICO.share} Compartir este link</button>
