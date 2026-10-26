@@ -30,6 +30,9 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
 /* En el tab Tabla conviene más ancho: la tabla scrollea horizontal igual, pero
    en desktop entran más columnas sin scrollear. */
 #app.wide{max-width:860px;}
+/* La barra "← Volver" va al mismo ancho que el contenido de abajo. */
+#subbar{max-width:480px;}
+#subbar.wide{max-width:860px;}
 
 /* HEADER */
 #site-header{
@@ -124,6 +127,54 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
 /* SECTION */
 .section{display:none;padding:16px;}
 .section.active{display:block;}
+
+/* FORMACIONES — usa el ancho de #app.wide (la cancha apaisada quedaba
+   comprimida en 480px) y, si el partido tiene data/mapas, cada jugador se
+   toca para ver su mapa de calor. */
+#tab-forma .fc-h{max-width:none;}
+@media (min-width:700px){
+  #tab-forma .fc-pitch-h .fc-nm{font-size:10px;}
+  #tab-forma .fc-in-row{font-size:13px;}
+}
+#tab-forma .fc-spot[data-mc],#tab-forma .fc-in-row[data-mc]{cursor:pointer;}
+#tab-forma .fc-spot[data-mc] .fc-kit{transition:box-shadow .15s,transform .15s;}
+#tab-forma .fc-spot[data-mc]:hover .fc-kit{box-shadow:0 0 0 2px #38bdf8,0 2px 5px rgba(0,0,0,.45);transform:scale(1.08);}
+#tab-forma .fc-in-row[data-mc]:hover .fc-in-nm{color:#38bdf8;}
+.mc-hint{display:flex;align-items:center;justify-content:center;gap:6px;margin:10px 0 2px;
+  font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:.8px;color:rgba(255,255,255,.42);}
+.mc-hint b{color:#38bdf8;font-weight:600;}
+
+/* DETALLE DE JUGADOR (mapa de calor) */
+#mc-sheet{position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;
+  background:rgba(5,8,16,.74);backdrop-filter:blur(2px);padding:16px;}
+#mc-sheet.open{display:flex;}
+.mc-card{width:100%;max-width:600px;background:var(--dark2);border:1px solid rgba(255,255,255,.09);
+  border-radius:14px;padding:16px 16px 14px;box-shadow:0 18px 50px rgba(0,0,0,.55);}
+.mc-head{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.mc-head .mc-kit{flex-shrink:0;}
+.mc-tit{min-width:0;flex:1;}
+.mc-nom{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:1.2px;line-height:1;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mc-sub{font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:.5px;color:rgba(255,255,255,.5);margin-top:3px;}
+.mc-x{flex-shrink:0;width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.04);color:rgba(255,255,255,.7);font-size:18px;line-height:1;cursor:pointer;}
+.mc-x:hover{background:rgba(255,255,255,.1);color:#fff;}
+.mc-sec{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;
+  color:rgba(255,255,255,.38);margin-bottom:6px;}
+.mc-map{border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,.08);}
+/* Flecha de ataque: ocupa todo el ancho de la cancha, con la punta hacia el arco rival. */
+.mc-flecha{position:relative;margin-top:10px;height:22px;color:rgba(255,255,255,.62);}
+.mc-flecha svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;}
+.mc-flecha span{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);padding:0 10px;
+  background:var(--dark2);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;
+  letter-spacing:2.5px;text-transform:uppercase;line-height:1;}
+.mc-vacio{padding:34px 12px;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:13px;
+  letter-spacing:.8px;color:rgba(255,255,255,.4);border:1px dashed rgba(255,255,255,.1);border-radius:8px;}
+@media (max-width:560px){
+  #mc-sheet{align-items:flex-end;padding:0;}
+  .mc-card{max-width:none;border-radius:16px 16px 0 0;border-bottom:none;padding:14px 14px 18px;}
+  .mc-nom{font-size:21px;}
+}
 
 /* TEAM SWITCHER en tab jugadores */
 .team-switcher{
@@ -354,7 +405,7 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
     </a>
   </div>
 </header>
-<div style="max-width:480px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid rgba(255,255,255,0.06);background:var(--dark2,#0d111f);">
+<div id="subbar" style="margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid rgba(255,255,255,0.06);background:var(--dark2,#0d111f);">
   <a id="back-btn" href="index.html" style="font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:1px;color:rgba(255,255,255,.5);text-decoration:none;display:flex;align-items:center;gap:4px;">← Volver</a>
   <div id="h-comp" style="font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1.5px;color:rgba(255,255,255,.4);text-transform:uppercase;"></div>
 </div>
@@ -438,6 +489,7 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
 <script src="js/club-colors.js"></script>
 <script src="js/kits.js"></script>
 <script src="js/ficha-cancha.js"></script>
+<script src="js/mapa-calor.js"></script>
 <script src="js/match-live.js"></script>
 <script>
 const params  = new URLSearchParams(location.search);
@@ -852,10 +904,15 @@ async function init(){
         [p.visitante]: jugsVisit.filter(j => j.tipo === 'titular' || (j.tipo === 'suplente' && j.min > 0)),
       },
     };
-    const fHtml = fcCanchaHTML(fdata, { nomFn: (slug, nom) => nb(slug) || nom, layout: 'horizontal' });
+    // Con la página ancha (desktop) los chips crecen: se regeneran a ese tamaño.
+    const kitPx = window.innerWidth >= 700 ? 30 : 24;
+    const fHtml = fcCanchaHTML(fdata, { nomFn: (slug, nom) => nb(slug) || nom, layout: 'horizontal', kitPx });
     if (fHtml) {
       document.getElementById('forma-container').innerHTML = fHtml;
       document.querySelector('.tab[data-tab="forma"]').hidden = false;
+      _mc.p = p;
+      _mc.jugs = { [p.local]: jugsLocal, [p.visitante]: jugsVisit };
+      mcCargar();
     }
   } catch (e) {}
 
@@ -867,8 +924,10 @@ async function init(){
       document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));
       t.classList.add('active');
       document.getElementById('tab-'+t.dataset.tab).classList.add('active');
-      // El tab Tabla se beneficia de una página más ancha (desktop).
-      document.getElementById('app').classList.toggle('wide', t.dataset.tab==='tabla');
+      // Tabla y Formaciones se benefician de una página más ancha (desktop).
+      const ancha = t.dataset.tab==='tabla' || t.dataset.tab==='forma';
+      document.getElementById('app').classList.toggle('wide', ancha);
+      document.getElementById('subbar').classList.toggle('wide', ancha);
       if(t.dataset.tab==='tabla') renderMatchTable();
     });
   });
@@ -878,7 +937,134 @@ async function init(){
   if(params.get('tab')==='jugadores' || params.get('tab')==='tabla'){
     const jt = document.querySelector('.tab[data-tab="tabla"]');
     if(jt) jt.click();
+  } else if(params.get('tab')==='forma'){
+    const ft = document.querySelector('.tab[data-tab="forma"]');
+    if(ft && !ft.hidden) ft.click();
   }
+}
+
+// ============================================================
+// FORMACIONES → DETALLE DE JUGADOR (mapa de calor)
+// data/mapas/{id}.json lo genera scripts/fetch_mapas.py: por equipo y dorsal, las
+// coordenadas de cada acción (metros sobre 105×68, el equipo ataca hacia x=105).
+// Si el partido no tiene mapas, la cancha queda como siempre (sin chips tocables).
+// El dibujo es propio (js/mapa-calor.js); el visitante se espeja para que el
+// mapa coincida con el lado de la cancha donde está su chip.
+// ============================================================
+const _mc = { p: null, jugs: {}, mapas: null };
+
+async function mcCargar(){
+  try {
+    const r = await fetch(`data/mapas/${matchId}.json?v=${Date.now()}`);
+    if (!r.ok) return;
+    _mc.mapas = (await r.json()).jugadores || {};
+  } catch (e) { return; }
+  const cont = document.getElementById('forma-container');
+  let n = 0;
+  cont.querySelectorAll('[data-slug][data-num]').forEach(el => {
+    const nombre = el.getAttribute('title') || (el.querySelector('.fc-in-nm') || {}).textContent || '';
+    const clave = mcClave(el.dataset.slug, el.dataset.num, nombre);
+    if (clave != null) { el.setAttribute('data-mc', clave); n++; }
+  });
+  if (!n) return;
+  const hint = document.createElement('div');
+  hint.className = 'mc-hint';
+  hint.innerHTML = 'Tocá un jugador para ver su <b>mapa de calor</b>';
+  cont.prepend(hint);
+  cont.addEventListener('click', e => {
+    const el = e.target.closest('[data-mc]');
+    if (el) mcAbrir(el.dataset.slug, el.dataset.num, el.getAttribute('data-mc'));
+  });
+}
+
+// Qué entrada de data/mapas le corresponde a un chip. Primero por dorsal (el mapa
+// está indexado así), pero la ficha y FotMob no siempre coinciden: a veces la ficha
+// no tiene el número de un suplente, o tiene otro (Gastón González: 22 en la ficha,
+// 11 en FotMob). Entonces se confirma con el apellido y, si no cierra, se busca por
+// nombre dentro del equipo. Devuelve la clave en _mc.mapas[slug] o null.
+const _mcNorm = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  .toLowerCase().replace(/[^a-z ]/g, ' ').trim().split(/\s+/).filter(Boolean);
+function _mcMismoJugador(a, b){
+  const A = _mcNorm(a), B = _mcNorm(b);
+  if (!A.length || !B.length) return false;
+  // mismo nombre con el apellido junto o separado: "Ronaldo De Jesus" / "Ronaldo Dejesús"
+  if (A.length > 1 && B.length > 1 && A[0] === B[0] && A.slice(1).join('') === B.slice(1).join('')) return true;
+  const ultA = A[A.length - 1], ultB = B[B.length - 1];
+  if (ultA === ultB) return A[0][0] === B[0][0] || A.length === 1 || B.length === 1;
+  // apellidos compuestos: "Hernán López Muñoz" vs "Hernán López"
+  return A[0] === B[0] && (A.includes(ultB) || B.includes(ultA));
+}
+function mcClave(slug, num, nombre){
+  const eq = (_mc.mapas || {})[slug] || {};
+  const util = k => eq[k] && Array.isArray(eq[k].heat) && eq[k].heat.length;
+  if (num && util(num) && (!nombre || _mcMismoJugador(eq[num].nombre, nombre))) return num;
+  if (nombre) {
+    const k = Object.keys(eq).find(k => util(k) && _mcMismoJugador(eq[k].nombre, nombre));
+    if (k != null) return k;
+  }
+  return (num && util(num)) ? num : null;
+}
+
+function mcAbrir(slug, num, clave){
+  const m = (_mc.mapas[slug] || {})[clave != null ? clave : num];
+  if (!m) return;
+  const j = (_mc.jugs[slug] || []).find(x => String(x.num) === String(num) && x.num !== '' && x.num != null)
+         || (_mc.jugs[slug] || []).find(x => _mcMismoJugador(x.nombre, m.nombre)) || {};
+  const visit = _mc.p && slug === _mc.p.visitante;
+  let sheet = document.getElementById('mc-sheet');
+  if (!sheet) {
+    sheet = document.createElement('div');
+    sheet.id = 'mc-sheet';
+    sheet.setAttribute('role', 'dialog');
+    sheet.setAttribute('aria-modal', 'true');
+    sheet.addEventListener('click', e => { if (e.target === sheet) mcCerrar(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') mcCerrar(); });
+    document.body.appendChild(sheet);
+  }
+  const nombre = j.nombre || m.nombre || '';
+  const marcas = '⚽'.repeat(j.goles || 0) + (j.asist > 0 ? ' 🅰'.repeat(j.asist) : '');
+  const min = j.min ? `${j.min}'` : '';
+  const rol = j.tipo === 'suplente' ? 'Ingresó' : '';
+  const sub = [nb(slug), rol, min].filter(Boolean).join(' · ') + (marcas ? ` · ${marcas}` : '');
+  sheet.innerHTML = `
+    <div class="mc-card">
+      <div class="mc-head">
+        <span class="mc-kit"></span>
+        <div class="mc-tit"><div class="mc-nom"></div><div class="mc-sub"></div></div>
+        <button class="mc-x" type="button" aria-label="Cerrar">×</button>
+      </div>
+      <div class="mc-sec">Mapa de calor</div>
+      <div class="mc-map"></div>
+      <div class="mc-flecha" aria-label="${visit ? 'Ataca hacia la izquierda' : 'Ataca hacia la derecha'}">
+        <svg aria-hidden="true">
+          <line x1="${visit ? '100%' : '0'}" y1="50%" x2="${visit ? '0' : '100%'}" y2="50%"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <svg aria-hidden="true" viewBox="0 0 14 22" preserveAspectRatio="${visit ? 'xMinYMid' : 'xMaxYMid'} meet">
+          <path d="${visit ? 'M14 3 L1 11 L14 19' : 'M0 3 L13 11 L0 19'}" fill="none" stroke="currentColor"
+                stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>Ataque</span>
+      </div>
+    </div>`;
+  sheet.setAttribute('aria-label', `Mapa de calor de ${nombre}`);
+  sheet.querySelector('.mc-nom').textContent = nombre;
+  sheet.querySelector('.mc-sub').textContent = sub;
+  sheet.querySelector('.mc-kit').appendChild(_mtKitChip(slug, num || clave, 40));
+  const caja = sheet.querySelector('.mc-map');
+  const ancho = Math.min(568, (caja.parentElement.clientWidth || window.innerWidth) - 32);
+  caja.appendChild(mcCanvas(m.heat, { espejado: visit, ancho: Math.max(260, ancho) }));
+  sheet.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  sheet.querySelector('.mc-x').addEventListener('click', mcCerrar);
+  sheet.querySelector('.mc-x').focus();
+}
+
+function mcCerrar(){
+  const sheet = document.getElementById('mc-sheet');
+  if (!sheet || !sheet.classList.contains('open')) return;
+  sheet.classList.remove('open');
+  document.body.style.overflow = '';
 }
 
 // ============================================================
@@ -927,8 +1113,7 @@ function _mtNum(v){
   const s = String(v); if (s.includes('/')) return Number(s.split('/')[0]) || 0;
   const n = Number(s); return isNaN(n) ? null : n;
 }
-function _mtKitChip(clubSlug, num){
-  const size = 26;
+function _mtKitChip(clubSlug, num, size = 26){
   const kit = (typeof clubKit === 'function') ? clubKit(clubSlug) : { type:'solid', colors:['#444'] };
   const wrap = document.createElement('div');
   wrap.className = 'kit-chip';

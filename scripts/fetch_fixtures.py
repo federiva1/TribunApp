@@ -17,7 +17,7 @@ import time
 import urllib.request
 from pathlib import Path
 
-from apikey import API_KEY
+from apikey import api_headers
 SEASON     = 2026
 OUTPUT_DIR = Path(__file__).parent.parent / 'data' / 'fixtures'
 
@@ -82,7 +82,7 @@ def fetch_fixtures(team_id, league_id):
            # Día local AR: sin esto `fecha` era el día UTC y un partido de las
            # 21:30 quedaba con el día siguiente (match_date/VER FECHAS corridos).
            f'&timezone=America/Argentina/Buenos_Aires')
-    req = urllib.request.Request(url, headers={'x-apisports-key': API_KEY})
+    req = urllib.request.Request(url, headers=api_headers())
     with urllib.request.urlopen(req, timeout=15) as resp:
         return json.loads(resp.read())['response']
 

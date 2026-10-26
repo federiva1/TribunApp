@@ -135,9 +135,9 @@ def payload_desde_json(pid):
 
 
 def _api(path):
-    from apikey import get_api_key
+    from apikey import api_headers
     req = urllib.request.Request('https://v3.football.api-sports.io/' + path,
-                                 headers={'x-apisports-key': get_api_key()})
+                                 headers=api_headers())
     with urllib.request.urlopen(req, timeout=25) as r:
         return json.loads(r.read()).get('response', [])
 

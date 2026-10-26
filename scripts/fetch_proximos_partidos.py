@@ -9,7 +9,7 @@ import re
 import urllib.request
 from datetime import datetime, timezone
 
-from apikey import API_KEY
+from apikey import api_headers
 LEAGUE  = 128
 SEASON  = 2026
 
@@ -38,7 +38,7 @@ NOMBRE_CORTO = {
 
 def api_get(endpoint):
     url = f'https://v3.football.api-sports.io/{endpoint}'
-    req = urllib.request.Request(url, headers={'x-apisports-key': API_KEY})
+    req = urllib.request.Request(url, headers=api_headers())
     with urllib.request.urlopen(req) as r:
         return json.loads(r.read())
 

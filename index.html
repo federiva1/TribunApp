@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+<!-- deploy-check 2026-09-18T21:18Z / via-pr 2026-09-18T21:33Z -->
 <head>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-0DN9D9L127"></script>
@@ -378,6 +379,7 @@ function copaInfoEquipos(copa) {
     const argIsHome = p.home.slug === arg.slug;
     const riv = argIsHome ? p.away : p.home;
     const it = info[arg.slug] || { rival: riv.name, resultados: [] };
+    if (riv.name !== it.rival) { it.rival = riv.name; it.resultados = []; }
     if (p.ronda) it.ronda = p.ronda;
     if (p.home_score != null && p.away_score != null) {
       const gf = argIsHome ? p.home_score : p.away_score;

@@ -79,6 +79,16 @@ def aplicar_overrides(slug: str, players: list) -> str:
         players.append(dict(nuevo))
         notas.append(f"+{nuevo.get('name')}")
 
+    # Corrección de nombre: FotMob a veces escribe distinto al club (romanización
+    # del japonés en Ryoga/Ryouga Kida). Match por substring, sin tildes.
+    for viejo, correcto in (ov.get('nombres') or {}).items():
+        clave = _norm(viejo)
+        for p in players:
+            if clave in _norm(p.get('name')) and p.get('name') != correcto:
+                p['name'] = correcto
+                notas.append(f'nombre={correcto}')
+                break
+
     # Corrección de dorsal: FotMob a veces trae el número viejo y dos jugadores
     # quedan con el mismo. El match es por apellido (o nombre completo), sin tildes.
     for nombre, num in (ov.get('numeros') or {}).items():

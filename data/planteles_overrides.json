@@ -1,5 +1,5 @@
 {
-  "_comentario": "Ajustes manuales que se aplican DESPUES de scrapear FotMob, para casos que FotMob no refleja bien (pases recientes, dorsales viejos). Los aplica scripts/fetch_planteles_liga.py, asi sobreviven a cada refresco. 'agregar' = jugadores que faltan; 'quitar' = nombres a sacar (substring, sin tildes); 'numeros' = corregir dorsal {nombre: num} (num '' = sin numero).",
+  "_comentario": "Ajustes manuales que se aplican DESPUES de scrapear FotMob, para casos que FotMob no refleja bien (pases recientes, dorsales viejos). Los aplica scripts/fetch_planteles_liga.py, asi sobreviven a cada refresco. 'agregar' = jugadores que faltan; 'quitar' = nombres a sacar (substring, sin tildes); 'numeros' = corregir dorsal {nombre: num} (num '' = sin numero); 'nombres' = corregir la grafia {substring actual: nombre correcto}.",
   "barracascentral": {
     "agregar": [
       {
@@ -112,7 +112,8 @@
     "quitar": [
       "Agustín Marchesín",
       "Exequiel Zeballos",
-      "Kevin Zenón"
+      "Kevin Zenón",
+      "Lautaro Bianco"
     ],
     "numeros": {
       "Tomás Aranda": "10",
@@ -160,7 +161,6 @@
       "Ronaldo Martínez"
     ],
     "numeros": {
-      "Bruno Barticciotto": "99",
       "Franco Cristaldo": "19",
       "Timoteo Chamorro": "2",
       "Agustín Álvarez": "9",
@@ -180,6 +180,20 @@
         "fid": 0,
         "nationality": "PAR",
         "position": "defenders"
+      },
+      {
+        "num": "23",
+        "name": "Mateo Mendoza",
+        "fid": 0,
+        "nationality": "ARG",
+        "position": "defenders"
+      },
+      {
+        "num": "1",
+        "name": "Agustín Mangiaut",
+        "fid": 0,
+        "nationality": "ARG",
+        "position": "keepers"
       }
     ],
     "quitar": [
@@ -194,8 +208,12 @@
       "Santino Gianini": "13",
       "Francisco Álvarez": "16",
       "Kevin Coronel": "22",
-      "Federico Mancuello": "",
-      "Gabriel Florentín": "10"
+      "Federico Mancuello": "18",
+      "Gabriel Florentín": "10",
+      "Diego Porcel": "7"
+    },
+    "nombres": {
+      "Kida": "Ryouga Kida"
     }
   },
   "rosariocentral": {
@@ -431,8 +449,7 @@
   },
   "gimnasiamendoza": {
     "numeros": {
-      "Agustín Módica": "9",
-      "Nicolás Ferreyra": ""
+      "Agustín Módica": "9"
     }
   },
   "lanus": {

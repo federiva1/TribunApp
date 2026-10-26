@@ -125,10 +125,10 @@ def candidatos(ahora=None):
 
 # ── api-sports ───────────────────────────────────────────────────────────────
 def fetch_lineups(api_id):
-    from apikey import get_api_key
+    from apikey import api_headers
     req = urllib.request.Request(
         f'https://v3.football.api-sports.io/fixtures/lineups?fixture={api_id}',
-        headers={'x-apisports-key': get_api_key()})
+        headers=api_headers())
     with urllib.request.urlopen(req, timeout=25) as r:
         return json.loads(r.read()).get('response', [])
 
