@@ -383,6 +383,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .score-avatar-wrap .av-fb { font-family: 'Bebas Neue', sans-serif; font-size: 13px; color: #fff; }
 .score-player-info { flex: 1; }
 .score-player-name { font-size: 13px; color: #fff; }
+.score-player-sub { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 1px; }
 .score-btns { display: flex; gap: 3px; flex-wrap: wrap; justify-content: flex-end; }
 .score-btn {
   width: 26px; height: 26px; border-radius: 4px;
@@ -1189,7 +1190,8 @@ let RIVAL_INSTANCIA = '', SCORES_INSTANCIA = '';
 // Formación real del partido (ej. '5-3-2'), de data/partidos/{id}.json.
 let SCORES_FORMACION = '';
 
-// Gate coordinado: 24 hs de puntajes desde el FT, después se cierran y se abre la formación
+// Gate coordinado: los puntajes duran PUNTAJES_VENTANA_H hs (js/clubes.js) desde el FT;
+// después se cierran y se abre la formación
 // de la fecha siguiente. Se calcula client-side en applyGating() (no hay archivo de estado).
 let PUNTAJES_OPEN = false, FORMACION_OPEN = true;
 
@@ -1311,7 +1313,7 @@ function openSection(section) {
     document.getElementById('scores-results-screen').style.display = 'none';
     if (!PUNTAJES_OPEN) {
       list.innerHTML = ''; btn.style.display = 'none'; closedMsg.style.display = 'block';
-      closedMsg.textContent = 'Los puntajes se abren cuando termina el partido (ventana de 24 hs).';
+      closedMsg.textContent = `Los puntajes se abren cuando termina el partido (ventana de ${PUNTAJES_VENTANA_H} hs).`;
       return;
     }
     closedMsg.style.display = 'none';
@@ -1562,6 +1564,12 @@ function _shRotar(j) {
 // Referencias de la cancha, en % del ancho: área chica 7,1 · penal 10,6 ·
 // área 15 · mitad 50 · área rival 85.
 const SH_X_GK = 5;    // arquero (dentro del área chica)
+// Tope de profundidad en la placa vertical. El de campo se corta en 89 para que
+// el cartel con el apellido no toque el borde. El arquero llega más abajo: con 89
+// quedaba POR ENCIMA del área chica (que va de 91% a 100%) y se veía despegado
+// del arco, dejando 41px muertos. A 93 entra en el área chica y al cartel le
+// quedan ~11px hasta el borde.
+const SH_Y_MAX = 89, SH_Y_MAX_GK = 93;
 const SH_X_DEF = 21;  // línea más retrasada de campo, pegada al área propia
 const SH_X_FWD = 80;  // línea más adelantada, apenas afuera del área rival
 
@@ -1587,7 +1595,7 @@ function _shPosiciones(jugadores) {
   const esArq = j => j.portero || j.pos.x < 20;
   const campo = conPos.filter(j => !esArq(j));
   const mapX = campo.length ? _shEscalaX(campo) : (x => x);
-  const ubicados = conPos.map(j => ({ ...j,
+  const ubicados = conPos.map(j => ({ ...j, arq: esArq(j),
     sx: cl(esArq(j) ? SH_X_GK : mapX(j.pos.x), 4, 93), sy: cl(j.pos.y, 12, 88) }));
   const resto = jugadores.filter(j => !(j.pos && j.pos.x != null && j.pos.y != null));
   return ubicados.concat(resto.length ? _shPorLineas(resto) : []);
@@ -1600,7 +1608,7 @@ function _shPorLineas(jugadores) {
   const out = [];
   GRUPOS.forEach(([grupo, sx]) => {
     const linea = jugadores.filter(j => j.grupo === grupo);
-    linea.forEach((j, i) => out.push({ ...j, sx, sy: ((i + 1) / (linea.length + 1)) * 100 }));
+    linea.forEach((j, i) => out.push({ ...j, arq: grupo === 'keepers', sx, sy: ((i + 1) / (linea.length + 1)) * 100 }));
   });
   // Cualquiera sin puesto reconocido va al medio, para no perderlo.
   jugadores.filter(j => !GRUPOS.some(g => g[0] === j.grupo))
@@ -2613,6 +2621,17 @@ function _scoresDispNum(p) {
   return m ? m.num : '';
 }
 
+// S/P (sin puntaje) se ofrece a los jugadores que no se pueden evaluar con
+// justicia: los suplentes que ingresaron y el TITULAR QUE NO COMPLETÓ EL PRIMER
+// TIEMPO — salió lesionado o expulsado antes del 45' (caso River-Huracán F10:
+// Almada salió a los 6' y Andrada a los 36'). El voto se guarda como null y los
+// promedios lo descartan, igual que el S/P de los suplentes.
+const SP_MIN_TITULAR = 45;
+function _scoresPermiteSP(p) {
+  if (p.tipo === 'suplente') return true;
+  return p.tipo === 'titular' && p.min != null && p.min < SP_MIN_TITULAR;
+}
+
 function renderScores() {
   const list = document.getElementById('scores-list');
   list.innerHTML = '';
@@ -2631,7 +2650,15 @@ function renderScores() {
       // Sin línea "#dorsal": ya está en el kit chip. Al DT lo identifica su título de grupo.
       const info = document.createElement('div'); info.className = 'score-player-info';
       const nameEl = document.createElement('div'); nameEl.className = 'score-player-name'; nameEl.textContent = p.name;
-      info.appendChild(nameEl); row.appendChild(info);
+      info.appendChild(nameEl);
+      // Al titular que salió antes del 45' se le aclara el minuto, así se entiende
+      // por qué tiene S/P y los demás titulares no.
+      if (p.tipo === 'titular' && _scoresPermiteSP(p)) {
+        const sub = document.createElement('div'); sub.className = 'score-player-sub';
+        sub.textContent = `salió ${p.min}'`;
+        info.appendChild(sub);
+      }
+      row.appendChild(info);
       const btns = document.createElement('div'); btns.className = 'score-btns';
       if (p.id in userScores) row.classList.add('voted');
       for (let i = 1; i <= 10; i++) {
@@ -2641,7 +2668,7 @@ function renderScores() {
         btn.addEventListener('click', () => { if (already) return; userScores[p.id] = i; btns.querySelectorAll('.score-btn').forEach((b, idx) => b.classList.toggle('selected', idx + 1 === i)); row.classList.add('voted'); checkScoresReady(); });
         btns.appendChild(btn);
       }
-      if (p.tipo === 'suplente') {
+      if (_scoresPermiteSP(p)) {
         // S/P = sin puntaje (jugó muy poco para evaluarlo). Se guarda null, la misma
         // convención que el Mundial (equipo.html); los promedios lo descartan.
         const sp = document.createElement('button'); sp.className = 'score-btn sp'; sp.textContent = 'S/P'; sp.title = 'Sin puntaje';
@@ -2828,7 +2855,8 @@ function _shOptsPuntajes(valorPorId, fmt, titulo, pie) {
     vertical: true,
     // _shPosiciones ubica en apaisado (arco propio a la izquierda); la placa
     // vertical lo gira: profundidad -> alto (arco propio abajo), lateral -> ancho.
-    jugadores: _shPosiciones(titulares).map(j => ({ ...j, xPct: j.sy, yPct: Math.min(89, 100 - j.sx) })),
+    jugadores: _shPosiciones(titulares).map(j => ({ ...j, xPct: j.sy,
+      yPct: Math.min(j.arq ? SH_Y_MAX_GK : SH_Y_MAX, 100 - j.sx) })),
     sup,
     dt: dtj ? { name: dtj.name, val: conVal(dtj) } : null,
   };
@@ -4088,7 +4116,7 @@ async function resolveMatchContext() {
       return;
     }
     // Copa: mismo esquema que la liga — formación para el próximo partido y
-    // puntajes para el último jugado, con el gate de 24 h.
+    // puntajes para el último jugado, con el mismo gate de la ventana.
     const suffix = `_${COPA}`;
     const r = await fetch(`data/fixtures/${CLUB_SLUG}${suffix}.json?t=${Date.now()}`);
     if (r.ok) {
@@ -4276,7 +4304,7 @@ async function resolveScoresContext(ultimo) {
   } catch(e) {}
 }
 
-// Gate: puntajes 24 hs desde el FT. La formación está SIEMPRE abierta mientras
+// Gate: puntajes durante PUNTAJES_VENTANA_H hs (js/clubes.js) desde el FT. La formación está SIEMPRE abierta mientras
 // haya próximo rival (conviven con los puntajes durante la ventana post-partido;
 // el voto va al próximo partido, que ya es el de la fecha siguiente porque
 // cierre-rapido actualiza liga.json antes de abrir los puntajes). Se cierra solo
@@ -4293,10 +4321,10 @@ function applyGating() {
   const override  = qs.get('testpuntajes')  === '1';
   const fOverride = qs.get('testformacion') === '1';
   const hasData = scoresSquad.length > 0;
-  const within24h = SCORES_FT ? (Date.now() - SCORES_FT.getTime()) < 24 * 3600 * 1000 : false;
+  const dentroVentana = SCORES_FT ? (Date.now() - SCORES_FT.getTime()) < PUNTAJES_VENTANA_H * 3600 * 1000 : false;
   const hasta = scoresMatchId && PUNTAJES_HASTA[scoresMatchId];
   const extendido = !!hasta && Date.now() < Date.parse(hasta);
-  PUNTAJES_OPEN = override || (hasData && (within24h || extendido));
+  PUNTAJES_OPEN = override || (hasData && (dentroVentana || extendido));
   FORMACION_OPEN = fOverride || !!(RIVAL && RIVAL !== 'Por definir');
 }
 

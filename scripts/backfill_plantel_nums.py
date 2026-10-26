@@ -36,7 +36,7 @@ except (AttributeError, ValueError):   # stdout redirigido a algo sin reconfigur
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / 'scripts'))
 from clubes_map import CLUBES          # noqa: E402
-from apikey import API_KEY             # noqa: E402
+from apikey import api_headers             # noqa: E402
 
 PLANTELES = ROOT / 'data' / 'planteles'
 SEASON = 2026
@@ -55,7 +55,7 @@ def toks(s: str) -> list[str]:
 
 def api_squad(team_id: int) -> list[dict]:
     url = f'https://v3.football.api-sports.io/players/squads?team={team_id}'
-    req = urllib.request.Request(url, headers={'x-apisports-key': API_KEY})
+    req = urllib.request.Request(url, headers=api_headers())
     with urllib.request.urlopen(req, timeout=20) as r:
         data = json.loads(r.read())
     resp = data.get('response', [])

@@ -30,7 +30,7 @@ PARTIDOS_DIR = ROOT / 'data' / 'partidos'
 INDEX_FILE   = PARTIDOS_DIR / 'index.json'
 MUNDIAL_JSON = ROOT / 'data' / 'fixtures' / 'mundial.json'
 
-from apikey import API_KEY
+from apikey import api_headers
 API_BASE = 'https://v3.football.api-sports.io'
 
 # Mapeo nombre api-sports -> slug (para equipos del Mundial)
@@ -140,7 +140,7 @@ def team_slug(api_id, api_name: str) -> str:
 
 def api_get(path: str) -> dict:
     url = f'{API_BASE}/{path}'
-    req = urllib.request.Request(url, headers={'x-apisports-key': API_KEY})
+    req = urllib.request.Request(url, headers=api_headers())
     try:
         with urllib.request.urlopen(req, timeout=20) as r:
             return json.loads(r.read())

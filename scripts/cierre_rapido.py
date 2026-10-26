@@ -81,10 +81,10 @@ def candidatos(liga, copas, ahora=None):
 
 
 def fixture_por_id(api_id):
-    from apikey import get_api_key
+    from apikey import api_headers
     req = urllib.request.Request(
         f'https://v3.football.api-sports.io/fixtures?id={api_id}',
-        headers={'x-apisports-key': get_api_key()})
+        headers=api_headers())
     with urllib.request.urlopen(req, timeout=25) as r:
         resp = json.loads(r.read()).get('response') or []
     return resp[0] if resp else None

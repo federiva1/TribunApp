@@ -24,6 +24,10 @@ PREVIEW = ROOT / 'data' / 'social' / 'preview'
 sys.path.insert(0, str(ROOT / 'scripts'))
 from social_lineups import NOM, _b64, esc_placa, aplicar_fondo_tribuna  # noqa: E402
 from social_resultado import _logo_datauri, ESTADIO_ICO   # noqa: E402
+from clubes_map import ALIAS                           # noqa: E402
+
+# alias/slug -> slug, para resolver lo que llega por --solo
+SLUG_POR_ALIAS = {a: sl for sl, a in ALIAS.items()}
 
 AR = timezone(timedelta(hours=-3))
 DIAS = ['LUNES', 'MARTES', 'MIÉRCOLES', 'JUEVES', 'VIERNES', 'SÁBADO', 'DOMINGO']
@@ -69,6 +73,34 @@ def partidos_del_dia(fecha):
                         'home_logo': p['home'].get('logo'), 'away_logo': p['away'].get('logo')})
     out.sort(key=lambda m: m['ko'])
     return out
+
+
+def filtrar(partidos, cruces):
+    """Deja solo los cruces pedidos (--solo). Cada uno es 'local-visitante' con
+    slug o alias ('instituto-boca'), en el orden que quiera: el cruce se compara
+    como par, así que no hay que acordarse de quién es local."""
+    def slug(x):
+        x = (x or '').strip().lower().replace(' ', '')
+        return SLUG_POR_ALIAS.get(x, x)
+
+    pedidos, faltan = [], []
+    for c in cruces:
+        partes = [x for x in c.split('-') if x]
+        if len(partes) != 2:
+            faltan.append((c, 'no tiene forma local-visitante'))
+            continue
+        pedidos.append((c, frozenset(slug(x) for x in partes)))
+
+    out = []
+    for c, par in pedidos:
+        m = next((m for m in partidos if {m['home'], m['away']} == set(par)), None)
+        if m:
+            out.append(m)
+        else:
+            faltan.append((c, 'no hay partido de ese cruce ese día'))
+    for c, por_que in faltan:
+        print(f'  OJO: {c} -> {por_que}')
+    return out, [c for c, _ in faltan]
 
 
 def _copa_esc(logo_url):
@@ -261,7 +293,7 @@ body{width:760px;height:950px;font-family:'Barlow Condensed',sans-serif;color:#f
         _logo_datauri(), torneo, titulo, sub, filas)
 
 
-def generar(partidos, fecha, titulo, outdir, nombre=None):
+def generar(partidos, fecha, titulo, outdir, nombre=None, escala=2):
     from playwright.sync_api import sync_playwright
     import os
     exe = os.environ.get('PLAYWRIGHT_CHROMIUM') or None
@@ -272,7 +304,7 @@ def generar(partidos, fecha, titulo, outdir, nombre=None):
     html = aplicar_fondo_tribuna(html)
     with sync_playwright() as pw:
         b = pw.chromium.launch(executable_path=exe) if exe else pw.chromium.launch()
-        pg = b.new_page(viewport={'width': 760, 'height': 950}, device_scale_factor=2)
+        pg = b.new_page(viewport={'width': 760, 'height': 950}, device_scale_factor=escala)
         pg.set_content(html)
         pg.wait_for_timeout(700)
         pg.screenshot(path=str(path))
@@ -287,21 +319,35 @@ def main():
     ap.add_argument('--out', default=str(PREVIEW))
     ap.add_argument('--cada-uno', action='store_true',
                     help='una placa por partido (layout de escudos grandes) en vez de la lista del dia')
+    ap.add_argument('--solo', nargs='+', metavar='LOCAL-VISITANTE',
+                    help='solo estos cruces, por slug o alias (ej: instituto-boca racing-belgrano). '
+                         'Implica --cada-uno.')
+    ap.add_argument('--escala', type=int, default=2,
+                    help='factor de resolucion: 2 = 1520x1900 (default), 4 = ultra HD 3040x3800')
     args = ap.parse_args()
+    sufijo = '' if args.escala == 2 else f'-x{args.escala}'
 
     fecha = args.date or datetime.now(AR).strftime('%Y-%m-%d')
     partidos = partidos_del_dia(fecha)
     if not partidos:
         print(f'No hay partidos nuestros el {fecha}')
         return 1
+    sin_resolver = []
+    if args.solo:
+        partidos, sin_resolver = filtrar(partidos, args.solo)
+        if not partidos:
+            print(f'Ninguno de los cruces pedidos juega el {fecha}')
+            return 1
     for m in partidos:
         print(f"  {m['ko'].strftime('%H:%M')}  {m['home']} vs {m['away']}  ({m['comp']})")
-    if args.cada_uno:
+    if args.cada_uno or args.solo:
         for m in partidos:
             print('imagen:', generar([m], fecha, args.titulo.upper(), args.out,
-                                    nombre=f"fecha-{fecha}-{m['home']}-{m['away']}.png"))
-        return 0
-    print('imagen:', generar(partidos, fecha, args.titulo.upper(), args.out))
+                                    nombre=f"fecha-{fecha}-{m['home']}-{m['away']}{sufijo}.png",
+                                    escala=args.escala))
+        return 1 if sin_resolver else 0
+    print('imagen:', generar(partidos, fecha, args.titulo.upper(), args.out,
+                            nombre=f'fecha-{fecha}{sufijo}.png', escala=args.escala))
     return 0
 
 

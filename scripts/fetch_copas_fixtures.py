@@ -29,7 +29,7 @@ OUT  = ROOT / 'data' / 'fixtures' / 'copas.json'
 SEASON = 2026
 COPAS = [('libertadores', 13), ('sudamericana', 11)]
 
-from apikey import get_api_key
+from apikey import get_api_key, api_headers
 API_KEY = get_api_key()   # env API_SPORTS_KEY o scripts/.apikey (gitignored); nunca hardcodeada
 
 # Rondas de eliminación en orden + etiqueta en español
@@ -52,7 +52,7 @@ ARG = set(SLUG)
 def get(lg):
     req = urllib.request.Request(
         'https://v3.football.api-sports.io/fixtures?league=%d&season=%d' % (lg, SEASON),
-        headers={'x-apisports-key': API_KEY})
+        headers=api_headers())
     with urllib.request.urlopen(req, timeout=25) as r:
         return json.loads(r.read()).get('response', [])
 

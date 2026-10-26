@@ -30,7 +30,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / 'scripts'))
 from clubes_map import lookup, league_id, estadisticas_path  # noqa: E402
 
-from apikey import API_KEY
+from apikey import api_headers
 SEASON = 2026
 
 # Default: rivales con votos migrados de Formaaajcion (solo AAAJ).
@@ -58,7 +58,7 @@ STAT_MAP = {
 def api_get(path: str, params: dict) -> dict:
     qs = '&'.join(f'{k}={v}' for k, v in params.items())
     url = f'https://v3.football.api-sports.io/{path}?{qs}'
-    req = urllib.request.Request(url, headers={'x-apisports-key': API_KEY})
+    req = urllib.request.Request(url, headers=api_headers())
     with urllib.request.urlopen(req, timeout=20) as resp:
         return json.loads(resp.read())
 
