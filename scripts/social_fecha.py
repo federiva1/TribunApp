@@ -293,7 +293,7 @@ body{width:760px;height:950px;font-family:'Barlow Condensed',sans-serif;color:#f
         _logo_datauri(), torneo, titulo, sub, filas)
 
 
-def generar(partidos, fecha, titulo, outdir, nombre=None):
+def generar(partidos, fecha, titulo, outdir, nombre=None, escala=2):
     from playwright.sync_api import sync_playwright
     import os
     exe = os.environ.get('PLAYWRIGHT_CHROMIUM') or None
@@ -304,7 +304,7 @@ def generar(partidos, fecha, titulo, outdir, nombre=None):
     html = aplicar_fondo_tribuna(html)
     with sync_playwright() as pw:
         b = pw.chromium.launch(executable_path=exe) if exe else pw.chromium.launch()
-        pg = b.new_page(viewport={'width': 760, 'height': 950}, device_scale_factor=2)
+        pg = b.new_page(viewport={'width': 760, 'height': 950}, device_scale_factor=escala)
         pg.set_content(html)
         pg.wait_for_timeout(700)
         pg.screenshot(path=str(path))
@@ -322,7 +322,10 @@ def main():
     ap.add_argument('--solo', nargs='+', metavar='LOCAL-VISITANTE',
                     help='solo estos cruces, por slug o alias (ej: instituto-boca racing-belgrano). '
                          'Implica --cada-uno.')
+    ap.add_argument('--escala', type=int, default=2,
+                    help='factor de resolucion: 2 = 1520x1900 (default), 4 = ultra HD 3040x3800')
     args = ap.parse_args()
+    sufijo = '' if args.escala == 2 else f'-x{args.escala}'
 
     fecha = args.date or datetime.now(AR).strftime('%Y-%m-%d')
     partidos = partidos_del_dia(fecha)
@@ -340,9 +343,11 @@ def main():
     if args.cada_uno or args.solo:
         for m in partidos:
             print('imagen:', generar([m], fecha, args.titulo.upper(), args.out,
-                                    nombre=f"fecha-{fecha}-{m['home']}-{m['away']}.png"))
+                                    nombre=f"fecha-{fecha}-{m['home']}-{m['away']}{sufijo}.png",
+                                    escala=args.escala))
         return 1 if sin_resolver else 0
-    print('imagen:', generar(partidos, fecha, args.titulo.upper(), args.out))
+    print('imagen:', generar(partidos, fecha, args.titulo.upper(), args.out,
+                            nombre=f'fecha-{fecha}{sufijo}.png', escala=args.escala))
     return 0
 
 
