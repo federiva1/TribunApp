@@ -491,19 +491,19 @@ async function cargarPuntajesGente(slug, fecha, fichaP) {
   const ficha = await fichaP;
   const jug = ficha && ficha.jugadores && ficha.jugadores[slug];
   if (!rows.length || !jug) return;
-  const sum = {}, cnt = {};
-  rows.forEach(row => Object.entries(row.puntajes || {}).forEach(([id, val]) => {
-    if (val === null || val === undefined || val === '') return;   // S/P no cuenta
-    const n = Number(val); if (isNaN(n)) return;
-    sum[id] = (sum[id] || 0) + n; cnt[id] = (cnt[id] || 0) + 1;
-  }));
-  const prom = j => cnt[String(j.id)] ? sum[String(j.id)] / cnt[String(j.id)] : null;
-  if (!jug.some(j => prom(j) != null)) return;
+  // Nota que un hincha le puso a cada jugador (S/P o sin voto = sin nota).
+  const deHincha = row => j => {
+    const v = (row.puntajes || {})[String(j.id)];
+    if (v === null || v === undefined || v === '') return null;
+    const n = Number(v); return isNaN(n) ? null : n;
+  };
+  rows = rows.filter(row => jug.some(j => deHincha(row)(j) != null));   // votos con alguna nota real
+  if (!rows.length) return;
   const bg = kitBackground(clubKit(slug), 26);
   const tit = jug.filter(j => j.tipo === 'titular');
   const posiciones = posTitulares(tit, ((ficha.partido || {}).formacion || {})[slug]);
   const banco = jug.filter(j => (j.tipo === 'suplente' && j.min != null && j.min > 0) || j.tipo === 'dt');
-  // Una cancha con las notas que da `nota(j)` (promedio de todos, o el voto de un hincha).
+  // Una cancha con las notas que da `nota(j)` (el voto de un hincha).
   const cardHtml = (nota, rotulo) => {
     const chip = (j, cls) => { const v = nota(j); return `<div class="mp-chip ${cls}${v == null ? ' sin' : ''}" style="background:${ESC(bg)}"><span class="mp-n">${fmtNota(v)}</span></div>`; };
     const enCancha = posiciones.map(({ j, x, y }) => `
@@ -515,17 +515,9 @@ async function cargarPuntajesGente(slug, fecha, fichaP) {
         <div class="pg-b">${chip(j, '')}<span class="n">${ESC(j.tipo === 'dt' ? 'DT ' + apellido(j.nombre) : apellido(j.nombre))}</span></div>`).join('')}</div></div>` : '';
     return `<div class="pg-rot">${rotulo}</div><div class="pg-card"><div class="mini-pitch">${_LINEAS_CANCHA}${enCancha}</div>${bancoHtml}</div>`;
   };
-  // Nota que un hincha le puso a cada jugador (S/P o sin voto = sin nota).
-  const deHincha = row => j => {
-    const v = (row.puntajes || {})[String(j.id)];
-    if (v === null || v === undefined || v === '') return null;
-    const n = Number(v); return isNaN(n) ? null : n;
-  };
   document.getElementById('gente-wrap').hidden = false;
   cont.innerHTML = `<div class="gente-n">${rows.length} ${rows.length === 1 ? 'hincha puntuó' : 'hinchas puntuaron'}</div>`
-    + (rows.length === 1
-      ? cardHtml(deHincha(rows[0]), 'Su puntaje')
-      : cardHtml(prom, 'Promedio de todos') + rows.map((row, i) => cardHtml(deHincha(row), `Hincha ${i + 1}`)).join(''));
+    + rows.map((row, i) => cardHtml(deHincha(row), `Hincha ${i + 1}`)).join('');
 }
 function sinPartido(html) {
   $main.innerHTML = `<div class="msg">${html}<br><br><a href="fixture.html">Ir al fixture →</a></div>`;
