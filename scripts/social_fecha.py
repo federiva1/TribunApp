@@ -75,6 +75,21 @@ def partidos_del_dia(fecha):
     return out
 
 
+def partidos_de_la_fecha(num):
+    """Todos los partidos de liga de la fecha N (número de ronda), por kickoff."""
+    liga = json.loads((ROOT / 'data' / 'fixtures' / 'liga.json').read_text(encoding='utf-8'))
+    out = []
+    for p in liga:
+        st = p.get('status') or {}
+        if p.get('fecha') != num or not st.get('utcTime'):
+            continue
+        out.append({'ko': datetime.fromisoformat(st['utcTime']).astimezone(AR), 'fecha_num': num,
+                    'comp': 'liga', 'home': p['home']['slug'], 'away': p['away']['slug'],
+                    'home_name': p['home']['name'], 'away_name': p['away']['name']})
+    out.sort(key=lambda m: m['ko'])
+    return out
+
+
 def filtrar(partidos, cruces):
     """Deja solo los cruces pedidos (--solo). Cada uno es 'local-visitante' con
     slug o alias ('instituto-boca'), en el orden que quiera: el cruce se compara
@@ -293,6 +308,106 @@ body{width:760px;height:950px;font-family:'Barlow Condensed',sans-serif;color:#f
         _logo_datauri(), torneo, titulo, sub, filas)
 
 
+def _html_columnas(partidos, titulo):
+    """Placa apaisada 1280x720 con una columna por día (todos los partidos de una fecha)."""
+    dias = []
+    for m in partidos:
+        if m['ko'].date() not in dias:
+            dias.append(m['ko'].date())
+    nums = {m['fecha_num'] for m in partidos if m['fecha_num']}
+    torneo = f'TORNEO LOCAL · FECHA {sorted(nums)[0]}' if len(nums) == 1 else 'TORNEO LOCAL'
+
+    ff = ''.join(
+        "@font-face{font-family:'%s';font-weight:%s;src:url(%s) format('woff2');}"
+        % (fam, w, _b64(ROOT / 'fonts' / f, 'font/woff2'))
+        for fam, w, f in (("Bebas Neue", 400, 'bebas-neue-latin-400-normal.woff2'),
+                          ("Barlow Condensed", 400, 'barlow-condensed-latin-400-normal.woff2'),
+                          ("Barlow Condensed", 600, 'barlow-condensed-latin-600-normal.woff2')))
+
+    def esc(slug):
+        p = esc_placa(slug)
+        return f'<img class="esc" src="{_b64(p, "image/png")}">' if (slug and p.exists()) else '<div class="esc"></div>'
+
+    # alto de tarjeta según la columna con más partidos (entra todo en 720 px)
+    maxn = max(sum(1 for m in partidos if m['ko'].date() == d) for d in dias)
+    gap = 10
+    alto = min(124, int((470 - (maxn - 1) * gap) / maxn))
+
+    cols = ''
+    for d in dias:
+        ms = [m for m in partidos if m['ko'].date() == d]
+        tarjetas = ''.join(
+            '<div class="p"><div class="eq">%s<span>%s</span></div>'
+            '<div class="mid"><div class="hora">%s</div><div class="vs">VS</div></div>'
+            '<div class="eq">%s<span>%s</span></div></div>'
+            % (esc(m['home']), _nombre(m['home'], m['home_name']), m['ko'].strftime('%H:%M'),
+               esc(m['away']), _nombre(m['away'], m['away_name']))
+            for m in ms)
+        cols += ('<div class="col"><div class="dia">%s</div><div class="fec">%d DE %s</div>'
+                 '<div class="cards">%s</div></div>'
+                 % (DIAS[d.weekday()], d.day, MESES[d.month - 1], tarjetas))
+
+    return """<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+%s
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:1280px;height:720px;font-family:'Barlow Condensed',sans-serif;color:#fff;
+  position:relative;overflow:hidden;background:#080c17;}
+.bg{position:absolute;inset:0;
+  background:radial-gradient(120%% 70%% at 50%% 122%%, rgba(56,140,220,.30) 0%%, rgba(20,44,86,.16) 42%%, transparent 70%%),
+             radial-gradient(90%% 60%% at 50%% -12%%, rgba(28,58,110,.30), transparent 62%%),
+             linear-gradient(180deg,#080c17 0%%,#0a1122 55%%,#070b16 100%%);}
+.glow{position:absolute;left:0;right:0;bottom:0;height:34%%;
+  background:repeating-linear-gradient(90deg, rgba(120,180,255,.05) 0 3px, transparent 3px 9px);
+  -webkit-mask-image:linear-gradient(0deg,rgba(0,0,0,.85),transparent);}
+.wrap{position:relative;height:100%%;padding:24px 44px 18px;display:flex;flex-direction:column}
+.logo{position:absolute;left:44px;top:24px;height:38px;width:auto}
+.tit-box{text-align:center;margin:0 0 16px}
+.torneo{font-family:'Bebas Neue';font-size:19px;letter-spacing:5px;color:#38bdf8;margin-bottom:3px}
+.tit{font-family:'Bebas Neue';font-size:42px;letter-spacing:9px;line-height:1}
+.cols{flex:1;display:flex;gap:18px;min-height:0}
+.col{flex:1;display:flex;flex-direction:column;min-width:0}
+.dia{font-family:'Bebas Neue';font-size:30px;letter-spacing:6px;text-align:center;line-height:1}
+.fec{font-family:'Bebas Neue';font-size:15px;letter-spacing:3px;text-align:center;color:#8b93a7;
+     margin:4px 0 9px;padding-bottom:9px;border-bottom:2px solid rgba(56,189,248,.55)}
+.cards{display:flex;flex-direction:column;gap:%dpx}
+.p{height:%dpx;border:1px solid rgba(255,255,255,.13);border-radius:14px;
+   background:rgba(255,255,255,.035);display:flex;align-items:center;padding:0 8px}
+.eq{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-width:0}
+.eq span{font-family:'Bebas Neue';font-size:15px;letter-spacing:1.4px;line-height:1.02;text-align:center}
+.esc{width:50px;height:50px;object-fit:contain;flex:0 0 auto;filter:drop-shadow(0 4px 10px rgba(0,0,0,.55))}
+.mid{width:62px;text-align:center;flex:0 0 auto}
+.hora{font-family:'Bebas Neue';font-size:25px;letter-spacing:1.5px;color:#38bdf8;line-height:1}
+.vs{font-family:'Bebas Neue';font-size:13px;letter-spacing:2px;color:#5d6479;margin-top:3px}
+.pie{text-align:center;font-family:'Bebas Neue';font-size:18px;letter-spacing:3px;color:#e8edf7;margin-top:12px}
+.pie b{color:#38bdf8;font-weight:400}
+</style></head><body>
+<div class="bg"></div><div class="glow"></div>
+<div class="wrap">
+  <img class="logo" src="%s">
+  <div class="tit-box"><div class="torneo">%s</div><div class="tit">%s</div></div>
+  <div class="cols">%s</div>
+  <div class="pie">SEGUILOS Y PUNTUÁ A LOS JUGADORES EN <b>TRIBUNAPP.COM.AR</b></div>
+</div></body></html>""" % (ff, gap, alto, _logo_datauri(), torneo, titulo, cols)
+
+
+def generar_columnas(partidos, titulo, outdir, nombre, escala=3):
+    """Placa apaisada 16:9: escala 3 = 3840x2160 (4K)."""
+    from playwright.sync_api import sync_playwright
+    import os
+    exe = os.environ.get('PLAYWRIGHT_CHROMIUM') or None
+    Path(outdir).mkdir(parents=True, exist_ok=True)
+    path = Path(outdir) / nombre
+    html = aplicar_fondo_tribuna(_html_columnas(partidos, titulo))
+    with sync_playwright() as pw:
+        b = pw.chromium.launch(executable_path=exe) if exe else pw.chromium.launch()
+        pg = b.new_page(viewport={'width': 1280, 'height': 720}, device_scale_factor=escala)
+        pg.set_content(html)
+        pg.wait_for_timeout(700)
+        pg.screenshot(path=str(path))
+        b.close()
+    return path
+
+
 def generar(partidos, fecha, titulo, outdir, nombre=None, escala=2):
     from playwright.sync_api import sync_playwright
     import os
@@ -324,8 +439,24 @@ def main():
                          'Implica --cada-uno.')
     ap.add_argument('--escala', type=int, default=2,
                     help='factor de resolucion: 2 = 1520x1900 (default), 4 = ultra HD 3040x3800')
+    ap.add_argument('--fecha-num', type=int, metavar='N',
+                    help='placa apaisada 16:9 con TODOS los partidos de la fecha N, una columna por dia '
+                         '(--escala 3 = 3840x2160 4K; default 3 en este modo)')
     args = ap.parse_args()
     sufijo = '' if args.escala == 2 else f'-x{args.escala}'
+
+    if args.fecha_num:
+        partidos = partidos_de_la_fecha(args.fecha_num)
+        if not partidos:
+            print(f'No hay partidos de la fecha {args.fecha_num}')
+            return 1
+        for m in partidos:
+            print(f"  {m['ko'].strftime('%a %d/%m %H:%M')}  {m['home']} vs {m['away']}")
+        esc = args.escala if args.escala != 2 else 3
+        titulo = args.titulo.upper() if args.titulo != 'PARTIDOS DE HOY' else 'PARTIDOS DE LA FECHA'
+        print('imagen:', generar_columnas(partidos, titulo, args.out,
+                                           f'fecha-{args.fecha_num}-columnas-x{esc}.png', escala=esc))
+        return 0
 
     fecha = args.date or datetime.now(AR).strftime('%Y-%m-%d')
     partidos = partidos_del_dia(fecha)
