@@ -83,6 +83,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 #main { padding: 22px 16px 50px; max-width: 1100px; margin: 0 auto; }
 
 /* ===== TOGGLE VISTA ===== */
+
 .vista-toggle { display: flex; gap: 8px; justify-content: center; margin-bottom: 26px; }
 
 /* ===== EN JUEGO (partidos en curso, liga + copas) ===== */
@@ -136,6 +137,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .live-card-goles > div { min-width: 0; }
 .live-card-goles .gol-away { text-align: right; }
 .live-card-goles .gol { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
 .vista-btn {
   font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 600;
   letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.6);
@@ -167,6 +169,46 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .sec-badge.zonaB { background: rgba(30,136,229,0.18); border: 1px solid rgba(30,136,229,0.4); color: #64b5f6; }
 .sec-badge.lib   { background: rgba(27,94,32,0.3); border: 1px solid rgba(102,187,106,0.4); color: var(--lib-light); }
 .sec-badge.sud   { background: rgba(230,81,0,0.2); border: 1px solid rgba(255,167,38,0.4); color: var(--sud-light); }
+
+/* ===== TABLA DE CADA ZONA ===== */
+.tz-wrap { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; overflow: hidden; }
+.tz-row { display: grid; grid-template-columns: var(--tz-cols); align-items: center; gap: 4px;
+  padding: 6px 10px; border-bottom: 1px solid rgba(255,255,255,0.04); position: relative; }
+.tz-row:last-child { border-bottom: none; }
+.tz-head { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+  color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.08); }
+.tz-head .n, .tz-head .r { text-align: center; }
+.tz-head .p { text-align: right; }
+.tz-rank { font-family: 'Bebas Neue', sans-serif; font-size: 14px; text-align: center; color: rgba(255,255,255,0.32); }
+.tz-esc { display: flex; align-items: center; justify-content: center; }
+.tz-esc img { width: 20px; height: 20px; object-fit: contain; }
+.tz-name { font-family: 'Barlow Condensed', sans-serif; font-size: 13.5px; font-weight: 600; color: #ddd;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tz-num { font-family: 'Bebas Neue', sans-serif; font-size: 13px; text-align: center; color: #aaa; }
+.tz-pts { font-family: 'Bebas Neue', sans-serif; font-size: 16px; text-align: right; color: #fff; padding-right: 2px; }
+.dg-pos { color: #4cd07d; }
+.dg-neg { color: #e5585b; }
+.dg-zero { color: #888; }
+.tz-row.dentro { background: rgba(79,195,247,0.045); box-shadow: inset 3px 0 0 rgba(79,195,247,0.85); }
+.tz-row.dentro .tz-rank { color: var(--celeste); }
+.tz-row.fuera { opacity: 0.5; }
+.tz-corte { display: flex; align-items: center; gap: 8px; padding: 0 10px; height: 16px; background: rgba(0,0,0,0.18); }
+.tz-corte::before, .tz-corte::after { content: ''; flex: 1; border-top: 1px dashed rgba(79,195,247,0.55); }
+.tz-corte span { font-family: 'Barlow Condensed', sans-serif; font-size: 9px; letter-spacing: 1.6px; text-transform: uppercase; color: rgba(79,195,247,0.85); white-space: nowrap; }
+.tz-ley { display: flex; flex-wrap: wrap; gap: 4px 14px; justify-content: center; margin-top: 8px;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 0.5px; color: rgba(255,255,255,0.45); }
+.tz-ley i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+/* la tabla a un costado de la grilla (A: tabla | equipos — B: equipos | tabla) */
+#main { max-width: 1280px; }
+@media (min-width: 901px) {
+  #vista-local section { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas: "cab cab" "tab gri"; column-gap: 16px; align-items: start; }
+  #vista-local section:nth-child(2) { grid-template-areas: "cab cab" "gri tab"; }
+  #vista-local section .sec-header { grid-area: cab; }
+  #vista-local section .equipos-grid { grid-area: gri; grid-template-columns: repeat(3, 1fr); }
+  #vista-local section .tz { grid-area: tab; }
+}
+@media (max-width: 900px) { .tz { margin-top: 18px; } }
 
 /* ===== GRILLA DE EQUIPOS ===== */
 .equipos-grid {
@@ -280,12 +322,14 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
             <span class="sec-title">ZONA A</span>
           </div>
           <div class="equipos-grid" id="zonaA-grid"></div>
+          <div class="tz" id="tabla-A"></div>
         </section>
         <section>
           <div class="sec-header zonaB">
             <span class="sec-title">ZONA B</span>
           </div>
           <div class="equipos-grid" id="zonaB-grid"></div>
+          <div class="tz" id="tabla-B"></div>
         </section>
       </div>
     </div>
@@ -568,6 +612,9 @@ renderGrid(ZONA_B, 'zonaB-grid');
 // Standings del torneo en curso vía el proxy api-sports (solo prod). Si falla
 // (ej. local sin proxy) se mantiene el orden alfabético.
 const _LEAGUE = 128;
+// Prototipo de tablas por zona: ?v=1 (a los costados) o ?v=2 (abajo). Sin parámetro = home de siempre.
+const TZ_PLAYOFFS = 8;   // los 8 primeros de cada zona clasifican (igual que tablas.html)
+let _tzZonas = null;
 function _slugDeId(id) { return (typeof ESCUDO_MAP !== 'undefined' && ESCUDO_MAP[id]) || null; }
 function _parseGrupo(name) {
   const low = (name || '').toLowerCase();
@@ -601,14 +648,40 @@ async function fetchPosiciones() {
       if (s) map[s] = { rank: t.rank || (i + 1), pts: t.points != null ? t.points : null };
     });
     add(zA); add(zB);
+    _tzZonas = { A: zA, B: zB };
     return Object.keys(map).length ? map : null;
   } catch (e) { return null; }
+}
+function renderTablaZona(letra, teams) {
+  const cont = document.getElementById('tabla-' + letra);
+  if (!cont || !teams || !teams.length) return;
+  cont.style.setProperty('--tz-cols', '22px 22px 1fr 26px 30px 32px');
+  let html = '<div class="tz-wrap"><div class="tz-row tz-head"><div class="r">#</div><div></div><div>Equipo</div>' +
+    '<div class="n">PJ</div><div class="n">DG</div><div class="p">Pts</div></div>';
+  teams.forEach((t, i) => {
+    if (i === TZ_PLAYOFFS) html += '<div class="tz-corte"><span>Corte de playoffs</span></div>';
+    const slug = _slugDeId(t.team.id);
+    const a = t.all || {};
+    const dg = t.goalsDiff != null ? t.goalsDiff : 0;
+    const nombre = slug ? nombreCorto(slug) : t.team.name;
+    html += `<div class="tz-row ${i < TZ_PLAYOFFS ? 'dentro' : 'fuera'}">` +
+      `<div class="tz-rank">${t.rank || (i + 1)}</div>` +
+      `<div class="tz-esc">${slug ? `<img src="escudos/${slug}.png" alt="">` : ''}</div>` +
+      `<div class="tz-name">${nombre}</div>` +
+      `<div class="tz-num">${a.played != null ? a.played : 0}</div>` +
+      `<div class="tz-num ${dg > 0 ? 'dg-pos' : dg < 0 ? 'dg-neg' : 'dg-zero'}">${dg > 0 ? '+' + dg : dg}</div>` +
+      `<div class="tz-pts">${t.points != null ? t.points : 0}</div></div>`;
+  });
+  html += '</div><div class="tz-ley"><span><i style="background:rgba(79,195,247,0.85)"></i>Clasifican a playoffs (1° a ' + TZ_PLAYOFFS + '°)</span>' +
+    '<span><i style="background:rgba(255,255,255,0.25)"></i>Fuera de playoffs</span></div>';
+  cont.innerHTML = html;
 }
 async function actualizarPosiciones() {
   const pos = await fetchPosiciones();
   if (pos) {
     renderGrid(ZONA_A, 'zonaA-grid', { posMap: pos });
     renderGrid(ZONA_B, 'zonaB-grid', { posMap: pos });
+    if (_tzZonas) { renderTablaZona('A', _tzZonas.A); renderTablaZona('B', _tzZonas.B); }
   }
 }
 actualizarPosiciones();
