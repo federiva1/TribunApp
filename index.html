@@ -252,6 +252,24 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   .sec-header.lib .sec-box, .sec-header.sud .sec-box { padding: 8px 14px; gap: 8px; }
 }
 
+/* ===== COMPACTO (escritorio): que la home entera entre en pantallas de poco alto ===== */
+@media (min-width: 901px) {
+  #main { padding-top: 14px; padding-bottom: 30px; }
+  .vista-toggle { margin-bottom: 18px; }
+  .sec-header.zonaA, .sec-header.zonaB, .sec-header.lib, .sec-header.sud { margin-bottom: 12px; }
+  #vista-local .equipos-grid { gap: 8px; }
+  #vista-local .equipo-card { padding: 9px 6px 20px; gap: 4px; border-radius: 12px; }
+  #vista-local .equipo-card .escudo-img { width: 36px; height: 36px; }
+  #vista-local .pos-badge { top: 5px; left: 8px; }
+  #vista-local .pts-badge { bottom: 5px; right: 8px; }
+  .tz-row { padding: 4px 10px; }
+  .tz-esc img { width: 18px; height: 18px; }
+}
+@media (min-width: 901px) and (max-height: 800px) {
+  #site-header { padding-top: 6px; padding-bottom: 5px; }
+  .logo-wrap img { height: 56px; }
+}
+
 /* ===== GRILLA DE EQUIPOS ===== */
 .equipos-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 9px;
