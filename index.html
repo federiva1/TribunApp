@@ -156,6 +156,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   display: flex; align-items: center; gap: 10px;
   margin-bottom: 14px; padding-bottom: 11px; border-bottom: 2px solid;
 }
+.sec-header.zonaA, .sec-header.zonaB { justify-content: center; }
 .sec-header.zonaA { border-color: rgba(79,195,247,0.55); }
 .sec-header.zonaB { border-color: rgba(30,136,229,0.55); }
 .sec-header.lib   { border-color: rgba(27,94,32,0.6); }
@@ -195,9 +196,6 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .tz-corte { display: flex; align-items: center; gap: 8px; padding: 0 10px; height: 16px; background: rgba(0,0,0,0.18); }
 .tz-corte::before, .tz-corte::after { content: ''; flex: 1; border-top: 1px dashed rgba(79,195,247,0.55); }
 .tz-corte span { font-family: 'Barlow Condensed', sans-serif; font-size: 9px; letter-spacing: 1.6px; text-transform: uppercase; color: rgba(79,195,247,0.85); white-space: nowrap; }
-.tz-ley { display: flex; flex-wrap: wrap; gap: 4px 14px; justify-content: center; margin-top: 8px;
-  font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 0.5px; color: rgba(255,255,255,0.45); }
-.tz-ley i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
 /* la tabla a un costado de la grilla (A: tabla | equipos — B: equipos | tabla) */
 #main { max-width: 1280px; }
 @media (min-width: 901px) {
@@ -672,8 +670,7 @@ function renderTablaZona(letra, teams) {
       `<div class="tz-num ${dg > 0 ? 'dg-pos' : dg < 0 ? 'dg-neg' : 'dg-zero'}">${dg > 0 ? '+' + dg : dg}</div>` +
       `<div class="tz-pts">${t.points != null ? t.points : 0}</div></div>`;
   });
-  html += '</div><div class="tz-ley"><span><i style="background:rgba(79,195,247,0.85)"></i>Clasifican a playoffs (1° a ' + TZ_PLAYOFFS + '°)</span>' +
-    '<span><i style="background:rgba(255,255,255,0.25)"></i>Fuera de playoffs</span></div>';
+  html += '</div>';
   cont.innerHTML = html;
 }
 async function actualizarPosiciones() {
