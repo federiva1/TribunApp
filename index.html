@@ -209,8 +209,8 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 }
 @media (max-width: 900px) { .tz { margin-top: 18px; } }
 
-/* ===== TÍTULOS (solo escritorio): pestañas en cápsula y cabeceras de zona con líneas laterales ===== */
-@media (min-width: 901px) {
+/* ===== TÍTULOS: pestañas en cápsula y cabeceras de zona con líneas laterales ===== */
+@media all {
   .vista-toggle { width: max-content; margin: 0 auto 30px; padding: 4px; gap: 2px;
     background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.09); border-radius: 14px;
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.04); }
@@ -230,7 +230,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
     text-shadow: 0 0 14px rgba(var(--c),0.55); }
 }
 
-@media (min-width: 901px) {
+@media all {
   .sec-header.lib, .sec-header.sud { gap: 16px; justify-content: center; border-bottom: none; padding-bottom: 0; margin-bottom: 18px; }
   .sec-header.lib { --c: 102,187,106; }
   .sec-header.sud { --c: 255,167,38; }
@@ -242,6 +242,14 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
     border: 1px solid rgba(var(--c),0.5); border-radius: 10px; background: rgba(var(--c),0.10); }
   .sec-header.lib .sec-title, .sec-header.sud .sec-title { font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 600;
     letter-spacing: 1.5px; text-shadow: 0 0 14px rgba(var(--c),0.55); }
+}
+
+@media (max-width: 560px) {
+  .vista-toggle { margin-bottom: 22px; }
+  .vista-btn { font-size: 17px; letter-spacing: 3px; padding: 7px 18px 5px; }
+  .sec-header.zonaA, .sec-header.zonaB, .sec-header.lib, .sec-header.sud { gap: 10px; margin-bottom: 14px; }
+  .sec-header.zonaA .sec-title, .sec-header.zonaB .sec-title { padding: 8px 20px; }
+  .sec-header.lib .sec-box, .sec-header.sud .sec-box { padding: 8px 14px; gap: 8px; }
 }
 
 /* ===== GRILLA DE EQUIPOS ===== */
