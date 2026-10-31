@@ -17,7 +17,7 @@
 ## 1. Qué es TribunApp
 
 > Desarrollo separado: **Campañas** se prepara en la rama `campanas`, pendiente de
-> revisión y merge. Incluye Apertura 2026 y 24 campañas históricas de 12 clubes.
+> revisión y merge. Incluye Apertura 2026 y 26 campañas históricas: dos por cada uno de 12 clubes y los Mundiales 2022 y 1990 de Argentina (7 partidos cada uno, escudo AFA).
 > Flujo vigente: formación del club → bonus opcional de resultado → bonus opcional
 > de goleadores. No hay elección de retos ni aleatorio. El marcador queda oculto
 > hasta el bonus o hasta tocar «Ver resultado», que lo da por jugado a 0 puntos.
@@ -27,7 +27,7 @@
 > completar formaciones. Apodo, mejores marcas y campañas empezadas se guardan localmente.
 > Las preferencias antiguas de Expreso pasan a Clásico, conservando las partidas jugadas.
 > «Jugar» abre una selección con escudos, campañas del club y cantidad de partidos.
-> La etiqueta «24 campañas históricas» enlaza a los clubes. «Ver rival» es una referencia gratuita;
+> La etiqueta «26 campañas históricas» enlaza a los clubes. «Ver rival» es una referencia gratuita;
 > con todos los clubes se completan ambos once. Las partidas antiguas se conservan.
 > Arquitectura y reglas: `docs/campanas-integracion.md`. Catálogo, fuentes y límites:
 > `docs/campanas-historicas.md`. Lo restante de `docs/campanas-objetivos.md` sigue pendiente.

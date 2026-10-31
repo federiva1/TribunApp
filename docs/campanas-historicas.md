@@ -4,7 +4,7 @@
 
 ## Alcance
 
-Dos campañas para cada uno de los 12 clubes nombrados por Fede: 24 colecciones.
+Dos campañas para cada uno de los 12 clubes nombrados por Fede, más Argentina en Qatar 2022 e Italia 1990: 26 colecciones.
 El Apertura 2026 existente sigue disponible sin cambios en sus datos. Se entra por
 el selector de torneo/campañas y se filtra por club. Desde el 31/10/2026 se completa
 primero la formación, con resultado y goleadores como bonus opcionales. El archivo y las marcas se guardan por colección, partido y modo, en el
@@ -24,6 +24,7 @@ navegador. No hay login ni nuevos servicios de pago.
 | Estudiantes LP | Libertadores 2009 (16, incluye clasificación) | Copa Argentina 2023 (6) |
 | Huracán | Copa Argentina 2014 (6) | Sudamericana 2015 (10) |
 | Lanús | Sudamericana 2013 (10) | Primera División 2016 (17) |
+| Selección Argentina | Mundial Qatar 2022 (7) | Mundial Italia 1990 (7) |
 
 Se priorizaron títulos y recorridos recordados con fichas recuperables. No es una
 selección definitiva de las dos mejores campañas de cada club. Se descartó para
@@ -31,10 +32,10 @@ esta tanda Newell’s 2004 porque la fuente consultada no aportaba sus alineacio
 se eligió la Sudamericana 2023. Gimnasia 2018 y 2025, Huracán 2015 y Argentinos 2023
 son recorridos destacados, no títulos.
 
-323 apariciones de partidos dentro de las campañas (no necesariamente 323 encuentros
-únicos: dos clubes pueden compartir un cruce). Disponibles: 322 en formación, 289
-en goleadores y 322 en resultado. El Boca–River suspendido de 2015 queda documentado
-pero fuera del juego. Los 0–0 no participan en goleadores. La tanda aporta 933 etapas disponibles
+337 apariciones de partidos dentro de las campañas (no necesariamente 337 encuentros
+únicos: dos clubes pueden compartir un cruce). Disponibles: 336 en formación, 302
+en goleadores y 336 en resultado. El Boca–River suspendido de 2015 queda documentado
+pero fuera del juego. Los 0–0 no participan en goleadores. La tanda aporta 974 etapas disponibles
 (sumando formaciones y bonus), además del Apertura existente.
 
 ## Fuentes y tratamiento
@@ -92,5 +93,29 @@ aislado e intercepta recursos locales: no envía votos ni toca la cuenta del usu
 
 Se comprueban cantidad e identidad de campañas/partidos, once por lado, autores y
 marcadores, ayudas, penales y suplemento editorial. La prueba de navegador inicia
-las 25 colecciones en el flujo unificado, verifica pistas dentro del input, bonus
+las 27 colecciones en el flujo unificado, verifica pistas dentro del input, bonus
 parciales y omitidos, archivo sin revelar resultados pendientes y progreso local.
+
+
+## Selección Argentina — 31/10/2026
+
+Qatar 2022 e Italia 1990 incluyen los siete partidos de Argentina. Clásico selecciona
+cuatro encuentros y Completo incluye siete. Se completa solamente el once argentino;
+el rival queda como referencia y los bonus conservan el funcionamiento existente.
+El 0–0 con Yugoslavia no ofrece goleadores. Las tandas se conservan como metadato,
+separadas del resultado después del alargue y de los goles del bonus.
+
+- Fixtures, resultados y fichas: ESPN, con URL por partido en cada JSON.
+- Las fichas antiguas tienen errores de nombres/posiciones y un titular de más en
+  Yugoslavia. `scripts/world-cup-lineups-1990.json` conserva onces, dorsales, posiciones,
+  ingresados y autores contrastados por partido en las fichas de
+  [fase de grupos](https://en.wikipedia.org/wiki/1990_FIFA_World_Cup_Group_B),
+  [eliminatorias](https://en.wikipedia.org/wiki/1990_FIFA_World_Cup_knockout_stage)
+  y [RSSSF](https://www.rsssf.org/tablesa/arg-wc.html). No se deducen onces del plantel.
+  Las incidencias de tarjetas no se presentan como completas.
+- El escudo local `escudos/argentina.svg` procede del
+  [sitio oficial de AFA](https://assets1.afa.com.ar/.statics/img/logo-afa-dorado.svg).
+  Representa a la selección en catálogo, acceso rápido, fichas y medallero;
+  no se presenta como la versión histórica usada en cada Mundial.
+- El importador acepta `--only=argentina-mundial-2022,argentina-mundial-1990`
+  para actualizar estas colecciones sin volver a escribir las campañas anteriores.

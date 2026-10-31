@@ -7,12 +7,12 @@ const catalog = require('../data/campanas/catalog.json').collections;
 const definitions = require('./historical-campaigns.json');
 const collections = catalog.map(item => JSON.parse(fs.readFileSync(path.join(__dirname,'..',item.file),'utf8')));
 
-test('24 historical collections cover exactly the requested 12 clubs twice', () => {
-  assert.equal(catalog.length,24);
+test('26 historical collections cover 12 clubs and Argentina twice', () => {
+  assert.equal(catalog.length,26);
   const clubs = Object.groupBy(catalog,item=>item.clubSlug);
-  assert.deepEqual(Object.keys(clubs).sort(), ['bocajuniors','riverplate','sanlorenzo','racingclub','independiente','rosariocentral','newellsoldboys','argentinosjuniors','gimnasialp','estudiantes','huracan','lanus'].sort());
+  assert.deepEqual(Object.keys(clubs).sort(), ['bocajuniors','riverplate','sanlorenzo','racingclub','independiente','rosariocentral','newellsoldboys','argentinosjuniors','gimnasialp','estudiantes','huracan','lanus','argentina'].sort());
   for (const group of Object.values(clubs)) assert.equal(group.length,2);
-  assert.equal(new Set(catalog.map(c=>c.id)).size,24);
+  assert.equal(new Set(catalog.map(c=>c.id)).size,26);
 });
 
 test('complete fixtures, provenance and honest mode coverage in every campaign', () => {
@@ -69,11 +69,11 @@ test('known finals keep match goals separate from shootouts and include extra ti
 
 test('editorial supplements complete every finished lineup with explicit sources',()=>{
   const all=collections.flatMap(c=>c.matches);
-  assert.equal(all.length,323);
-  assert.equal(all.filter(m=>m.availability.formation).length,322);
-  assert.equal(all.filter(m=>m.availability.scorers).length,289);
-  assert.equal(all.filter(m=>m.availability.result).length,322);
-  const supplements=all.filter(m=>m.supplementalSources);
+  assert.equal(all.length,337);
+  assert.equal(all.filter(m=>m.availability.formation).length,336);
+  assert.equal(all.filter(m=>m.availability.scorers).length,302);
+  assert.equal(all.filter(m=>m.availability.result).length,336);
+  const supplements=all.filter(m=>m.supplementalSources && ![m.homeSlug,m.awaySlug].includes("argentina"));
   assert.equal(supplements.length,7);
   for(const m of all) if(m.availability.result) assert.equal(m.availability.formation,true,m.id);
   for(const m of supplements) {
@@ -86,4 +86,44 @@ test('editorial supplements complete every finished lineup with explicit sources
   const central=supplements.find(m=>m.id==='espn-508553');
   assert.equal(central.homeSubs.find(p=>p.name==='Herrera').playerId,central.goalEvents[2].playerId);
   assert.equal(central.goalEvents[2].playerId,central.goalEvents[5].playerId);
+});
+
+
+test('Argentina World Cups preserve verified lineups, substitutions, own goals and shootouts',()=>{
+  const c90=collections.find(c=>c.id==='argentina-mundial-1990');
+  const c22=collections.find(c=>c.id==='argentina-mundial-2022');
+  for(const c of [c90,c22]) {
+    assert.equal(c.matches.length,7);
+    assert.equal(core.routeMatches(c.matches,'argentina','classic').length,4);
+    assert.equal(core.routeMatches(c.matches,'argentina','complete').length,7);
+    for(const m of c.matches) {
+      assert.deepEqual(m.qualityWarnings,[]);
+      const side=m.homeSlug==='argentina'?'home':'away';
+      assert.deepEqual(core.formationSides(m,'argentina'),[side]);
+      const xi=m[side+'XI'];
+      assert.equal(xi.length,11);
+      assert(xi.every(p=>Number.isInteger(p.n)&&p.n>0));
+      assert.equal(core.positionRank(core.orderedLineup(xi)[0].player.pos),0);
+    }
+  }
+  const soviet=c90.matches.find(m=>m.id==='espn-197984');
+  assert(soviet.homeXI.some(p=>p.name==='Pumpido'&&p.n===1));
+  assert(soviet.homeSubs.some(p=>p.name==='Goycochea'&&p.n===12));
+  assert(soviet.homeXI.some(p=>p.name==='Troglio'&&p.pos==='M'));
+  assert(c90.matches[0].homeXI.some(p=>p.name==='Fabbri'&&p.n===11));
+  assert.equal(c90.matches.find(m=>m.id==='espn-198011').stadium,'Delle Alpi');
+  const yug=c90.matches.find(m=>m.id==='espn-198016');
+  assert(yug.homeXI.some(p=>p.name==='Stojković'));
+  assert(!yug.homeXI.some(p=>p.fullName.includes('Stanojkov')));
+  assert.equal(yug.score,'0 — 0');assert.equal(yug.availability.scorers,false);
+  assert.deepEqual(yug.shootout,{home:2,away:3});
+  assert.deepEqual(c22.matches.at(-1).shootout,{home:4,away:2});
+  assert.equal(c22.matches.at(-1).score,'3 — 3');
+  assert.equal(c22.matches.at(-1).goalEvents.length,6);
+  const mexico=c22.matches.find(m=>m.id==='espn-633807');
+  assert(mexico.homeSubs.some(p=>p.name==='Fernández'));
+  assert(core.actualScorers(mexico).includes('Selección Argentina|Fernández'));
+  const australia=c22.matches.find(m=>m.id==='espn-633836');
+  assert.equal(australia.goalEvents.filter(g=>g.ownGoal).length,1);
+  assert.equal(c90.coverage.scorers,6);assert.equal(c22.coverage.scorers,7);
 });

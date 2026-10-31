@@ -6,7 +6,7 @@ const os = require('node:os');
 const crypto = require('node:crypto');
 const root = path.resolve(__dirname, '..');
 const definitions = require('./historical-campaigns.json');
-const lineupOverrides = require('./historical-lineup-overrides.json');
+const lineupOverrides = { ...require('./historical-lineup-overrides.json'), ...require('./world-cup-lineups-1990.json') };
 const core = require('../js/campanas-core.js');
 const applyPositions = require('./apply-campanas-positions.cjs');
 const cache = path.join(os.tmpdir(), 'tribunapp-historical-espn-v1');
@@ -29,6 +29,7 @@ const original = require('../data/campanas/apertura-2026.json');
 const localTeams = new Map();
 for (const m of original.matches) for (const side of ['home', 'away']) localTeams.set(core.normalize(m[side]).replace(/[^a-z0-9]/g, ''), { name: m[side], slug: m[side+'Slug'] });
 for (const c of definitions) localTeams.set(core.normalize(c.club).replace(/[^a-z0-9]/g, ''), { name: c.club, slug: c.clubSlug });
+const nationalNames = { '655':'Arabia Saudita', '203':'México', '471':'Polonia', '628':'Australia', '449':'Países Bajos', '477':'Croacia', '478':'Francia', '656':'Camerún', '6680':'Unión Soviética', '473':'Rumania', '205':'Brasil', '6647':'Yugoslavia', '162':'Italia', '6655':'Alemania Federal' };
 function teamInfo(team) {
   const known = definitions.find(d => d.team === String(team.id));
   if (known) return { name: known.club, slug: known.clubSlug, crest: null };
@@ -36,7 +37,7 @@ function teamInfo(team) {
   const normalized = core.normalize(team.displayName).replace(/[^a-z0-9]/g, '');
   const candidate = localTeams.get(normalized);
   const found = candidate && !definitions.some(d => d.clubSlug === candidate.slug) ? candidate : null;
-  return { name: found?.name || team.displayName, slug: found?.slug || 'espn-' + team.id, crest: found ? null : (team.logo || team.logos?.[0]?.href || `https://a.espncdn.com/i/teamlogos/soccer/500/${team.id}.png`) };
+  return { name: found?.name || nationalNames[String(team.id)] || team.displayName, slug: found?.slug || 'espn-' + team.id, crest: found ? null : (team.logo || team.logos?.[0]?.href || `https://a.espncdn.com/i/teamlogos/soccer/500/${team.id}.png`) };
 }
 function player(raw) {
   const a = raw.athlete;
@@ -113,12 +114,14 @@ function convert(summary, event, def, sourceApi) {
   }
   const supplement = lineupOverrides[match.id];
   if (supplement) {
+    for (const key of ['dateISO','stadium','zone']) if(supplement[key]) match[key]=supplement[key];
+    match.date = new Intl.DateTimeFormat('es-AR', { timeZone:'America/Argentina/Buenos_Aires', day:'2-digit', month:'short', year:'numeric' }).format(new Date(match.dateISO));
     match.supplementalSources = [supplement.source, supplement.additionalSource].filter(Boolean);
     match.editorialNote = supplement.note || 'XI, ingresados y goles contrastados en crónica del partido; dorsales y posiciones no informados se conservan nulos.';
     for (const side of ['home','away']) for (const group of ['XI','Subs']) {
       match[side+group] = supplement[side+group].map((entry,index)=>{
-        const [fullName,name]=entry.split('|');
-        return {playerId:`editorial-${event.id}-${side}-${group}-${index}`,name,fullName,accepted_answers:[name,fullName],n:null,pos:group==='XI'&&index===0?'GK':null};
+        const [fullName,name]=typeof entry==='string' ? entry.split('|') : [entry.fullName,entry.name];
+        return {playerId:`editorial-${event.id}-${side}-${group}-${index}`,name,fullName,accepted_answers:[name,fullName],n:entry.n??null,pos:entry.pos??(group==='XI'&&index===0?'GK':null)};
       });
       match[side+'LineupEvidence'] = supplement.source;
     }
@@ -148,8 +151,11 @@ function convert(summary, event, def, sourceApi) {
   return applyPositions(match, def.id);
 }
 async function main() {
-  const index = [], audit = [];
-  for (const def of definitions) {
+  const onlyArg = process.argv.find(arg=>arg.startsWith('--only='));
+  const selected = onlyArg ? new Set(onlyArg.slice(7).split(',')) : null;
+  if(selected && [...selected].some(id=>!definitions.some(d=>d.id===id))) throw new Error('Campaña desconocida en --only');
+  const index = selected ? require('../data/campanas/catalog.json').collections.filter(c=>!selected.has(c.id)) : [], audit = [];
+  for (const def of definitions.filter(d=>!selected||selected.has(d.id))) {
     const scoreboard = await get(base + def.league + '/scoreboard?dates=' + def.year + '&limit=1000');
     const events = (scoreboard.events||[]).filter(e => e.competitions?.[0]?.competitors.some(c=>String(c.id)===def.team) && (!def.from||e.date>=def.from) && (!def.to||e.date<def.to));
     console.log(def.id, 'fixture', events.length, '/', def.expected);
@@ -170,16 +176,16 @@ async function main() {
     }
     matches.sort((a,b)=>a.dateISO.localeCompare(b.dateISO));
     const coverage = Object.fromEntries(['formation','scorers','result'].map(mode=>[mode,matches.filter(m=>m.availability[mode]).length]));
-    const collection = {id:def.id,title:def.title,version:1,club:def.club,clubSlug:def.clubSlug,year:def.year,achievement:def.achievement,description:def.achievement+'. El recorrido completo, partido por partido.',provenance:'Fichas públicas de ESPN. Cobertura y validación estructural por reto; sin reconstruir alineaciones desde planteles anuales.',expectedMatches:def.expected,coverage,matches};
+    const collection = {id:def.id,title:def.title,version:1,club:def.club,clubSlug:def.clubSlug,...(def.teamType?{teamType:def.teamType}:{}),year:def.year,achievement:def.achievement,description:def.achievement+'. El recorrido completo, partido por partido.',provenance:'Fichas públicas de ESPN. Cobertura y validación estructural por reto; sin reconstruir alineaciones desde planteles anuales.',expectedMatches:def.expected,coverage,matches};
     fs.writeFileSync(path.join(root,'data/campanas',def.id+'.json'),JSON.stringify(collection)+'\n');
-    index.push({id:def.id,title:def.title,club:def.club,clubSlug:def.clubSlug,year:def.year,achievement:def.achievement,matchCount:matches.length,coverage,file:'data/campanas/'+def.id+'.json'});
+    index.push({id:def.id,title:def.title,club:def.club,clubSlug:def.clubSlug,...(def.teamType?{teamType:def.teamType}:{}),year:def.year,achievement:def.achievement,matchCount:matches.length,coverage,file:'data/campanas/'+def.id+'.json'});
     audit.push({id:def.id,coverage,warnings:matches.filter(m=>m.qualityWarnings.length).map(m=>({id:m.id,source:m.source,warnings:m.qualityWarnings}))});
     console.log('  retos',JSON.stringify(coverage));
   }
   fs.writeFileSync(path.join(cache,'audit.json'),JSON.stringify(audit,null,2));
   console.log('Auditoría:',path.join(cache,'audit.json'));
   if (process.argv.includes('--inventory')) return;
-  if(index.length!==24) throw new Error('No publicar catálogo incompleto: '+index.length+'/24. Revisar auditoría.');
+  if(index.length!==definitions.length) throw new Error('No publicar catálogo incompleto: '+index.length+'/'+definitions.length+'. Revisar auditoría.');
   fs.writeFileSync(path.join(root,'data/campanas/catalog.json'),JSON.stringify({version:1,collections:index})+'\n');
 }
 main().catch(error=>{console.error(error);process.exitCode=1;});

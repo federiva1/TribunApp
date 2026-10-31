@@ -7,7 +7,7 @@ async function assets(page){await page.route('**/*',async route=>{
   const url=new URL(route.request().url());if(url.hostname!=='campanas.test')return route.abort();
   const file=path.resolve(root,'.'+decodeURIComponent(url.pathname));
   if(!file.startsWith(root+path.sep)||!fs.existsSync(file))return route.fulfill({status:404,body:''});
-  const types={'.html':'text/html','.js':'application/javascript','.css':'text/css','.json':'application/json','.png':'image/png','.webp':'image/webp'};
+  const types={'.html':'text/html','.js':'application/javascript','.css':'text/css','.json':'application/json','.svg':'image/svg+xml','.png':'image/png','.webp':'image/webp'};
   return route.fulfill({body:fs.readFileSync(file),contentType:types[path.extname(file)]||'application/octet-stream'});
 });}
 const stamp='2026-10-31T10:00:00Z';
@@ -36,7 +36,7 @@ async function centered(page){
   const page=await browser.newPage({viewport:{width:1440,height:1100}}),errors=[];
   page.on('pageerror',e=>errors.push(e.message));await assets(page);
   await page.goto(base);await page.locator('.historical-library').waitFor();
-  assert.equal(await page.locator('.historical-card').count(),24);assert.equal(await page.locator('.crest-wall img').count(),30);
+  assert.equal(await page.locator('.historical-card').count(),26);assert.equal(await page.locator('.crest-wall img').count(),30);
   assert.equal(await page.locator('[data-mode],[data-action="random-play"]').count(),0);
   await page.locator('[data-action="medals"]').click();assert.equal(await page.locator('.medal-card').count(),0);
   await page.locator('.section-bar [data-action="quick-play"]').click();
@@ -190,6 +190,6 @@ async function centered(page){
   await blocked.locator('[data-bonus="result"]').click();await result(blocked,0,0);
   assert.equal(await blocked.locator('.points').textContent(),'53 pts · partido');await blocked.close();
   assert.deepEqual(errors,[]);
-  console.log('PASS: 25 campaign starts; unified flow; hidden result and archive reload; centered desktop/mobile inputs; partial/zero/skip bonuses; medals; ordered aligned rival; legacy progress; Madrid 22; blocked storage.');
+  console.log('PASS: 27 campaign starts; unified flow; hidden result and archive reload; centered desktop/mobile inputs; partial/zero/skip bonuses; medals; ordered aligned rival; legacy progress; Madrid 22; blocked storage.');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});
