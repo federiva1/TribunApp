@@ -23,11 +23,14 @@ Uso:
 """
 import argparse
 import json
+import os
 import subprocess
 import sys
 import time
 import urllib.request
 from pathlib import Path
+
+_EXE = os.environ.get('PLAYWRIGHT_CHROMIUM') or None   # chromium del entorno (nube), como en las otras placas
 
 ROOT = Path(__file__).resolve().parent.parent
 PREVIEW = ROOT / 'data' / 'social' / 'preview'
@@ -59,7 +62,7 @@ def leer_anual(standings_json):
     time.sleep(2)
     try:
         with sync_playwright() as pw:
-            b = pw.chromium.launch()
+            b = pw.chromium.launch(executable_path=_EXE) if _EXE else pw.chromium.launch()
             pg = b.new_page(viewport={'width': 1200, 'height': 1000})
             pg.route('**/api/apisports/**', lambda route: route.fulfill(
                 status=200, content_type='application/json', body=standings_json))
@@ -128,7 +131,8 @@ body{width:760px;height:950px;font-family:'Barlow Condensed',sans-serif;color:#f
 .head{padding:0 16px 7px;font-family:'Bebas Neue';font-size:15px;letter-spacing:2.5px;color:#5d6479}
 .head div{text-align:center}
 .head .h-nom{text-align:left;padding-left:4px}
-.lista{flex:1;display:flex;flex-direction:column;justify-content:center;gap:%dpx}
+.bloque{flex:1;display:flex;flex-direction:column;justify-content:center}
+.lista{display:flex;flex-direction:column;gap:%dpx}
 .f{height:%dpx;border:1px solid rgba(255,255,255,.13);border-radius:16px;
    background:rgba(255,255,255,.035);padding:0 16px}
 .f.lider{border-color:rgba(56,189,248,.55);background:rgba(56,189,248,.09)}
@@ -152,9 +156,11 @@ body{width:760px;height:950px;font-family:'Barlow Condensed',sans-serif;color:#f
     <div class="tit">%s</div>
     <div class="sub">%s</div>
   </div>
-  <div class="head"><div></div><div></div><div class="h-nom">EQUIPO</div>
-    <div>PJ</div><div>DIF</div><div>PTS</div></div>
-  <div class="lista">%s</div>
+  <div class="bloque">
+    <div class="head"><div></div><div></div><div class="h-nom">EQUIPO</div>
+      <div>PJ</div><div>DIF</div><div>PTS</div></div>
+    <div class="lista">%s</div>
+  </div>
   <div class="pie">TABLAS Y ESTADÍSTICAS EN <b>TRIBUNAPP.COM.AR</b></div>
 </div></body></html>""" % (ff, gap, alto, _logo_datauri(), titulo, sub, cuerpo)
 
@@ -165,7 +171,7 @@ def generar(filas, titulo, sub, out):
     tmp = out.with_suffix('.html')
     tmp.write_text(_html(filas, titulo, sub), encoding='utf-8')
     with sync_playwright() as pw:
-        b = pw.chromium.launch()
+        b = pw.chromium.launch(executable_path=_EXE) if _EXE else pw.chromium.launch()
         pg = b.new_page(viewport={'width': 760, 'height': 950}, device_scale_factor=2)
         pg.goto(tmp.as_uri())
         pg.wait_for_timeout(500)
