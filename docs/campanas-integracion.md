@@ -15,10 +15,51 @@ con selector de colección, carga diferida y progreso separado. Catálogo, cober
 fuentes y límites: `campanas-historicas.md`. Las otras propuestas del documento
 `campanas-objetivos.md` siguen siendo objetivos editoriales, no datos publicados.
 
-La portada conserva la presentación «¿Cuánto sabés de fútbol argentino?», los 30
-escudos, el filtro por equipo y los tres retos del Apertura 2026 con acceso directo.
-Debajo aparece la biblioteca de campañas históricas con sus mismas opciones. Volver
-desde una campaña recupera esa portada y el equipo elegido para el torneo.
+La portada conserva «¿Cuánto sabés de fútbol argentino?» y los 30 escudos. Primero
+explica los tres retos con imágenes; debajo ofrece el Apertura 2026 (con filtro por
+equipo) y las campañas históricas agrupadas en 12 tarjetas de clubes, cinco por fila
+en escritorio y dos en celular. Elegir una campaña abre sus recorridos y retos.
+
+## Recorridos y medallero (31/10/2026)
+
+- **Expreso:** un tercio redondeado hacia arriba, con un máximo de cinco partidos.
+- **Clásico:** la mitad de los partidos, redondeada hacia arriba.
+- **Completo:** todos los partidos jugables. Los suspendidos no entran.
+
+Son duraciones, no dificultades: no cambian ayudas ni puntajes. Una campaña de 19
+partidos ofrece 5/10/19; una de seis, 2/3/6. La selección es fija: prioriza el último
+partido, el primero y puntos intermedios espaciados, en ese orden; se muestra en
+orden cronológico. No es una selección editorial de «los mejores partidos».
+Expreso está contenido en Clásico, y Clásico en Completo. Las tres vistas usan los
+mismos registros existentes: cambiar de recorrido no borra ni duplica resultados.
+
+Completar un reto disponible por partido alcanza para la medalla del recorrido.
+Una respuesta errónea o asistida también termina ese reto: la medalla reconoce
+haberlo recorrido; los puntos reflejan el desempeño. Otros retos del mismo partido
+quedan como opcionales. Se priorizan partidos sin ningún reto terminado. Si sólo
+quedan encuentros sin reto de goleadores (por ejemplo, 0–0), se ofrece explícitamente
+formación o resultado para continuar; no se repiten goleadores indefinidamente.
+
+**Mis campañas** muestra todas las colecciones con estados por empezar, en juego o
+completada, y tres insignias (una por recorrido). La campaña completada tiene borde
+y brillo dorados. Los filtros de club, recorrido y estado permiten revisar cada
+avance. El Apertura se calcula para todo el torneo o para el club filtrado; sus
+recorridos por club pueden incluir partidos distintos de la selección global.
+Los puntos totales suman mejores marcas por colección/partido/reto una sola vez,
+independientemente del filtro del medallero. Repetir no acumula esa marca de nuevo.
+
+Al primer intento de jugar se pide un **apodo local**, sin email ni contraseña.
+Se guarda en `tribunapp.campanas.profile.v1` junto con preferencias de recorrido y
+reto. Cambiarlo renombra el mismo perfil y conserva el progreso anterior; no crea
+varios usuarios. No identifica al usuario en otros dispositivos ni recupera datos
+borrados. Si el almacenamiento está bloqueado, se avisa y se puede jugar en memoria.
+Las partidas incompletas siguen sin guardarse: se retoma desde el último reto terminado.
+
+Las tres fotografías se generaron con ElevenLabs (`gpt-image-2.5-sunburst`) en el
+flujo `KqC3C4D8huEO80H9Pwwq`: formación `MYJPIJ6R7GUCvA1Qn8oi`, goleadores
+`oiv8nW2pgMjrqPKxe6iK`, resultado `x2VmfJcIz44uJXdxA5GR`. Son ilustraciones
+fotográficas genéricas, no imágenes documentales de partidos. Se sirven localmente
+desde `assets/campanas/` en WebP de 768×432: aproximadamente 110 KB entre las tres.
 
 ## Arquitectura
 
@@ -29,6 +70,10 @@ desde una campaña recupera esa portada y el equipo elegido para el torneo.
 - `js/campanas-progress.js`: almacenamiento versionado y tolerancia a JSON corrupto,
   datos incompletos, duplicados o almacenamiento bloqueado.
 - `js/campanas-ui.js`: vistas y eventos; no llamadas a Supabase ni a APIs deportivas.
+- `data/campanas/recorridos.json`: índice sin respuestas con IDs, clubes y retos
+  disponibles; permite calcular medallas sin descargar todas las formaciones.
+- `scripts/build-campanas-journeys.cjs`: regenera ese índice después de cualquier
+  importación o corrección de colecciones. La prueba detecta índices desactualizados.
 - `data/campanas/apertura-2026.json`: colección con fuentes, slugs, versión y calidad.
 - `scripts/import-campanas.mjs`: conversión reproducible del prototipo local; usa
   los overrides que realmente aplicaba `page.tsx` por fecha (10), no todos los seeds.
@@ -59,7 +104,8 @@ recreativo y local: no constituye una clasificación competitiva validada por se
 
 ```powershell
 node scripts/import-campanas.mjs "C:\ruta\a\mvp-la-planilla"
-node --test scripts/test-campanas.cjs
+node scripts/build-campanas-journeys.cjs
+node --test scripts/test-campanas.cjs scripts/test-historical-campaigns.cjs scripts/test-campanas-journeys.cjs
 node --check js/campanas-ui.js
 node --check js/campanas-progress.js
 python scripts/check_datos.py
@@ -102,3 +148,9 @@ Revisar el diseño con Fede, resolver observaciones de juego y realizar el contr
 adicional solicitado con Cloud. El push a `campanas` puede generar un preview de
 Vercel; producción sigue en `master`. Merge y publicación definitiva requieren el
 OK del usuario. No habilitar ni modificar workflows automáticos.
+
+Pruebas de navegador: `scripts/test-campanas-browser.cjs` cubre los 72 inicios de
+modo históricos, las pistas y el archivo; `scripts/test-campanas-journeys-browser.cjs`
+verifica medallas, rutas, filtros, apodo, progreso anterior, transición desde
+goleadores cuando quedan 0–0, vistas móviles y almacenamiento bloqueado. Se usa un
+navegador aislado, sin tocar los resultados reales del usuario.

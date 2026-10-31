@@ -19,7 +19,10 @@
 > Desarrollo separado: **Campañas** se prepara en la rama `campanas` con el Apertura
 > 2026, tres modos de memoria y progreso local sin login. Aún pendiente de revisión
 > y merge. Incluye además 24 campañas históricas de 12 clubes, seleccionables con
-> los mismos retos y progreso independiente. Arquitectura: `docs/campanas-integracion.md`.
+> los mismos retos y progreso independiente. La portada presenta los modos, el torneo
+> y las campañas agrupadas por club. Incluye recorridos Expreso/Clásico/Completo,
+> apodo local y medallero «Mis campañas», con avance compartido entre recorridos.
+> Arquitectura y reglas: `docs/campanas-integracion.md`.
 > Catálogo producido, fuentes y límites: `docs/campanas-historicas.md`. Las propuestas
 > restantes de `docs/campanas-objetivos.md` siguen pendientes.
 

@@ -72,7 +72,26 @@
       },
     };
   }
-  const api = { open, validEntry, KEY };
+  const PROFILE_KEY = "tribunapp.campanas.profile.v1";
+  function openProfile(storage, onError) {
+    let value = { nickname: "", route: "express", mode: "formation" };
+    const clean = (input) => ({
+      nickname: typeof input?.nickname === "string" ? [...input.nickname.replace(/[\u0000-\u001f\u007f]/g, "").trim()].slice(0, 24).join("") : "",
+      route: ["express", "classic", "complete"].includes(input?.route) ? input.route : "express",
+      mode: ["formation", "scorers", "result"].includes(input?.mode) ? input.mode : "formation",
+    });
+    try { const raw = storage.getItem(PROFILE_KEY); if (raw) value = clean(JSON.parse(raw)); }
+    catch (error) { onError(error); }
+    return {
+      get: () => ({ ...value }),
+      save(changes) {
+        value = clean({ ...value, ...changes });
+        try { storage.setItem(PROFILE_KEY, JSON.stringify(value)); } catch (error) { onError(error); }
+        return { ...value };
+      },
+    };
+  }
+  const api = { open, openProfile, validEntry, KEY, PROFILE_KEY };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   root.CampanasProgress = api;
 })(typeof window !== "undefined" ? window : globalThis);

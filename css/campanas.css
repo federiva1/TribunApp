@@ -8,6 +8,8 @@
   --muted: #a5a8bb;
   --border: rgba(255, 255, 255, 0.12);
 }
+[hidden] { display: none !important; }
+#campanas:focus { outline: none; }
 * {
   box-sizing: border-box;
 }
@@ -127,7 +129,7 @@ h3,
   color: var(--celeste);
 }
 #campanas {
-  max-width: 1100px;
+  max-width: 1280px;
   margin: auto;
   padding: 28px 24px 48px;
   min-height: 75vh;
@@ -1007,6 +1009,129 @@ h3,
 }
 .goal-correct .goal-pick:disabled .player-name {
   color: var(--verde);
+}
+/* Campaign library, shared routes and the local medal cabinet. */
+.profile-nav { display:flex; align-items:center; gap:16px; min-width:0; }
+.nickname { max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--celeste); }
+.tournament-library { margin-top:44px; }
+.tournament-card { display:flex; justify-content:space-between; align-items:center; gap:32px; padding:32px; border:1px solid #4fc3f733; border-radius:14px; background:linear-gradient(115deg,#19304466,transparent 70%),var(--dark2); }
+.tournament-card h3 { font-size:40px; margin:8px 0; }
+.tournament-card .tag { display:inline-block; margin-top:20px; }
+.tournament-choice { display:flex; flex-direction:column; gap:14px; min-width:260px; }
+.tournament-choice label { display:flex; flex-direction:column; gap:8px; }
+.tournament-choice select,.medal-filters select { width:100%; padding:12px; color:white; background:#1b1d2d; border:1px solid var(--border); border-radius:8px; }
+.mode-card { padding:0; overflow:hidden; }
+.mode-photo { display:block; width:100%; height:auto; aspect-ratio:16/9; object-fit:cover; border-bottom:1px solid var(--border); }
+.mode-body { display:flex; flex-direction:column; width:100%; padding:24px; flex:1; }
+.mode-body .mode-progress { margin-top:auto; padding-top:22px; }
+.mode-body .progress-track { flex-shrink:0; }
+.mode-explainer:hover { transform:none; border-color:var(--border); }
+.mode-explainer p { min-height:0; }
+.club-campaign-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:16px; }
+.club-campaign-card { min-width:0; background:var(--dark2); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+.club-card-head { display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:25px 12px 18px; height:176px; background:radial-gradient(ellipse at top,#4fc3f710,transparent 80%); }
+.club-card-head img { width:54px; height:60px; object-fit:contain; filter:drop-shadow(0 4px 8px #0006); }
+.club-card-head h3 { font-size:22px; margin-top:14px; }
+.club-campaign-links { display:grid; grid-template-rows:repeat(2,1fr); }
+.historical-card { display:flex; flex-direction:column; gap:8px; text-align:left; width:100%; min-height:152px; background:transparent; color:#fff; padding:18px; border-top:1px solid var(--border); }
+.historical-card:hover { background:#4fc3f710; }
+.historical-card strong { font-size:14px; line-height:1.45; }
+.historical-card span { font-size:12px; line-height:1.5; color:var(--muted); }
+.historical-card small { display:flex; justify-content:space-between; margin-top:auto; padding-top:5px; color:var(--celeste); }
+.campaign-hero { grid-template-columns:1fr auto; }
+.campaign-hero h1 { font-size:clamp(36px,5vw,60px); }
+.campaign-hero p { max-width:680px; }
+.campaign-crest { width:100px; height:110px; object-fit:contain; }
+.route-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+.route-card { display:flex; align-items:center; gap:16px; text-align:left; padding:20px; border:1px solid var(--border); border-radius:12px; color:white; background:var(--dark2); }
+.route-card[aria-pressed="true"] { border-color:var(--celeste); background:#4fc3f710; box-shadow:inset 0 0 0 1px var(--celeste); }
+.route-mark { width:36px; height:42px; flex-shrink:0; display:grid; place-items:center; border:1px solid #4fc3f744; color:var(--celeste); font-family:"Barlow Condensed",sans-serif; border-radius:50% 50% 35% 35%; }
+.route-card strong { display:block; font-family:"Bebas Neue",sans-serif; font-size:28px; font-weight:400; letter-spacing:1px; }
+.route-count { display:block; color:var(--celeste); font-size:13px; margin:5px 0; }
+.route-card small { display:block; color:var(--muted); line-height:1.5; }
+.route-note { color:var(--muted); font-size:12px; line-height:1.6; margin-top:14px; }
+.route-status { display:flex; flex-wrap:wrap; align-items:center; gap:8px 20px; padding:16px 20px; border-left:3px solid var(--celeste); background:#4fc3f708; margin:28px 0; }
+.route-status span { color:var(--muted); font-size:13px; }
+.route-status.earned { border-color:var(--gold); }
+.route-status.earned strong,.medal-earned { color:var(--gold); }
+.journey-strip { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:0 4px 14px; color:var(--celeste); font-size:13px; }
+.completion .medal-earned { margin-top:16px; }
+.medal-hero { border-bottom:1px solid var(--border); padding:10px 0 32px; }
+.medal-hero h1 { font-size:clamp(48px,7vw,76px); margin:10px 0; }
+.medal-hero p { font-size:17px; color:#c0c4d3; overflow-wrap:anywhere; }
+.medal-filters { display:grid; grid-template-columns:2fr 1fr 1fr; gap:16px; margin:28px 0 18px; }
+.medal-filters label { display:flex; flex-direction:column; gap:8px; color:var(--muted); font-size:12px; }
+.medal-explanation { font-size:13px; max-width:920px; margin-bottom:24px; }
+.medal-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:20px; }
+.medal-card { display:flex; flex-direction:column; padding:24px; min-width:0; border:1px solid var(--border); border-radius:14px; background:var(--dark2); }
+.medal-card.new { border-style:dashed; }
+.medal-card.started { border-color:#4fc3f744; }
+.medal-card.complete { background:radial-gradient(ellipse at top right,#f5c5181e,transparent 70%),var(--dark2); border-color:#f5c51888; box-shadow:0 0 22px #f5c51812; }
+.medal-card-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; }
+.medal-card-heading img { width:44px; height:50px; object-fit:contain; }
+.medal-state { font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); }
+.started .medal-state { color:var(--celeste); }
+.complete .medal-state { color:var(--gold); }
+.tournament-monogram { font-family:"Bebas Neue",sans-serif; font-size:36px; color:var(--celeste); line-height:50px; }
+.medal-card h2 { font-size:27px; }
+.medal-badges { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:24px 0; }
+.medal-badge { display:flex; flex-direction:column; align-items:center; gap:6px; color:#85899c; font-size:11px; }
+.medal-badge b { display:grid; place-items:center; font-family:"Barlow Condensed",sans-serif; font-size:20px; width:45px; height:50px; border:1px dashed #ffffff30; border-radius:50% 50% 38% 38%; background:#ffffff04; }
+.medal-badge.started { color:var(--celeste); }
+.medal-badge.started b { border-color:#4fc3f777; border-style:solid; }
+.medal-badge.earned { color:var(--gold); }
+.medal-badge.earned b { border:1px solid #f5c518aa; color:#ffdf65; background:linear-gradient(140deg,#f5c51833,#f5c51808); box-shadow:0 0 16px #f5c51820; }
+.medal-card > .muted { font-size:12px; }
+.medal-card > button { width:100%; margin-top:auto; }
+.nickname-dialog { max-width:460px; width:calc(100% - 32px); padding:30px; background:#13131f; color:white; border:1px solid #4fc3f777; border-radius:16px; box-shadow:0 20px 100px #000a; }
+.nickname-dialog::backdrop { background:#060610cc; backdrop-filter:blur(5px); }
+.nickname-dialog h2 { font-size:38px; margin:12px 0; }
+.nickname-dialog label { display:block; margin:22px 0 8px; }
+.nickname-dialog input { width:100%; padding:14px; background:var(--dark); border:1px solid var(--border); border-radius:8px; color:white; font-size:16px; }
+.dialog-actions { display:flex; justify-content:flex-end; gap:12px; }
+@media (max-width:1000px) {
+  .club-campaign-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .route-card { gap:10px; padding:16px; }
+  .medal-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media (max-width:600px) {
+  .profile-nav { gap:8px; }
+  .nickname { max-width:88px; font-size:12px; }
+  .section-bar { flex-wrap:wrap; }
+  .section-bar > .eyebrow { font-size:11px; }
+  .mode-card { padding:0; }
+  .mode-explainer { display:grid; grid-template-columns:108px 1fr; align-items:stretch; }
+  .mode-explainer .mode-photo { height:100%; min-height:150px; aspect-ratio:auto; border-bottom:0; border-right:1px solid var(--border); }
+  .mode-body { padding:18px; }
+  .mode-body h3 { font-size:24px; }
+  .mode-explainer .mode-body { padding:16px; }
+  .mode-explainer h3 { font-size:23px; }
+  .mode-card[data-mode] { display:grid; grid-template-columns:84px minmax(0,1fr); align-items:stretch; }
+  .mode-card[data-mode] .mode-photo { height:100%; aspect-ratio:auto; border-bottom:0; border-right:1px solid var(--border); }
+  .mode-card[data-mode] .mode-body { padding:16px; }
+  .mode-card[data-mode] .mode-body p { font-size:12px; }
+  .mode-card[data-mode] .mode-progress { padding-top:12px; margin-top:0; }
+  .tournament-library { margin-top:34px; }
+  .tournament-card { flex-direction:column; align-items:stretch; gap:24px; padding:24px; }
+  .tournament-choice { min-width:0; }
+  .club-campaign-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+  .club-card-head { height:168px; padding:20px 10px 14px; }
+  .club-card-head h3 { font-size:21px; }
+  .historical-card { padding:14px; min-height:165px; }
+  .historical-card strong { font-size:13px; }
+  .campaign-hero { gap:12px; padding:24px; }
+  .campaign-hero h1 { font-size:36px; }
+  .campaign-crest { width:54px; height:66px; }
+  .route-grid { grid-template-columns:1fr; gap:10px; }
+  .route-card { padding:16px; gap:16px; }
+  .route-card strong { font-size:26px; }
+  .route-card small { font-size:12px; }
+  .journey-strip { align-items:flex-start; }
+  .journey-strip span { max-width:70%; line-height:1.6; }
+  .medal-filters { grid-template-columns:1fr 1fr; gap:12px; }
+  .medal-filters label:first-child { grid-column:1/-1; }
+  .medal-grid { grid-template-columns:1fr; }
+  .nickname-dialog { padding:24px; }
 }
 @media (prefers-reduced-motion: reduce) {
   * {

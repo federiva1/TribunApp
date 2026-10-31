@@ -137,7 +137,44 @@
       );
     });
   }
+  // Input order is the published chronological order. Every shorter route is a
+  // prefix of the same selection priority, then displayed chronologically.
+  function routeMatches(matches, club, route) {
+    var options = matches.filter(function (match) {
+      return (!club || club === "all" || [match.homeSlug, match.awaySlug].includes(club)) && matchModes(match).length;
+    });
+    var count = route === "express" ? Math.min(5, Math.ceil(options.length / 3))
+      : route === "classic" ? Math.ceil(options.length / 2) : options.length;
+    if (!count) return [];
+    var order = [options.length - 1];
+    if (options.length > 1) order.push(0);
+    while (order.length < count) {
+      var sorted = order.slice().sort(function (a, b) { return a - b; });
+      var left = 0, gap = 0;
+      for (var i = 1; i < sorted.length; i++) {
+        if (sorted[i] - sorted[i - 1] > gap) { left = sorted[i - 1]; gap = sorted[i] - left; }
+      }
+      order.push(left + Math.ceil(gap / 2));
+    }
+    return order.slice(0, count).sort(function (a, b) { return a - b; }).map(function (index) { return options[index]; });
+  }
+  function matchModes(match) {
+    return match.modes || ["formation", "scorers", "result"].filter(function (mode) { return eligible([match], "all", mode).length; });
+  }
+  function routeStatus(matches, entries, collectionId) {
+    var allowed = new Map(matches.map(function (match) { return [match.id, matchModes(match)]; }));
+    var relevant = entries.filter(function (entry) {
+      return entry.collectionId === collectionId && allowed.get(entry.matchId)?.includes(entry.mode);
+    });
+    var completed = new Set(relevant.map(function (entry) { return entry.matchId; }));
+    return { total: matches.length, done: completed.size, complete: matches.length > 0 && completed.size === matches.length,
+      score: relevant.reduce(function (sum, entry) { return sum + entry.bestScore; }, 0),
+      remaining: matches.filter(function (match) { return !completed.has(match.id); }) };
+  }
   return {
+    routeMatches: routeMatches,
+    routeStatus: routeStatus,
+    matchModes: matchModes,
     normalize: normalize,
     acceptedAnswer: acceptedAnswer,
     pointsForPlayer: pointsForPlayer,
