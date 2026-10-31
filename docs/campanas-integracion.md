@@ -19,6 +19,10 @@ La portada conserva «¿Cuánto sabés de fútbol argentino?» y los 30 escudos.
 explica los tres retos con imágenes; debajo ofrece el Apertura 2026 (con filtro por
 equipo) y las campañas históricas agrupadas en 12 tarjetas de clubes, cinco por fila
 en escritorio y dos en celular. Elegir una campaña abre sus recorridos y retos.
+El botón **Jugar** está arriba junto a **Mis campañas**, y también en el hero. Abre
+una selección compacta de campaña, equipo (si corresponde), recorrido y reto; desde
+allí se entra a la partida. Recuerda la última campaña jugada. Los textos de logros
+históricos se retiraron de las tarjetas y de las cabeceras de campañas por club.
 
 ## Recorridos y medallero (31/10/2026)
 
@@ -40,11 +44,14 @@ quedan como opcionales. Se priorizan partidos sin ningún reto terminado. Si só
 quedan encuentros sin reto de goleadores (por ejemplo, 0–0), se ofrece explícitamente
 formación o resultado para continuar; no se repiten goleadores indefinidamente.
 
-**Mis campañas** muestra todas las colecciones con estados por empezar, en juego o
-completada, y tres insignias (una por recorrido). La campaña completada tiene borde
-y brillo dorados. Los filtros de club, recorrido y estado permiten revisar cada
-avance. El Apertura se calcula para todo el torneo o para el club filtrado; sus
-recorridos por club pueden incluir partidos distintos de la selección global.
+**Mis campañas** muestra sólo las que el usuario empezó a jugar, con estados en
+juego o completada y tres insignias (una por recorrido). Entrar a ver una campaña
+no la agrega; empezar una partida sí, aunque todavía no se haya terminado. Se conserva
+esa pertenencia al recargar. Los resultados anteriores también recuperan sus campañas.
+La campaña completada tiene borde y brillo dorados. Los filtros de club, recorrido y
+estado permiten revisar cada avance. El Apertura sólo aparece si se jugó y conserva
+el equipo elegido: no se agregan automáticamente recorridos de sus rivales. Una misma
+persona puede empezar recorridos del Apertura con distintos clubes o con todos.
 Los puntos totales suman mejores marcas por colección/partido/reto una sola vez,
 independientemente del filtro del medallero. Repetir no acumula esa marca de nuevo.
 
@@ -54,6 +61,28 @@ reto. Cambiarlo renombra el mismo perfil y conserva el progreso anterior; no cre
 varios usuarios. No identifica al usuario en otros dispositivos ni recupera datos
 borrados. Si el almacenamiento está bloqueado, se avisa y se puede jugar en memoria.
 Las partidas incompletas siguen sin guardarse: se retoma desde el último reto terminado.
+`tribunapp.campanas.activity.v1` registra las campañas empezadas, su equipo y última
+configuración, sin guardar respuestas parciales ni crear una cuenta.
+
+## Formación del club y rival de referencia
+
+En campañas históricas y en el torneo filtrado por club, sólo se piden los **once
+jugadores del club elegido**, tanto de local como de visitante. Completar esos once
+termina el reto; los puntos y pistas mantienen la misma regla por jugador (máximo 33).
+El tablero sigue mostrando rival, marcador, fecha y estadio. **Ver rival** muestra
+su once completo como referencia, sin inputs, sin pistas, sin puntos adicionales y
+sin borrar lo que el usuario está escribiendo. Se puede volver a ocultar.
+
+Con **Todos los equipos** se mantienen ambos once (22 apellidos, máximo 66). En la
+final de Madrid de 2018 (`espn-528144`) se ofrece explícitamente jugar ambos once,
+antes de responder, pedir pistas o revelar al rival; sigue siendo opcional.
+Goleadores y resultado conservan las planillas y reglas previas.
+
+El progreso nuevo de formación guarda `formationClub`; resolver el once de Boca no
+marca como resuelto el de su rival ni el desafío de ambos equipos en el Apertura.
+Los registros anteriores sin ese campo representan los 22 apellidos y siguen siendo
+válidos. `playClub` conserva el equipo con el que se jugó. Los puntos globales usan la
+mejor marca por colección/partido/reto, sin sumar otra vez por cambiar de equipo.
 
 Las tres fotografías se generaron con ElevenLabs (`gpt-image-2.5-sunburst`) en el
 flujo `KqC3C4D8huEO80H9Pwwq`: formación `MYJPIJ6R7GUCvA1Qn8oi`, goleadores
@@ -154,3 +183,6 @@ modo históricos, las pistas y el archivo; `scripts/test-campanas-journeys-brows
 verifica medallas, rutas, filtros, apodo, progreso anterior, transición desde
 goleadores cuando quedan 0–0, vistas móviles y almacenamiento bloqueado. Se usa un
 navegador aislado, sin tocar los resultados reales del usuario.
+`scripts/test-campanas-access-browser.cjs` prueba el acceso visible, la selección
+rápida, campañas personales vacías y empezadas, cierre con once apellidos, referencia
+gratuita del rival, borradores de respuesta y opción de 22 jugadores en Madrid.

@@ -163,15 +163,54 @@
   }
   function routeStatus(matches, entries, collectionId) {
     var allowed = new Map(matches.map(function (match) { return [match.id, matchModes(match)]; }));
-    var relevant = entries.filter(function (entry) {
+    var relevant = bestEntries(entries.filter(function (entry) {
       return entry.collectionId === collectionId && allowed.get(entry.matchId)?.includes(entry.mode);
-    });
+    }));
     var completed = new Set(relevant.map(function (entry) { return entry.matchId; }));
     return { total: matches.length, done: completed.size, complete: matches.length > 0 && completed.size === matches.length,
       score: relevant.reduce(function (sum, entry) { return sum + entry.bestScore; }, 0),
       remaining: matches.filter(function (match) { return !completed.has(match.id); }) };
   }
+  function formationSides(match, club) {
+    var sides = ["home", "away"];
+    return !club || club === "all" ? sides : sides.filter(function (side) { return match[side + "Slug"] === club; });
+  }
+  function bestEntries(entries) {
+    var unique = new Map();
+    entries.forEach(function (entry) {
+      var key = JSON.stringify([entry.collectionId, entry.matchId, entry.mode]), previous = unique.get(key);
+      if (!previous || entry.bestScore > previous.bestScore || (entry.bestScore === previous.bestScore && entry.updatedAt > previous.updatedAt)) unique.set(key, entry);
+    });
+    return [...unique.values()];
+  }
+  function progressForClub(entries, club) {
+    return bestEntries(entries.filter(function (entry) {
+      return entry.mode !== "formation" || !entry.formationClub || entry.formationClub === "all" || entry.formationClub === club;
+    }));
+  }
+  function personalCampaigns(collections, activity, entries) {
+    var played = new Map();
+    function add(item, club, date) {
+      club = item.clubSlug || club || "all";
+      if (club !== "all" && !item.matches.some(function (m) { return m.homeSlug === club || m.awaySlug === club; })) return;
+      var key = item.id + "|" + club, previous = played.get(key);
+      if (!previous || date > previous.lastPlayedAt) played.set(key, { item: item, club: club, lastPlayedAt: date });
+    }
+    activity.forEach(function (record) {
+      var item = collections.find(function (c) { return c.id === record.collectionId; });
+      if (item) add(item, record.club, record.startedAt);
+    });
+    entries.forEach(function (entry) {
+      var item = collections.find(function (c) { return c.id === entry.collectionId && c.matches.some(function (m) { return m.id === entry.matchId; }); });
+      if (item) add(item, entry.playClub || entry.formationClub, entry.updatedAt);
+    });
+    return [...played.values()].sort(function (a, b) { return b.lastPlayedAt.localeCompare(a.lastPlayedAt); });
+  }
   return {
+    formationSides: formationSides,
+    bestEntries: bestEntries,
+    progressForClub: progressForClub,
+    personalCampaigns: personalCampaigns,
     routeMatches: routeMatches,
     routeStatus: routeStatus,
     matchModes: matchModes,

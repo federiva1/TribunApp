@@ -80,3 +80,51 @@ test('local profile validates preferences, bounds nicknames and survives unavail
   const malformed=progress.openProfile({getItem:()=>'{bad'},e=>errors.push(e));
   assert.equal(malformed.get().nickname,'');assert.equal(errors.length,2);
 });
+test('formation challenges follow the selected club at home or away, or both with all teams', () => {
+  const match={homeSlug:'bocajuniors',awaySlug:'arsenal'};
+  assert.deepEqual(core.formationSides(match,'bocajuniors'),['home']);
+  assert.deepEqual(core.formationSides(match,'arsenal'),['away']);
+  assert.deepEqual(core.formationSides(match,'all'),['home','away']);
+  assert.deepEqual(core.formationSides(match,'unknown'),[]);
+});
+test('one-club lineups do not complete another club or both teams; old 22-player records stay valid', () => {
+  const values=new Map(),storage={getItem:k=>values.get(k),setItem:(k,v)=>values.set(k,v)};
+  const store=progress.open(storage,e=>{throw e;});
+  store.save('one','a','formation',33,1,'bocajuniors','bocajuniors');
+  assert.equal(core.progressForClub(store.list(),'bocajuniors').length,1);
+  assert.equal(core.progressForClub(store.list(),'arsenal').length,0);
+  assert.equal(core.progressForClub(store.list(),'all').length,0);
+  store.save('one','a','formation',30,1,'arsenal','arsenal');
+  store.save('one','a','formation',25,1,'bocajuniors','bocajuniors');
+  assert.equal(store.list().length,2);
+  assert.equal(core.progressForClub(store.list(),'bocajuniors')[0].bestScore,33);
+  assert.equal(core.progressForClub(store.list(),'arsenal')[0].bestScore,30);
+  assert.equal(core.routeStatus([{id:'a',modes:['formation']}],store.list(),'one').score,33,'totals use best mark without counting separate scopes twice');
+  const legacy={...store.list()[0],bestScore:66};delete legacy.formationClub;delete legacy.playClub;
+  for(const club of ['all','bocajuniors','arsenal']) assert.equal(core.progressForClub([legacy,...store.list()],club)[0].bestScore,66);
+  assert.equal(progress.open(storage,e=>{throw e;}).list().length,2);
+});
+test('personal campaigns include starts and legacy results, never unplayed catalog entries or rival contexts', () => {
+  const historical=index.collections.find(c=>c.id==='boca-libertadores-2007');
+  const tournament=index.collections.find(c=>c.id==='apertura-2026');
+  const started={collectionId:tournament.id,club:'bocajuniors',route:'express',mode:'formation',startedAt:'2026-10-30T12:00:00Z'};
+  assert.deepEqual(core.personalCampaigns(index.collections,[],[]),[]);
+  let mine=core.personalCampaigns(index.collections,[started],[]);
+  assert.equal(mine.length,1);assert.equal(mine[0].club,'bocajuniors');
+  const old={collectionId:historical.id,matchId:historical.matches[0].id,mode:'result',bestScore:20,updatedAt:'2026-10-29T12:00:00Z'};
+  mine=core.personalCampaigns(index.collections,[started],[old]);
+  assert.equal(mine.length,2);assert(mine.every(c=>c.club==='bocajuniors'));
+  assert(!mine.some(c=>c.item.id==='boca-liga-2022'));
+  const newer={...old,playClub:'bocajuniors',collectionId:tournament.id,matchId:tournament.matches.find(m=>[m.homeSlug,m.awaySlug].includes('bocajuniors')).id};
+  assert.equal(core.personalCampaigns(index.collections,[started],[newer]).length,1,'activity and scores merge the same campaign context');
+});
+test('activity survives reload, tracks only the latest visit per campaign and works without storage', () => {
+  const raw=new Map(),storage={getItem:k=>raw.get(k),setItem:(k,v)=>raw.set(k,v)};
+  const store=progress.openActivity(storage,e=>{throw e;});
+  store.start('one','bocajuniors','express','formation');
+  store.start('one','bocajuniors','classic','result');
+  assert.equal(store.list().length,1);assert.equal(store.list()[0].route,'classic');
+  assert.equal(progress.openActivity(storage,e=>{throw e;}).list().length,1);
+  const errors=[],blocked=progress.openActivity({getItem(){throw Error('blocked')},setItem(){throw Error('blocked')}},e=>errors.push(e));
+  blocked.start('one','all','express','formation');assert.equal(blocked.list().length,1);assert.equal(errors.length,2);
+});

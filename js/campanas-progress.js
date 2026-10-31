@@ -7,6 +7,8 @@
       typeof entry.matchId === "string" &&
       typeof entry.collectionId === "string" &&
       ["formation", "scorers", "result"].includes(entry.mode) &&
+      (entry.formationClub === undefined || typeof entry.formationClub === "string") &&
+      (entry.playClub === undefined || typeof entry.playClub === "string") &&
       Number.isFinite(entry.bestScore) &&
       Number.isInteger(entry.attempts) &&
       entry.attempts > 0 &&
@@ -26,7 +28,7 @@
           throw new Error("Formato de progreso inválido");
         const unique = new Map();
         saved.entries.filter(validEntry).forEach((entry) => {
-          const key = JSON.stringify([entry.collectionId, entry.matchId, entry.mode]),
+          const key = JSON.stringify([entry.collectionId, entry.matchId, entry.mode, entry.mode === "formation" ? entry.formationClub || "all" : "all"]),
             previous = unique.get(key);
           if (!previous) unique.set(key, entry);
           else
@@ -45,16 +47,19 @@
     const list = () => entries.map((entry) => ({ ...entry }));
     return {
       list,
-      save(collectionId, matchId, mode, score, dataVersion) {
+      save(collectionId, matchId, mode, score, dataVersion, playClub = "all", formationClub = "all") {
         const previous = entries.find(
           (entry) =>
-            entry.collectionId === collectionId && entry.matchId === matchId && entry.mode === mode,
+            entry.collectionId === collectionId && entry.matchId === matchId && entry.mode === mode &&
+            (mode !== "formation" || (entry.formationClub || "all") === formationClub),
         );
         const now = new Date().toISOString();
         const next = {
           collectionId,
           matchId,
           mode,
+          playClub,
+          ...(mode === "formation" ? { formationClub } : {}),
           bestScore: Math.max(previous ? previous.bestScore : -Infinity, score),
           lastScore: score,
           attempts: (previous?.attempts || 0) + 1,
@@ -69,6 +74,29 @@
           onError(error);
         }
         return next;
+      },
+    };
+  }
+  const ACTIVITY_KEY = "tribunapp.campanas.activity.v1";
+  function openActivity(storage, onError) {
+    let entries = [];
+    try {
+      const raw = storage.getItem(ACTIVITY_KEY);
+      if (raw) {
+        const value = JSON.parse(raw);
+        if (!Array.isArray(value)) throw new Error("Actividad inválida");
+        entries = value.filter(item => item && typeof item.collectionId === "string" && typeof item.club === "string" &&
+          ["express", "classic", "complete"].includes(item.route) && ["formation", "scorers", "result"].includes(item.mode) &&
+          typeof item.startedAt === "string" && Number.isFinite(Date.parse(item.startedAt)));
+      }
+    } catch (error) { onError(error); }
+    const list = () => entries.map(item => ({ ...item })).sort((a,b) => b.startedAt.localeCompare(a.startedAt));
+    return {
+      list,
+      start(collectionId, club, route, mode) {
+        entries = entries.filter(item => item.collectionId !== collectionId || item.club !== club)
+          .concat({ collectionId, club, route, mode, startedAt: new Date().toISOString() });
+        try { storage.setItem(ACTIVITY_KEY, JSON.stringify(entries)); } catch (error) { onError(error); }
       },
     };
   }
@@ -91,7 +119,7 @@
       },
     };
   }
-  const api = { open, openProfile, validEntry, KEY, PROFILE_KEY };
+  const api = { open, openProfile, openActivity, validEntry, KEY, PROFILE_KEY, ACTIVITY_KEY };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   root.CampanasProgress = api;
 })(typeof window !== "undefined" ? window : globalThis);

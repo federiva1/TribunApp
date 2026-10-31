@@ -61,7 +61,7 @@ function entry(collection,match,mode='result',score=20) {
     assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
     await page.screenshot({path:path.join(os.tmpdir(),'campanas-medallero-mobile.png'),fullPage:true});
     await page.locator('#medal-club').selectOption('all');
-    assert.equal(await page.locator('.medal-card').count(),25);
+    assert.equal(await page.locator('.medal-card').count(),1,'only played campaigns belong in the medal cabinet');
     await page.setViewportSize({width:1440,height:1100});
     await page.screenshot({path:path.join(os.tmpdir(),'campanas-medallero-desktop.png'),fullPage:true});
     await page.locator('#medal-state').selectOption('complete');
@@ -81,7 +81,7 @@ function entry(collection,match,mode='result',score=20) {
     const firstRecord=page.locator('.archive-card').first();
     assert.equal(await firstRecord.locator('[data-replay-mode="result"]').count(),0,'archive offers only unplayed challenges');
     await firstRecord.locator('[data-replay-mode="formation"]').click();
-    assert.equal(await page.locator('[data-player-form]').count(),22);
+    assert.equal(await page.locator('[data-player-form]').count(),11);
     await page.locator('[data-action="home"]').click();
     await page.locator('[data-action="profile"]').click();
     await page.locator('#nickname-input').fill('Bicho');await page.locator('#nickname-form .primary').click();

@@ -22,6 +22,9 @@
 > los mismos retos y progreso independiente. La portada presenta los modos, el torneo
 > y las campañas agrupadas por club. Incluye recorridos Expreso/Clásico/Completo,
 > apodo local y medallero «Mis campañas», con avance compartido entre recorridos.
+> «Jugar» permite entrar desde arriba con una selección compacta. «Mis campañas»
+> sólo muestra campañas empezadas. Formación pide el once del club elegido y permite
+> consultar al rival; con todos los clubes se mantienen los dos once.
 > Arquitectura y reglas: `docs/campanas-integracion.md`.
 > Catálogo producido, fuentes y límites: `docs/campanas-historicas.md`. Las propuestas
 > restantes de `docs/campanas-objetivos.md` siguen pendientes.
