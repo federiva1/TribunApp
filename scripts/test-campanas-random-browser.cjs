@@ -48,7 +48,7 @@ const KEY='tribunapp.campanas.progress.v1',PROFILE='tribunapp.campanas.profile.v
   for(const [i,p] of target.awayXI.entries()) {const input=page.locator('#guess-away-'+i);await input.fill(p.accepted_answers?.[0]||p.name);await input.press('Enter');}
   assert.equal(await page.locator('.points').textContent(),'33 pts · partido','rival formation points are not duplicated');
   assert.equal(await page.locator('[data-bonus="result"]').count(),0);assert.equal(await page.locator('[data-bonus="scorers"]').count(),1);
-  await page.locator('[data-action="medals"]').click();assert.equal(await page.locator('.medal-track').count(),3);
+  await page.locator('[data-action="medals"]').click();assert.equal(await page.locator('.medal-track').count(),2);
   assert.deepEqual(errors,[]);
   console.log('PASS: retired random/result/scorers preferences, remembered launcher, formation-only skips, cross-club result exposure, preserved sheet ordering/alignment and mobile medal rows.');
  }finally{await browser.close();}

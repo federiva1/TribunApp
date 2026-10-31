@@ -15,8 +15,8 @@ Las tres imágenes explican las etapas, no son opciones para elegir modos.
 “Jugar”, en la barra superior, abre un selector visual: históricas muestra los 12
 escudos, luego las dos campañas del club elegido; Apertura 2026 permite elegir entre
 los 30 clubes o todos. Recuerda la última selección y permite jugar sólo cuando hay
-una campaña elegida. Los tres recorridos muestran únicamente su cantidad de partidos,
-tanto en la ventana como en la pantalla de campaña. Se mantienen sus claves y progreso.
+una campaña elegida. “¿Cómo querés jugar?” ofrece sólo Clásico y Completo, con su
+cantidad de partidos, tanto en la ventana como en la pantalla de campaña.
 La página principal `index.html` de TribunApp no forma parte de este cambio.
 
 ### Etapas y protección de respuestas
@@ -67,19 +67,19 @@ Se muestran todos los suplentes ingresados únicamente cuando hubo un goleador s
 
 ## Recorridos y progreso
 
-- Expreso: un tercio redondeado hacia arriba, máximo cinco partidos.
 - Clásico: la mitad redondeada hacia arriba.
 - Completo: todos los partidos con formación jugable; excluye suspendidos.
 
 Son duraciones, no dificultades. La selección es fija, anidada y cronológica:
-prioriza final, inicio y puntos intermedios. Para 19 partidos ofrece 5/10/19.
+prioriza final, inicio y puntos intermedios. Para 19 partidos ofrece 10/19; para los
+8 de Argentinos en la Libertadores 2023 ofrece 4/8.
 Completar **la formación** hace avanzar la medalla; los bonus no son requisito.
-Los tres recorridos comparten progreso. Cambiar el club no completa automáticamente
+Los dos recorridos comparten progreso. Cambiar el club no completa automáticamente
 su once: `formationClub` conserva ese alcance. El caso opcional de ambos once de
 Madrid 2018 sigue disponible antes de pedir ayudas o ver al rival.
 
 “Mis campañas” incluye sólo las empezadas, incluso antes de terminar el primer
-partido. El medallero conserva filtros y tres barras de avance; los recorridos
+partido. El medallero conserva filtros y dos barras de avance; los recorridos
 terminados se destacan en dorado. Los puntos suman la mejor marca por colección,
 partido y etapa una sola vez, sin duplicarla por cambiar de equipo.
 
@@ -89,6 +89,11 @@ y se permite seguir en memoria. Los borradores de formación no sobreviven a una
 recarga; se retoma desde la última etapa terminada.
 
 ### Compatibilidad con partidas anteriores
+
+Expreso se retiró de la interfaz y del medallero. Los enlaces, perfiles y actividades
+que todavía lo mencionan se interpretan como Clásico, que es la opción inicial.
+No se borran ni reescriben sus fichas o puntajes: los partidos ya completados siguen
+contando en los dos recorridos. La selección de Clásico conserva los mismos partidos.
 
 Se conservan las claves y las marcas anteriores. Los registros nuevos llevan
 `flowVersion: 2`; los de formación anteriores ya habían mostrado el resultado,

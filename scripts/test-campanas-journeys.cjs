@@ -21,15 +21,13 @@ test('medal index matches source collections, has no answers, and excludes suspe
 test('route lengths are proportional, nested, stable, chronological and include the last match', () => {
   for (let n=0;n<=255;n++) {
     const matches=Array.from({length:n},(_,i)=>({id:String(i),modes:['formation','result']}));
-    const express=core.routeMatches(matches,'all','express');
     const classic=core.routeMatches(matches,'all','classic');
     const full=core.routeMatches(matches,'all','complete');
-    assert.equal(express.length,Math.min(5,Math.ceil(n/3)));
+    assert.deepEqual(core.routeMatches(matches,'all','express'),classic,'legacy Express aliases Classic');
     assert.equal(classic.length,Math.ceil(n/2));
     assert.equal(full.length,n);
-    assert(express.every(m=>classic.includes(m)));
     assert(classic.every(m=>full.includes(m)));
-    for (const route of [express,classic,full]) {
+    for (const route of [classic,full]) {
       assert.equal(new Set(route.map(m=>m.id)).size,route.length);
       assert.deepEqual(route.map(m=>Number(m.id)),route.map(m=>Number(m.id)).sort((a,b)=>a-b));
       if (n) assert(route.includes(matches.at(-1)));
@@ -79,7 +77,7 @@ test('nickname and preferences preserve existing progress and best marks across 
 test('local profile validates preferences, bounds nicknames and survives unavailable storage in memory', () => {
   const errors=[];
   const profile=progress.openProfile({getItem:()=>JSON.stringify({nickname:123,route:'unknown',mode:'bad'}),setItem(){throw Error('quota');}},e=>errors.push(e));
-  assert.deepEqual(profile.get(),{nickname:'',route:'express',mode:'formation'});
+  assert.deepEqual(profile.get(),{nickname:'',route:'classic',mode:'formation'});
   profile.save({nickname:'X'.repeat(100),mode:'result'});
   assert.equal(profile.get().nickname.length,24);assert.equal(profile.get().mode,'result');assert.equal(errors.length,1);
   const malformed=progress.openProfile({getItem:()=>'{bad'},e=>errors.push(e));
@@ -132,4 +130,29 @@ test('activity survives reload, tracks only the latest visit per campaign and wo
   assert.equal(progress.openActivity(storage,e=>{throw e;}).list().length,1);
   const errors=[],blocked=progress.openActivity({getItem(){throw Error('blocked')},setItem(){throw Error('blocked')}},e=>errors.push(e));
   blocked.start('one','all','express','formation');assert.equal(blocked.list().length,1);assert.equal(errors.length,2);
+});
+
+test('retiring Express preserves completed matches, scores and activity under Classic', () => {
+  const raw=new Map(),storage={getItem:k=>raw.get(k),setItem:(k,v)=>raw.set(k,v)},fail=e=>{throw e;};
+  const matches=Array.from({length:19},(_,i)=>({id:String(i),modes:['formation','result']}));
+  const store=progress.open(storage,fail);
+  for(const id of [0,5,9,14,18]) store.save('one',String(id),'formation',33,1);
+  const before=raw.get(progress.KEY);
+  raw.set(progress.PROFILE_KEY,JSON.stringify({nickname:'Bicho',route:'express',mode:'formation'}));
+  raw.set(progress.ACTIVITY_KEY,JSON.stringify([{collectionId:'one',club:'all',route:'express',mode:'formation',startedAt:'2026-10-31T10:00:00Z'}]));
+  const profile=progress.openProfile(storage,fail),activity=progress.openActivity(storage,fail);
+  assert.equal(profile.get().route,'classic');assert.equal(profile.get().nickname,'Bicho');
+  assert.equal(activity.list()[0].route,'classic');
+  profile.save({nickname:'Bicho'});activity.start('one','all','express','formation');
+  assert.equal(JSON.parse(raw.get(progress.PROFILE_KEY)).route,'classic');
+  assert.equal(JSON.parse(raw.get(progress.ACTIVITY_KEY))[0].route,'classic');
+  assert.equal(raw.get(progress.KEY),before,'match records are never rewritten by route migration');
+  for(const route of ['classic','complete']) {
+    const state=core.routeStatus(core.routeMatches(matches,'all',route),store.list(),'one');
+    assert.equal(state.done,5);assert.equal(state.score,165);
+    assert.equal(state.total,route==='classic'?10:19);
+  }
+  const argentinos=require('../data/campanas/argentinos-libertadores-2023.json');
+  assert.equal(core.routeMatches(argentinos.matches,argentinos.clubSlug,'classic').length,4);
+  assert.equal(core.routeMatches(argentinos.matches,argentinos.clubSlug,'complete').length,8);
 });

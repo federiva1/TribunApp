@@ -23,13 +23,17 @@ function entry(collection,match,mode='formation',score=33) {
       return route.fulfill({body:fs.readFileSync(file),contentType:types[path.extname(file)]||'application/octet-stream'});
     });
     const collection=require('../data/campanas/argentinos-clausura-2010.json');
-    const express=core.routeMatches(collection.matches,'all','express');
+    const classic=core.routeMatches(collection.matches,'all','classic');
     await page.goto(url);await page.locator('.historical-library').waitFor();
-    await page.evaluate(({KEY,record})=>localStorage.setItem(KEY,JSON.stringify({schemaVersion:1,entries:[record]})),{KEY,record:entry(collection,express[0])});
+    await page.evaluate(({KEY,record})=>localStorage.setItem(KEY,JSON.stringify({schemaVersion:1,entries:[record]})),{KEY,record:entry(collection,classic[0])});
     await page.goto(url+'?collection='+collection.id+'&route=express');
-    await page.locator('[data-route="express"]').waitFor();
-    for(const [key,count] of [['express',5],['classic',10],['complete',19]]) assert.match(await page.locator(`[data-route="${key}"]`).textContent(),new RegExp(count+' partidos'));
-    assert.match(await page.locator('.route-status').textContent(),/1 de 5/);
+    await page.locator('[data-route="classic"]').waitFor();
+    assert.equal(await page.locator('[data-route="express"]').count(),0);
+    assert.equal(await page.locator('[data-route="classic"]').getAttribute('aria-pressed'),'true');
+    assert.equal(new URL(page.url()).searchParams.get('route'),'classic');
+    assert.match(await page.locator('section[aria-label="Recorrido"] h2').textContent(),/¿Cómo querés jugar\?/);
+    for(const [key,count] of [['classic',10],['complete',19]]) assert.match(await page.locator(`[data-route="${key}"]`).textContent(),new RegExp(count+' partidos'));
+    assert.match(await page.locator('.route-status').textContent(),/1 de 10/);
     await page.locator('[data-action="campaign-play"]').click();
     await page.locator('#nickname-cancel').click();
     assert.equal(await page.locator('#result-form').count(),0,'cancel must not start a round');
@@ -40,10 +44,10 @@ function entry(collection,match,mode='formation',score=33) {
     assert.equal(await page.locator('.nickname').textContent(),'<Fede>','nickname must be rendered as text');
     assert.equal(await page.locator('.nickname fede').count(),0);
     assert.equal(await page.evaluate(KEY=>JSON.parse(localStorage.getItem(KEY)).entries.length,KEY),1,'old records survive nickname creation');
-    const seen=new Set([express[0].id]);
-    for(let i=1;i<5;i++) {
+    const seen=new Set([classic[0].id]);
+    for(let i=1;i<classic.length;i++) {
       const names=await page.locator('.score-team span').allTextContents();
-      const match=express.find(m=>m.home===names[0]&&m.away===names[1]);
+      const match=classic.find(m=>m.home===names[0]&&m.away===names[1]);
       assert(match);assert(!seen.has(match.id),'next must prioritize an unplayed route match');seen.add(match.id);
       const side=match.homeSlug===collection.clubSlug?'home':'away';
       for(const [index,player] of match[side+'XI'].entries()) {
@@ -54,16 +58,17 @@ function entry(collection,match,mode='formation',score=33) {
         await page.locator('#result-form input[name="home"]').fill('99');await page.locator('#result-form input[name="away"]').fill('99');
         await page.locator('#result-form .primary').click();
       }
-      assert.match(await page.locator('.journey-strip').textContent(),new RegExp((i+1)+' / 5'));
+      assert.match(await page.locator('.journey-strip').textContent(),new RegExp((i+1)+' / 10'));
       await page.locator('.completion [data-action="skip-bonuses"], .completion [data-action="next"]').click();
     }
     await page.locator('.medal-hero').waitFor();
     const medal=page.locator(`[data-medal-collection="${collection.id}"]`);
     assert(await medal.evaluate(el=>el.classList.contains('complete')));
     assert.equal(await medal.locator('.medal-badge.earned').count(),1);
-    assert.equal(await medal.locator('.medal-badge.started').count(),2);
-    assert.match(await medal.textContent(),/5 \/ 10 partidos/);assert.match(await medal.textContent(),/5 \/ 19 partidos/);
-    assert.match(await page.locator('.medal-hero').textContent(),/165 PUNTOS/,'a failed bonus cannot deduct formation points');
+    assert.equal(await medal.locator('.medal-badge.started').count(),1);
+    assert.match(await medal.textContent(),/10 \/ 19 partidos/);
+    assert.doesNotMatch(await medal.textContent(),/Expreso/);
+    assert.match(await page.locator('.medal-hero').textContent(),/330 PUNTOS/,'a failed bonus cannot deduct formation points');
     assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
     await page.screenshot({path:path.join(os.tmpdir(),'campanas-medallero-mobile.png'),fullPage:true});
     await page.locator('#medal-club').selectOption('all');
@@ -78,7 +83,7 @@ function entry(collection,match,mode='formation',score=33) {
     assert.equal(await page.locator('.medal-card').count(),1);
     await page.locator('[data-medal-open]').click();
     assert.equal(await page.locator('[data-route="complete"]').getAttribute('aria-pressed'),'true');
-    assert.match(await page.locator('.route-status').textContent(),/5 de 19/);
+    assert.match(await page.locator('.route-status').textContent(),/10 de 19/);
     await page.screenshot({path:path.join(os.tmpdir(),'campanas-recorridos-desktop.png'),fullPage:true});
     await page.setViewportSize({width:390,height:844});
     assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
@@ -93,7 +98,7 @@ function entry(collection,match,mode='formation',score=33) {
     await page.locator('#nickname-input').fill('Bicho');await page.locator('#nickname-form .primary').click();
     await page.reload();await page.locator('.route-status').waitFor();
     assert.equal(await page.locator('.nickname').textContent(),'Bicho');
-    assert.match(await page.locator('.route-status').textContent(),/5 de 19/);
+    assert.match(await page.locator('.route-status').textContent(),/10 de 19/);
 
     // A 0–0 still advances with its formation; no scorer bonus or repeat trap.
     const central=require('../data/campanas/central-copaargentina-2018.json');
@@ -106,7 +111,7 @@ function entry(collection,match,mode='formation',score=33) {
     await page.locator('[data-bonus="result"]').click();await page.locator('#result-form input[name="home"]').fill('0');await page.locator('#result-form input[name="away"]').fill('0');await page.locator('#result-form .primary').click();
     assert.match(await page.locator('.medal-earned').textContent(),/Completaste Completo/);
     await page.locator('.completion [data-action="next"]').click();
-    assert.equal(await page.locator(`[data-medal-collection="${central.id}"] .medal-badge.earned`).count(),3);
+    assert.equal(await page.locator(`[data-medal-collection="${central.id}"] .medal-badge.earned`).count(),2);
 
     // No profile or storage access must still allow a complete in-memory session.
     const blocked=await browser.newPage();

@@ -89,13 +89,15 @@
         if (!Array.isArray(value)) throw new Error("Actividad inválida");
         entries = value.filter(item => item && typeof item.collectionId === "string" && typeof item.club === "string" &&
           ["express", "classic", "complete"].includes(item.route) && ["formation", "scorers", "result", "random"].includes(item.mode) &&
-          typeof item.startedAt === "string" && Number.isFinite(Date.parse(item.startedAt)));
+          typeof item.startedAt === "string" && Number.isFinite(Date.parse(item.startedAt)))
+          .map(item => ({ ...item, route: item.route === "express" ? "classic" : item.route }));
       }
     } catch (error) { onError(error); }
     const list = () => entries.map(item => ({ ...item })).sort((a,b) => b.startedAt.localeCompare(a.startedAt));
     return {
       list,
       start(collectionId, club, route, mode) {
+        route = route === "complete" ? "complete" : "classic";
         entries = entries.filter(item => item.collectionId !== collectionId || item.club !== club)
           .concat({ collectionId, club, route, mode, startedAt: new Date().toISOString() });
         try { storage.setItem(ACTIVITY_KEY, JSON.stringify(entries)); } catch (error) { onError(error); }
@@ -104,10 +106,10 @@
   }
   const PROFILE_KEY = "tribunapp.campanas.profile.v1";
   function openProfile(storage, onError) {
-    let value = { nickname: "", route: "express", mode: "formation" };
+    let value = { nickname: "", route: "classic", mode: "formation" };
     const clean = (input) => ({
       nickname: typeof input?.nickname === "string" ? [...input.nickname.replace(/[\u0000-\u001f\u007f]/g, "").trim()].slice(0, 24).join("") : "",
-      route: ["express", "classic", "complete"].includes(input?.route) ? input.route : "express",
+      route: input?.route === "complete" ? "complete" : "classic",
       mode: ["formation", "scorers", "result", "random"].includes(input?.mode) ? input.mode : "formation",
     });
     try { const raw = storage.getItem(PROFILE_KEY); if (raw) value = clean(JSON.parse(raw)); }

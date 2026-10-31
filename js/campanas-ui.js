@@ -29,9 +29,8 @@
     },
   };
   const routes = {
-    express: { title: "Expreso", description: "Una selección corta para entrar en partido.", mark: "I" },
-    classic: { title: "Clásico", description: "La mitad del camino, de principio a fin.", mark: "II" },
-    complete: { title: "Completo", description: "Cada partido de la campaña, a tu ritmo.", mark: "III" },
+    classic: { title: "Clásico" },
+    complete: { title: "Completo" },
   };
   let data, catalog = [], journeyIndex = [], loadingCollection = false, view = "library",
     teams,
@@ -60,7 +59,7 @@
   const profile = window.CampanasProgress.openProfile(storage, storageError);
   const activity = window.CampanasProgress.openActivity(storage, storageError);
   let selectedRoute = new URLSearchParams(location.search).get("route") || profile.get().route;
-  if (!routes[selectedRoute]) selectedRoute = "express";
+  if (!routes[selectedRoute]) selectedRoute = "classic";
   const routeGames = () => C.routeMatches(data.matches, scope, selectedRoute);
   const routeStats = () => C.routeStatus(routeGames(), records(), data.id);
   const modeImage = (mode) => `<img class="mode-photo" src="assets/campanas/${modes[mode].image}.webp" alt="" width="768" height="432" loading="lazy">`;
@@ -140,7 +139,7 @@
     app.innerHTML = `<div class="section-bar"><span class="eyebrow">CAMPAÑAS TRIBUNAPP</span>${profileNav()}</div>
       <section class="hero"><div><h1>¿Cuánto sabés<br>de <span>fútbol argentino?</span></h1><div class="hero-tags"><span class="tag">30 CLUBES</span><a class="tag tag-link" href="#historical-campaigns">24 CAMPAÑAS HISTÓRICAS</a><span class="tag">FORMACIÓN + BONUS</span></div></div><div class="crest-wall" aria-label="Los 30 clubes del torneo">${teams.map(team=>crest(team.slug,team.name)).join("")}</div></section>
       <section class="mode-intro" aria-label="Cómo se juega"><div class="club-picker"><div><span class="eyebrow">UN PARTIDO, PASO A PASO</span><h2>Armá el once. Sumá con los bonus.</h2><p class="muted">La formación hace avanzar tu campaña. Después, resultado y goleadores son opcionales.</p></div></div><div class="mode-grid">${Object.entries(modes).sort(([a],[b])=>["formation","result","scorers"].indexOf(a)-["formation","result","scorers"].indexOf(b)).map(([mode,info],index)=>`<article class="mode-card mode-explainer">${modeImage(mode)}<div class="mode-body"><span class="eyebrow">${index===0?"01 · EL DESAFÍO":"0"+(index+1)+" · BONUS OPCIONAL"}</span><h3>${info.title}</h3><p>${info.description}</p></div></article>`).join("")}</div></section>
-      <section id="tournaments" class="tournament-library" aria-label="Torneos argentinos"><div class="club-picker"><div><span class="eyebrow">EMPEZÁ POR ACÁ</span><h2>Torneos argentinos</h2></div></div><div class="tournament-card"><div><span class="eyebrow">255 PARTIDOS · 30 CLUBES</span><h3>Apertura 2026</h3><p class="muted">Seguí a tu equipo o recorré el torneo entero.</p><span class="tag">EXPRESO · CLÁSICO · COMPLETO</span></div><div class="tournament-choice">${clubSelect()}<button class="primary" data-collection="apertura-2026">Elegir recorrido →</button></div></div></section>
+      <section id="tournaments" class="tournament-library" aria-label="Torneos argentinos"><div class="club-picker"><div><span class="eyebrow">EMPEZÁ POR ACÁ</span><h2>Torneos argentinos</h2></div></div><div class="tournament-card"><div><span class="eyebrow">255 PARTIDOS · 30 CLUBES</span><h3>Apertura 2026</h3><p class="muted">Seguí a tu equipo o recorré el torneo entero.</p><span class="tag">CLÁSICO · COMPLETO</span></div><div class="tournament-choice">${clubSelect()}<button class="primary" data-collection="apertura-2026">Elegir recorrido →</button></div></div></section>
       ${historicalLibrary()}${localNote}`;
   }
   function showSetup() {
@@ -149,7 +148,7 @@
     app.innerHTML = `<div class="section-bar"><button class="back" data-action="library">← Todas las campañas</button>${profileNav()}</div>
       <section class="hero campaign-hero"><div><span class="eyebrow">ELEGÍ TU RECORRIDO</span><h1>${escape(data.title)}</h1>${data.clubSlug ? "" : `<p>${escape(data.description)}</p>`}<div class="hero-tags"><span class="tag">${C.routeMatches(data.matches,scope,"complete").length} PARTIDOS JUGABLES</span><span class="tag">${escape(scopeName())}</span></div></div>${data.clubSlug ? crest(data.clubSlug,data.club,"campaign-crest") : ""}</section>
       ${data.clubSlug ? "" : `<div class="club-picker"><p class="muted">Jugá con tu club o con todos los equipos.</p>${clubSelect()}</div>`}
-      <section aria-label="Recorrido"><div class="club-picker"><div><span class="eyebrow">01 · A TU RITMO</span><h2>¿Cuánto querés jugar?</h2></div></div><div class="route-grid">${Object.keys(routes).map(key=>`<button class="route-card" data-route="${key}" aria-pressed="${selectedRoute===key}"><strong>${C.routeMatches(data.matches,scope,key).length}</strong> <span>partidos</span></button>`).join("")}</div></section>
+      <section aria-label="Recorrido"><div class="club-picker"><div><span class="eyebrow">01 · A TU RITMO</span><h2>¿Cómo querés jugar?</h2></div></div><div class="route-grid">${Object.keys(routes).map(key=>`<button class="route-card" data-route="${key}" aria-pressed="${selectedRoute===key}"><span class="route-name">${routes[key].title}</span> <strong>${C.routeMatches(data.matches,scope,key).length}</strong> <span>partidos</span></button>`).join("")}</div></section>
       <div class="route-status ${stats.complete?"earned":""}" role="status"><strong>${stats.complete?"✓ Recorrido completado":routes[selectedRoute].title+" · "+stats.done+" de "+stats.total+" partidos"}</strong><span>Completá la formación de cada partido para ganar la medalla. Los bonus suman puntos extra.</span></div>
       <section class="campaign-start"><div><span class="eyebrow">02 · A LA CANCHA</span><h2>${stats.complete?"Recorrido completo":"Tu próximo partido"}</h2><p class="muted">Primero, el once. Después, bonus opcionales de resultado y goleadores.</p></div><div class="campaign-start-actions"><button class="primary" data-action="campaign-play">${stats.complete?"Ver mis partidos":stats.done?"Continuar campaña":"Empezar campaña"} →</button><button class="back" data-action="archive">Mi archivo ↗</button></div></section>
       ${localNote}`;
@@ -180,7 +179,7 @@
       const clubs=kind==="history"?historyClubs.map(([slug,{name,short}])=>clubButton(slug,name,short,slug===historyClub)).join("")
         :clubButton("all","Todos los equipos","Todos",tournamentClub==="all")+clubNames.map(([slug,name])=>clubButton(slug,name,historyClubs.find(([key])=>key===slug)?.[1].short||name,slug===tournamentClub)).join("");
       const campaigns=kind==="history"&&historyClub?`<fieldset class="quick-section"><legend>Campaña de ${escape(historyClubs.find(([slug])=>slug===historyClub)[1].short)}</legend><div class="quick-campaigns">${catalog.filter(c=>c.clubSlug===historyClub).map(c=>`<button type="button" data-quick-collection="${escape(c.id)}" aria-pressed="${historyCollection===c.id}">${escape(c.title.split(" · ").slice(1).join(" · "))}</button>`).join("")}</div></fieldset>`:"";
-      dialog.querySelector("#quick-choices").innerHTML=`<fieldset class="quick-section"><legend>Club</legend><div class="quick-clubs ${kind==="tournament"?"tournament-clubs":""}">${clubs}</div></fieldset>${campaigns}${item?`<fieldset class="quick-section"><legend>¿Cuántos partidos?</legend><div class="quick-routes">${Object.keys(routes).map(key=>`<button type="button" data-quick-route="${key}" aria-pressed="${route===key}"><strong>${C.routeMatches(item.matches,club,key).length}</strong><span>partidos</span></button>`).join("")}</div></fieldset>`:""}`;
+      dialog.querySelector("#quick-choices").innerHTML=`<fieldset class="quick-section"><legend>Club</legend><div class="quick-clubs ${kind==="tournament"?"tournament-clubs":""}">${clubs}</div></fieldset>${campaigns}${item?`<fieldset class="quick-section"><legend>¿Cómo querés jugar?</legend><div class="quick-routes">${Object.keys(routes).map(key=>`<button type="button" data-quick-route="${key}" aria-pressed="${route===key}"><span class="route-name">${routes[key].title}</span> <strong>${C.routeMatches(item.matches,club,key).length}</strong> <span>partidos</span></button>`).join("")}</div></fieldset>`:""}`;
       dialog.querySelector(".quick-submit").disabled=!item;
       if(focusSelector) dialog.querySelector(focusSelector)?.focus({preventScroll:true});
     };

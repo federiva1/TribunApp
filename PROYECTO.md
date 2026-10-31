@@ -23,8 +23,9 @@
 > hasta el bonus o hasta tocar «Ver resultado», que lo da por jugado a 0 puntos.
 > Goleadores se ofrece al terminar la planilla y resolver o revelar el marcador;
 > reconoce aciertos parciales y los bonus nunca restan.
-> Expreso/Clásico/Completo cambian la cantidad de partidos; las medallas avanzan al
+> Clásico (la mitad redondeada hacia arriba) y Completo cambian la cantidad de partidos; las medallas avanzan al
 > completar formaciones. Apodo, mejores marcas y campañas empezadas se guardan localmente.
+> Las preferencias antiguas de Expreso pasan a Clásico, conservando las partidas jugadas.
 > «Jugar» abre una selección con escudos, campañas del club y cantidad de partidos.
 > La etiqueta «24 campañas históricas» enlaza a los clubes. «Ver rival» es una referencia gratuita;
 > con todos los clubes se completan ambos once. Las partidas antiguas se conservan.

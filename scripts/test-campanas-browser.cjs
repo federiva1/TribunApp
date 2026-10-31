@@ -92,7 +92,7 @@ async function centered(page){
   assert.equal(saved.find(e=>e.matchId===target.id&&e.mode==='result').bestScore,0);
   assert.equal(saved.find(e=>e.matchId===target.id&&e.mode==='scorers').bestScore,10);
   assert.equal(saved.find(e=>e.matchId===target.id&&e.mode==='formation').flowVersion,2);
-  await page.locator('.completion [data-action="next"]').click();assert.equal(await page.locator('.medal-badge.earned').count(),3);
+  await page.locator('.completion [data-action="next"]').click();assert.equal(await page.locator('.medal-badge.earned').count(),2);
   // A 0–0 gets a result bonus but never a scorer bonus. Optional means no medal prerequisite.
   const zero=boca.matches[0];await seed(page,[entry(boca,zero)]);await open(page,boca);
   await page.locator('[data-action="archive"]').click();await page.locator(`[data-open-match="${zero.id}"]`).click();
@@ -155,7 +155,7 @@ async function centered(page){
   assert.equal(await page.locator('.points').textContent(),'20 pts · partido');
   assert.equal(await page.locator('.completion [data-action="next"]').count(),1);
   await page.locator('.completion [data-action="next"]').click();
-  assert.equal(await page.locator('.medal-badge.earned').count(),3);
+  assert.equal(await page.locator('.medal-badge.earned').count(),2);
   // Previously earned bonus points survive an explicit reveal on an unfinished formation.
   await seed(page,[...rest,entry(boca,target,'result')]);await open(page,boca);
   await page.locator('[data-action="campaign-play"]').click();

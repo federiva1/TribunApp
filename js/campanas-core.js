@@ -149,8 +149,8 @@
     var options = matches.filter(function (match) {
       return (!club || club === "all" || [match.homeSlug, match.awaySlug].includes(club)) && matchModes(match).includes("formation");
     });
-    var count = route === "express" ? Math.min(5, Math.ceil(options.length / 3))
-      : route === "classic" ? Math.ceil(options.length / 2) : options.length;
+    // Old Express links resume the Classic route; completed match IDs stay unchanged.
+    var count = route === "classic" || route === "express" ? Math.ceil(options.length / 2) : options.length;
     if (!count) return [];
     var order = [options.length - 1];
     if (options.length > 1) order.push(0);

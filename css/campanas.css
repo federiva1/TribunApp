@@ -1093,10 +1093,11 @@ h3,
 .quick-club[aria-pressed="true"]::after { content:"✓"; position:absolute; right:5px; top:3px; color:var(--celeste); font-size:11px; }
 .quick-campaigns { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
 .quick-campaigns button { min-width:0; min-height:52px; padding:12px; color:var(--muted); background:var(--dark); border:1px solid var(--border); border-radius:8px; text-align:left; font-size:13px; line-height:1.4; }
-.quick-routes { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+.quick-routes { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
 .quick-routes button { display:flex; flex-direction:column; align-items:center; gap:2px; padding:8px; color:var(--muted); background:var(--dark); border:1px solid var(--border); border-radius:8px; }
 .quick-routes strong { color:var(--celeste); font-family:"Barlow Condensed",sans-serif; font-size:26px; font-weight:600; }
 .quick-routes span { font-size:11px; }
+.quick-routes .route-name { color:white; font-size:13px; font-weight:600; }
 .tournament-clubs { max-height:220px; overflow-y:auto; padding:2px 5px 2px 2px; scrollbar-width:thin; }
 .quick-submit { width:100%; margin-top:20px; min-height:44px; }
 .quick-submit:disabled { opacity:.4; cursor:not-allowed; }
@@ -1136,11 +1137,12 @@ h3,
 .campaign-hero h1 { font-size:clamp(36px,5vw,60px); }
 .campaign-hero p { max-width:680px; }
 .campaign-crest { width:100px; height:110px; object-fit:contain; }
-.route-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+.route-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
 .route-card { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; text-align:center; padding:20px; border:1px solid var(--border); border-radius:12px; color:white; background:var(--dark2); }
 .route-card[aria-pressed="true"] { border-color:var(--celeste); background:#4fc3f710; box-shadow:inset 0 0 0 1px var(--celeste); }
 .route-card strong { display:block; color:var(--celeste); font-family:"Barlow Condensed",sans-serif; font-size:32px; font-weight:600; }
 .route-card > span { color:var(--muted); font-size:12px; }
+.route-card .route-name { color:white; font-size:16px; font-weight:600; }
 .route-status { display:flex; flex-wrap:wrap; align-items:center; gap:8px 20px; padding:16px 20px; border-left:3px solid var(--celeste); background:#4fc3f708; margin:28px 0; }
 .route-status span { color:var(--muted); font-size:13px; }
 .route-status.earned { border-color:var(--gold); }
