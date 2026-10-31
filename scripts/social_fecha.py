@@ -48,7 +48,8 @@ def partidos_del_dia(fecha):
             continue
         out.append({'ko': ko, 'fecha_num': p.get('fecha'), 'comp': 'liga',
                     'home': p['home']['slug'], 'away': p['away']['slug'],
-                    'home_name': p['home']['name'], 'away_name': p['away']['name']})
+                    'home_name': p['home']['name'], 'away_name': p['away']['name'],
+                    'hs': p.get('home_score'), 'as': p.get('away_score')})
     try:
         copas = json.loads((ROOT / 'data' / 'fixtures' / 'copas.json').read_text(encoding='utf-8'))
     except FileNotFoundError:
@@ -214,6 +215,9 @@ body{width:760px;height:950px;font-family:'Barlow Condensed',sans-serif;color:#f
         m['ko'].strftime('%H:%M'))
 
 
+RESULTADOS = False   # --resultados: marcador en lugar de "VS" y "FINAL" en lugar de la hora
+
+
 def _html(partidos, fecha, titulo):
     d = datetime.strptime(fecha, '%Y-%m-%d')
     sub = f'{DIAS[d.weekday()]} {d.day} DE {MESES[d.month - 1]}'
@@ -246,14 +250,20 @@ def _html(partidos, fecha, titulo):
         alto = 132 if n == 4 else (118 if n == 5 else 102)
         escala = 1.0 if n == 4 else (0.92 if n == 5 else 0.82)
 
+    def _medio(m):
+        if RESULTADOS and m.get('hs') is not None and m.get('as') is not None:
+            return '<div class="vs res">%s - %s</div>' % (m['hs'], m['as'])
+        return '<div class="vs">VS</div>'
+
     filas = ''.join(
         '<div class="p"><div class="hora">%s</div><div class="cruce">'
         '<div class="eq der"><span>%s</span>%s</div>'
-        '<div class="vs">VS</div>'
+        '%s'
         '<div class="eq izq">%s<span>%s</span></div>'
         '</div></div>'
-        % (m['ko'].strftime('%H:%M'),
+        % ('FINAL' if RESULTADOS else m['ko'].strftime('%H:%M'),
            _nombre(m['home'], m['home_name']), esc(m['home'], m.get('home_logo')),
+           _medio(m),
            esc(m['away'], m.get('away_logo')), _nombre(m['away'], m['away_name']))
         for m in partidos)
 
@@ -288,6 +298,7 @@ body{width:760px;height:950px;font-family:'Barlow Condensed',sans-serif;color:#f
 .esc{width:%dpx;height:%dpx;object-fit:contain;flex:0 0 auto;
      filter:drop-shadow(0 5px 14px rgba(0,0,0,.55))}
 .vs{font-family:'Bebas Neue';font-size:%dpx;letter-spacing:2px;color:#5d6479;width:12%%;text-align:center}
+.vs.res{color:#fff;font-size:%dpx;letter-spacing:3px;width:auto;white-space:nowrap;padding:0 12px}
 .pie{text-align:center;font-family:'Bebas Neue';font-size:19px;letter-spacing:3px;color:#e8edf7;margin-top:6px}
 .pie b{color:#38bdf8;font-weight:400}
 </style></head><body>
@@ -304,7 +315,7 @@ body{width:760px;height:950px;font-family:'Barlow Condensed',sans-serif;color:#f
 </div></body></html>""" % (
         ff,
         int(16 * escala), alto, int(21 * escala), int(25 * escala),
-        int(62 * escala), int(62 * escala), int(17 * escala),
+        int(62 * escala), int(62 * escala), int(17 * escala), int(46 * escala),
         _logo_datauri(), torneo, titulo, sub, filas)
 
 
@@ -437,12 +448,16 @@ def main():
     ap.add_argument('--solo', nargs='+', metavar='LOCAL-VISITANTE',
                     help='solo estos cruces, por slug o alias (ej: instituto-boca racing-belgrano). '
                          'Implica --cada-uno.')
+    ap.add_argument('--resultados', action='store_true',
+                    help='placa de resultados: marcador en lugar de VS y FINAL en lugar de la hora')
     ap.add_argument('--escala', type=int, default=2,
                     help='factor de resolucion: 2 = 1520x1900 (default), 4 = ultra HD 3040x3800')
     ap.add_argument('--fecha-num', type=int, metavar='N',
                     help='placa apaisada 16:9 con TODOS los partidos de la fecha N, una columna por dia '
                          '(--escala 3 = 3840x2160 4K; default 3 en este modo)')
     args = ap.parse_args()
+    global RESULTADOS
+    RESULTADOS = args.resultados
     sufijo = '' if args.escala == 2 else f'-x{args.escala}'
 
     if args.fecha_num:
