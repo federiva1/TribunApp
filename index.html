@@ -274,8 +274,6 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .pl { margin-top: 34px; }
 .pl[hidden] { display: none; }
 .pl .sec-header { margin-bottom: 8px; }
-.pl-sub { text-align: center; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 0.4px;
-  color: rgba(255,255,255,0.55); margin: 0 auto 10px; max-width: 640px; line-height: 1.35; }
 .pl-acc { display: flex; justify-content: center; gap: 8px; margin-bottom: 16px; }
 .pl-btn { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
   color: rgba(255,255,255,0.75); background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12);
@@ -308,14 +306,16 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .pl-edit { flex: 0 0 auto; width: 20px; height: 20px; border: none; border-radius: 6px; background: transparent;
   color: rgba(255,255,255,0.3); font-size: 12px; cursor: pointer; line-height: 20px; padding: 0; }
 .pl-edit:hover { color: #fff; background: rgba(255,255,255,0.1); }
-/* campeón */
-.pl-campeon { text-align: center; border: 1px solid rgba(245,197,24,0.25); border-radius: 12px; padding: 10px 8px 9px;
-  background: linear-gradient(180deg, rgba(245,197,24,0.10), rgba(245,197,24,0.02)); }
-.pl-campeon img { width: 46px; height: 46px; object-fit: contain; filter: drop-shadow(0 3px 10px rgba(0,0,0,0.5)); display: block; margin: 0 auto 4px; }
-.pl-camp-nom { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 2px; color: #fff; line-height: 1.1; }
-.pl-camp-nom.vacio { color: rgba(255,255,255,0.3); font-size: 16px; }
-.pl-camp-lab { font-family: 'Bebas Neue', sans-serif; font-size: 12px; letter-spacing: 3px; color: var(--gold); margin-top: 2px; }
-.pl-campeon.ok { border-color: rgba(245,197,24,0.6); box-shadow: 0 0 22px rgba(245,197,24,0.15); }
+/* campeón: "CAMPEÓN" arriba de la final (y el escudo del ganador cuando lo hay); trofeo abajo */
+.pl-camp { text-align: center; }
+.pl-camp-esc { width: 54px; height: 54px; object-fit: contain; display: block; margin: 0 auto 6px;
+  filter: drop-shadow(0 0 14px rgba(245,197,24,0.45)) drop-shadow(0 3px 8px rgba(0,0,0,0.5)); animation: plSube 0.35s ease-out; }
+@keyframes plSube { from { opacity: 0; transform: translateY(10px) scale(0.85); } to { opacity: 1; transform: none; } }
+.pl-camp-lab { font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 4px; color: var(--gold); }
+.pl-trofeo { display: flex; justify-content: center; }
+.pl-trofeo svg { height: 112px; width: auto; opacity: 0.5; transition: opacity 0.3s, filter 0.3s; }
+.pl-trofeo .pl-estrella { filter: drop-shadow(0 0 4px rgba(245,197,24,0.8)); }
+.pl-trofeo.ok svg { opacity: 1; filter: drop-shadow(0 0 14px rgba(255,255,255,0.18)); }
 /* escritorio: cuadro de dos mitades que convergen en la final */
 .pl-desk { display: none; }
 .pl-mob { display: block; }
@@ -342,14 +342,17 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   .pl-col.izq.r3 .pl-p::after { right: calc(var(--g) * -1 - 1px); }
   .pl-col.der.r3 .pl-p::after { left: calc(var(--g) * -1 - 1px); }
   .pl-col.fin .pl-p { border-color: rgba(245,197,24,0.45); }
-  .pl-col.fin .pl-campeon { position: absolute; left: 6%; right: 6%; top: calc(50% + 46px); }
+  .pl-col.fin .pl-camp { position: absolute; left: 0; right: 0; bottom: calc(50% + 40px); }
+  .pl-col.fin .pl-trofeo { position: absolute; left: 0; right: 0; top: calc(50% + 46px); }
   .pl-col.fin .pl-ronda { color: var(--gold); }
 }
 /* celular: una ronda debajo de la otra */
 .pl-m-ronda { margin-bottom: 16px; }
 .pl-m-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .pl-m-grid.uno { grid-template-columns: minmax(0, 260px); justify-content: center; }
-.pl-mob .pl-campeon { max-width: 220px; margin: 4px auto 0; }
+.pl-mob .pl-camp { margin-bottom: 8px; }
+.pl-mob .pl-trofeo { margin-top: 12px; }
+.pl-mob .pl-trofeo svg { height: 84px; }
 /* selector de equipo */
 .pl-modal { position: fixed; inset: 0; z-index: 200; background: rgba(5,7,15,0.78); backdrop-filter: blur(4px);
   display: flex; align-items: center; justify-content: center; padding: 16px; }
@@ -501,7 +504,6 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
       <!-- CUADRO DE PLAYOFFS: se arma con la tabla actual y el hincha lo edita -->
       <div class="pl" id="playoffs" hidden>
         <div class="sec-header zonaA"><span class="sec-title">CUADRO DE PLAYOFFS</span></div>
-        <div class="pl-sub">Así quedarían los cruces si el torneo terminara hoy. Tocá un equipo para que pase de ronda y armá tu pronóstico; con el lápiz ✎ cambiás cualquier equipo del cuadro.</div>
         <div class="pl-acc"><button class="pl-btn" id="pl-reset">Volver a la tabla actual</button></div>
         <div id="pl-cuadro"></div>
       </div>
@@ -909,10 +911,20 @@ function _plPartido(m) {
 }
 function _plCampeon() {
   const c = _plGanador('f');
-  return `<div class="pl-campeon${c ? ' ok' : ''}">` +
-    (c ? `<img src="escudos/${c.slug}.png" alt=""><div class="pl-camp-nom">${nombreCorto(c.slug)}</div>`
-       : '<div class="pl-camp-nom vacio">¿Quién sale campeón?</div>') +
+  return '<div class="pl-camp">' + (c ? `<img class="pl-camp-esc" src="escudos/${c.slug}.png" alt="${nombreCorto(c.slug)}" title="${nombreCorto(c.slug)}">` : '') +
     '<div class="pl-camp-lab">Campeón</div></div>';
+}
+// Silueta del trofeo (estilo Planeta Bicho: silueta plana gris claro con la
+// estrella dorada arriba); se enciende cuando el hincha elige campeón.
+function _plTrofeo(id) {
+  const g = `url(#${id})`;
+  return `<div class="pl-trofeo${_plGanador('f') ? ' ok' : ''}"><svg viewBox="0 0 100 130" aria-hidden="true">` +
+    `<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eef0f4"/><stop offset="1" stop-color="#aeb4bf"/></linearGradient></defs>` +
+    `<polygon class="pl-estrella" fill="#f5c518" points="50.0,2.0 52.7,9.3 60.5,9.6 54.4,14.4 56.5,21.9 50.0,17.6 43.5,21.9 45.6,14.4 39.5,9.6 47.3,9.3"/>` +
+    `<path fill="none" stroke="${g}" stroke-width="5" stroke-linecap="round" d="M30 40H17c0 15 8 24 19 26M70 40h13c0 15-8 24-19 26"/>` +
+    `<path fill="${g}" d="M28 32h44v6c0 22-9 36-22 41C37 74 28 60 28 38z"/>` +
+    `<path fill="${g}" d="M45 78h10v14c0 4 4 7 9 9H36c5-2 9-5 9-9z"/>` +
+    `<rect x="31" y="101" width="38" height="7" rx="2" fill="${g}"/><rect x="25" y="110" width="50" height="18" rx="3" fill="${g}"/></svg></div>`;
 }
 function plRender() {
   const cont = document.getElementById('pl-cuadro');
@@ -922,14 +934,14 @@ function plRender() {
   const col = (t, cls, inner) => `<div class="pl-col ${cls}"><div class="pl-ronda">${t}</div><div class="pl-col-in">${inner}</div></div>`;
   const desk = col('Octavos', 'izq r1', par('o1', 'o2') + par('o3', 'o4')) +
     col('Cuartos', 'izq r2', par('q1', 'q2')) + col('Semis', 'izq r3', uno('s1')) +
-    col('Final', 'fin', uno('f') + _plCampeon()) +
+    col('Final', 'fin', _plCampeon() + uno('f') + _plTrofeo('plOroD')) +
     col('Semis', 'der r3', uno('s2')) + col('Cuartos', 'der r2', par('q3', 'q4')) +
     col('Octavos', 'der r1', par('o5', 'o6') + par('o7', 'o8'));
-  const bloque = (t, ids, extra) => `<div class="pl-m-ronda"><div class="pl-ronda">${t}</div>` +
-    `<div class="pl-m-grid${ids.length === 1 ? ' uno' : ''}">${ids.map(_plPartido).join('')}</div>${extra || ''}</div>`;
+  const bloque = (t, ids, antes, despues) => `<div class="pl-m-ronda"><div class="pl-ronda">${t}</div>${antes || ''}` +
+    `<div class="pl-m-grid${ids.length === 1 ? ' uno' : ''}">${ids.map(_plPartido).join('')}</div>${despues || ''}</div>`;
   const mob = bloque('Octavos de final', ['o1', 'o2', 'o3', 'o4', 'o5', 'o6', 'o7', 'o8']) +
     bloque('Cuartos de final', ['q1', 'q2', 'q3', 'q4']) + bloque('Semifinales', ['s1', 's2']) +
-    bloque('Final', ['f'], _plCampeon());
+    bloque('Final', ['f'], _plCampeon(), _plTrofeo('plOroM'));
   cont.innerHTML = `<div class="pl-desk">${desk}</div><div class="pl-mob">${mob}</div>`;
   document.getElementById('pl-reset').disabled = !Object.keys(_plSt.ov).length && !Object.keys(_plSt.picks).length;
 }
