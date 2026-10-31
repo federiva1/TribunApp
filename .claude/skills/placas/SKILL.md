@@ -37,6 +37,11 @@ python scripts/social_fecha.py --cada-uno --date 2026-09-06 --titulo "Partido de
   si se manda con anticipación (el subtítulo ya dice el día, así que "hoy" mentiría).
 - Sale en `data/social/preview/fecha-{fecha}-{local}-{visitante}.png`.
 - Para varios días, correr una vez por fecha.
+- **`--dias D1 D2 …`**: una placa apaisada 16:9 (4K) con los partidos de esos días, una columna por día
+  (ej. hoy y mañana: `--dias 2026-10-31 2026-11-01`).
+- **`--resultados`**: la misma lista del día pero con el marcador en lugar de "VS" y "FINAL" en lugar de la hora
+  (ej. `--date 2026-10-30 --titulo "Resultados del viernes" --resultados --escala 4`). Los marcadores salen de `liga.json`,
+  así que primero hay que cerrar los partidos.
 
 ---
 
