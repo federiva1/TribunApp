@@ -448,6 +448,8 @@ def main():
     ap.add_argument('--solo', nargs='+', metavar='LOCAL-VISITANTE',
                     help='solo estos cruces, por slug o alias (ej: instituto-boca racing-belgrano). '
                          'Implica --cada-uno.')
+    ap.add_argument('--dias', nargs='+', metavar='YYYY-MM-DD',
+                    help='placa apaisada 16:9 con los partidos de estos días, una columna por día (ej. hoy y mañana)')
     ap.add_argument('--resultados', action='store_true',
                     help='placa de resultados: marcador en lugar de VS y FINAL en lugar de la hora')
     ap.add_argument('--escala', type=int, default=2,
@@ -459,6 +461,19 @@ def main():
     global RESULTADOS
     RESULTADOS = args.resultados
     sufijo = '' if args.escala == 2 else f'-x{args.escala}'
+
+    if args.dias:
+        partidos = [m for d in args.dias for m in partidos_del_dia(d)]
+        if not partidos:
+            print(f'No hay partidos nuestros en {args.dias}')
+            return 1
+        for m in partidos:
+            print(f"  {m['ko'].strftime('%a %d/%m %H:%M')}  {m['home']} vs {m['away']}  ({m['comp']})")
+        esc = args.escala if args.escala != 2 else 3
+        titulo = args.titulo.upper() if args.titulo != 'PARTIDOS DE HOY' else 'PARTIDOS DE HOY Y MAÑANA'
+        print('imagen:', generar_columnas(partidos, titulo, args.out,
+                                           f"dias-{'_'.join(args.dias)}-columnas-x{esc}.png", escala=esc))
+        return 0
 
     if args.fecha_num:
         partidos = partidos_de_la_fecha(args.fecha_num)
