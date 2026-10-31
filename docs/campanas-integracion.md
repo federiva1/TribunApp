@@ -1,88 +1,107 @@
-# Campañas: primera integración
+# Campañas: integración y reglas vigentes
 
-Estado: implementación para revisión en la rama `campanas`, sin merge a `master`.
+Estado al 31/10/2026: revisión en la rama `campanas`, sin merge a `master`.
 
-## Alcance acordado
+## Campaña unificada
 
-Primer corte con el Apertura 2026 existente: 255 partidos, 30 clubes, tres modos,
-filtro por club y archivo personal. Sin login, sincronización ni rankings públicos.
-Se guarda la mejor marca por colección/partido/modo en este navegador, con cantidad
-de intentos y fechas. Una respuesta incorrecta también termina el desafío; repetirlo
-no multiplica la mejor marca. Abandonar o recargar una partida incompleta no la guarda.
+El usuario eligió reemplazar la elección de retos y el modo aleatorio por un único
+recorrido por partido: **formación → bonus resultado → bonus goleadores**. El Apertura
+2026 conserva sus 255 partidos y 30 clubes, más 24 campañas históricas de 12 clubes.
+No hay login, sincronización ni clasificación pública.
 
-Se agregaron 24 campañas históricas (dos por cada uno de los 12 clubes pedidos),
-con selector de colección, carga diferida y progreso separado. Catálogo, cobertura,
-fuentes y límites: `campanas-historicas.md`. Las otras propuestas del documento
-`campanas-objetivos.md` siguen siendo objetivos editoriales, no datos publicados.
+La portada de Campañas conserva el título y los 30 escudos. Las tres imágenes explican
+las etapas, no son opciones para elegir modos. Se elige campaña, club y recorrido;
+“Jugar” abre esa selección compacta y recuerda la última campaña. La página principal
+`index.html` de TribunApp no forma parte de este cambio.
 
-La portada conserva «¿Cuánto sabés de fútbol argentino?» y los 30 escudos. Primero
-explica los tres retos con imágenes; debajo ofrece el Apertura 2026 (con filtro por
-equipo) y las campañas históricas agrupadas en 12 tarjetas de clubes, cinco por fila
-en escritorio y dos en celular. Elegir una campaña abre sus recorridos y retos.
-El botón **Jugar** está arriba junto a **Mis campañas**, y también en el hero. Abre
-una selección compacta de campaña, equipo (si corresponde), recorrido y reto; desde
-allí se entra a la partida. Recuerda la última campaña jugada. Los textos de logros
-históricos se retiraron de las tarjetas y de las cabeceras de campañas por club.
+### Etapas y protección de respuestas
 
-## Recorridos y medallero (31/10/2026)
+1. **Formación:** completar el once del club elegido hace avanzar la campaña. Con
+   todos los equipos se piden los 22 apellidos. El resultado queda oculto; tampoco
+   se muestran metadatos que incluyan la tanda de penales. Las ayudas conservan sus
+   reglas anteriores y se muestran dentro del input.
+2. **Resultado, opcional:** sólo después de la formación. El marcador editable y
+   su separador están centrados respecto del tablero. “Confirmar resultado” queda
+   debajo y es más compacto. Durante este bonus no se repiten las planillas.
+3. **Goleadores, opcional:** se ofrece después de responder u omitir el resultado.
+   Omitirlo lo revela y guarda `skipped: true`, con 0 puntos, antes de mostrar los
+   candidatos. No se puede volver a sumar por ese resultado ya revelado. Los 0–0
+   y las fichas no aptas no ofrecen este bonus.
 
-- **Expreso:** un tercio redondeado hacia arriba, con un máximo de cinco partidos.
-- **Clásico:** la mitad de los partidos, redondeada hacia arriba.
-- **Completo:** todos los partidos jugables. Los suspendidos no entran.
+Es posible pasar al siguiente partido después de la formación sin hacer los bonus.
+Si no se revelaron sus respuestas, se pueden retomar desde el archivo. No se ofrecen
+retos independientes ni enlaces para volver a una respuesta ya revelada. El archivo
+oculta el marcador cuando sigue pendiente el bonus de resultado.
 
-Son duraciones, no dificultades: no cambian ayudas ni puntajes. Una campaña de 19
-partidos ofrece 5/10/19; una de seis, 2/3/6. La selección es fija: prioriza el último
-partido, el primero y puntos intermedios espaciados, en ese orden; se muestra en
-orden cronológico. No es una selección editorial de «los mejores partidos».
-Expreso está contenido en Clásico, y Clásico en Completo. Las tres vistas usan los
-mismos registros existentes: cambiar de recorrido no borra ni duplica resultados.
+El encabezado muestra el total del partido. Cada cierre detalla los puntos de la
+etapa y el acumulado, con desglose por formación/resultado/goleadores. Los aciertos
+parciales usan un cierre neutro, no un anuncio verde de victoria total.
 
-Completar un reto disponible por partido alcanza para la medalla del recorrido.
-Una respuesta errónea o asistida también termina ese reto: la medalla reconoce
-haberlo recorrido; los puntos reflejan el desempeño. Otros retos del mismo partido
-quedan como opcionales. Se priorizan partidos sin ningún reto terminado. Si sólo
-quedan encuentros sin reto de goleadores (por ejemplo, 0–0), se ofrece explícitamente
-formación o resultado para continuar; no se repiten goleadores indefinidamente.
+### Puntaje
 
-**Mis campañas** muestra sólo las que el usuario empezó a jugar, con estados en
-juego o completada y tres insignias (una por recorrido). Entrar a ver una campaña
-no la agrega; empezar una partida sí, aunque todavía no se haya terminado. Se conserva
-esa pertenencia al recargar. Los resultados anteriores también recuperan sus campañas.
-La campaña completada tiene borde y brillo dorados. Los filtros de club, recorrido y
-estado permiten revisar cada avance. El Apertura sólo aparece si se jugó y conserva
-el equipo elegido: no se agregan automáticamente recorridos de sus rivales. Una misma
-persona puede empezar recorridos del Apertura con distintos clubes o con todos.
-Los puntos totales suman mejores marcas por colección/partido/reto una sola vez,
-independientemente del filtro del medallero. Repetir no acumula esa marca de nuevo.
+- Formación: 3 puntos por jugador; primera ayuda 2, segunda 1, tercera y siguientes
+  0. Revelar dos letras o la mitad de un apellido corto también deja 0. Revelación
+  completa resuelve automáticamente sin sumar. Los errores no descuentan.
+- Resultado: exacto +20; incorrecto u omitido 0. Nunca descuenta de la formación.
+- Goleadores: máximo 20, reducido a 14/8/0 según ayudas. Se reparte proporcionalmente
+  entre los goles acertados y se redondea al entero más cercano. Se comparan goles
+  como un multiconjunto: un jugador con dos goles requiere dos selecciones.
+  Un acierto y un error en un partido de dos goles da 10 puntos sin ayudas.
+  Los errores no descuentan; una selección repetida no inventa un gol extra.
 
-Al primer intento de jugar se pide un **apodo local**, sin email ni contraseña.
-Se guarda en `tribunapp.campanas.profile.v1` junto con preferencias de recorrido y
-reto. Cambiarlo renombra el mismo perfil y conserva el progreso anterior; no crea
-varios usuarios. No identifica al usuario en otros dispositivos ni recupera datos
-borrados. Si el almacenamiento está bloqueado, se avisa y se puede jugar en memoria.
-Las partidas incompletas siguen sin guardarse: se retoma desde el último reto terminado.
-`tribunapp.campanas.activity.v1` registra las campañas empezadas, su equipo y última
-configuración, sin guardar respuestas parciales ni crear una cuenta.
+Las ayudas de goleadores siempre eliminan nuevos candidatos incorrectos; la tercera
+revela los autores y deja el bonus en 0. Se retiran selecciones eliminadas con aviso.
+Se muestran todos los suplentes ingresados únicamente cuando hubo un goleador suplente.
 
-## Formación del club y rival de referencia
+## Recorridos y progreso
 
-En campañas históricas y en el torneo filtrado por club, sólo se piden los **once
-jugadores del club elegido**, tanto de local como de visitante. Completar esos once
-termina el reto; los puntos y pistas mantienen la misma regla por jugador (máximo 33).
-El tablero sigue mostrando rival, marcador, fecha y estadio. **Ver rival** muestra
-su once completo como referencia, sin inputs, sin pistas, sin puntos adicionales y
-sin borrar lo que el usuario está escribiendo. Se puede volver a ocultar.
+- Expreso: un tercio redondeado hacia arriba, máximo cinco partidos.
+- Clásico: la mitad redondeada hacia arriba.
+- Completo: todos los partidos con formación jugable; excluye suspendidos.
 
-Con **Todos los equipos** se mantienen ambos once (22 apellidos, máximo 66). En la
-final de Madrid de 2018 (`espn-528144`) se ofrece explícitamente jugar ambos once,
-antes de responder, pedir pistas o revelar al rival; sigue siendo opcional.
-Goleadores y resultado conservan las planillas y reglas previas.
+Son duraciones, no dificultades. La selección es fija, anidada y cronológica:
+prioriza final, inicio y puntos intermedios. Para 19 partidos ofrece 5/10/19.
+Completar **la formación** hace avanzar la medalla; los bonus no son requisito.
+Los tres recorridos comparten progreso. Cambiar el club no completa automáticamente
+su once: `formationClub` conserva ese alcance. El caso opcional de ambos once de
+Madrid 2018 sigue disponible antes de pedir ayudas o ver al rival.
 
-El progreso nuevo de formación guarda `formationClub`; resolver el once de Boca no
-marca como resuelto el de su rival ni el desafío de ambos equipos en el Apertura.
-Los registros anteriores sin ese campo representan los 22 apellidos y siguen siendo
-válidos. `playClub` conserva el equipo con el que se jugó. Los puntos globales usan la
-mejor marca por colección/partido/reto, sin sumar otra vez por cambiar de equipo.
+“Mis campañas” incluye sólo las empezadas, incluso antes de terminar el primer
+partido. El medallero conserva filtros y tres barras de avance; los recorridos
+terminados se destacan en dorado. Los puntos suman la mejor marca por colección,
+partido y etapa una sola vez, sin duplicarla por cambiar de equipo.
+
+Apodo, preferencias y actividad se guardan en este navegador. Cambiar el apodo
+renombra el mismo perfil; no crea otra cuenta. Si falla el almacenamiento, se avisa
+y se permite seguir en memoria. Los borradores de formación no sobreviven a una
+recarga; se retoma desde la última etapa terminada.
+
+### Compatibilidad con partidas anteriores
+
+Se conservan las claves y las marcas anteriores. Los registros nuevos llevan
+`flowVersion: 2`; los de formación anteriores ya habían mostrado el resultado,
+por lo que no vuelven a ofrecer ese bonus. Lo mismo sucede con los antiguos
+registros de goleadores. Esa exposición se respeta incluso al cambiar de club.
+Los resultados antiguos, por sí solos, no cuentan como una formación completada.
+Las penalizaciones negativas antiguas se conservan en el almacenamiento original,
+pero aportan 0 al total y al archivo de la campaña nueva; los bonus nuevos no restan.
+
+Los campos internos de preferencias de modo antiguo se leen por compatibilidad.
+Al iniciar se usa siempre formación, aunque el perfil hubiera guardado `random`,
+`result` o `scorers`. No queda ningún selector ni sorteo de retos.
+
+## Planillas y posiciones
+
+“Ver rival” está sobre las planillas. En escritorio aparecen columnas de igual ancho
+alineadas arriba; en celular se apilan. La referencia es gratuita y conserva el
+borrador de respuesta. No se requieren los apellidos del rival.
+
+El orden usa posición: arquero, defensa, medio, delantero, manteniendo los índices
+originales para pistas/respuestas. Donde faltan posiciones se conserva el orden de
+formación de origen, sin inferir roles por dorsal ni presuponer 4-4-2. Se corrigieron
+28 registros de roles en Boca 2007, incluido Caranta. Fuentes e IDs están en
+`scripts/campanas-position-overrides.json`; el importador conserva `sourcePos` y
+`positionSource` mediante `scripts/apply-campanas-positions.cjs`.
 
 Las tres fotografías se generaron con ElevenLabs (`gpt-image-2.5-sunburst`) en el
 flujo `KqC3C4D8huEO80H9Pwwq`: formación `MYJPIJ6R7GUCvA1Qn8oi`, goleadores
@@ -129,89 +148,24 @@ podrán corregir y volver a importar sin alterar sus IDs estables.
 Las respuestas están en JSON público, igual que en el prototipo. El puntaje es
 recreativo y local: no constituye una clasificación competitiva validada por servidor.
 
-## Reproducción y validación
+## Validación y publicación
 
 ```powershell
-node scripts/import-campanas.mjs "C:\ruta\a\mvp-la-planilla"
-node scripts/build-campanas-journeys.cjs
-node --test scripts/test-campanas.cjs scripts/test-historical-campaigns.cjs scripts/test-campanas-journeys.cjs
+node --test scripts/test-campanas.cjs scripts/test-historical-campaigns.cjs scripts/test-campanas-journeys.cjs scripts/test-campanas-random-order.cjs
 node --check js/campanas-ui.js
-node --check js/campanas-progress.js
+node scripts/test-campanas-browser.cjs
+node scripts/test-campanas-access-browser.cjs
+node scripts/test-campanas-journeys-browser.cjs
+node scripts/test-campanas-random-browser.cjs
 python scripts/check_datos.py
-python -m http.server 8765 --bind 127.0.0.1
 ```
 
-En servidor estático visitar `/campanas.html`; `/campanas` requiere Vercel.
-La primera colección no depende del proxy de Vercel.
+Los nombres de pruebas que contienen `random` se conservan por compatibilidad;
+ahora cubren la migración del flujo retirado, la secuencia de bonus y el orden.
+Las pruebas de navegador usan Playwright/Chrome, una sesión aislada y recursos
+locales. Cubren las 25 colecciones, 11/22 apellidos, ayudas, resultados sin revelar,
+archivo tras recarga, centrado en móvil/escritorio, bonus parciales/omitidos/cero,
+medallas, apodo, preferencias antiguas y almacenamiento bloqueado.
 
-Pruebas manuales realizadas en navegador: formación completa con 22 respuestas y
-una ayuda (65 puntos), resultado correcto (+20), resultado incorrecto (-5), goleadores
-con selección/deshacer y ayuda (+14), persistencia tras recarga, archivo, filtro por
-club, ocultamiento de los 22 dorsales después de dos partidos de un club y revelación
-del dorsal mediante pista. Revisar de nuevo luego de cambios funcionales.
-
-## Antes de integrar a producción
-
-### Revisión de ayudas y archivo (18/09/2026)
-
-Las letras reemplazan el placeholder dentro del propio input del apellido, sin una
-pista debajo. Al escribir se muestra la respuesta del usuario; al vaciar el campo
-vuelve la pista. Pedir otra ayuda no borra lo escrito. Cada jugador vale 3 puntos
-sin ayuda, 2 tras la primera, 1 tras
-la segunda y 0 desde la tercera; revelar dos letras o la mitad de un apellido corto
-también anula los puntos. Una revelación completa resuelve automáticamente sin sumar.
-Si falta el dorsal, la primera pista pasa directamente a la longitud del apellido.
-
-Las ayudas de goleadores siempre eliminan candidatos nuevos; la última deja sólo
-autores reales y vale 0 puntos. Las selecciones de jugadores descartados se retiran
-con un aviso; las ayudas sin candidatos para eliminar se deshabilitan sin penalizar.
-Se indica cuánto vale acertar antes de confirmar. Los errores siguen restando 5.
-
-El archivo agrupa por partido y ofrece modos pendientes, incluso cuando el reto
-anterior terminó con 0 o puntaje negativo. Al completar también se ofrecen esos
-modos; el reto adicional guarda su propia marca. Sólo cuando no quedan pendientes
-se ofrece repetir explícitamente. Formación y resultado no revelan los goleadores
-en su cierre para permitir intentar el reto pendiente.
-
-Revisar el diseño con Fede, resolver observaciones de juego y realizar el control
-adicional solicitado con Cloud. El push a `campanas` puede generar un preview de
-Vercel; producción sigue en `master`. Merge y publicación definitiva requieren el
-OK del usuario. No habilitar ni modificar workflows automáticos.
-
-Pruebas de navegador: `scripts/test-campanas-browser.cjs` cubre los 72 inicios de
-modo históricos, las pistas y el archivo; `scripts/test-campanas-journeys-browser.cjs`
-verifica medallas, rutas, filtros, apodo, progreso anterior, transición desde
-goleadores cuando quedan 0–0, vistas móviles y almacenamiento bloqueado. Se usa un
-navegador aislado, sin tocar los resultados reales del usuario.
-`scripts/test-campanas-access-browser.cjs` prueba el acceso visible, la selección
-rápida, campañas personales vacías y empezadas, cierre con once apellidos, referencia
-gratuita del rival, borradores de respuesta y opción de 22 jugadores en Madrid.
-
-### Planillas, medallero y retos aleatorios (31/10/2026)
-
-- “Ver rival” pasa a una barra sobre las planillas. En escritorio, ambos once
-  empiezan a la misma altura y tienen igual ancho; en celular se apilan. Consultar
-  al rival sigue siendo gratuito y conserva las respuestas en curso.
-- Todos los retos ordenan por posición: arquero, defensa, medio y delantero.
-  Los índices originales se conservan para que respuestas y pistas sigan apuntando
-  al mismo jugador. Donde faltan posiciones (Apertura y suplementos editoriales)
-  se mantiene el orden de formación de la fuente, sin deducir roles por dorsal
-  ni presuponer un 4-4-2.
-- Se corrigen roles erróneos de Boca 2007, incluido Caranta como mediocampista.
-  `scripts/campanas-position-overrides.json` registra IDs y fuentes. El importador
-  usa `apply-campanas-positions.cjs`, que conserva `sourcePos` y `positionSource`.
-  No cambian las identidades, los integrantes del once ni las incidencias.
-- “Retos aleatorios” es un botón dentro de la campaña y una opción del acceso
-  rápido, sin cuarta tarjeta. Sortea partido y reto entre los disponibles del club
-  y recorrido elegidos; prioriza partidos sin terminar, evita repetir el recién
-  saltado si hay otro pendiente y excluye goleadores en 0–0 o fichas no aptas.
-- El azar es una preferencia, no un cuarto tipo de puntaje: archivo y medallas
-  guardan el reto real. “Siguiente” mantiene el azar; elegir un reto fijo sale de
-  él. Al completar el recorrido se abre el medallero como en los modos fijos.
-- El medallero reemplaza los óvalos I/II/III por tres filas con nombre, partidos
-  completados y barra. Los recorridos terminados se destacan en dorado.
-
-Pruebas adicionales: `node --test scripts/test-campanas-random-order.cjs` y
-`node scripts/test-campanas-random-browser.cjs` (Playwright). Cubren orden e identidad
-en todas las colecciones, Caranta, elegibilidad, persistencia del reto real,
-siguiente/saltar, acceso rápido y alineación en escritorio/celular.
+La previsualización está en `campanas`; no se cambia la configuración de Vercel ni
+los workflows. El merge a `master` requiere el OK del usuario.

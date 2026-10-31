@@ -26,7 +26,7 @@ const KEY='tribunapp.campanas.progress.v1';
     await page.locator('.section-bar [data-action="quick-play"]').click();
     await page.locator('#quick-collection').selectOption('boca-libertadores-2007');
     await page.locator('#quick-route').selectOption('complete');
-    await page.locator('#quick-mode').selectOption('formation');
+    assert.equal(await page.locator('#quick-mode').count(),0,'campaign has no mode picker');
     assert(await page.locator('#quick-club-label').isHidden());
     assert.match(await page.locator('.quick-summary').textContent(),/sólo el once/);
     await page.screenshot({path:path.join(os.tmpdir(),'campanas-jugar-mobile.png')});
@@ -55,7 +55,7 @@ const KEY='tribunapp.campanas.progress.v1';
     assert.equal(await page.locator('#rival-sheet .player-name').count(),11);
     assert.equal(await page.locator('#rival-sheet input').count(),0);
     assert.equal(await page.locator('#rival-sheet [data-hint]').count(),0);
-    assert.equal(await page.locator('.points').textContent(),'0 pts','opening reference is free');
+    assert.equal(await page.locator('.points').textContent(),'0 pts · partido','opening reference is free');
     await page.locator('[data-action="toggle-rival"]').click();
     assert.equal(await input.inputValue(),'respuesta en curso');
     await page.locator(`[data-hint="${side}-0"]`).click();
@@ -79,23 +79,23 @@ const KEY='tribunapp.campanas.progress.v1';
 
     // Selecting all clubs keeps the original two-lineup game.
     await page.goto(base+'?collection=apertura-2026&club=all&route=express');
-    await page.locator('[data-mode="formation"]').click();
+    await page.locator('[data-action="campaign-play"]').click();
     assert.equal(await page.locator('[data-player-form]').count(),22);
     assert.equal(await page.locator('[data-action="toggle-rival"]').count(),0);
 
     // The Madrid final remains optional and cannot be enabled after seeing the rival answers.
     const river=require('../data/campanas/river-libertadores-2018.json');
     const final=river.matches.find(m=>m.id==='espn-528144');
-    const entries=river.matches.filter(m=>m.id!==final.id).map(m=>({collectionId:river.id,matchId:m.id,mode:'result',bestScore:20,attempts:1,completedAt:'2026-10-01T10:00:00Z',updatedAt:'2026-10-01T10:00:00Z'}));
+    const entries=river.matches.filter(m=>m.id!==final.id).map(m=>({collectionId:river.id,matchId:m.id,mode:'formation',flowVersion:2,bestScore:33,attempts:1,completedAt:'2026-10-01T10:00:00Z',updatedAt:'2026-10-01T10:00:00Z'}));
     await page.evaluate(({KEY,entries})=>localStorage.setItem(KEY,JSON.stringify({schemaVersion:1,entries})),{KEY,entries});
     await page.goto(base+'?collection='+river.id+'&route=complete');
     assert.equal(await page.locator('.campaign-hero p').count(),0);
-    await page.locator('[data-mode="formation"]').click();
+    await page.locator('[data-action="campaign-play"]').click();
     assert.equal(await page.locator('[data-player-form]').count(),11);
     assert.equal(await page.locator('[data-action="both-teams"]').count(),1);
     await page.locator('[data-action="toggle-rival"]').click();
     assert.equal(await page.locator('[data-action="both-teams"]').count(),0);
-    await page.locator('[data-action="home"]').click();await page.locator('[data-mode="formation"]').click();
+    await page.locator('[data-action="home"]').click();await page.locator('[data-action="campaign-play"]').click();
     await page.locator('[data-action="both-teams"]').click();
     assert.equal(await page.locator('[data-player-form]').count(),22);
     assert.equal(await page.locator('[data-action="toggle-rival"]').count(),0);

@@ -50,13 +50,13 @@ test('archive pending modes honor zero and negative scores and scorer eligibilit
   const values = new Map();
   const store = progress.open({ getItem: key => values.get(key), setItem: (key, value) => values.set(key, value) }, error => { throw error; });
   store.save(collection.id, match.id, 'scorers', 0, collection.version);
-  assert.deepEqual(core.pendingModes(match, store.list()), ['formation', 'result']);
+  assert.deepEqual(core.pendingModes(match, store.list()), ['formation']);
   store.save(collection.id, match.id, 'result', -5, collection.version);
   assert.deepEqual(core.pendingModes(match, store.list()), ['formation']);
   store.save(collection.id, match.id, 'formation', 0, collection.version);
   assert.deepEqual(core.pendingModes(match, store.list()), []);
   const zero = collection.matches.find(m => !m.scorers.length);
-  assert.deepEqual(core.pendingModes(zero, []), ['formation', 'result']);
+  assert.deepEqual(core.pendingModes(zero, []), ['formation']);
 });
 test('collection retains all matches, clubs, sources, complete starters and unique IDs', () => {
   assert.equal(collection.matches.length, 255);
@@ -77,13 +77,13 @@ test('all eligible scorer challenges are solvable including substitutes and repe
     const actual = core.actualScorers(m);
     const candidates = core.scorerCandidates(m);
     assert(actual.every(id => candidates.some(p => p.id === id)), m.id);
-    assert.deepEqual(core.scoreScorers(actual.slice().reverse(), m, 0), { correct: true, score: 20 });
+    assert.deepEqual(core.scoreScorers(actual.slice().reverse(), m, 0), { correct: true, score: 20, matched:actual.length,total:actual.length,wrong:0 });
     assert.deepEqual([0, 1, 2, 3].map(h => core.scoreScorers(actual, m, h).score), [20, 14, 8, 0]);
     assert.equal(core.scoreScorers(actual.slice(1), m).correct, false);
   }
   const repeated = eligible.find(m => new Set(core.actualScorers(m)).size < m.scorers.length);
   assert(repeated);
-  assert.equal(core.scoreScorers([...new Set(core.actualScorers(repeated))], repeated).score, -5);
+  assert.equal(core.scoreScorers([...new Set(core.actualScorers(repeated))], repeated).score, Math.round(20*new Set(core.actualScorers(repeated)).size/repeated.scorers.length));
 });
 test('club filters accept slugs or names; no-goal and ambiguous games stay out of scorer mode', () => {
   assert.deepEqual(core.eligible(collection.matches, 'aldosivi', 'result'), core.eligible(collection.matches, 'Aldosivi', 'result'));

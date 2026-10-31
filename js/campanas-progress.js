@@ -47,7 +47,7 @@
     const list = () => entries.map((entry) => ({ ...entry }));
     return {
       list,
-      save(collectionId, matchId, mode, score, dataVersion, playClub = "all", formationClub = "all") {
+      save(collectionId, matchId, mode, score, dataVersion, playClub = "all", formationClub = "all", options = {}) {
         const previous = entries.find(
           (entry) =>
             entry.collectionId === collectionId && entry.matchId === matchId && entry.mode === mode &&
@@ -66,6 +66,8 @@
           completedAt: previous?.completedAt || now,
           updatedAt: now,
           dataVersion,
+          ...(options.skipped ? { skipped: true } : {}),
+          ...(options.flowVersion === 2 ? { flowVersion: 2 } : {}),
         };
         entries = entries.filter((entry) => entry !== previous).concat(next);
         try {

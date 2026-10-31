@@ -16,18 +16,17 @@
 
 ## 1. Qué es TribunApp
 
-> Desarrollo separado: **Campañas** se prepara en la rama `campanas` con el Apertura
-> 2026, tres modos de memoria y progreso local sin login. Aún pendiente de revisión
-> y merge. Incluye además 24 campañas históricas de 12 clubes, seleccionables con
-> los mismos retos y progreso independiente. La portada presenta los modos, el torneo
-> y las campañas agrupadas por club. Incluye recorridos Expreso/Clásico/Completo,
-> apodo local y medallero «Mis campañas», con avance compartido entre recorridos.
-> «Jugar» permite entrar desde arriba con una selección compacta. «Mis campañas»
-> sólo muestra campañas empezadas. Formación pide el once del club elegido y permite
-> consultar al rival; con todos los clubes se mantienen los dos once.
-> Arquitectura y reglas: `docs/campanas-integracion.md`.
-> Catálogo producido, fuentes y límites: `docs/campanas-historicas.md`. Las propuestas
-> restantes de `docs/campanas-objetivos.md` siguen pendientes.
+> Desarrollo separado: **Campañas** se prepara en la rama `campanas`, pendiente de
+> revisión y merge. Incluye Apertura 2026 y 24 campañas históricas de 12 clubes.
+> Flujo vigente: formación del club → bonus opcional de resultado → bonus opcional
+> de goleadores. No hay elección de retos ni aleatorio. El marcador queda oculto
+> hasta el bonus; goleadores reconoce aciertos parciales y los bonus nunca restan.
+> Expreso/Clásico/Completo cambian la cantidad de partidos; las medallas avanzan al
+> completar formaciones. Apodo, mejores marcas y campañas empezadas se guardan localmente.
+> «Jugar» abre una selección compacta. «Ver rival» es una referencia gratuita;
+> con todos los clubes se completan ambos once. Las partidas antiguas se conservan.
+> Arquitectura y reglas: `docs/campanas-integracion.md`. Catálogo, fuentes y límites:
+> `docs/campanas-historicas.md`. Lo restante de `docs/campanas-objetivos.md` sigue pendiente.
 
 Una web para **hinchas de los 30 clubes de la Liga Profesional Argentina** (y de los clubes
 argentinos en Libertadores y Sudamericana). Producción: **www.tribunapp.com.ar**.

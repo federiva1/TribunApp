@@ -20,7 +20,7 @@ test('medal index matches source collections, has no answers, and excludes suspe
 });
 test('route lengths are proportional, nested, stable, chronological and include the last match', () => {
   for (let n=0;n<=255;n++) {
-    const matches=Array.from({length:n},(_,i)=>({id:String(i),modes:['result']}));
+    const matches=Array.from({length:n},(_,i)=>({id:String(i),modes:['formation','result']}));
     const express=core.routeMatches(matches,'all','express');
     const classic=core.routeMatches(matches,'all','classic');
     const full=core.routeMatches(matches,'all','complete');
@@ -36,17 +36,22 @@ test('route lengths are proportional, nested, stable, chronological and include 
     }
   }
 });
-test('one finished challenge per match earns medals, independent of score, with no mode or collection inflation', () => {
-  const matches=[{id:'a',modes:['formation','result']},{id:'b',modes:['result']}];
-  const records=[{collectionId:'one',matchId:'a',mode:'result',bestScore:-5},{collectionId:'one',matchId:'a',mode:'formation',bestScore:0},
-    {collectionId:'two',matchId:'b',mode:'result',bestScore:20},{collectionId:'one',matchId:'b',mode:'scorers',bestScore:20}];
-  const state=core.routeStatus(matches,records,'one');
-  assert.equal(state.done,1);assert.equal(state.score,-5);assert(!state.complete);
+test('only formations advance campaigns; optional bonus scores never double completion', () => {
+  const matches=[{id:'a',modes:['formation','result']},{id:'b',modes:['formation','result']}];
+  const entries=[{collectionId:'one',matchId:'a',mode:'result',bestScore:20},
+    {collectionId:'two',matchId:'b',mode:'formation',bestScore:33}];
+  assert.equal(core.routeStatus(matches,entries,'one').done,0);
+  entries.push({collectionId:'one',matchId:'a',mode:'formation',bestScore:0});
+  let state=core.routeStatus(matches,entries,'one');
+  assert.equal(state.done,1);assert.equal(state.score,20);assert(!state.complete);
   assert.deepEqual(state.remaining,[matches[1]]);
-  records.push({collectionId:'one',matchId:'b',mode:'result',bestScore:0});
-  assert(core.routeStatus(matches,records,'one').complete);
-  assert(!core.routeStatus([],records,'one').complete);
+  entries.push({collectionId:'one',matchId:'b',mode:'formation',bestScore:33});
+  entries.push({collectionId:'one',matchId:'b',mode:'result',bestScore:-5});
+  state=core.routeStatus(matches,entries,'one');
+  assert(state.complete);assert.equal(state.score,53,'legacy negative scores do not reduce the new campaign total');
+  assert(!core.routeStatus([],entries,'one').complete);
 });
+
 test('Apertura club routes only include that club and unavailable scorer modes stay unavailable', () => {
   const collection=require('../data/campanas/apertura-2026.json');
   const mirror=index.collections.find(c=>c.id===collection.id);

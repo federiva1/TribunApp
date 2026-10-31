@@ -30,11 +30,17 @@
     if (name && (revealed >= 2 || (letters && revealed >= Math.ceil(letters / 2)))) return 0;
     return level === undefined ? 3 : [2, 1][level] || 0;
   }
-  function pendingModes(match, entries) {
-    return ["formation", "scorers", "result"].filter(function (mode) {
-      return eligible([match], "all", mode).length && !entries.some(function (entry) {
-        return entry.matchId === match.id && entry.mode === mode;
-      });
+  function pendingModes(match, entries, exposureEntries) {
+    var played = new Set(entries.filter(function (entry) { return entry.matchId === match.id; }).map(function (entry) { return entry.mode; }));
+    if (!played.has("formation")) return eligible([match], "all", "formation").length ? ["formation"] : [];
+    // A scorer sheet already exposes both the result and the lineups, including legacy games.
+    if (!resultRevealed(match, exposureEntries || entries) && eligible([match], "all", "result").length) return ["result"];
+    return !played.has("scorers") && eligible([match], "all", "scorers").length ? ["scorers"] : [];
+  }
+  function resultRevealed(match, entries) {
+    return entries.some(function (entry) {
+      return entry.matchId === match.id && (entry.mode === "result" || entry.mode === "scorers" ||
+        (entry.mode === "formation" && entry.flowVersion !== 2));
     });
   }
   function scorerHintPlan(match, eliminated, used) {
@@ -115,15 +121,15 @@
     });
   }
   function scoreScorers(selected, match, hints) {
-    var expected = actualScorers(match).map(normalize).sort();
-    var answers = selected.map(normalize).sort();
-    var correct =
-      expected.length > 0 &&
-      answers.length === expected.length &&
-      answers.every(function (answer, i) {
-        return answer === expected[i];
-      });
-    return { correct: correct, score: correct ? [20, 14, 8, 0][hints || 0] || 0 : -5 };
+    var expected = actualScorers(match).map(normalize), remaining = expected.slice(), matched = 0;
+    selected.map(normalize).forEach(function (answer) {
+      var index = remaining.indexOf(answer);
+      if (index >= 0) { matched++; remaining.splice(index, 1); }
+    });
+    var cap = [20, 14, 8, 0][hints || 0] || 0;
+    return { correct: expected.length > 0 && selected.length === expected.length && matched === expected.length,
+      score: expected.length ? Math.round(cap * matched / expected.length) : 0,
+      matched: matched, total: expected.length, wrong: selected.length - matched };
   }
   function eligible(matches, club, mode) {
     return matches.filter(function (match) {
@@ -141,7 +147,7 @@
   // prefix of the same selection priority, then displayed chronologically.
   function routeMatches(matches, club, route) {
     var options = matches.filter(function (match) {
-      return (!club || club === "all" || [match.homeSlug, match.awaySlug].includes(club)) && matchModes(match).length;
+      return (!club || club === "all" || [match.homeSlug, match.awaySlug].includes(club)) && matchModes(match).includes("formation");
     });
     var count = route === "express" ? Math.min(5, Math.ceil(options.length / 3))
       : route === "classic" ? Math.ceil(options.length / 2) : options.length;
@@ -181,29 +187,14 @@
     var next = 0;
     return rows.map(function (row) { return positionRank(row.player.pos) < 0 ? row : known[next++]; });
   }
-  function randomChallenge(matches, entries, previousId, random) {
-    random = random || Math.random;
-    var options = matches.filter(function (match) { return matchModes(match).length; });
-    var untouched = options.filter(function (match) { return !entries.some(function (entry) { return entry.matchId === match.id; }); });
-    var pending = options.filter(function (match) { return matchModes(match).some(function (mode) {
-      return !entries.some(function (entry) { return entry.matchId === match.id && entry.mode === mode; });
-    }); });
-    options = untouched.length ? untouched : pending.length ? pending : options;
-    if (options.some(function (match) { return match.id !== previousId; })) options = options.filter(function (match) { return match.id !== previousId; });
-    if (!options.length) return null;
-    var pick = function (list) { return list[Math.min(list.length - 1, Math.max(0, Math.floor(random() * list.length)))]; };
-    var match = pick(options), available = matchModes(match);
-    var missing = available.filter(function (mode) { return !entries.some(function (entry) { return entry.matchId === match.id && entry.mode === mode; }); });
-    return { match: match, mode: pick(missing.length ? missing : available) };
-  }
   function routeStatus(matches, entries, collectionId) {
     var allowed = new Map(matches.map(function (match) { return [match.id, matchModes(match)]; }));
     var relevant = bestEntries(entries.filter(function (entry) {
       return entry.collectionId === collectionId && allowed.get(entry.matchId)?.includes(entry.mode);
     }));
-    var completed = new Set(relevant.map(function (entry) { return entry.matchId; }));
+    var completed = new Set(relevant.filter(function (entry) { return entry.mode === "formation"; }).map(function (entry) { return entry.matchId; }));
     return { total: matches.length, done: completed.size, complete: matches.length > 0 && completed.size === matches.length,
-      score: relevant.reduce(function (sum, entry) { return sum + entry.bestScore; }, 0),
+      score: relevant.reduce(function (sum, entry) { return sum + Math.max(0, entry.bestScore); }, 0),
       remaining: matches.filter(function (match) { return !completed.has(match.id); }) };
   }
   function formationSides(match, club) {
@@ -242,9 +233,9 @@
     return [...played.values()].sort(function (a, b) { return b.lastPlayedAt.localeCompare(a.lastPlayedAt); });
   }
   return {
+    resultRevealed: resultRevealed,
     positionRank: positionRank,
     orderedLineup: orderedLineup,
-    randomChallenge: randomChallenge,
     formationSides: formationSides,
     bestEntries: bestEntries,
     progressForClub: progressForClub,

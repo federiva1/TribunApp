@@ -5,8 +5,8 @@ const core=require('../js/campanas-core.js');
 const root=path.resolve(__dirname,'..');
 const url='http://campanas.test/campanas.html';
 const KEY='tribunapp.campanas.progress.v1', PROFILE='tribunapp.campanas.profile.v1';
-function entry(collection,match,mode='result',score=20) {
-  return {collectionId:collection.id,matchId:match.id,mode,bestScore:score,lastScore:score,attempts:1,
+function entry(collection,match,mode='formation',score=33) {
+  return {flowVersion:2,collectionId:collection.id,matchId:match.id,mode,bestScore:score,lastScore:score,attempts:1,
     completedAt:'2026-10-01T10:00:00.000Z',updatedAt:'2026-10-01T10:00:00.000Z'};
 }
 (async()=>{
@@ -30,10 +30,10 @@ function entry(collection,match,mode='result',score=20) {
     await page.locator('[data-route="express"]').waitFor();
     for(const [key,count] of [['express',5],['classic',10],['complete',19]]) assert.match(await page.locator(`[data-route="${key}"]`).textContent(),new RegExp(count+' partidos'));
     assert.match(await page.locator('.route-status').textContent(),/1 de 5/);
-    await page.locator('[data-mode="result"]').click();
+    await page.locator('[data-action="campaign-play"]').click();
     await page.locator('#nickname-cancel').click();
     assert.equal(await page.locator('#result-form').count(),0,'cancel must not start a round');
-    await page.locator('[data-mode="result"]').click();
+    await page.locator('[data-action="campaign-play"]').click();
     await page.locator('#nickname-input').fill('  ');await page.locator('#nickname-form .primary').click();
     assert(await page.locator('#nickname-dialog').isVisible());
     await page.locator('#nickname-input').fill('<Fede>');await page.locator('#nickname-form .primary').click();
@@ -45,9 +45,15 @@ function entry(collection,match,mode='result',score=20) {
       const names=await page.locator('.score-team span').allTextContents();
       const match=express.find(m=>m.home===names[0]&&m.away===names[1]);
       assert(match);assert(!seen.has(match.id),'next must prioritize an unplayed route match');seen.add(match.id);
-      await page.locator('#result-form input[name="home"]').fill(String(i===1?99:match.homeGoals));
-      await page.locator('#result-form input[name="away"]').fill(String(i===1?99:match.awayGoals));
-      await page.locator('#result-form .primary').click();
+      const side=match.homeSlug===collection.clubSlug?'home':'away';
+      for(const [index,player] of match[side+'XI'].entries()) {
+        const input=page.locator(`#guess-${side}-${index}`);await input.fill(player.accepted_answers?.[0]||player.name);await input.press('Enter');
+      }
+      if(i===1) {
+        await page.locator('[data-bonus="result"]').click();
+        await page.locator('#result-form input[name="home"]').fill('99');await page.locator('#result-form input[name="away"]').fill('99');
+        await page.locator('#result-form .primary').click();
+      }
       assert.match(await page.locator('.journey-strip').textContent(),new RegExp((i+1)+' / 5'));
       await page.locator('.completion [data-action="next"]').click();
     }
@@ -57,7 +63,7 @@ function entry(collection,match,mode='result',score=20) {
     assert.equal(await medal.locator('.medal-badge.earned').count(),1);
     assert.equal(await medal.locator('.medal-badge.started').count(),2);
     assert.match(await medal.textContent(),/5 \/ 10 partidos/);assert.match(await medal.textContent(),/5 \/ 19 partidos/);
-    assert.match(await page.locator('.medal-hero').textContent(),/75 PUNTOS/,'wrong result counts completion but still deducts points');
+    assert.match(await page.locator('.medal-hero').textContent(),/165 PUNTOS/,'a failed bonus cannot deduct formation points');
     assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
     await page.screenshot({path:path.join(os.tmpdir(),'campanas-medallero-mobile.png'),fullPage:true});
     await page.locator('#medal-club').selectOption('all');
@@ -80,8 +86,8 @@ function entry(collection,match,mode='result',score=20) {
     await page.locator('[data-action="archive"]').click();
     const firstRecord=page.locator('.archive-card').first();
     assert.equal(await firstRecord.locator('[data-replay-mode="result"]').count(),0,'archive offers only unplayed challenges');
-    await firstRecord.locator('[data-replay-mode="formation"]').click();
-    assert.equal(await page.locator('[data-player-form]').count(),11);
+    await firstRecord.locator('[data-open-match]').click();
+    assert.equal(await page.locator('[data-player-form]').count(),0,'a completed formation opens its saved sheet');
     await page.locator('[data-action="home"]').click();
     await page.locator('[data-action="profile"]').click();
     await page.locator('#nickname-input').fill('Bicho');await page.locator('#nickname-form .primary').click();
@@ -89,27 +95,18 @@ function entry(collection,match,mode='result',score=20) {
     assert.equal(await page.locator('.nickname').textContent(),'Bicho');
     assert.match(await page.locator('.route-status').textContent(),/5 de 19/);
 
-    // A 0–0 must not trap a scorers-only player in an endless repeat loop.
+    // A 0–0 still advances with its formation; no scorer bonus or repeat trap.
     const central=require('../data/campanas/central-copaargentina-2018.json');
-    const goals=core.eligible(central.matches,'all','scorers');
-    const last=goals.at(-1);
-    await page.evaluate(({KEY,records})=>localStorage.setItem(KEY,JSON.stringify({schemaVersion:1,entries:records})),{KEY,records:goals.slice(0,-1).map(m=>entry(central,m,'scorers'))});
-    await page.goto(url+'?collection='+central.id+'&route=complete');
-    await page.locator('[data-mode="scorers"]').click();
-    assert.deepEqual(await page.locator('.score-team span').allTextContents(),[last.home,last.away]);
-    for (const id of core.actualScorers(last)) await page.locator('[data-goal]').evaluateAll((buttons,id)=>buttons.find(b=>b.dataset.goal===id).click(),id);
-    await page.locator('[data-action="confirm-scorers"]').click();
-    await page.locator('.completion [data-action="next"]').click();
-    assert.match(await page.locator('h1').textContent(),/Seguimos con otro reto/);
-    assert.equal(await page.locator('[data-replay-mode="scorers"]').count(),0);
-    await page.locator('[data-replay-mode="result"]').click();
-    await page.locator('#result-form input[name="home"]').fill('0');
-    await page.locator('#result-form input[name="away"]').fill('0');
-    await page.locator('#result-form .primary').click();
+    const zero=central.matches.find(m=>!m.scorers.length);
+    await page.evaluate(({KEY,records})=>localStorage.setItem(KEY,JSON.stringify({schemaVersion:1,entries:records})),{KEY,records:central.matches.filter(m=>m.id!==zero.id).map(m=>entry(central,m))});
+    await page.goto(url+'?collection='+central.id+'&route=complete');await page.locator('[data-action="campaign-play"]').click();
+    const side=zero.homeSlug===central.clubSlug?'home':'away';
+    for(const [index,p] of zero[side+'XI'].entries()) {const input=page.locator(`#guess-${side}-${index}`);await input.fill(p.accepted_answers?.[0]||p.name);await input.press('Enter');}
+    assert.equal(await page.locator('[data-bonus="scorers"]').count(),0);
+    await page.locator('[data-bonus="result"]').click();await page.locator('#result-form input[name="home"]').fill('0');await page.locator('#result-form input[name="away"]').fill('0');await page.locator('#result-form .primary').click();
     assert.match(await page.locator('.medal-earned').textContent(),/Completaste Completo/);
     await page.locator('.completion [data-action="next"]').click();
-    const centralMedal=page.locator(`[data-medal-collection="${central.id}"]`);
-    assert.equal(await centralMedal.locator('.medal-badge.earned').count(),3);
+    assert.equal(await page.locator(`[data-medal-collection="${central.id}"] .medal-badge.earned`).count(),3);
 
     // No profile or storage access must still allow a complete in-memory session.
     const blocked=await browser.newPage();
@@ -122,10 +119,10 @@ function entry(collection,match,mode='result',score=20) {
     });
     await blocked.addInitScript(()=>Object.defineProperty(window,'localStorage',{get(){throw Error('blocked')}}));
     await blocked.goto(url+'?collection=central-copaargentina-2018&route=express');
-    await blocked.locator('[data-mode="result"]').click();
+    await blocked.locator('[data-action="campaign-play"]').click();
     await blocked.locator('#nickname-input').fill('Invitado');await blocked.locator('#nickname-form .primary').click();
     assert(await blocked.locator('#storage-notice').isVisible());
-    assert.equal(await blocked.locator('#result-form').count(),1);
+    assert.equal(await blocked.locator('[data-player-form]').count(),11);
     await blocked.close();
     assert.deepEqual(errors,[]);
     console.log('PASS: route completion, all medal states/filters, old progress, nickname cancellation/rename, no XSS, resume, responsive layouts, 0–0 transition and blocked storage.');

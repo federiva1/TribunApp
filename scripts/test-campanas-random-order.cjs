@@ -38,36 +38,43 @@ test('Caranta is first and Boca role corrections retain their sources and surviv
   assert.deepEqual(raw,match);
 });
 
-test('random challenges use only eligible modes across all campaigns including 0–0s and incomplete games',()=>{
-  for(const collection of collections) for(const match of collection.matches) {
-    const eligible=C.matchModes(match),seen=new Set();
-    for(let n=0;n<12;n++) {
-      const pick=C.randomChallenge([match],[],null,()=>n/12);
-      if(!eligible.length) {assert.equal(pick,null);continue;}
-      assert.equal(pick.match,match);assert(eligible.includes(pick.mode));seen.add(pick.mode);
-      if(!match.scorers.length) assert.notEqual(pick.mode,'scorers');
-    }
-    assert.deepEqual([...seen].sort(),eligible.slice().sort());
-  }
-});
-
-test('random campaign avoids completed matches and immediate skip repeats, then prefers pending modes',()=>{
-  const games=[{id:'a',modes:['formation','result']},{id:'b',modes:['result','scorers']},{id:'c',modes:['result']}];
-  const entries=[{matchId:'a',mode:'formation'}];
-  assert.equal(C.randomChallenge(games,entries,null,()=>0).match.id,'b');
-  assert.equal(C.randomChallenge(games,entries,'b',()=>0).match.id,'c');
-  assert.equal(C.randomChallenge([games[0]],entries,null,()=>0).mode,'result');
-  assert.equal(C.randomChallenge([games[0]],[...entries,{matchId:'a',mode:'result'}],null,()=>0).mode,'formation');
-  assert.equal(C.randomChallenge([],[],null),null);
-  assert.equal(C.randomChallenge(games,[],null,()=>0.999).match.id,'c');
-});
-
-test('random is a persistent preference while scores remain attached to the actual challenge',()=>{
+test('bonus sequence protects unseen results, including reloads, skips and old scorer games',()=>{
+  const match=collections.find(c=>c.id==='boca-libertadores-2007').matches.find(m=>m.id==='espn-213122');
   const values=new Map(),storage={getItem:k=>values.get(k),setItem:(k,v)=>values.set(k,v)},error=e=>{throw e;};
-  P.openProfile(storage,error).save({nickname:'Fede',mode:'random'});
-  P.openActivity(storage,error).start('boca','bocajuniors','express','random');
-  assert.equal(P.openProfile(storage,error).get().mode,'random');
-  assert.equal(P.openActivity(storage,error).list()[0].mode,'random');
-  P.open(storage,error).save('boca','match','result',20,1,'bocajuniors');
-  assert.equal(P.open(storage,error).list()[0].mode,'result');
+  let store=P.open(storage,error);
+  assert.deepEqual(C.pendingModes(match,[]),['formation']);
+  store.save('boca',match.id,'formation',33,1,'bocajuniors','bocajuniors',{flowVersion:2});
+  store=P.open(storage,error);
+  assert.deepEqual(C.pendingModes(match,store.list()),['result']);
+  assert.equal(C.resultRevealed(match,store.list()),false);
+  store.save('boca',match.id,'result',0,1,'bocajuniors','all',{flowVersion:2,skipped:true});
+  store=P.open(storage,error);
+  assert(store.list().find(e=>e.mode==='result').skipped);
+  assert(C.resultRevealed(match,store.list()));
+  assert.deepEqual(C.pendingModes(match,store.list()),['scorers']);
+  store.save('boca',match.id,'scorers',10,1);
+  assert.deepEqual(C.pendingModes(match,store.list()),[]);
+  const legacy=[{matchId:match.id,mode:'formation',bestScore:33}];
+  assert(C.resultRevealed(match,legacy),'old formation screens already exposed the result');
+  assert.deepEqual(C.pendingModes(match,legacy),['scorers']);
+  legacy.push({matchId:match.id,mode:'scorers',bestScore:0});
+  assert.deepEqual(C.pendingModes(match,legacy),[]);
+  const newClub=[{matchId:match.id,mode:'formation',flowVersion:2}];
+  assert.deepEqual(C.pendingModes(match,newClub,legacy),['scorers'],'changing club cannot unlock an exposed result');
+  const zero=collections[0].matches.find(m=>!m.scorers.length);
+  assert.deepEqual(C.pendingModes(zero,[{matchId:zero.id,mode:'formation',flowVersion:2}]),['result']);
+  assert.deepEqual(C.pendingModes(zero,[{matchId:zero.id,mode:'formation',flowVersion:2},{matchId:zero.id,mode:'result'}]),[]);
+});
+
+test('scorer bonus rewards partial goals, respects repeated scorers and never deducts points',()=>{
+  const match=collections.find(c=>c.id==='boca-libertadores-2007').matches.find(m=>m.id==='espn-213122');
+  const [a,b]=C.actualScorers(match);
+  const wrong=C.scorerCandidates(match).find(p=>![a,b].includes(p.id)).id;
+  assert.deepEqual(C.scoreScorers([a,wrong],match,0),{correct:false,score:10,matched:1,total:2,wrong:1});
+  assert.deepEqual([0,1,2,3].map(h=>C.scoreScorers([a,wrong],match,h).score),[10,7,4,0]);
+  assert.equal(C.scoreScorers([wrong,wrong],match,0).score,0);
+  assert.equal(C.scoreScorers([a,a],match,0).score,10,'a goal cannot be counted twice');
+  const double={...match,scorers:[match.scorers[0],match.scorers[0]],scorerTeams:[match.scorerTeams[0],match.scorerTeams[0]]};
+  assert.equal(C.scoreScorers([a,a],double,0).score,20);
+  assert.equal(C.scoreScorers([a,wrong],double,0).score,10);
 });

@@ -6,8 +6,8 @@
 
 Dos campañas para cada uno de los 12 clubes nombrados por Fede: 24 colecciones.
 El Apertura 2026 existente sigue disponible sin cambios en sus datos. Se entra por
-el selector de torneo/campañas, se filtra por club y se elige cualquiera de los tres
-retos. El archivo y las marcas se guardan por colección, partido y modo, en el
+el selector de torneo/campañas y se filtra por club. Desde el 31/10/2026 se completa
+primero la formación, con resultado y goleadores como bonus opcionales. El archivo y las marcas se guardan por colección, partido y modo, en el
 navegador. No hay login ni nuevos servicios de pago.
 
 | Club | Campaña A | Campaña B |
@@ -34,8 +34,8 @@ son recorridos destacados, no títulos.
 323 apariciones de partidos dentro de las campañas (no necesariamente 323 encuentros
 únicos: dos clubes pueden compartir un cruce). Disponibles: 322 en formación, 289
 en goleadores y 322 en resultado. El Boca–River suspendido de 2015 queda documentado
-pero fuera del juego. Los 0–0 no participan en goleadores. La tanda ofrece 933 retos
-por colección/modo, además del Apertura existente.
+pero fuera del juego. Los 0–0 no participan en goleadores. La tanda aporta 933 etapas disponibles
+(sumando formaciones y bonus), además del Apertura existente.
 
 ## Fuentes y tratamiento
 
@@ -92,5 +92,5 @@ aislado e intercepta recursos locales: no envía votos ni toca la cuenta del usu
 
 Se comprueban cantidad e identidad de campañas/partidos, once por lado, autores y
 marcadores, ayudas, penales y suplemento editorial. La prueba de navegador inicia
-los 72 pares campaña/modo, verifica el Apertura original, pista dentro del input,
-reducción efectiva de candidatos y archivo/progreso independiente incluso con 0 puntos.
+las 25 colecciones en el flujo unificado, verifica pistas dentro del input, bonus
+parciales y omitidos, archivo sin revelar resultados pendientes y progreso local.
