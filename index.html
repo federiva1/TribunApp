@@ -270,6 +270,108 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   .logo-wrap img { height: 56px; }
 }
 
+/* ===== CUADRO DE PLAYOFFS (pronóstico del hincha) ===== */
+.pl { margin-top: 34px; }
+.pl[hidden] { display: none; }
+.pl .sec-header { margin-bottom: 8px; }
+.pl-acc { display: flex; justify-content: center; gap: 8px; margin-bottom: 16px; }
+.pl-btn { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+  color: rgba(255,255,255,0.75); background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 9px; padding: 6px 14px; cursor: pointer; transition: all 0.16s; }
+.pl-btn:hover { color: #fff; border-color: rgba(79,195,247,0.5); background: rgba(79,195,247,0.12); }
+.pl-btn[disabled] { opacity: 0.35; cursor: default; pointer-events: none; }
+.pl-ronda { font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 3px; color: var(--celeste);
+  text-align: center; margin-bottom: 8px; }
+/* partido */
+.pl-p { position: relative; background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 10px; overflow: visible; }
+.pl-eq { display: flex; align-items: center; gap: 6px; height: 29px; padding: 0 7px; cursor: pointer;
+  transition: background 0.14s, opacity 0.14s; position: relative; }
+.pl-eq + .pl-eq { border-top: 1px solid rgba(255,255,255,0.06); }
+.pl-eq:first-child { border-radius: 9px 9px 0 0; }
+.pl-eq:last-child { border-radius: 0 0 9px 9px; }
+.pl-eq[data-slug]:hover { background: rgba(79,195,247,0.12); }
+.pl-eq.vacio { cursor: default; }
+.pl-seed { font-family: 'Bebas Neue', sans-serif; font-size: 12px; letter-spacing: 0.5px; color: rgba(255,255,255,0.38);
+  width: 18px; flex: 0 0 auto; text-align: center; }
+.pl-eq img { width: 18px; height: 18px; object-fit: contain; flex: 0 0 auto; }
+.pl-nom { flex: 1; min-width: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 600;
+  color: #ddd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pl-eq.vacio .pl-nom { color: rgba(255,255,255,0.25); font-weight: 400; font-style: italic; }
+.pl-eq.gana { background: rgba(79,195,247,0.14); box-shadow: inset 3px 0 0 var(--celeste); }
+.pl-eq.gana .pl-nom { color: #fff; }
+.pl-eq.gana .pl-seed { color: var(--celeste); }
+.pl-eq.pierde { opacity: 0.4; }
+.pl-eq.mod .pl-seed { color: var(--gold); }
+.pl-edit { flex: 0 0 auto; width: 20px; height: 20px; border: none; border-radius: 6px; background: transparent;
+  color: rgba(255,255,255,0.3); font-size: 12px; cursor: pointer; line-height: 20px; padding: 0; }
+.pl-edit:hover { color: #fff; background: rgba(255,255,255,0.1); }
+/* campeón: "CAMPEÓN" arriba de la final (y el escudo del ganador cuando lo hay); trofeo abajo */
+.pl-camp { text-align: center; }
+.pl-camp-esc { width: 54px; height: 54px; object-fit: contain; display: block; margin: 0 auto 6px;
+  filter: drop-shadow(0 0 14px rgba(245,197,24,0.45)) drop-shadow(0 3px 8px rgba(0,0,0,0.5)); animation: plSube 0.35s ease-out; }
+@keyframes plSube { from { opacity: 0; transform: translateY(10px) scale(0.85); } to { opacity: 1; transform: none; } }
+.pl-camp-lab { font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 4px; color: var(--gold); }
+.pl-trofeo { display: flex; justify-content: center; }
+.pl-trofeo svg { height: 140px; width: auto; opacity: 0.5; transition: opacity 0.3s, filter 0.3s; }
+.pl-trofeo.ok svg { opacity: 1; filter: drop-shadow(0 0 14px rgba(255,255,255,0.18)); }
+/* escritorio: cuadro de dos mitades que convergen en la final */
+.pl-desk { display: none; }
+.pl-mob { display: block; }
+@media (min-width: 901px) {
+  .pl-desk { display: grid; --g: 22px; grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 1.15fr) repeat(3, minmax(0, 1fr));
+    column-gap: var(--g); }
+  .pl-mob { display: none; }
+  .pl-col { display: flex; flex-direction: column; }
+  .pl-col-in { flex: none; display: flex; flex-direction: column; height: 410px; position: relative; }
+  .pl-par { flex: 1; display: flex; flex-direction: column; justify-content: space-around; position: relative; }
+  /* llaves: línea que une los dos partidos del par y sale hacia la ronda siguiente */
+  .pl-col.izq .pl-par:not(.uno)::after, .pl-col.der .pl-par:not(.uno)::after {
+    content: ''; position: absolute; top: 25%; bottom: 25%; width: calc(var(--g) / 2);
+    border: 1px solid rgba(79,195,247,0.35); pointer-events: none; }
+  .pl-col.izq .pl-par:not(.uno)::after { right: calc(var(--g) / -2); border-left: none; border-radius: 0 6px 6px 0; }
+  .pl-col.der .pl-par:not(.uno)::after { left: calc(var(--g) / -2); border-right: none; border-radius: 6px 0 0 6px; }
+  .pl-col.izq.r2 .pl-p::before, .pl-col.izq.r3 .pl-p::before,
+  .pl-col.der.r2 .pl-p::before, .pl-col.der.r3 .pl-p::before {
+    content: ''; position: absolute; top: 50%; width: calc(var(--g) / 2); border-top: 1px solid rgba(79,195,247,0.35); pointer-events: none; }
+  .pl-col.izq.r2 .pl-p::before, .pl-col.izq.r3 .pl-p::before { left: calc(var(--g) / -2 - 1px); }
+  .pl-col.der.r2 .pl-p::before, .pl-col.der.r3 .pl-p::before { right: calc(var(--g) / -2 - 1px); }
+  .pl-col.izq.r3 .pl-p::after, .pl-col.der.r3 .pl-p::after {
+    content: ''; position: absolute; top: 50%; width: var(--g); border-top: 1px solid rgba(79,195,247,0.35); pointer-events: none; }
+  .pl-col.izq.r3 .pl-p::after { right: calc(var(--g) * -1 - 1px); }
+  .pl-col.der.r3 .pl-p::after { left: calc(var(--g) * -1 - 1px); }
+  .pl-col.fin .pl-p { border-color: rgba(245,197,24,0.45); }
+  .pl-col.fin .pl-camp { position: absolute; left: 0; right: 0; bottom: calc(50% + 40px); }
+  .pl-col.fin .pl-trofeo { position: absolute; left: 0; right: 0; top: calc(50% + 46px); }
+  .pl-col.fin .pl-ronda { color: var(--gold); }
+}
+/* celular: una ronda debajo de la otra */
+.pl-m-ronda { margin-bottom: 16px; }
+.pl-m-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pl-m-grid.uno { grid-template-columns: minmax(0, 260px); justify-content: center; }
+.pl-mob .pl-camp { margin-bottom: 8px; }
+.pl-mob .pl-trofeo { margin-top: 12px; }
+.pl-mob .pl-trofeo svg { height: 120px; }
+/* selector de equipo */
+.pl-modal { position: fixed; inset: 0; z-index: 200; background: rgba(5,7,15,0.78); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center; padding: 16px; }
+.pl-modal[hidden] { display: none; }
+.pl-modal-box { width: 100%; max-width: 560px; max-height: 88vh; overflow-y: auto; background: var(--dark2);
+  border: 1px solid rgba(79,195,247,0.35); border-radius: 16px; padding: 16px 16px 14px; }
+.pl-modal-tit { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 2px; text-align: center; margin-bottom: 4px; }
+.pl-modal-tit b { color: var(--celeste); font-weight: 400; }
+.pl-modal-nota { text-align: center; font-family: 'Barlow Condensed', sans-serif; font-size: 12px; color: rgba(255,255,255,0.45); margin-bottom: 10px; }
+.pl-modal-zona { font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 2px; color: rgba(255,255,255,0.5); margin: 8px 0 6px; }
+.pl-modal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; }
+.pl-op { display: flex; align-items: center; gap: 6px; padding: 6px 7px; border-radius: 9px; cursor: pointer;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: #ddd;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 12.5px; font-weight: 600; text-align: left; min-width: 0; }
+.pl-op img { width: 20px; height: 20px; object-fit: contain; flex: 0 0 auto; }
+.pl-op span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pl-op:hover { border-color: rgba(79,195,247,0.5); background: rgba(79,195,247,0.12); color: #fff; }
+.pl-op.act { border-color: var(--celeste); background: rgba(79,195,247,0.2); color: #fff; }
+.pl-modal-acc { display: flex; justify-content: center; gap: 8px; margin-top: 14px; }
+
 /* ===== GRILLA DE EQUIPOS ===== */
 .equipos-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 9px;
@@ -392,6 +494,13 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
           <div class="tz" id="tabla-B"></div>
         </section>
       </div>
+
+      <!-- CUADRO DE PLAYOFFS: se arma con la tabla actual y el hincha lo edita -->
+      <div class="pl" id="playoffs" hidden>
+        <div class="sec-header zonaA"><span class="sec-title">CUADRO DE PLAYOFFS</span></div>
+        <div class="pl-acc"><button class="pl-btn" id="pl-reset">Volver a la tabla actual</button></div>
+        <div id="pl-cuadro"></div>
+      </div>
     </div>
 
     <!-- COPAS: Libertadores | Sudamericana -->
@@ -421,6 +530,19 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
     </div>
   </div>
 </main>
+
+<!-- selector de equipo para el cuadro de playoffs -->
+<div class="pl-modal" id="pl-modal" hidden>
+  <div class="pl-modal-box">
+    <div class="pl-modal-tit">Equipo para el <b id="pl-modal-seed"></b></div>
+    <div class="pl-modal-nota">Si elegís un equipo que ya está en el cuadro, intercambian lugares.</div>
+    <div id="pl-modal-lista"></div>
+    <div class="pl-modal-acc">
+      <button class="pl-btn" id="pl-modal-rest">Usar el de la tabla</button>
+      <button class="pl-btn" id="pl-modal-cerrar">Cancelar</button>
+    </div>
+  </div>
+</div>
 
 <script src="js/clubes.js"></script>
 <script src="js/standings-fix.js"></script>
@@ -739,12 +861,154 @@ function renderTablaZona(letra, teams) {
   html += '</div>';
   cont.innerHTML = html;
 }
+// ── Cuadro de playoffs: pronóstico del hincha ──
+// Formato del torneo (el mismo del Apertura 2026, reconstruido de api-sports):
+// octavos 1A-8B, 4B-5A, 2B-7A, 3A-6B | 1B-8A, 4A-5B, 2A-7B, 3B-6A. Cada par
+// adyacente se cruza en cuartos y las dos llaves de cada mitad, en semis.
+// Arranca con los 8 primeros de cada zona; el hincha elige quién pasa (tocando
+// el equipo) y puede cambiar cualquier equipo del cuadro (✎). Se guarda en el
+// dispositivo (localStorage) como cambios sobre la tabla: si la tabla se mueve,
+// el cuadro se rearma y los pronósticos que ya no aplican se caen solos.
+const PL_OCTAVOS = { o1: ['A1', 'B8'], o2: ['B4', 'A5'], o3: ['B2', 'A7'], o4: ['A3', 'B6'],
+                     o5: ['B1', 'A8'], o6: ['A4', 'B5'], o7: ['A2', 'B7'], o8: ['B3', 'A6'] };
+const PL_HIJOS = { q1: ['o1', 'o2'], q2: ['o3', 'o4'], q3: ['o5', 'o6'], q4: ['o7', 'o8'],
+                   s1: ['q1', 'q2'], s2: ['q3', 'q4'], f: ['s1', 's2'] };
+const PL_SEEDS = Object.values(PL_OCTAVOS).flat();
+const PL_KEY = 'tribunapp_playoffs_v1';
+let _plBase = null, _plFirma = '';
+let _plSt = { ov: {}, picks: {} };
+try {
+  const g = JSON.parse(localStorage.getItem(PL_KEY) || 'null');
+  if (g && g.ov && g.picks) _plSt = g;
+} catch (e) {}
+function _plGuardar() { try { localStorage.setItem(PL_KEY, JSON.stringify(_plSt)); } catch (e) {} }
+function _plSeed(k) { return _plSt.ov[k] || (_plBase && _plBase[k]) || null; }
+function _plEquipos(m) {
+  if (PL_OCTAVOS[m]) return PL_OCTAVOS[m].map(k => ({ slug: _plSeed(k), seed: k }));
+  return PL_HIJOS[m].map(_plGanador);
+}
+function _plGanador(m) {
+  const p = _plSt.picks[m];
+  return p ? (_plEquipos(m).find(e => e && e.slug === p) || null) : null;
+}
+function _plFila(m, e, g) {
+  if (!e || !e.slug) return '<div class="pl-eq vacio"><span class="pl-seed"></span><span class="pl-nom">A definir</span></div>';
+  const cls = (g ? (g.slug === e.slug ? ' gana' : ' pierde') : '') + (_plSt.ov[e.seed] ? ' mod' : '');
+  const edit = PL_OCTAVOS[m] ? `<button class="pl-edit" data-seed="${e.seed}" title="Cambiar equipo" aria-label="Cambiar equipo">✎</button>` : '';
+  return `<div class="pl-eq${cls}" data-m="${m}" data-slug="${e.slug}">` +
+    `<span class="pl-seed">${e.seed[1]}${e.seed[0]}</span><img src="escudos/${e.slug}.png" alt="">` +
+    `<span class="pl-nom">${nombreCorto(e.slug)}</span>${edit}</div>`;
+}
+function _plPartido(m) {
+  const eq = _plEquipos(m), g = _plGanador(m);
+  return `<div class="pl-p">${_plFila(m, eq[0], g)}${_plFila(m, eq[1], g)}</div>`;
+}
+function _plCampeon() {
+  const c = _plGanador('f');
+  return '<div class="pl-camp">' + (c ? `<img class="pl-camp-esc" src="escudos/${c.slug}.png" alt="${nombreCorto(c.slug)}" title="${nombreCorto(c.slug)}">` : '') +
+    '<div class="pl-camp-lab">Campeón</div></div>';
+}
+// Silueta del trofeo de la Liga Profesional (pelota arriba, cuello con aros,
+// cuerpo de jarrón que se afina hacia abajo, dos asas largas unidas al cuerpo
+// por dos brazos cortos y base cúbica),
+// plana en gris claro como en Planeta Bicho; se enciende cuando hay campeón.
+function _plTrofeo(id) {
+  const g = `url(#${id})`;
+  return `<div class="pl-trofeo${_plGanador('f') ? ' ok' : ''}"><svg viewBox="0 0 120 194" aria-hidden="true" fill="${g}">` +
+    `<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eef0f4"/><stop offset="1" stop-color="#aeb4bf"/></linearGradient></defs>` +
+    `<circle cx="60" cy="20" r="13"/>` +
+    `<path d="M60.00 15.40 L64.37 18.58 L62.70 23.72 L57.30 23.72 L55.63 18.58 Z M60.00 15.40 L60.00 11.40 M60.00 11.40 L54.30 8.32 M60.00 11.40 L65.70 8.32 M64.37 18.58 L68.18 17.34 M68.18 17.34 L69.35 10.97 M68.18 17.34 L72.87 21.81 M62.70 23.72 L65.05 26.96 M65.05 26.96 L71.48 26.10 M65.05 26.96 L62.26 32.80 M57.30 23.72 L54.95 26.96 M54.95 26.96 L57.74 32.80 M54.95 26.96 L48.52 26.10 M55.63 18.58 L51.82 17.34 M51.82 17.34 L47.13 21.81 M51.82 17.34 L50.65 10.97" fill="none" stroke="#0d0d1a" stroke-opacity=".45" stroke-width=".9" stroke-linejoin="round"/>` +
+    `<path d="M50 33 H70 L73 41 H47 Z"/><rect x="41" y="41" width="38" height="4" rx="2"/><rect x="46" y="46" width="28" height="5" rx="1"/>` +
+    `<path d="M44 51 C36 53 32 58 32 67 C32 93 44 122 52 142 L48 151 H72 L68 142 C76 122 88 93 88 67 C88 58 84 53 76 51 Z"/>` +
+    `<path d="M50 131 C27 120 7 101 8 72 C8.5 56 11 45 14.2 36.8 C15.6 35.4 18.4 35.6 19.4 37.2 C17 47 14 58 14 72 C14 97 31 114 51 122 Z"/><path d="M 70 131 C 93 120 113 101 112 72 C 111.5 56 109 45 105.8 36.8 C 104.4 35.4 101.6 35.6 100.6 37.2 C 103 47 106 58 106 72 C 106 97 89 114 69 122 Z"/><path d="M36 58 C29 54 21 52 12 52 L12 55.5 C21 55.5 28 57.5 34 62 Z"/><path d="M 84 58 C 91 54 99 52 108 52 L 108 55.5 C 99 55.5 92 57.5 86 62 Z"/>` +
+    `<rect x="38" y="153" width="44" height="40" rx="2"/></svg></div>`;
+}
+function plRender() {
+  const cont = document.getElementById('pl-cuadro');
+  if (!cont || !_plBase) return;
+  const par = (a, b) => `<div class="pl-par">${_plPartido(a)}${_plPartido(b)}</div>`;
+  const uno = a => `<div class="pl-par uno">${_plPartido(a)}</div>`;
+  const col = (t, cls, inner) => `<div class="pl-col ${cls}"><div class="pl-ronda">${t}</div><div class="pl-col-in">${inner}</div></div>`;
+  const desk = col('Octavos', 'izq r1', par('o1', 'o2') + par('o3', 'o4')) +
+    col('Cuartos', 'izq r2', par('q1', 'q2')) + col('Semis', 'izq r3', uno('s1')) +
+    col('Final', 'fin', _plCampeon() + uno('f') + _plTrofeo('plOroD')) +
+    col('Semis', 'der r3', uno('s2')) + col('Cuartos', 'der r2', par('q3', 'q4')) +
+    col('Octavos', 'der r1', par('o5', 'o6') + par('o7', 'o8'));
+  const bloque = (t, ids, antes, despues) => `<div class="pl-m-ronda"><div class="pl-ronda">${t}</div>${antes || ''}` +
+    `<div class="pl-m-grid${ids.length === 1 ? ' uno' : ''}">${ids.map(_plPartido).join('')}</div>${despues || ''}</div>`;
+  const mob = bloque('Octavos de final', ['o1', 'o2', 'o3', 'o4', 'o5', 'o6', 'o7', 'o8']) +
+    bloque('Cuartos de final', ['q1', 'q2', 'q3', 'q4']) + bloque('Semifinales', ['s1', 's2']) +
+    bloque('Final', ['f'], _plCampeon(), _plTrofeo('plOroM'));
+  cont.innerHTML = `<div class="pl-desk">${desk}</div><div class="pl-mob">${mob}</div>`;
+  document.getElementById('pl-reset').disabled = !Object.keys(_plSt.ov).length && !Object.keys(_plSt.picks).length;
+}
+function plActualizar(zonas) {
+  const base = {};
+  ['A', 'B'].forEach(z => (zonas[z] || []).slice(0, TZ_PLAYOFFS).forEach((t, i) => {
+    const s = _slugDeId(t.team.id); if (s) base[z + (i + 1)] = s;
+  }));
+  if (PL_SEEDS.some(k => !base[k])) return;
+  const firma = JSON.stringify(base);
+  if (firma === _plFirma) return;           // la tabla no cambió: no se toca lo que el hincha está armando
+  _plFirma = firma; _plBase = base;
+  document.getElementById('playoffs').hidden = false;
+  plRender();
+}
+let _plModalSeed = null;
+function plAbrirModal(seed) {
+  _plModalSeed = seed;
+  const act = _plSeed(seed);
+  document.getElementById('pl-modal-seed').textContent = `${seed[1]}° de la Zona ${seed[0]}`;
+  const ops = lista => lista.slice().sort((a, b) => nombreCorto(a).localeCompare(nombreCorto(b), 'es'))
+    .map(s => `<button class="pl-op${s === act ? ' act' : ''}" data-slug="${s}"><img src="escudos/${s}.png" alt=""><span>${nombreCorto(s)}</span></button>`).join('');
+  document.getElementById('pl-modal-lista').innerHTML =
+    `<div class="pl-modal-zona">Zona A</div><div class="pl-modal-grid">${ops(ZONA_A)}</div>` +
+    `<div class="pl-modal-zona">Zona B</div><div class="pl-modal-grid">${ops(ZONA_B)}</div>`;
+  document.getElementById('pl-modal-rest').disabled = !_plSt.ov[seed];
+  document.getElementById('pl-modal').hidden = false;
+}
+function plCerrarModal() { document.getElementById('pl-modal').hidden = true; _plModalSeed = null; }
+function _plPoner(seed, slug) {
+  const antes = _plSeed(seed);
+  if (!slug || slug === antes) return;
+  const otro = PL_SEEDS.find(k => k !== seed && _plSeed(k) === slug);
+  _plSt.ov[seed] = slug;
+  if (otro) _plSt.ov[otro] = antes;            // ya estaba en el cuadro: intercambian lugares
+  PL_SEEDS.forEach(k => { if (_plSt.ov[k] === _plBase[k]) delete _plSt.ov[k]; });
+}
+document.getElementById('pl-cuadro').addEventListener('click', ev => {
+  const ed = ev.target.closest('.pl-edit');
+  if (ed) { plAbrirModal(ed.dataset.seed); return; }
+  const f = ev.target.closest('.pl-eq[data-slug]');
+  if (!f) return;
+  const m = f.dataset.m, s = f.dataset.slug;
+  if (_plSt.picks[m] === s) delete _plSt.picks[m]; else _plSt.picks[m] = s;
+  _plGuardar(); plRender();
+});
+document.getElementById('pl-modal-lista').addEventListener('click', ev => {
+  const b = ev.target.closest('.pl-op');
+  if (!b || !_plModalSeed) return;
+  _plPoner(_plModalSeed, b.dataset.slug);
+  _plGuardar(); plCerrarModal(); plRender();
+});
+document.getElementById('pl-modal-rest').addEventListener('click', () => {
+  if (!_plModalSeed) return;
+  _plPoner(_plModalSeed, _plBase[_plModalSeed]);
+  _plGuardar(); plCerrarModal(); plRender();
+});
+document.getElementById('pl-modal-cerrar').addEventListener('click', plCerrarModal);
+document.getElementById('pl-modal').addEventListener('click', ev => { if (ev.target.id === 'pl-modal') plCerrarModal(); });
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && !document.getElementById('pl-modal').hidden) plCerrarModal(); });
+document.getElementById('pl-reset').addEventListener('click', () => {
+  _plSt = { ov: {}, picks: {} }; _plGuardar(); plRender();
+});
+
 async function actualizarPosiciones() {
   const pos = await fetchPosiciones();
   if (pos) {
     renderGrid(ZONA_A, 'zonaA-grid', { posMap: pos });
     renderGrid(ZONA_B, 'zonaB-grid', { posMap: pos });
-    if (_tzZonas) { renderTablaZona('A', _tzZonas.A); renderTablaZona('B', _tzZonas.B); }
+    if (_tzZonas) { renderTablaZona('A', _tzZonas.A); renderTablaZona('B', _tzZonas.B); plActualizar(_tzZonas); }
   }
 }
 actualizarPosiciones();
