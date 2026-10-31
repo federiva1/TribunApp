@@ -914,16 +914,18 @@ function _plCampeon() {
     '<div class="pl-camp-lab">Campeón</div></div>';
 }
 // Silueta del trofeo de la Liga Profesional (pelota arriba, cuello con aros,
-// cuerpo de jarrón que se afina hacia abajo, dos asas largas y base cúbica),
+// cuerpo de jarrón que se afina hacia abajo, dos asas largas unidas al cuerpo
+// por dos brazos cortos y base cúbica),
 // plana en gris claro como en Planeta Bicho; se enciende cuando hay campeón.
 function _plTrofeo(id) {
   const g = `url(#${id})`;
   return `<div class="pl-trofeo${_plGanador('f') ? ' ok' : ''}"><svg viewBox="0 0 120 194" aria-hidden="true" fill="${g}">` +
     `<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eef0f4"/><stop offset="1" stop-color="#aeb4bf"/></linearGradient></defs>` +
     `<circle cx="60" cy="20" r="13"/>` +
+    `<path d="M60.00 15.40 L64.37 18.58 L62.70 23.72 L57.30 23.72 L55.63 18.58 Z M60.00 15.40 L60.00 11.40 M60.00 11.40 L54.30 8.32 M60.00 11.40 L65.70 8.32 M64.37 18.58 L68.18 17.34 M68.18 17.34 L69.35 10.97 M68.18 17.34 L72.87 21.81 M62.70 23.72 L65.05 26.96 M65.05 26.96 L71.48 26.10 M65.05 26.96 L62.26 32.80 M57.30 23.72 L54.95 26.96 M54.95 26.96 L57.74 32.80 M54.95 26.96 L48.52 26.10 M55.63 18.58 L51.82 17.34 M51.82 17.34 L47.13 21.81 M51.82 17.34 L50.65 10.97" fill="none" stroke="#0d0d1a" stroke-opacity=".45" stroke-width=".9" stroke-linejoin="round"/>` +
     `<path d="M50 33 H70 L73 41 H47 Z"/><rect x="41" y="41" width="38" height="4" rx="2"/><rect x="46" y="46" width="28" height="5" rx="1"/>` +
     `<path d="M44 51 C36 53 32 58 32 67 C32 93 44 122 52 142 L48 151 H72 L68 142 C76 122 88 93 88 67 C88 58 84 53 76 51 Z"/>` +
-    `<path d="M50 131 C27 120 7 101 8 72 C8.5 55 12 45 17 36 C15.5 47 13.5 58 13.5 72 C13.5 97 31 114 51 122 Z"/><path d="M 70 131 C 93 120 113 101 112 72 C 111.5 55 108 45 103 36 C 104.5 47 106.5 58 106.5 72 C 106.5 97 89 114 69 122 Z"/>` +
+    `<path d="M50 131 C27 120 7 101 8 72 C8.5 55 12 45 17 36 C15.5 47 13.5 58 13.5 72 C13.5 97 31 114 51 122 Z"/><path d="M 70 131 C 93 120 113 101 112 72 C 111.5 55 108 45 103 36 C 104.5 47 106.5 58 106.5 72 C 106.5 97 89 114 69 122 Z"/><path d="M36 58 C29 54 21 52 12 52 L12 55.5 C21 55.5 28 57.5 34 62 Z"/><path d="M 84 58 C 91 54 99 52 108 52 L 108 55.5 C 99 55.5 92 57.5 86 62 Z"/>` +
     `<rect x="38" y="153" width="44" height="40" rx="2"/></svg></div>`;
 }
 function plRender() {
