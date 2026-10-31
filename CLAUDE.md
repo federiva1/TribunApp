@@ -412,7 +412,7 @@ se publica; no hace falta limpiarlo).
 
 - **`social_fecha.py`** — PRÓXIMO PARTIDO / PARTIDOS DE HOY. Con un solo partido usa el
   layout de escudos grandes (`_html_uno`); con varios, la lista de tarjetas, que se
-  **agrandan con 2-3 partidos** (el layout base está calibrado para 4-6). Fondo de tribuna. `--escala 4` = ultra HD (3040×3800, archivo con sufijo `-x4`); default 2 = 1520×1900. Los escudos son de 150-192 px, así que más escala afila texto y vectores pero no los escudos.
+  **agrandan con 2-3 partidos** (el layout base está calibrado para 4-6). Fondo de tribuna. `--escala 4` = ultra HD (3040×3800, archivo con sufijo `-x4`); default 2 = 1520×1900. Los escudos son de 150-192 px, así que más escala afila texto y vectores pero no los escudos. `--fecha-num N` = placa apaisada 16:9 con **todos los partidos de la fecha N, una columna por día** (`_html_columnas`; default `--escala 3` = 3840×2160 4K exacto, archivo `fecha-N-columnas-x3.png`).
 - **`social_club.py`** — placa individual de un club: escudo grande, nombre y la URL corta
   (`tribunapp.com.ar/boca`), que sale de los rewrites de `vercel.json` para no duplicar el
   mapeo de alias. `python scripts/social_club.py boca river` (slug o alias) o `--all`.
