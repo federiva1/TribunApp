@@ -65,7 +65,7 @@
   const modeImage = (mode) => `<img class="mode-photo" src="assets/campanas/${modes[mode].image}.webp" alt="" width="768" height="432" loading="lazy">`;
   const profileNav = () => `<div class="profile-nav">${profile.get().nickname ? `<button class="back nickname" data-action="profile">${escape(profile.get().nickname)}</button>` : ""}${round ? "" : '<button class="primary" data-action="quick-play">Jugar →</button>'}<button class="archive-button" data-action="medals">Mis campañas ↗</button></div>`;
   const localNote = '<p class="local-note">Tu apodo, puntos y medallas se guardan en este navegador. No es una cuenta: usar el mismo apodo en otro dispositivo no recupera tu progreso.</p>';
-  const localCrest = slug => slug === "argentina" ? "escudos/argentina.svg" : `escudos/${slug}.png`;
+  const localCrest = slug => slug === "argentina" ? "escudos/argentina-bandera.png" : `escudos/${slug}.png`;
   const crest = (slug, name, className = "") => {
     const match = data?.matches.find(m => m.homeSlug === slug || m.awaySlug === slug);
     const side = match?.homeSlug === slug ? "home" : "away";

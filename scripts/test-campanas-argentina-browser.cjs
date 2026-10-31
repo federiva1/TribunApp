@@ -17,7 +17,7 @@ const collections=[1990,2022].map(year=>require('../data/campanas/argentina-mund
   });
   await page.goto(base);const card=page.locator('.club-campaign-card[data-club="argentina"]');await card.waitFor();
   assert.equal(await card.locator('.historical-card').count(),2);
-  assert(await card.locator('img').evaluate(img=>img.complete&&img.naturalWidth>0&&img.src.endsWith('/argentina.svg')));
+  assert(await card.locator('img').evaluate(img=>img.complete&&img.naturalWidth>0&&img.src.endsWith('/argentina-bandera.png')));
   await card.screenshot({path:path.join(os.tmpdir(),'campanas-argentina-card.png')});
   await page.setViewportSize({width:390,height:844});
   await page.locator('.section-bar [data-action="quick-play"]').click();
@@ -58,6 +58,6 @@ const collections=[1990,2022].map(year=>require('../data/campanas/argentina-mund
    assert.equal(await page.locator('[data-bonus]').count(),0);
   }
   assert.deepEqual(errors,[]);
-  console.log('PASS: AFA card and mobile selector; 4/7 routes; Argentina XI only; USSR 1990, goalless shootout, substitute scorer, own goal and 2022 final; scores and saved progress.');
+  console.log('PASS: Argentina flag card and mobile selector; 4/7 routes; Argentina XI only; USSR 1990, goalless shootout, substitute scorer, own goal and 2022 final; scores and saved progress.');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1});

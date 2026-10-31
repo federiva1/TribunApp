@@ -17,7 +17,7 @@
 ## 1. Qué es TribunApp
 
 > Desarrollo separado: **Campañas** se prepara en la rama `campanas`, pendiente de
-> revisión y merge. Incluye Apertura 2026 y 26 campañas históricas: dos por cada uno de 12 clubes y los Mundiales 2022 y 1990 de Argentina (7 partidos cada uno, escudo AFA).
+> revisión y merge. Incluye Apertura 2026 y 26 campañas históricas: dos por cada uno de 12 clubes y los Mundiales 2022 y 1990 de Argentina (7 partidos cada uno, bandera argentina).
 > Flujo vigente: formación del club → bonus opcional de resultado → bonus opcional
 > de goleadores. No hay elección de retos ni aleatorio. El marcador queda oculto
 > hasta el bonus o hasta tocar «Ver resultado», que lo da por jugado a 0 puntos.

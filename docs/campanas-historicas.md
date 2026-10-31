@@ -113,9 +113,9 @@ separadas del resultado después del alargue y de los goles del bonus.
   [eliminatorias](https://en.wikipedia.org/wiki/1990_FIFA_World_Cup_knockout_stage)
   y [RSSSF](https://www.rsssf.org/tablesa/arg-wc.html). No se deducen onces del plantel.
   Las incidencias de tarjetas no se presentan como completas.
-- El escudo local `escudos/argentina.svg` procede del
-  [sitio oficial de AFA](https://assets1.afa.com.ar/.statics/img/logo-afa-dorado.svg).
-  Representa a la selección en catálogo, acceso rápido, fichas y medallero;
-  no se presenta como la versión histórica usada en cada Mundial.
+- La bandera local `escudos/argentina-bandera.png` procede de
+  [ESPN](https://a.espncdn.com/i/teamlogos/countries/500/arg.png).
+  Representa a la selección en catálogo, acceso rápido, fichas y medallero.
+  Reemplaza al escudo de AFA por pedido de Fede.
 - El importador acepta `--only=argentina-mundial-2022,argentina-mundial-1990`
   para actualizar estas colecciones sin volver a escribir las campañas anteriores.
