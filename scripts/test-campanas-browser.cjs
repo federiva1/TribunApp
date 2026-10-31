@@ -114,6 +114,65 @@ async function centered(page){
   const old=entry(boca,target);delete old.flowVersion;
   await seed(page,[old]);await open(page,boca);await page.locator('[data-action="archive"]').click();await page.locator(`[data-open-match="${target.id}"]`).click();
   assert.equal(await page.locator('[data-bonus="result"]').count(),0);assert.equal(await page.locator('[data-bonus="scorers"]').count(),1);
+  assert.equal(await page.locator('.score-value').textContent(),'? — ?','even a saved formation opens without displaying the score');
+  // Reveal during formation: keep drafts, points and help; persist only the 0-point result.
+  await seed(page,rest);await open(page,boca);await page.locator('[data-action="campaign-play"]').click();
+  await page.locator('[data-hint="away-6"]').click();
+  await page.locator('#guess-away-6').fill('borrador');
+  const hintPlaceholder=await page.locator('#guess-away-6').getAttribute('placeholder');
+  assert.equal(await page.locator('.score-value').textContent(),'? — ?');
+  await page.locator('[data-action="reveal-result"]').click();
+  assert.equal(await page.locator('.score-value').textContent(),target.score);
+  assert.equal(await page.locator('#guess-away-6').inputValue(),'borrador');
+  assert.equal(await page.locator('#guess-away-6').getAttribute('placeholder'),hintPlaceholder);
+  assert.equal(await page.locator('.points').textContent(),'0 pts · partido');
+  assert.equal(await page.locator('[data-player-form]').count(),11);
+  assert.equal(await page.locator('[data-bonus], .completion').count(),0);
+  assert.match(await page.locator('.stage-trail li').nth(1).textContent(),/✓ResultadoRevelado · 0 pts/);
+  saved=await page.evaluate(KEY=>JSON.parse(localStorage.getItem(KEY)).entries,KEY);
+  assert.equal(saved.filter(e=>e.matchId===target.id).length,1);
+  assert.equal(saved.find(e=>e.matchId===target.id).mode,'result');
+  assert.equal(saved.find(e=>e.matchId===target.id).bestScore,0);
+  assert(saved.find(e=>e.matchId===target.id).skipped);
+  // Reload cannot unlock the result bonus again; re-revealing does not create another attempt.
+  await page.reload();await page.locator('[data-action="campaign-play"]').click();
+  assert.equal(await page.locator('.score-value').textContent(),'? — ?');
+  await page.locator('[data-action="reveal-result"]').click();
+  saved=await page.evaluate(KEY=>JSON.parse(localStorage.getItem(KEY)).entries,KEY);
+  assert.equal(saved.find(e=>e.matchId===target.id&&e.mode==='result').attempts,1);
+  // A planilla fully solved with hints (0 points) still offers scorers before Next.
+  for(const [i,p] of target.awayXI.entries()) {
+    const hint=page.locator(`[data-hint="away-${i}"]`);
+    let uses=0;while(await hint.count()) {assert(++uses<60);await hint.click();}
+  }
+  assert.match(await page.locator('.completion').textContent(),/\+0 puntos/);
+  assert.equal(await page.locator('[data-bonus="result"]').count(),0);
+  assert.equal(await page.locator('[data-bonus="scorers"]').count(),1);
+  assert.equal(await page.locator('.completion [data-action="next"]').count(),0);
+  await page.screenshot({path:path.join(os.tmpdir(),'campanas-formacion-bonus-mobile.png'),fullPage:true});
+  await page.locator('[data-bonus="scorers"]').click();
+  for(const id of actual)await goal(page,id);await page.locator('[data-action="confirm-scorers"]').click();
+  assert.equal(await page.locator('.points').textContent(),'20 pts · partido');
+  assert.equal(await page.locator('.completion [data-action="next"]').count(),1);
+  await page.locator('.completion [data-action="next"]').click();
+  assert.equal(await page.locator('.medal-badge.earned').count(),3);
+  // Previously earned bonus points survive an explicit reveal on an unfinished formation.
+  await seed(page,[...rest,entry(boca,target,'result')]);await open(page,boca);
+  await page.locator('[data-action="campaign-play"]').click();
+  assert.equal(await page.locator('.score-value').textContent(),'? — ?');
+  await page.locator('[data-action="reveal-result"]').click();
+  assert.equal(await page.locator('.points').textContent(),'20 pts · partido');
+  saved=await page.evaluate(KEY=>JSON.parse(localStorage.getItem(KEY)).entries,KEY);
+  assert.equal(saved.find(e=>e.matchId===target.id&&e.mode==='result').attempts,1);
+  // A goalless match must not leak its 0–0 through the stage trail before reveal.
+  await seed(page,[]);await open(page,boca);await page.locator('[data-action="campaign-play"]').click();
+  assert.equal(await page.locator('.score-value').textContent(),'? — ?');
+  assert.doesNotMatch(await page.locator('.stage-trail').textContent(),/Sin goles/);
+  await page.screenshot({path:path.join(os.tmpdir(),'campanas-ver-resultado-mobile.png'),fullPage:true});
+  await page.locator('[data-action="reveal-result"]').click();await solve(page,zero,['away']);
+  assert.equal(await page.locator('[data-bonus]').count(),0);
+  assert.match(await page.locator('.completion').textContent(),/terminó sin goles/);
+  assert.equal(await page.locator('.completion [data-action="next"]').count(),1);
   // Madrid's optional two-XI challenge still completes and saves the all-teams scope.
   const river=require('../data/campanas/river-libertadores-2018.json'),final=river.matches.find(m=>m.id==='espn-528144');
   await seed(page,river.matches.filter(m=>m.id!==final.id).map(m=>entry(river,m)));await open(page,river);

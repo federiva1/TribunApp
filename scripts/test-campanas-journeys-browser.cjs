@@ -55,7 +55,7 @@ function entry(collection,match,mode='formation',score=33) {
         await page.locator('#result-form .primary').click();
       }
       assert.match(await page.locator('.journey-strip').textContent(),new RegExp((i+1)+' / 5'));
-      await page.locator('.completion [data-action="next"]').click();
+      await page.locator('.completion [data-action="skip-bonuses"], .completion [data-action="next"]').click();
     }
     await page.locator('.medal-hero').waitFor();
     const medal=page.locator(`[data-medal-collection="${collection.id}"]`);

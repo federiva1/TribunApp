@@ -20,7 +20,9 @@
 > revisión y merge. Incluye Apertura 2026 y 24 campañas históricas de 12 clubes.
 > Flujo vigente: formación del club → bonus opcional de resultado → bonus opcional
 > de goleadores. No hay elección de retos ni aleatorio. El marcador queda oculto
-> hasta el bonus; goleadores reconoce aciertos parciales y los bonus nunca restan.
+> hasta el bonus o hasta tocar «Ver resultado», que lo da por jugado a 0 puntos.
+> Goleadores se ofrece al terminar la planilla y resolver o revelar el marcador;
+> reconoce aciertos parciales y los bonus nunca restan.
 > Expreso/Clásico/Completo cambian la cantidad de partidos; las medallas avanzan al
 > completar formaciones. Apodo, mejores marcas y campañas empezadas se guardan localmente.
 > «Jugar» abre una selección compacta. «Ver rival» es una referencia gratuita;

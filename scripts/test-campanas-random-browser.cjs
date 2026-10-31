@@ -39,6 +39,7 @@ const KEY='tribunapp.campanas.progress.v1',PROFILE='tribunapp.campanas.profile.v
   const entries=data.matches.map(m=>({collectionId:data.id,matchId:m.id,mode:'formation',bestScore:33,attempts:1,completedAt:stamp,updatedAt:stamp,formationClub:m.id===target.id?target.homeSlug:'bocajuniors',...(m.id===target.id?{}:{flowVersion:2})}));
   await page.evaluate(({KEY,entries})=>localStorage.setItem(KEY,JSON.stringify({schemaVersion:1,entries})),{KEY,entries});
   await page.goto(base+'?collection='+data.id+'&route=complete');await page.locator('[data-action="campaign-play"]').click();
+  assert.equal(await page.locator('.score-value').textContent(),'? — ?','old rival records must not expose the score on a new lineup');
   assert.equal(await page.locator('.player-row').first().getAttribute('data-player'),'away-6');
   await page.locator('[data-action="toggle-rival"]').click();
   const tops=await page.locator('.team-sheet').evaluateAll(els=>els.map(el=>el.getBoundingClientRect().top));assert(Math.abs(tops[0]-tops[1])<1);

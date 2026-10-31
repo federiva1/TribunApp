@@ -17,9 +17,13 @@ las etapas, no son opciones para elegir modos. Se elige campaña, club y recorri
 ### Etapas y protección de respuestas
 
 1. **Formación:** completar el once del club elegido hace avanzar la campaña. Con
-   todos los equipos se piden los 22 apellidos. El resultado queda oculto; tampoco
+   todos los equipos se piden los 22 apellidos. Al abrir la formación, el resultado
+   siempre queda oculto, incluso si hay partidas antiguas guardadas; tampoco
    se muestran metadatos que incluyan la tanda de penales. Las ayudas conservan sus
-   reglas anteriores y se muestran dentro del input.
+   reglas anteriores y se muestran dentro del input. El botón pequeño “Ver resultado”
+   revela el marcador y registra ese bonus como jugado a 0 puntos. No termina la
+   formación ni modifica sus ayudas, borradores o puntos. Si ya se había jugado ese
+   bonus, se conserva la marca previa sin volver a sumar ni restar.
 2. **Resultado, opcional:** sólo después de la formación. El marcador editable y
    su separador están centrados respecto del tablero. “Confirmar resultado” queda
    debajo y es más compacto. Durante este bonus no se repiten las planillas.
@@ -28,7 +32,10 @@ las etapas, no son opciones para elegir modos. Se elige campaña, club y recorri
    candidatos. No se puede volver a sumar por ese resultado ya revelado. Los 0–0
    y las fichas no aptas no ofrecen este bonus.
 
-Es posible pasar al siguiente partido después de la formación sin hacer los bonus.
+Al completar la formación, incluso a 0 puntos, la acción principal ofrece el bonus
+de resultado o directamente goleadores si el marcador ya se reveló. “Siguiente
+partido” aparece al terminar los bonus disponibles; se puede continuar antes mediante
+la opción secundaria explícita “Continuar sin los bonus pendientes”.
 Si no se revelaron sus respuestas, se pueden retomar desde el archivo. No se ofrecen
 retos independientes ni enlaces para volver a una respuesta ya revelada. El archivo
 oculta el marcador cuando sigue pendiente el bonus de resultado.

@@ -226,7 +226,7 @@
     round={mode:"formation",match:chosen,points:saved?Math.max(0,saved.bestScore):0,solved:new Set(),hints:{},selected:[],eliminated:new Set(),scorerHints:0,
       completed:!!saved,correct:saved?true:null,saved,formationSides,formationTotal:formationSides.reduce((n,side)=>n+chosen[side+"XI"].length,0),
       showRival:false,rivalSeen:false,hideNumbers:scope!=="all"&&teamGames>=2,
-      resultRevealed:C.resultRevealed(chosen,collectionRecords()),
+      resultRevealed:false,
       scores:Object.fromEntries(existing.map(e=>[e.mode,Math.max(0,e.bestScore)]))};
     if(saved) for(const side of formationSides) chosen[side+"XI"].forEach((p,i)=>round.solved.add(playerKey(side,i)));
     app.innerHTML="";renderRound();focusMain();
@@ -245,6 +245,15 @@
     if(pending(round.match).includes("scorers")) beginBonus("scorers");
     else renderRound("Resultado revelado. Conservás todos los puntos de tu formación.");
   }
+  function revealResult() {
+    if(!round || round.mode!=="formation" || round.resultRevealed) return;
+    // Revealing the score resolves only that bonus, never the unfinished lineup.
+    const existing=collectionRecords().find(e=>e.matchId===round.match.id&&e.mode==="result");
+    const entry=existing || progress.save(data.id,round.match.id,"result",0,data.version,scope,"all",{skipped:true,flowVersion:2});
+    round.scores.result=Math.max(0,entry.bestScore);
+    round.resultRevealed=true;
+    renderRound("Resultado revelado. No suma ni resta puntos. "+(round.completed?"Podés seguir con el bonus de goleadores si está disponible.":"Seguí completando la formación; después vienen los bonus pendientes."));
+  }
   const playerKey = (side, index) => `${side}-${index}`;
   const playerName = (player) => player.accepted_answers?.[0] || player.name;
   const hiddenNumber = (player) => round.hideNumbers && player.n != null && player.n !== "";
@@ -252,21 +261,23 @@
   const pending = (match) => C.pendingModes(match, records(), collectionRecords());
   function bonusButtons(match) {
     const next=pending(match)[0];
-    if(next==="result") return `<div class="bonus-offer"><p>Tu formación ya cuenta. ¿Sumamos puntos extra?</p><div class="completion-actions"><button class="secondary" data-bonus="result">Bonus resultado · hasta +20</button>${C.eligible([match],"all","scorers").length?'<button class="back" data-action="skip-result">Omitir resultado e ir a goleadores →</button>':""}</div></div>`;
-    if(next==="scorers") return '<div class="bonus-offer"><p>Podés sumar más con los autores de los goles.</p><button class="secondary" data-bonus="scorers">Bonus goleadores · hasta +20</button></div>';
-    return '<p class="muted">No quedan bonus pendientes de este partido.</p>';
+    if(next==="result") return `<div class="bonus-offer"><p>Tu formación ya cuenta. ¿Sumamos puntos extra?</p><div class="completion-actions"><button class="primary" data-bonus="result">Bonus resultado · hasta +20</button><button class="back" data-action="skip-result">${C.eligible([match],"all","scorers").length?"Omitir resultado e ir a goleadores →":"Ver resultado · 0 puntos"}</button></div></div>`;
+    if(next==="scorers") return '<div class="bonus-offer"><p>La planilla está completa. Ahora podés sumar con los autores de los goles.</p><button class="primary" data-bonus="scorers">Jugar bonus goleadores · hasta +20</button></div>';
+    if(records().some(e=>e.matchId===match.id&&e.mode==="scorers")) return '<p class="muted">Ya jugaste el bonus de goleadores de este partido. Tus puntos están guardados.</p>';
+    return `<p class="muted">${round.resultRevealed&&!match.scorers.length?"Este partido terminó sin goles: no tiene bonus de goleadores.":"No hay bonus de goleadores disponible para esta ficha."}</p>`;
   }
   function stageTrail() {
     const played=records().filter(e=>e.matchId===round.match.id);
     return `<ol class="stage-trail" aria-label="Etapas del partido">${["formation","result","scorers"].map((mode,i)=>{
-      const entry=played.find(e=>e.mode===mode), exposed=mode==="result"&&round.resultRevealed&&!entry, unavailable=mode==="scorers"&&!C.eligible([round.match],"all","scorers").length;
-      return `<li class="${round.mode===mode?"active ":""}${entry?"done":""} ${unavailable||exposed?"unavailable":""}" ${round.mode===mode?'aria-current="step"':""}><span class="stage-number" aria-hidden="true">${entry&&!entry.skipped?"✓":i+1}</span><span>${mode==="formation"?"Formación":mode==="result"?"Resultado":"Goleadores"}<small>${unavailable?(round.match.scorers.length?"No disponible":"Sin goles"):exposed?"Ya revelado":entry?.skipped?"Omitido":mode==="formation"?"Avance de campaña":"Bonus opcional"}</small></span></li>`;
+      const entry=played.find(e=>e.mode===mode), exposed=mode==="result"&&C.resultRevealed(round.match,collectionRecords())&&!entry, unavailable=mode==="scorers"&&round.resultRevealed&&!C.eligible([round.match],"all","scorers").length;
+      return `<li class="${round.mode===mode?"active ":""}${entry||exposed?"done":""} ${unavailable?"unavailable":""}" ${round.mode===mode?'aria-current="step"':""}><span class="stage-number" aria-hidden="true">${entry||exposed?"✓":i+1}</span><span>${mode==="formation"?"Formación":mode==="result"?"Resultado":"Goleadores"}<small>${unavailable?(round.match.scorers.length?"No disponible":"Sin goles"):exposed?"Ya jugado":entry?.skipped?"Revelado · 0 pts":entry?"Jugado":mode==="formation"?"Avance de campaña":"Bonus opcional"}</small></span></li>`;
     }).join("")}</ol>`;
   }
   function completionPanel(status) {
     if(!round.completed) return "";
     const title=round.mode==="formation"?"Planilla completa":round.skipped?"Bonus omitido":round.mode==="scorers"&&!round.correct?`${round.scorerResult?.matched||0} de ${round.match.scorers.length} goles acertados`:round.correct?"¡Lo tenías guardado!":"Esta vez no sumaste bonus";
-    return `<section tabindex="-1" class="completion ${round.correct?"success":"neutral"}"><h2>${title}</h2><p><strong>+${round.points} puntos</strong> ${round.mode==="formation"?"por la formación":"en este bonus"}. Total del partido: <strong>${matchPoints()} puntos</strong>.</p><div class="points-breakdown">${["formation","result","scorers"].filter(mode=>Object.hasOwn(round.scores,mode)).map(mode=>`<span>${mode==="formation"?"Formación":mode==="result"?"Resultado":"Goleadores"} <b>${round.scores[mode]} pts</b></span>`).join("")}</div>${round.mode==="scorers"?`<p class="goal-summary">Goleadores: ${escape(round.match.scorers.join(", "))}.</p>`:""}${status.complete?`<p class="medal-earned">✓ Completaste ${routes[selectedRoute].title}. Los bonus siguen siendo opcionales.</p>`:""}${bonusButtons(round.match)}<div class="completion-actions"><button class="primary" data-action="next">${status.complete?"Ver mi medalla":"Siguiente partido"} →</button></div></section>`;
+    const hasBonus=pending(round.match).length>0;
+    return `<section tabindex="-1" class="completion ${round.correct?"success":"neutral"}"><h2>${title}</h2><p><strong>+${round.points} puntos</strong> ${round.mode==="formation"?"por la formación":"en este bonus"}. Total del partido: <strong>${matchPoints()} puntos</strong>.</p><div class="points-breakdown">${["formation","result","scorers"].filter(mode=>Object.hasOwn(round.scores,mode)).map(mode=>`<span>${mode==="formation"?"Formación":mode==="result"?"Resultado":"Goleadores"} <b>${round.scores[mode]} pts</b></span>`).join("")}</div>${round.mode==="scorers"?`<p class="goal-summary">Goleadores: ${escape(round.match.scorers.join(", "))}.</p>`:""}${status.complete?`<p class="medal-earned">✓ Completaste ${routes[selectedRoute].title}. Los bonus siguen siendo opcionales.</p>`:""}${bonusButtons(round.match)}<div class="completion-actions">${hasBonus?'<button class="back" data-action="skip-bonuses">Continuar sin los bonus pendientes →</button>':`<button class="primary" data-action="next">${status.complete?"Ver mi medalla":"Siguiente partido"} →</button>`}</div></section>`;
   }
   function playerRow(player, side, index, reference = false) {
     const key = playerKey(side, index),
@@ -353,7 +364,7 @@
     const newlyCompleted=round.completed&&!app.querySelector(".completion");
     app.innerHTML = `<div class="section-bar"><button class="back" data-action="home">← Volver a la campaña</button>${profileNav()}</div><div class="game-top"><div><span class="eyebrow">${escape(data.title)} · ${escape(scopeName())}</span><h1>${info.title}</h1></div><div class="points" aria-label="Puntos de esta partida">${matchPoints()} pts · partido</div></div>
       <div class="journey-strip"><span>${routes[selectedRoute].title} · ${status.done} / ${status.total} partidos terminados${status.complete ? " · ✓ Medalla obtenida" : ""}</span><button class="back" data-action="archive">Mi archivo ↗</button></div>
-      ${stageTrail()}<section class="match-board" aria-label="Partido"><p class="match-date">${escape(match.date)}</p><div class="scoreboard"><div class="score-team">${crest(match.homeSlug, "")}<span>${escape(match.home)}</span></div><strong class="score-value">${round.resultRevealed ? escape(match.score) : "? — ?"}</strong><div class="score-team away">${crest(match.awaySlug, "")}<span>${escape(match.away)}</span></div></div><p class="venue">${escape(match.stadium)}${round.resultRevealed ? ` · ${escape(match.zone)}` : ""}</p></section>
+      ${stageTrail()}<section class="match-board" aria-label="Partido"><p class="match-date">${escape(match.date)}</p><div class="scoreboard"><div class="score-team">${crest(match.homeSlug, "")}<span>${escape(match.home)}</span></div><strong class="score-value">${round.resultRevealed ? escape(match.score) : "? — ?"}</strong><div class="score-team away">${crest(match.awaySlug, "")}<span>${escape(match.away)}</span></div></div>${round.mode==="formation"&&!round.resultRevealed?'<button class="reveal-result" data-action="reveal-result">Ver resultado <span>· sin puntos por este bonus</span></button>':""}<p class="venue">${escape(match.stadium)}${round.resultRevealed ? ` · ${escape(match.zone)}` : ""}</p></section>
       <p class="rules-strip">${rules}</p>
       ${round.mode === "result" && !round.completed ? `<form id="result-form" class="result-form"><div class="result-inputs"><label><span>${escape(match.home)}</span><input name="home" type="number" inputmode="numeric" min="0" max="99" step="1" required aria-label="Goles de ${escape(match.home)}"></label><span class="result-separator" aria-hidden="true">—</span><label><span>${escape(match.away)}</span><input name="away" type="number" inputmode="numeric" min="0" max="99" step="1" required aria-label="Goles de ${escape(match.away)}"></label></div><button class="primary">Confirmar resultado</button></form>` : ""}
       <p class="notice ${tone}" id="game-message" role="status" aria-live="polite">${escape(message || (round.mode === "formation" ? `${round.solved.size} / ${round.formationTotal} apellidos encontrados` : round.mode === "scorers" ? `${round.selected.length} / ${match.scorers.length} goles elegidos` : "Tu formación ya está completa. Este bonus es opcional."))}</p>
@@ -504,6 +515,7 @@
     const action = button.dataset.action;
     if(action==="campaign-play") return start();
     if(action==="skip-result") return skipResult();
+    if(action==="reveal-result") return revealResult();
     if(action==="quick-play") return showQuickPlay();
     if(action==="profile") return askNickname(null);
     if(action==="medals") return showMedals();
@@ -523,7 +535,7 @@
       round.showRival=!round.showRival;round.rivalSeen=true;return renderRound();
     }
     if(action==="both-teams" && round.match.id==="espn-528144" && !round.rivalSeen && !round.completed && !round.solved.size && !Object.keys(round.hints).length) return start(round.match.id,true);
-    if (action === "next") {
+    if (action === "next" || (action === "skip-bonuses" && round.completed)) {
       return nextRound();
     }
     if (button.dataset.hint) return hint(button.dataset.hint);
