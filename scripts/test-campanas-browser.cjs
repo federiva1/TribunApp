@@ -41,7 +41,7 @@ async function centered(page){
   await page.locator('[data-action="medals"]').click();assert.equal(await page.locator('.medal-card').count(),0);
   await page.locator('.section-bar [data-action="quick-play"]').click();
   assert.equal(await page.locator('#quick-mode').count(),0);
-  await page.locator('#quick-collection').selectOption(boca.id);await page.locator('#quick-route').selectOption('complete');
+  await page.locator('[data-quick-club="bocajuniors"]').click();await page.locator(`[data-quick-collection="${boca.id}"]`).click();await page.locator('[data-quick-route="complete"]').click();
   await page.locator('.quick-submit').click();await page.locator('#nickname-input').fill('<Fede>');await page.locator('#nickname-form .primary').click();
   assert.equal(await page.locator('[data-player-form]').count(),11);assert.equal(await page.locator('.score-value').textContent(),'? — ?');
   await page.locator('[data-action="medals"]').click();assert.equal(await page.locator('.medal-card').count(),1);

@@ -22,7 +22,7 @@ const KEY='tribunapp.campanas.progress.v1',PROFILE='tribunapp.campanas.profile.v
     localStorage.setItem(ACTIVITY,JSON.stringify([{collectionId:id,club:'bocajuniors',route:'complete',mode,startedAt:'2026-10-01T10:00:00Z'}]));
    },{PROFILE,ACTIVITY,mode,id:data.id});
    await page.reload();await page.locator('.section-bar [data-action="quick-play"]').click();
-   assert.equal(await page.locator('#quick-mode').count(),0);assert.equal(await page.locator('#quick-collection').inputValue(),data.id);
+   assert.equal(await page.locator('#quick-mode').count(),0);assert.equal(await page.locator('[data-quick-collection][aria-pressed="true"]').getAttribute('data-quick-collection'),data.id);
    await page.locator('.quick-submit').click();await page.locator('[data-player-form]').first().waitFor();
    assert.equal(await page.locator('[data-player-form]').count(),11);assert.equal(await page.locator('.random-label,[data-mode],[data-action="random-play"]').count(),0);
    assert.equal(await page.locator('#result-form,[data-goal],[data-bonus]').count(),0,'no bonus before completing formation');

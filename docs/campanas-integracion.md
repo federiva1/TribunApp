@@ -9,10 +9,15 @@ recorrido por partido: **formación → bonus resultado → bonus goleadores**. 
 2026 conserva sus 255 partidos y 30 clubes, más 24 campañas históricas de 12 clubes.
 No hay login, sincronización ni clasificación pública.
 
-La portada de Campañas conserva el título y los 30 escudos. Las tres imágenes explican
-las etapas, no son opciones para elegir modos. Se elige campaña, club y recorrido;
-“Jugar” abre esa selección compacta y recuerda la última campaña. La página principal
-`index.html` de TribunApp no forma parte de este cambio.
+La portada de Campañas conserva el título y los 30 escudos, sin los botones del hero.
+La etiqueta “24 campañas históricas” enlaza directamente a la sección de los clubes.
+Las tres imágenes explican las etapas, no son opciones para elegir modos.
+“Jugar”, en la barra superior, abre un selector visual: históricas muestra los 12
+escudos, luego las dos campañas del club elegido; Apertura 2026 permite elegir entre
+los 30 clubes o todos. Recuerda la última selección y permite jugar sólo cuando hay
+una campaña elegida. Los tres recorridos muestran únicamente su cantidad de partidos,
+tanto en la ventana como en la pantalla de campaña. Se mantienen sus claves y progreso.
+La página principal `index.html` de TribunApp no forma parte de este cambio.
 
 ### Etapas y protección de respuestas
 

@@ -25,7 +25,8 @@
 > reconoce aciertos parciales y los bonus nunca restan.
 > Expreso/Clásico/Completo cambian la cantidad de partidos; las medallas avanzan al
 > completar formaciones. Apodo, mejores marcas y campañas empezadas se guardan localmente.
-> «Jugar» abre una selección compacta. «Ver rival» es una referencia gratuita;
+> «Jugar» abre una selección con escudos, campañas del club y cantidad de partidos.
+> La etiqueta «24 campañas históricas» enlaza a los clubes. «Ver rival» es una referencia gratuita;
 > con todos los clubes se completan ambos once. Las partidas antiguas se conservan.
 > Arquitectura y reglas: `docs/campanas-integracion.md`. Catálogo, fuentes y límites:
 > `docs/campanas-historicas.md`. Lo restante de `docs/campanas-objetivos.md` sigue pendiente.

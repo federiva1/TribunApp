@@ -212,6 +212,9 @@ h3,
   padding: 6px 9px;
   background: rgba(79, 195, 247, 0.05);
 }
+.tag-link { cursor:pointer; text-decoration:none; transition:background .15s,border-color .15s; }
+.tag-link:hover,.tag-link:focus-visible { color:white; background:#4fc3f71c; border-color:var(--celeste); text-decoration:underline; text-underline-offset:3px; }
+#historical-campaigns { scroll-margin-top:28px; }
 .crest-wall {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
@@ -1071,17 +1074,32 @@ h3,
 }
 /* Campaign library, shared routes and the local medal cabinet. */
 .profile-nav { display:flex; align-items:center; gap:16px; min-width:0; }
-.hero-play { display:flex; align-items:center; gap:20px; flex-wrap:wrap; margin-top:24px; }
-.hero-play .primary { padding:14px 26px; font-size:16px; }
-.hero-play .back { color:#b8d4e7; font-size:13px; }
-.quick-play-dialog { width:calc(100% - 32px); max-width:540px; max-height:calc(100dvh - 32px); overflow:auto; padding:28px; background:var(--dark2); color:white; border:1px solid #4fc3f766; border-radius:16px; }
+.quick-play-dialog { width:calc(100% - 32px); max-width:640px; max-height:calc(100dvh - 32px); overflow:auto; padding:28px; background:var(--dark2); color:white; border:1px solid #4fc3f766; border-radius:16px; }
 .quick-play-dialog::backdrop { background:#060610cc; backdrop-filter:blur(5px); }
 .dialog-heading { display:flex; justify-content:space-between; align-items:center; }
-.quick-play-dialog h2 { font-size:38px; margin:6px 0 20px; }
-.quick-play-dialog label { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; font-size:13px; }
-.quick-play-dialog select { min-width:0; width:100%; border:1px solid var(--border); border-radius:8px; background:#1b1d2d; color:white; padding:12px; }
-.quick-submit { width:100%; margin-top:18px; }
-.quick-summary { font-size:13px; }
+.quick-play-dialog h2 { font-size:36px; margin:4px 0 16px; }
+.quick-kinds { display:grid; grid-template-columns:1.25fr 1fr; gap:6px; padding:4px; background:var(--dark); border-radius:9px; }
+.quick-kinds button { padding:10px 8px; min-height:44px; color:var(--muted); background:transparent; border:1px solid transparent; border-radius:6px; font-size:12px; }
+.quick-kinds button[aria-pressed="true"] { color:var(--celeste); background:#4fc3f710; border-color:#4fc3f74d; }
+.quick-section { min-width:0; border:0; padding:0; margin:20px 0 0; }
+.quick-section legend { padding:0; margin-bottom:10px; font-size:12px; color:var(--muted); }
+.quick-clubs { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:7px; }
+.quick-club { position:relative; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px; padding:10px 4px; color:var(--muted); background:var(--dark); border:1px solid var(--border); border-radius:8px; }
+.quick-club img { width:30px; height:34px; object-fit:contain; }
+.quick-club > span:last-child { display:flex; align-items:center; justify-content:center; min-height:26px; font-size:10px; line-height:1.3; overflow-wrap:anywhere; }
+.quick-all { display:grid; place-items:center; width:30px; height:34px; color:var(--celeste); font-family:"Barlow Condensed",sans-serif; font-size:24px; }
+.quick-club:hover,.quick-campaigns button:hover,.quick-routes button:hover { border-color:#4fc3f788; }
+.quick-club[aria-pressed="true"],.quick-campaigns button[aria-pressed="true"],.quick-routes button[aria-pressed="true"] { color:white; background:#4fc3f710; border-color:var(--celeste); box-shadow:inset 0 0 0 1px var(--celeste); }
+.quick-club[aria-pressed="true"]::after { content:"✓"; position:absolute; right:5px; top:3px; color:var(--celeste); font-size:11px; }
+.quick-campaigns { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.quick-campaigns button { min-width:0; min-height:52px; padding:12px; color:var(--muted); background:var(--dark); border:1px solid var(--border); border-radius:8px; text-align:left; font-size:13px; line-height:1.4; }
+.quick-routes { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+.quick-routes button { display:flex; flex-direction:column; align-items:center; gap:2px; padding:8px; color:var(--muted); background:var(--dark); border:1px solid var(--border); border-radius:8px; }
+.quick-routes strong { color:var(--celeste); font-family:"Barlow Condensed",sans-serif; font-size:26px; font-weight:600; }
+.quick-routes span { font-size:11px; }
+.tournament-clubs { max-height:220px; overflow-y:auto; padding:2px 5px 2px 2px; scrollbar-width:thin; }
+.quick-submit { width:100%; margin-top:20px; min-height:44px; }
+.quick-submit:disabled { opacity:.4; cursor:not-allowed; }
 .single-team { grid-template-columns:minmax(0,760px); justify-content:center; }
 .with-rival { align-items:start; }
 .lineup-toolbar { display:flex; align-items:center; justify-content:space-between; gap:16px; margin:0 0 16px; }
@@ -1119,13 +1137,10 @@ h3,
 .campaign-hero p { max-width:680px; }
 .campaign-crest { width:100px; height:110px; object-fit:contain; }
 .route-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
-.route-card { display:flex; align-items:center; gap:16px; text-align:left; padding:20px; border:1px solid var(--border); border-radius:12px; color:white; background:var(--dark2); }
+.route-card { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; text-align:center; padding:20px; border:1px solid var(--border); border-radius:12px; color:white; background:var(--dark2); }
 .route-card[aria-pressed="true"] { border-color:var(--celeste); background:#4fc3f710; box-shadow:inset 0 0 0 1px var(--celeste); }
-.route-mark { width:36px; height:42px; flex-shrink:0; display:grid; place-items:center; border:1px solid #4fc3f744; color:var(--celeste); font-family:"Barlow Condensed",sans-serif; border-radius:50% 50% 35% 35%; }
-.route-card strong { display:block; font-family:"Bebas Neue",sans-serif; font-size:28px; font-weight:400; letter-spacing:1px; }
-.route-count { display:block; color:var(--celeste); font-size:13px; margin:5px 0; }
-.route-card small { display:block; color:var(--muted); line-height:1.5; }
-.route-note { color:var(--muted); font-size:12px; line-height:1.6; margin-top:14px; }
+.route-card strong { display:block; color:var(--celeste); font-family:"Barlow Condensed",sans-serif; font-size:32px; font-weight:600; }
+.route-card > span { color:var(--muted); font-size:12px; }
 .route-status { display:flex; flex-wrap:wrap; align-items:center; gap:8px 20px; padding:16px 20px; border-left:3px solid var(--celeste); background:#4fc3f708; margin:28px 0; }
 .route-status span { color:var(--muted); font-size:13px; }
 .route-status.earned { border-color:var(--gold); }
@@ -1170,14 +1185,17 @@ h3,
 .dialog-actions { display:flex; justify-content:flex-end; gap:12px; }
 @media (max-width:1000px) {
   .club-campaign-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
-  .route-card { gap:10px; padding:16px; }
+  .route-card { padding:16px; }
   .medal-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
 }
 @media (max-width:600px) {
   .profile-nav { gap:8px; flex-wrap:wrap; }
   .profile-nav .primary,.profile-nav .archive-button { padding:10px 12px; }
   .quick-play-dialog { padding:20px; }
-  .quick-options { grid-template-columns:1fr; gap:0; }
+  .quick-clubs { grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px; }
+  .quick-club { padding:7px 3px; gap:4px; }
+  .quick-club img { width:27px; height:31px; }
+  .quick-campaigns button { padding:10px; font-size:12px; }
   .single-team { grid-template-columns:1fr; }
   .lineup-toolbar { align-items:flex-start; }
   .lineup-toolbar > div { flex-direction:column; align-items:flex-end; }
@@ -1203,10 +1221,9 @@ h3,
   .campaign-hero { gap:12px; padding:24px; }
   .campaign-hero h1 { font-size:36px; }
   .campaign-crest { width:54px; height:66px; }
-  .route-grid { grid-template-columns:1fr; gap:10px; }
-  .route-card { padding:16px; gap:16px; }
+  .route-grid { gap:10px; }
+  .route-card { padding:16px 10px; }
   .route-card strong { font-size:26px; }
-  .route-card small { font-size:12px; }
   .journey-strip { align-items:flex-start; }
   .journey-strip span { max-width:70%; line-height:1.6; }
   .medal-filters { grid-template-columns:1fr 1fr; gap:12px; }

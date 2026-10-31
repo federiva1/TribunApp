@@ -78,7 +78,7 @@
   }
   function historicalLibrary() {
     const clubs = [...new Map(catalog.map(item => [item.clubSlug, item.club])).entries()];
-    return `<section class="historical-library" aria-label="Campañas históricas"><div class="club-picker"><div><span class="eyebrow">LAS QUE NO TE OLVIDÁS</span><h2>Campañas históricas</h2><p class="muted">12 clubes. 24 historias. ¿Cuál vas a revivir?</p></div><label>Club <select id="history-club"><option value="all">Todos los clubes</option>${clubs.map(([slug,name])=>`<option value="${escape(slug)}">${escape(name)}</option>`).join("")}</select></label></div><div class="club-campaign-grid">${clubs.map(([slug,name])=>`<article class="club-campaign-card" data-club="${escape(slug)}"><div class="club-card-head">${crest(slug,name)}<h3>${escape(name)}</h3></div><div class="club-campaign-links">${catalog.filter(item=>item.clubSlug===slug).map(item=>`<button class="historical-card" data-collection="${escape(item.id)}"><strong>${escape(item.title.split(" · ").slice(1).join(" · "))}</strong><small>${item.matchCount} partidos <b aria-hidden="true">→</b></small></button>`).join("")}</div></article>`).join("")}</div></section>`;
+    return `<section id="historical-campaigns" class="historical-library" aria-label="Campañas históricas" tabindex="-1"><div class="club-picker"><div><span class="eyebrow">LAS QUE NO TE OLVIDÁS</span><h2>Campañas históricas</h2><p class="muted">12 clubes. 24 historias. ¿Cuál vas a revivir?</p></div><label>Club <select id="history-club"><option value="all">Todos los clubes</option>${clubs.map(([slug,name])=>`<option value="${escape(slug)}">${escape(name)}</option>`).join("")}</select></label></div><div class="club-campaign-grid">${clubs.map(([slug,name])=>`<article class="club-campaign-card" data-club="${escape(slug)}"><div class="club-card-head">${crest(slug,name)}<h3>${escape(name)}</h3></div><div class="club-campaign-links">${catalog.filter(item=>item.clubSlug===slug).map(item=>`<button class="historical-card" data-collection="${escape(item.id)}"><strong>${escape(item.title.split(" · ").slice(1).join(" · "))}</strong><small>${item.matchCount} partidos <b aria-hidden="true">→</b></small></button>`).join("")}</div></article>`).join("")}</div></section>`;
   }
   async function loadCollection(id, target = "setup", nextScope) {
     if (loadingCollection) return;
@@ -138,7 +138,7 @@
     round = null;
     if (view !== "library") return showSetup();
     app.innerHTML = `<div class="section-bar"><span class="eyebrow">CAMPAÑAS TRIBUNAPP</span>${profileNav()}</div>
-      <section class="hero"><div><span class="eyebrow">EL FÚTBOL SE JUEGA DE MEMORIA</span><h1>¿Cuánto sabés<br>de <span>fútbol argentino?</span></h1><div class="hero-play"><button class="primary" data-action="quick-play">Jugar ahora →</button><a class="back" href="#tournaments">Explorar campañas ↓</a></div><div class="hero-tags"><span class="tag">30 CLUBES</span><span class="tag">24 CAMPAÑAS HISTÓRICAS</span><span class="tag">FORMACIÓN + 2 BONUS</span></div></div><div class="crest-wall" aria-label="Los 30 clubes del torneo">${teams.map(team=>crest(team.slug,team.name)).join("")}</div></section>
+      <section class="hero"><div><h1>¿Cuánto sabés<br>de <span>fútbol argentino?</span></h1><div class="hero-tags"><span class="tag">30 CLUBES</span><a class="tag tag-link" href="#historical-campaigns">24 CAMPAÑAS HISTÓRICAS</a><span class="tag">FORMACIÓN + BONUS</span></div></div><div class="crest-wall" aria-label="Los 30 clubes del torneo">${teams.map(team=>crest(team.slug,team.name)).join("")}</div></section>
       <section class="mode-intro" aria-label="Cómo se juega"><div class="club-picker"><div><span class="eyebrow">UN PARTIDO, PASO A PASO</span><h2>Armá el once. Sumá con los bonus.</h2><p class="muted">La formación hace avanzar tu campaña. Después, resultado y goleadores son opcionales.</p></div></div><div class="mode-grid">${Object.entries(modes).sort(([a],[b])=>["formation","result","scorers"].indexOf(a)-["formation","result","scorers"].indexOf(b)).map(([mode,info],index)=>`<article class="mode-card mode-explainer">${modeImage(mode)}<div class="mode-body"><span class="eyebrow">${index===0?"01 · EL DESAFÍO":"0"+(index+1)+" · BONUS OPCIONAL"}</span><h3>${info.title}</h3><p>${info.description}</p></div></article>`).join("")}</div></section>
       <section id="tournaments" class="tournament-library" aria-label="Torneos argentinos"><div class="club-picker"><div><span class="eyebrow">EMPEZÁ POR ACÁ</span><h2>Torneos argentinos</h2></div></div><div class="tournament-card"><div><span class="eyebrow">255 PARTIDOS · 30 CLUBES</span><h3>Apertura 2026</h3><p class="muted">Seguí a tu equipo o recorré el torneo entero.</p><span class="tag">EXPRESO · CLÁSICO · COMPLETO</span></div><div class="tournament-choice">${clubSelect()}<button class="primary" data-collection="apertura-2026">Elegir recorrido →</button></div></div></section>
       ${historicalLibrary()}${localNote}`;
@@ -149,7 +149,7 @@
     app.innerHTML = `<div class="section-bar"><button class="back" data-action="library">← Todas las campañas</button>${profileNav()}</div>
       <section class="hero campaign-hero"><div><span class="eyebrow">ELEGÍ TU RECORRIDO</span><h1>${escape(data.title)}</h1>${data.clubSlug ? "" : `<p>${escape(data.description)}</p>`}<div class="hero-tags"><span class="tag">${C.routeMatches(data.matches,scope,"complete").length} PARTIDOS JUGABLES</span><span class="tag">${escape(scopeName())}</span></div></div>${data.clubSlug ? crest(data.clubSlug,data.club,"campaign-crest") : ""}</section>
       ${data.clubSlug ? "" : `<div class="club-picker"><p class="muted">Jugá con tu club o con todos los equipos.</p>${clubSelect()}</div>`}
-      <section aria-label="Recorrido"><div class="club-picker"><div><span class="eyebrow">01 · A TU RITMO</span><h2>¿Cuánto querés jugar?</h2><p class="muted">Cambia la cantidad de partidos. Las reglas y las ayudas son las mismas.</p></div></div><div class="route-grid">${Object.entries(routes).map(([key,info])=>{const s=C.routeStatus(C.routeMatches(data.matches,scope,key),records(),data.id);return `<button class="route-card" data-route="${key}" aria-pressed="${selectedRoute===key}"><span class="route-mark">${info.mark}</span><span><strong>${info.title}</strong><span class="route-count">${s.total} partidos${s.complete ? " · ✓ Completado" : ""}</span><small>${info.description}</small></span></button>`;}).join("")}</div><p class="route-note">Los partidos de Expreso están incluidos en Clásico y Completo. Lo que ya jugaste cuenta en los tres.</p></section>
+      <section aria-label="Recorrido"><div class="club-picker"><div><span class="eyebrow">01 · A TU RITMO</span><h2>¿Cuánto querés jugar?</h2></div></div><div class="route-grid">${Object.keys(routes).map(key=>`<button class="route-card" data-route="${key}" aria-pressed="${selectedRoute===key}"><strong>${C.routeMatches(data.matches,scope,key).length}</strong> <span>partidos</span></button>`).join("")}</div></section>
       <div class="route-status ${stats.complete?"earned":""}" role="status"><strong>${stats.complete?"✓ Recorrido completado":routes[selectedRoute].title+" · "+stats.done+" de "+stats.total+" partidos"}</strong><span>Completá la formación de cada partido para ganar la medalla. Los bonus suman puntos extra.</span></div>
       <section class="campaign-start"><div><span class="eyebrow">02 · A LA CANCHA</span><h2>${stats.complete?"Recorrido completo":"Tu próximo partido"}</h2><p class="muted">Primero, el once. Después, bonus opcionales de resultado y goleadores.</p></div><div class="campaign-start-actions"><button class="primary" data-action="campaign-play">${stats.complete?"Ver mis partidos":stats.done?"Continuar campaña":"Empezar campaña"} →</button><button class="back" data-action="archive">Mi archivo ↗</button></div></section>
       ${localNote}`;
@@ -157,35 +157,54 @@
   function showQuickPlay() {
     const recent = activity.list().find(item=>journeyIndex.some(c=>c.id===item.collectionId));
     const current = view === "setup" ? {collectionId:data.id,club:scope,route:selectedRoute}
-      : recent || {collectionId:"apertura-2026",club:tournamentScope,route:selectedRoute};
+      : recent;
+    const remembered=journeyIndex.find(item=>item.id===current?.collectionId);
+    let kind=remembered&&!remembered.clubSlug?"tournament":"history",
+      historyClub=remembered?.clubSlug||"", historyCollection=remembered?.clubSlug?remembered.id:"",
+      tournamentClub=current?.club||tournamentScope, route=routes[current?.route]?current.route:selectedRoute;
     let dialog=document.getElementById("quick-play-dialog");
     if(dialog) dialog.remove();
     dialog=document.createElement("dialog");dialog.id="quick-play-dialog";dialog.className="quick-play-dialog";
     dialog.setAttribute("aria-labelledby","quick-play-title");
     const tournament=journeyIndex.find(c=>c.id==="apertura-2026");
     const clubNames=[...new Map(tournament.matches.flatMap(m=>[[m.homeSlug,m.home],[m.awaySlug,m.away]])).entries()].sort((a,b)=>a[1].localeCompare(b[1],"es"));
-    dialog.innerHTML=`<form id="quick-play-form"><div class="dialog-heading"><span class="eyebrow">DIRECTO A LA CANCHA</span><button type="button" class="back" data-close-quick aria-label="Cerrar">✕</button></div><h2 id="quick-play-title">¿Qué jugamos?</h2><label>Campaña<select id="quick-collection" name="collection"><optgroup label="Torneo argentino"><option value="apertura-2026">Apertura 2026</option></optgroup><optgroup label="Campañas históricas">${catalog.map(item=>`<option value="${escape(item.id)}">${escape(item.title)}</option>`).join("")}</optgroup></select></label><label id="quick-club-label">Equipo<select id="quick-club" name="club"><option value="all">Todos los equipos</option>${clubNames.map(([slug,name])=>`<option value="${escape(slug)}">${escape(name)}</option>`).join("")}</select></label><label>Recorrido<select id="quick-route" name="route">${Object.entries(routes).map(([key,info])=>`<option value="${key}">${info.title}</option>`).join("")}</select></label><p class="quick-summary muted" role="status"></p><button class="primary quick-submit">Jugar ahora →</button></form>`;
+    const historyClubs=[...new Map(catalog.map(item=>[item.clubSlug,{name:item.club,short:item.title.split(" · ")[0]}])).entries()];
+    if(!clubNames.some(([slug])=>slug===tournamentClub)) tournamentClub="all";
+    dialog.innerHTML=`<form id="quick-play-form"><div class="dialog-heading"><span class="eyebrow">DIRECTO A LA CANCHA</span><button type="button" class="back" data-close-quick aria-label="Cerrar">✕</button></div><h2 id="quick-play-title">¿Qué jugamos?</h2><div class="quick-kinds" role="group" aria-label="Tipo de campaña"><button type="button" data-quick-kind="history">Campañas históricas</button><button type="button" data-quick-kind="tournament">Apertura 2026</button></div><div id="quick-choices"></div><button class="primary quick-submit">Jugar →</button></form>`;
     document.body.append(dialog);
-    const select=id=>dialog.querySelector("#quick-"+id);
-    select("collection").value=current.collectionId;select("club").value=current.club;
-    if(!select("club").value) select("club").value="all";
-    select("route").value=current.route;
-    const refresh=()=>{
-      const item=journeyIndex.find(c=>c.id===select("collection").value), club=item.clubSlug||select("club").value;
-      dialog.querySelector("#quick-club-label").hidden=!!item.clubSlug;
-      const matches=C.routeMatches(item.matches,club,select("route").value);
-      const note=club==="all"?"Completás los dos once.":"Completás sólo el once de tu equipo.";
-      dialog.querySelector(".quick-summary").textContent=`${matches.length} partidos. ${note} Resultado y goleadores: bonus opcionales.`;
+    const selection=()=>({id:kind==="history"?historyCollection:tournament.id,club:kind==="history"?historyClub:tournamentClub});
+    const clubButton=(slug,name,short,selected)=>`<button type="button" class="quick-club" data-quick-club="${escape(slug)}" aria-label="${escape(name)}" aria-pressed="${selected}">${slug==="all"?'<span class="quick-all" aria-hidden="true">30</span>':`<img src="escudos/${escape(slug)}.png" alt="" width="32" height="36">`}<span>${escape(short)}</span></button>`;
+    const refresh=(focusSelector)=>{
+      const {id,club}=selection(),item=journeyIndex.find(c=>c.id===id);
+      dialog.querySelectorAll("[data-quick-kind]").forEach(button=>button.setAttribute("aria-pressed",button.dataset.quickKind===kind));
+      const clubs=kind==="history"?historyClubs.map(([slug,{name,short}])=>clubButton(slug,name,short,slug===historyClub)).join("")
+        :clubButton("all","Todos los equipos","Todos",tournamentClub==="all")+clubNames.map(([slug,name])=>clubButton(slug,name,historyClubs.find(([key])=>key===slug)?.[1].short||name,slug===tournamentClub)).join("");
+      const campaigns=kind==="history"&&historyClub?`<fieldset class="quick-section"><legend>Campaña de ${escape(historyClubs.find(([slug])=>slug===historyClub)[1].short)}</legend><div class="quick-campaigns">${catalog.filter(c=>c.clubSlug===historyClub).map(c=>`<button type="button" data-quick-collection="${escape(c.id)}" aria-pressed="${historyCollection===c.id}">${escape(c.title.split(" · ").slice(1).join(" · "))}</button>`).join("")}</div></fieldset>`:"";
+      dialog.querySelector("#quick-choices").innerHTML=`<fieldset class="quick-section"><legend>Club</legend><div class="quick-clubs ${kind==="tournament"?"tournament-clubs":""}">${clubs}</div></fieldset>${campaigns}${item?`<fieldset class="quick-section"><legend>¿Cuántos partidos?</legend><div class="quick-routes">${Object.keys(routes).map(key=>`<button type="button" data-quick-route="${key}" aria-pressed="${route===key}"><strong>${C.routeMatches(item.matches,club,key).length}</strong><span>partidos</span></button>`).join("")}</div></fieldset>`:""}`;
+      dialog.querySelector(".quick-submit").disabled=!item;
+      if(focusSelector) dialog.querySelector(focusSelector)?.focus({preventScroll:true});
     };
-    dialog.querySelector("form").addEventListener("change",refresh);
+    dialog.querySelector("form").addEventListener("click",event=>{
+      const button=event.target.closest("button");if(!button)return;
+      if(button.dataset.quickKind) {kind=button.dataset.quickKind;return refresh();}
+      if(button.dataset.quickClub) {
+        if(kind==="history") {
+          if(historyClub!==button.dataset.quickClub) historyCollection="";
+          historyClub=button.dataset.quickClub;
+        } else tournamentClub=button.dataset.quickClub;
+        return refresh(`[data-quick-club="${CSS.escape(button.dataset.quickClub)}"]`);
+      }
+      if(button.dataset.quickCollection) {historyCollection=button.dataset.quickCollection;return refresh(`[data-quick-collection="${CSS.escape(historyCollection)}"]`);}
+      if(button.dataset.quickRoute) {route=button.dataset.quickRoute;return refresh(`[data-quick-route="${route}"]`);}
+    });
     dialog.querySelector("[data-close-quick]").addEventListener("click",()=>dialog.close());
     dialog.querySelector("form").addEventListener("submit",event=>{
       event.preventDefault();
-      selectedRoute=select("route").value;
-      const id=select("collection").value, club=select("club").value;
+      const {id,club}=selection();if(!journeyIndex.some(c=>c.id===id))return;
+      selectedRoute=route;
       dialog.close();loadCollection(id,"play",club);
     });
-    refresh();dialog.showModal();select("collection").focus();
+    refresh();dialog.showModal();dialog.querySelector(`[data-quick-kind="${kind}"]`).focus();
   }
   let pendingStart = null, profileReturnFocus = null;
   function askNickname(next) {
