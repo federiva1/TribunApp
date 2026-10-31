@@ -1024,11 +1024,16 @@ h3,
 .quick-options { display:grid; grid-template-columns:1fr 1.5fr; gap:12px; }
 .quick-submit { width:100%; margin-top:18px; }
 .quick-summary { font-size:13px; }
-.single-team { grid-template-columns:minmax(0,1.25fr) minmax(0,1fr); align-items:start; }
-.rival-reference { padding:24px; border:1px dashed var(--border); border-radius:12px; }
-.rival-reference p { margin:12px 0 18px; font-size:13px; }
-.rival-reference .text-button { display:block; margin-top:12px; text-align:left; }
-#rival-sheet { margin-top:20px; }
+.single-team { grid-template-columns:minmax(0,760px); justify-content:center; }
+.with-rival { align-items:start; }
+.lineup-toolbar { display:flex; align-items:center; justify-content:space-between; gap:16px; margin:0 0 16px; }
+.lineup-toolbar > div { display:flex; align-items:center; gap:12px; }
+.lineup-toolbar .secondary { min-height:42px; padding:8px 18px; }
+.rival-note { margin-top:12px; font-size:12px; }
+.challenge-tools { display:flex; flex-wrap:wrap; align-items:center; gap:16px; }
+.random-play { border-color:#4fc3f755; color:var(--celeste); }
+.random-note { font-size:13px; margin:-12px 0 24px; }
+.random-label { display:inline-block; color:var(--celeste); font-size:12px; margin-top:8px; }
 .nickname { max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--celeste); }
 .tournament-library { margin-top:44px; }
 .tournament-card { display:flex; justify-content:space-between; align-items:center; gap:32px; padding:32px; border:1px solid #4fc3f733; border-radius:14px; background:linear-gradient(115deg,#19304466,transparent 70%),var(--dark2); }
@@ -1091,13 +1096,16 @@ h3,
 .complete .medal-state { color:var(--gold); }
 .tournament-monogram { font-family:"Bebas Neue",sans-serif; font-size:36px; color:var(--celeste); line-height:50px; }
 .medal-card h2 { font-size:27px; }
-.medal-badges { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:24px 0; }
-.medal-badge { display:flex; flex-direction:column; align-items:center; gap:6px; color:#85899c; font-size:11px; }
-.medal-badge b { display:grid; place-items:center; font-family:"Barlow Condensed",sans-serif; font-size:20px; width:45px; height:50px; border:1px dashed #ffffff30; border-radius:50% 50% 38% 38%; background:#ffffff04; }
+.medal-badges { display:grid; gap:18px; margin:24px 0; }
+.medal-badge { display:grid; gap:8px; color:#a4a9ba; font-size:13px; }
+.medal-progress-label { display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
+.medal-progress-label > span { font-weight:600; }
+.medal-progress-label small { font-size:11px; }
+.medal-track { display:block; height:4px; border-radius:4px; overflow:hidden; background:#ffffff12; }
+.medal-track > span { display:block; height:100%; border-radius:inherit; background:currentColor; }
 .medal-badge.started { color:var(--celeste); }
-.medal-badge.started b { border-color:#4fc3f777; border-style:solid; }
 .medal-badge.earned { color:var(--gold); }
-.medal-badge.earned b { border:1px solid #f5c518aa; color:#ffdf65; background:linear-gradient(140deg,#f5c51833,#f5c51808); box-shadow:0 0 16px #f5c51820; }
+.medal-badge.earned .medal-track { box-shadow:0 0 12px #f5c51830; }
 .medal-card > .muted { font-size:12px; }
 .medal-card > button { width:100%; margin-top:auto; }
 .nickname-dialog { max-width:460px; width:calc(100% - 32px); padding:30px; background:#13131f; color:white; border:1px solid #4fc3f777; border-radius:16px; box-shadow:0 20px 100px #000a; }
@@ -1117,7 +1125,9 @@ h3,
   .quick-play-dialog { padding:20px; }
   .quick-options { grid-template-columns:1fr; gap:0; }
   .single-team { grid-template-columns:1fr; }
-  .rival-reference { padding:20px; }
+  .lineup-toolbar { align-items:flex-start; }
+  .lineup-toolbar > div { flex-direction:column; align-items:flex-end; }
+  .lineup-toolbar > .muted { max-width:55%; font-size:12px; }
   .nickname { max-width:88px; font-size:12px; }
   .section-bar { flex-wrap:wrap; }
   .section-bar > .eyebrow { font-size:11px; }

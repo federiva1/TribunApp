@@ -186,3 +186,32 @@ navegador aislado, sin tocar los resultados reales del usuario.
 `scripts/test-campanas-access-browser.cjs` prueba el acceso visible, la selección
 rápida, campañas personales vacías y empezadas, cierre con once apellidos, referencia
 gratuita del rival, borradores de respuesta y opción de 22 jugadores en Madrid.
+
+### Planillas, medallero y retos aleatorios (31/10/2026)
+
+- “Ver rival” pasa a una barra sobre las planillas. En escritorio, ambos once
+  empiezan a la misma altura y tienen igual ancho; en celular se apilan. Consultar
+  al rival sigue siendo gratuito y conserva las respuestas en curso.
+- Todos los retos ordenan por posición: arquero, defensa, medio y delantero.
+  Los índices originales se conservan para que respuestas y pistas sigan apuntando
+  al mismo jugador. Donde faltan posiciones (Apertura y suplementos editoriales)
+  se mantiene el orden de formación de la fuente, sin deducir roles por dorsal
+  ni presuponer un 4-4-2.
+- Se corrigen roles erróneos de Boca 2007, incluido Caranta como mediocampista.
+  `scripts/campanas-position-overrides.json` registra IDs y fuentes. El importador
+  usa `apply-campanas-positions.cjs`, que conserva `sourcePos` y `positionSource`.
+  No cambian las identidades, los integrantes del once ni las incidencias.
+- “Retos aleatorios” es un botón dentro de la campaña y una opción del acceso
+  rápido, sin cuarta tarjeta. Sortea partido y reto entre los disponibles del club
+  y recorrido elegidos; prioriza partidos sin terminar, evita repetir el recién
+  saltado si hay otro pendiente y excluye goleadores en 0–0 o fichas no aptas.
+- El azar es una preferencia, no un cuarto tipo de puntaje: archivo y medallas
+  guardan el reto real. “Siguiente” mantiene el azar; elegir un reto fijo sale de
+  él. Al completar el recorrido se abre el medallero como en los modos fijos.
+- El medallero reemplaza los óvalos I/II/III por tres filas con nombre, partidos
+  completados y barra. Los recorridos terminados se destacan en dorado.
+
+Pruebas adicionales: `node --test scripts/test-campanas-random-order.cjs` y
+`node scripts/test-campanas-random-browser.cjs` (Playwright). Cubren orden e identidad
+en todas las colecciones, Caranta, elegibilidad, persistencia del reto real,
+siguiente/saltar, acceso rápido y alineación en escritorio/celular.

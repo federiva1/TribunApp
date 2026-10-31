@@ -56,7 +56,7 @@ function entry(collection,match,mode='result',score=20) {
     assert(await medal.evaluate(el=>el.classList.contains('complete')));
     assert.equal(await medal.locator('.medal-badge.earned').count(),1);
     assert.equal(await medal.locator('.medal-badge.started').count(),2);
-    assert.match(await medal.textContent(),/5\/10/);assert.match(await medal.textContent(),/5\/19/);
+    assert.match(await medal.textContent(),/5 \/ 10 partidos/);assert.match(await medal.textContent(),/5 \/ 19 partidos/);
     assert.match(await page.locator('.medal-hero').textContent(),/75 PUNTOS/,'wrong result counts completion but still deducts points');
     assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
     await page.screenshot({path:path.join(os.tmpdir(),'campanas-medallero-mobile.png'),fullPage:true});

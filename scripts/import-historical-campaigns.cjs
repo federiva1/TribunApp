@@ -8,6 +8,7 @@ const root = path.resolve(__dirname, '..');
 const definitions = require('./historical-campaigns.json');
 const lineupOverrides = require('./historical-lineup-overrides.json');
 const core = require('../js/campanas-core.js');
+const applyPositions = require('./apply-campanas-positions.cjs');
 const cache = path.join(os.tmpdir(), 'tribunapp-historical-espn-v1');
 fs.mkdirSync(cache, { recursive: true });
 const base = 'https://site.api.espn.com/apis/site/v2/sports/soccer/';
@@ -144,7 +145,7 @@ function convert(summary, event, def, sourceApi) {
   try { const authors=core.actualScorers(match); identitiesOK=authors.length===match.scorers.length && !core.scorerCandidates(match).some(p=>p.rosterUnknown); } catch (_) {}
   match.availability.scorers = match.availability.formation && match.scorers.length>0 && goalsOK && identitiesOK;
   if (!goalsOK) match.qualityWarnings.push('Los eventos de gol no coinciden con el marcador; goleadores deshabilitado.');
-  return match;
+  return applyPositions(match, def.id);
 }
 async function main() {
   const index = [], audit = [];

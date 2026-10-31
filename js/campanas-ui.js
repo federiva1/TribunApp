@@ -157,7 +157,7 @@
       ${data.clubSlug ? "" : `<div class="club-picker"><p class="muted">Jugá con tu club o con todos los equipos.</p>${clubSelect()}</div>`}
       <section aria-label="Recorrido"><div class="club-picker"><div><span class="eyebrow">01 · A TU RITMO</span><h2>¿Cuánto querés jugar?</h2><p class="muted">Cambia la cantidad de partidos. Las reglas y las ayudas son las mismas.</p></div></div><div class="route-grid">${Object.entries(routes).map(([key,info])=>{const s=C.routeStatus(C.routeMatches(data.matches,scope,key),records(),data.id);return `<button class="route-card" data-route="${key}" aria-pressed="${selectedRoute===key}"><span class="route-mark">${info.mark}</span><span><strong>${info.title}</strong><span class="route-count">${s.total} partidos${s.complete ? " · ✓ Completado" : ""}</span><small>${info.description}</small></span></button>`;}).join("")}</div><p class="route-note">Los partidos de Expreso están incluidos en Clásico y Completo. Lo que ya jugaste cuenta en los tres.</p></section>
       <div class="route-status ${stats.complete?"earned":""}" role="status"><strong>${stats.complete?"✓ Recorrido completado":routes[selectedRoute].title+" · "+stats.done+" de "+stats.total+" partidos"}</strong><span>Terminá un reto por partido para ganar la medalla. Podés retomar cuando quieras.</span></div>
-      <section aria-label="Elegir desafío"><div class="club-picker"><div><span class="eyebrow">02 · ELEGÍ CÓMO JUGAR</span><h2>Tu próximo reto</h2><p class="muted">Podés cambiar de reto entre partidos. Los 0–0 no participan en goleadores.</p></div><button class="back" data-action="archive">Ver partidos jugados ↗</button></div><div class="mode-grid">${Object.entries(modes).map(([mode,info])=>{const total=C.eligible(routeGames(),scope,mode).length,count=done(mode);return `<button class="mode-card" data-mode="${mode}" ${total?"":"disabled"}>${modeImage(mode)}<span class="mode-body"><h3>${info.title}</h3><p>${info.description}</p><span class="mode-progress">${count} / ${total} retos terminados en ${routes[selectedRoute].title}</span><span class="progress-track"><span style="width:${total?count/total*100:0}%"></span></span><span class="mode-cta">${!total?"Sin partidos para este reto":count===total?"Repetir reto":count?"Seguir jugando":"Jugar"}<span aria-hidden="true">→</span></span></span></button>`;}).join("")}</div></section>
+      <section aria-label="Elegir desafío"><div class="club-picker"><div><span class="eyebrow">02 · ELEGÍ CÓMO JUGAR</span><h2>Tu próximo reto</h2><p class="muted">Podés cambiar de reto entre partidos. Los 0–0 no participan en goleadores.</p></div><div class="challenge-tools"><button class="secondary random-play" data-action="random-play">⇄ Retos aleatorios</button><button class="back" data-action="archive">Ver partidos jugados ↗</button></div></div><p class="random-note muted">Dejá que el juego elija el reto y el partido de tu recorrido.</p><div class="mode-grid">${Object.entries(modes).map(([mode,info])=>{const total=C.eligible(routeGames(),scope,mode).length,count=done(mode);return `<button class="mode-card" data-mode="${mode}" ${total?"":"disabled"}>${modeImage(mode)}<span class="mode-body"><h3>${info.title}</h3><p>${info.description}</p><span class="mode-progress">${count} / ${total} retos terminados en ${routes[selectedRoute].title}</span><span class="progress-track"><span style="width:${total?count/total*100:0}%"></span></span><span class="mode-cta">${!total?"Sin partidos para este reto":count===total?"Repetir reto":count?"Seguir jugando":"Jugar"}<span aria-hidden="true">→</span></span></span></button>`;}).join("")}</div></section>
       <details class="coming"><summary>Ver los ${stats.total} partidos de ${routes[selectedRoute].title}</summary><div>${routeGames().map(match=>`<p>${records().some(e=>e.matchId===match.id)?"✓ ":""}${escape(match.date)} · ${escape(match.home)} — ${escape(match.away)}</p>`).join("")}</div></details>${localNote}`;
   }
   function showQuickPlay() {
@@ -170,7 +170,7 @@
     dialog.setAttribute("aria-labelledby","quick-play-title");
     const tournament=journeyIndex.find(c=>c.id==="apertura-2026");
     const clubNames=[...new Map(tournament.matches.flatMap(m=>[[m.homeSlug,m.home],[m.awaySlug,m.away]])).entries()].sort((a,b)=>a[1].localeCompare(b[1],"es"));
-    dialog.innerHTML=`<form id="quick-play-form"><div class="dialog-heading"><span class="eyebrow">DIRECTO A LA CANCHA</span><button type="button" class="back" data-close-quick aria-label="Cerrar">✕</button></div><h2 id="quick-play-title">¿Qué jugamos?</h2><label>Campaña<select id="quick-collection" name="collection"><optgroup label="Torneo argentino"><option value="apertura-2026">Apertura 2026</option></optgroup><optgroup label="Campañas históricas">${catalog.map(item=>`<option value="${escape(item.id)}">${escape(item.title)}</option>`).join("")}</optgroup></select></label><label id="quick-club-label">Equipo<select id="quick-club" name="club"><option value="all">Todos los equipos</option>${clubNames.map(([slug,name])=>`<option value="${escape(slug)}">${escape(name)}</option>`).join("")}</select></label><div class="quick-options"><label>Recorrido<select id="quick-route" name="route">${Object.entries(routes).map(([key,info])=>`<option value="${key}">${info.title}</option>`).join("")}</select></label><label>Reto<select id="quick-mode" name="mode">${Object.entries(modes).map(([key,info])=>`<option value="${key}">${info.title}</option>`).join("")}</select></label></div><p class="quick-summary muted" role="status"></p><button class="primary quick-submit">Jugar ahora →</button></form>`;
+    dialog.innerHTML=`<form id="quick-play-form"><div class="dialog-heading"><span class="eyebrow">DIRECTO A LA CANCHA</span><button type="button" class="back" data-close-quick aria-label="Cerrar">✕</button></div><h2 id="quick-play-title">¿Qué jugamos?</h2><label>Campaña<select id="quick-collection" name="collection"><optgroup label="Torneo argentino"><option value="apertura-2026">Apertura 2026</option></optgroup><optgroup label="Campañas históricas">${catalog.map(item=>`<option value="${escape(item.id)}">${escape(item.title)}</option>`).join("")}</optgroup></select></label><label id="quick-club-label">Equipo<select id="quick-club" name="club"><option value="all">Todos los equipos</option>${clubNames.map(([slug,name])=>`<option value="${escape(slug)}">${escape(name)}</option>`).join("")}</select></label><div class="quick-options"><label>Recorrido<select id="quick-route" name="route">${Object.entries(routes).map(([key,info])=>`<option value="${key}">${info.title}</option>`).join("")}</select></label><label>Reto<select id="quick-mode" name="mode"><option value="random">Retos aleatorios</option>${Object.entries(modes).map(([key,info])=>`<option value="${key}">${info.title}</option>`).join("")}</select></label></div><p class="quick-summary muted" role="status"></p><button class="primary quick-submit">Jugar ahora →</button></form>`;
     document.body.append(dialog);
     const select=id=>dialog.querySelector("#quick-"+id);
     select("collection").value=current.collectionId;select("club").value=current.club;
@@ -180,10 +180,10 @@
       const item=journeyIndex.find(c=>c.id===select("collection").value), club=item.clubSlug||select("club").value;
       dialog.querySelector("#quick-club-label").hidden=!!item.clubSlug;
       const matches=C.routeMatches(item.matches,club,select("route").value);
-      for(const option of select("mode").options) option.disabled=!matches.some(m=>m.modes.includes(option.value));
+      for(const option of select("mode").options) option.disabled=!matches.some(m=>option.value==="random" ? m.modes.length : m.modes.includes(option.value));
       if(select("mode").selectedOptions[0].disabled) select("mode").value=[...select("mode").options].find(o=>!o.disabled).value;
-      const available=matches.filter(m=>m.modes.includes(select("mode").value)).length;
-      const note=select("mode").value==="formation" ? (club==="all"?"Completás los dos once.":"Completás sólo el once de tu equipo.") : "";
+      const available=matches.filter(m=>select("mode").value==="random" ? m.modes.length : m.modes.includes(select("mode").value)).length;
+      const note=select("mode").value==="formation" ? (club==="all"?"Completás los dos once.":"Completás sólo el once de tu equipo.") : select("mode").value==="random" ? "Un reto sorpresa en cada partido." : "";
       dialog.querySelector(".quick-summary").textContent=`${available} partidos disponibles para este reto. ${note}`;
     };
     dialog.querySelector("form").addEventListener("change",refresh);
@@ -223,13 +223,18 @@
     dialog.showModal();dialog.querySelector("input").focus();
   }
   function start(mode, matchId, bothTeams = false) {
-    if (!modes[mode]) return;
+    const randomPlay = mode === "random";
+    if (!randomPlay && !modes[mode]) return;
     if (!profile.get().nickname) return askNickname(()=>start(mode,matchId,bothTeams));
     profile.save({route:selectedRoute,mode});
+    const seen = records();
+    const randomPick = randomPlay ? C.randomChallenge(matchId ? scoped().filter(m=>m.id===matchId) : routeGames(),seen,round?.match.id) : null;
+    if (randomPlay && !randomPick) return;
+    if (randomPick) mode = randomPick.mode;
     const options = C.eligible(matchId ? scoped() : routeGames(), scope, mode);
     if (!options.length) return;
-    const seen = records();
     const chosen =
+      randomPick?.match ||
       options.find((match) => match.id === matchId) ||
       options.find((match) => !seen.some((entry) => entry.matchId === match.id)) ||
       options.find(
@@ -241,10 +246,11 @@
         .filter((entry) => scoped().some((match) => match.id === entry.matchId))
         .map((entry) => entry.matchId),
     ).size;
-    activity.start(data.id,scope,selectedRoute,mode);
+    activity.start(data.id,scope,selectedRoute,randomPlay ? "random" : mode);
     const formationSides = C.formationSides(chosen,bothTeams ? "all" : scope);
     round = {
       mode,
+      randomPlay,
       match: chosen,
       points: 0,
       solved: new Set(),
@@ -310,11 +316,11 @@
       name = match[side],
       slug = match[side + "Slug"],
       players = match[side + "XI"];
-    let body = players.map((player, index) => playerRow(player, side, index, reference)).join("");
+    let body = C.orderedLineup(players).map(({player, index}) => playerRow(player, side, index, reference)).join("");
     if (round.mode === "result" && match.availability?.formation === false)
       body = '<li class="player-row muted">La formación completa no está disponible en esta ficha. Podés jugar a recordar el resultado.</li>';
     if (round.mode === "scorers") {
-      const candidates = C.scorerCandidates(match).filter((player) => player.team === name);
+      const candidates = C.orderedLineup(C.scorerCandidates(match).filter((player) => player.team === name)).map(row=>row.player);
       body = candidates
         .filter((player) => !player.substitute && !player.rosterUnknown)
         .map(scorerRow)
@@ -333,7 +339,7 @@
     if (round.mode !== "formation" || round.formationSides.length === 2) return `<div class="sheets">${sheet("home")}${sheet("away")}</div>`;
     const side=round.formationSides[0], rival=side==="home"?"away":"home";
     const showcase=round.match.id==="espn-528144" && !round.completed && !round.solved.size && !Object.keys(round.hints).length && !round.rivalSeen;
-    return `<div class="sheets single-team">${sheet(side)}<aside class="rival-reference"><span class="eyebrow">EL RIVAL, COMO REFERENCIA</span><p class="muted">No hace falta completar la formación de ${escape(round.match[rival])}. Podés consultarla sin gastar ayudas ni puntos.</p><button class="secondary" data-action="toggle-rival" aria-expanded="${round.showRival}" aria-controls="rival-sheet">${round.showRival?"Ocultar rival":"Ver rival"}</button>${showcase?'<button class="text-button" data-action="both-teams">Final de Madrid: jugar ambos once →</button>':""}<div id="rival-sheet" ${round.showRival?"":"hidden"}>${round.showRival?sheet(rival,true):""}</div></aside></div>`;
+    return `<div class="lineup-toolbar"><span class="muted">Tu once · ${escape(round.match[side])}</span><div><button class="secondary" data-action="toggle-rival" aria-expanded="${round.showRival}" aria-controls="rival-sheet">${round.showRival?"Ocultar rival":"Ver rival"}</button>${showcase?'<button class="text-button" data-action="both-teams">Final de Madrid: jugar ambos once →</button>':""}</div></div><div class="sheets ${round.showRival?"with-rival":"single-team"}">${sheet(side)}<div id="rival-sheet" ${round.showRival?"":"hidden"}>${round.showRival?sheet(rival,true):""}</div></div>${round.showRival?'<p class="rival-note muted">El rival es una referencia: no tenés que completarlo ni consume ayudas o puntos.</p>':""}`;
   }
   function renderRound(message = "", tone = "") {
     const match = round.match,
@@ -356,7 +362,7 @@
           ? "Tocá un jugador una vez por cada gol. Podés quitar goles con −. Acertar suma 20 puntos; con ayudas: 14, 8 o 0. Un error resta 5."
           : "Ingresá el marcador al final del partido (incluye alargue, no la tanda de penales). Acertar suma 20 puntos; un error resta 5.";
     const status = routeStats();
-    app.innerHTML = `<div class="section-bar"><button class="back" data-action="home">← Cambiar desafío</button>${profileNav()}</div><div class="game-top"><div><span class="eyebrow">${escape(data.title)} · ${escape(scopeName())}</span><h1>${info.title}</h1></div><div class="points" aria-label="Puntos de esta partida">${round.points} pts</div></div>
+    app.innerHTML = `<div class="section-bar"><button class="back" data-action="home">← Cambiar desafío</button>${profileNav()}</div><div class="game-top"><div><span class="eyebrow">${escape(data.title)} · ${escape(scopeName())}</span><h1>${info.title}</h1>${round.randomPlay?'<span class="random-label">⇄ Retos aleatorios</span>':""}</div><div class="points" aria-label="Puntos de esta partida">${round.points} pts</div></div>
       <div class="journey-strip"><span>${routes[selectedRoute].title} · ${status.done} / ${status.total} partidos terminados${status.complete ? " · ✓ Medalla obtenida" : ""}</span><button class="back" data-action="archive">Mi archivo ↗</button></div>
       <section class="match-board" aria-label="Partido"><p class="match-date">${escape(match.date)}</p><div class="scoreboard"><div class="score-team">${crest(match.homeSlug, "")}<span>${escape(match.home)}</span></div><strong class="score-value">${round.mode === "result" && !round.completed ? "? — ?" : escape(match.score)}</strong><div class="score-team away">${crest(match.awaySlug, "")}<span>${escape(match.away)}</span></div></div><p class="venue">${escape(match.stadium)}${round.mode !== "result" || round.completed ? ` · ${escape(match.zone)}` : ""}</p></section>
       <p class="rules-strip">${rules}</p>
@@ -466,12 +472,13 @@
     app.innerHTML=`<div class="section-bar"><button class="back" data-action="library">← Todas las campañas</button><div class="profile-nav"><button class="primary" data-action="quick-play">Jugar →</button><button class="back" data-action="profile">${profile.get().nickname?"Cambiar apodo":"Elegir apodo"}</button></div></div>
       <section class="medal-hero"><span class="eyebrow">TU HISTORIA EN LA TRIBUNA</span><h1>Mis campañas</h1><p>${profile.get().nickname?`${escape(profile.get().nickname)}, tu memoria tiene premio.`:"Tu próxima medalla empieza con un partido."}</p><div class="hero-tags"><span class="tag">${totalPoints} PUNTOS · MEJORES MARCAS</span><span class="tag">${medalCount} ${medalCount===1?"MEDALLA":"MEDALLAS"} EN ESTA VISTA</span></div></section>
       ${personal.length?`<div class="medal-filters"><label>Club<select id="medal-club"><option value="all">Todos mis clubes</option>${allClubs.map(([slug,name])=>`<option value="${escape(slug)}" ${medalClub===slug?"selected":""}>${escape(name)}</option>`).join("")}</select></label><label>Recorrido<select id="medal-route">${Object.entries(routes).map(([key,info])=>`<option value="${key}" ${medalRoute===key?"selected":""}>${info.title}</option>`).join("")}</select></label><label>Estado<select id="medal-state">${[["all","Todos"],["started","En juego"],["complete","Completadas"]].map(([key,name])=>`<option value="${key}" ${medalState===key?"selected":""}>${name}</option>`).join("")}</select></label></div><p class="muted medal-explanation">Sólo las campañas que empezaste. Terminá un reto por partido para ganar cada medalla. Los puntos conservan tu mejor marca.</p>`:""}
-      <div class="medal-grid">${visible.map(({item,medals,current,state,club})=>`<article class="medal-card ${state}" data-medal-collection="${escape(item.id)}" data-medal-club="${escape(club)}"><div class="medal-card-heading">${item.clubSlug||club!=="all"?crest(item.clubSlug||club,""): '<span class="tournament-monogram" aria-hidden="true">26</span>'}<span class="medal-state">${state==="complete"?"✓ Completada":"En juego"}</span></div><h2>${escape(item.title)}</h2>${!item.clubSlug?`<p class="muted">${escape(tournamentNames.get(club)||"Todos los equipos")}</p>`:""}<div class="medal-badges">${medals.map(m=>`<span class="medal-badge ${m.complete?"earned":m.done?"started":""}" title="${routes[m.key].title}: ${m.done} de ${m.total} partidos"><b aria-hidden="true">${m.complete?"✓":routes[m.key].mark}</b><span>${routes[m.key].title}</span><small>${m.done}/${m.total}</small></span>`).join("")}</div><p class="muted">${routes[medalRoute].title} · ${current.done} de ${current.total} partidos</p><span class="progress-track"><span style="width:${current.total?100*current.done/current.total:0}%"></span></span><button class="secondary" data-medal-open="${escape(item.id)}" data-scope="${escape(club)}">${current.complete?"Ver campaña":"Continuar"} →</button></article>`).join("")}</div>${visible.length?"":personal.length?'<div class="empty-state"><h2>Todavía no hay campañas con este filtro</h2><p class="muted">Cambiá el estado o elegí otro recorrido.</p></div>':'<div class="empty-state"><h2>Tu primera campaña te espera</h2><p class="muted">Cuando empieces a jugar, la vas a encontrar acá.</p><button class="primary" data-action="quick-play">Jugar ahora →</button></div>'}${localNote}`;
+      <div class="medal-grid">${visible.map(({item,medals,current,state,club})=>`<article class="medal-card ${state}" data-medal-collection="${escape(item.id)}" data-medal-club="${escape(club)}"><div class="medal-card-heading">${item.clubSlug||club!=="all"?crest(item.clubSlug||club,""): '<span class="tournament-monogram" aria-hidden="true">26</span>'}<span class="medal-state">${state==="complete"?"✓ Completada":"En juego"}</span></div><h2>${escape(item.title)}</h2>${!item.clubSlug?`<p class="muted">${escape(tournamentNames.get(club)||"Todos los equipos")}</p>`:""}<div class="medal-badges">${medals.map(m=>`<span class="medal-badge ${m.complete?"earned":m.done?"started":""}" title="${routes[m.key].title}: ${m.done} de ${m.total} partidos"><span class="medal-progress-label"><span>${routes[m.key].title}</span><small>${m.complete?"✓ Completado":`${m.done} / ${m.total} partidos`}</small></span><span class="medal-track" aria-hidden="true"><span style="width:${m.total?100*m.done/m.total:0}%"></span></span></span>`).join("")}</div><button class="secondary" data-medal-open="${escape(item.id)}" data-scope="${escape(club)}">${current.complete?"Ver campaña":`Continuar ${routes[medalRoute].title.toLowerCase()}`} →</button></article>`).join("")}</div>${visible.length?"":personal.length?'<div class="empty-state"><h2>Todavía no hay campañas con este filtro</h2><p class="muted">Cambiá el estado o elegí otro recorrido.</p></div>':'<div class="empty-state"><h2>Tu primera campaña te espera</h2><p class="muted">Cuando empieces a jugar, la vas a encontrar acá.</p><button class="primary" data-action="quick-play">Jugar ahora →</button></div>'}${localNote}`;
     focusMain();
   }
   function nextRound() {
     const stats=routeStats(), mode=round.mode, previous=round.match.id;
     if(stats.complete) { medalClub=scope;medalRoute=selectedRoute;medalState="all";return showMedals(); }
+    if(round.randomPlay) return start("random");
     const available=C.eligible(stats.remaining,scope,mode);
     if(available.length) {
       const index=available.findIndex(m=>m.id===previous);
@@ -517,6 +524,7 @@
     if (button.dataset.mode) return start(button.dataset.mode);
     if (button.dataset.replay) return start(button.dataset.replayMode, button.dataset.replay);
     const action = button.dataset.action;
+    if(action==="random-play") return start("random");
     if(action==="quick-play") return showQuickPlay();
     if(action==="profile") return askNickname(null);
     if(action==="medals") return showMedals();

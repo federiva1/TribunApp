@@ -161,6 +161,41 @@
   function matchModes(match) {
     return match.modes || ["formation", "scorers", "result"].filter(function (mode) { return eligible([match], "all", mode).length; });
   }
+  function positionRank(position) {
+    var code = String(position || "").toUpperCase();
+    var groups = [
+      ["G", "GK", "ARQ"],
+      ["D", "DF", "DEF", "CD", "CD-L", "CD-R", "LB", "RB", "SW", "LWB", "RWB"],
+      ["M", "MF", "MED", "DM", "CM", "CM-L", "CM-R", "LM", "RM", "AM", "AM-L", "AM-R"],
+      ["F", "FW", "DEL", "CF", "CF-L", "CF-R", "LF", "RF", "LCF", "RCF", "LW", "RW", "ST"]
+    ];
+    return groups.findIndex(function (group) { return group.includes(code); });
+  }
+  function orderedLineup(players) {
+    // Keep source indices: hints, answers and drafts must still address the same player.
+    var rows = players.map(function (player, index) { return { player: player, index: index }; });
+    var known = rows.filter(function (row) { return positionRank(row.player.pos) >= 0; })
+      .sort(function (a, b) { return positionRank(a.player.pos) - positionRank(b.player.pos) || a.index - b.index; });
+    // The legacy tournament already follows its source's pitch order, but omits roles.
+    // Preserve those slots instead of guessing positions from shirt numbers or a 4-4-2.
+    var next = 0;
+    return rows.map(function (row) { return positionRank(row.player.pos) < 0 ? row : known[next++]; });
+  }
+  function randomChallenge(matches, entries, previousId, random) {
+    random = random || Math.random;
+    var options = matches.filter(function (match) { return matchModes(match).length; });
+    var untouched = options.filter(function (match) { return !entries.some(function (entry) { return entry.matchId === match.id; }); });
+    var pending = options.filter(function (match) { return matchModes(match).some(function (mode) {
+      return !entries.some(function (entry) { return entry.matchId === match.id && entry.mode === mode; });
+    }); });
+    options = untouched.length ? untouched : pending.length ? pending : options;
+    if (options.some(function (match) { return match.id !== previousId; })) options = options.filter(function (match) { return match.id !== previousId; });
+    if (!options.length) return null;
+    var pick = function (list) { return list[Math.min(list.length - 1, Math.max(0, Math.floor(random() * list.length)))]; };
+    var match = pick(options), available = matchModes(match);
+    var missing = available.filter(function (mode) { return !entries.some(function (entry) { return entry.matchId === match.id && entry.mode === mode; }); });
+    return { match: match, mode: pick(missing.length ? missing : available) };
+  }
   function routeStatus(matches, entries, collectionId) {
     var allowed = new Map(matches.map(function (match) { return [match.id, matchModes(match)]; }));
     var relevant = bestEntries(entries.filter(function (entry) {
@@ -207,6 +242,9 @@
     return [...played.values()].sort(function (a, b) { return b.lastPlayedAt.localeCompare(a.lastPlayedAt); });
   }
   return {
+    positionRank: positionRank,
+    orderedLineup: orderedLineup,
+    randomChallenge: randomChallenge,
     formationSides: formationSides,
     bestEntries: bestEntries,
     progressForClub: progressForClub,

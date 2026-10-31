@@ -86,7 +86,7 @@
         const value = JSON.parse(raw);
         if (!Array.isArray(value)) throw new Error("Actividad inválida");
         entries = value.filter(item => item && typeof item.collectionId === "string" && typeof item.club === "string" &&
-          ["express", "classic", "complete"].includes(item.route) && ["formation", "scorers", "result"].includes(item.mode) &&
+          ["express", "classic", "complete"].includes(item.route) && ["formation", "scorers", "result", "random"].includes(item.mode) &&
           typeof item.startedAt === "string" && Number.isFinite(Date.parse(item.startedAt)));
       }
     } catch (error) { onError(error); }
@@ -106,7 +106,7 @@
     const clean = (input) => ({
       nickname: typeof input?.nickname === "string" ? [...input.nickname.replace(/[\u0000-\u001f\u007f]/g, "").trim()].slice(0, 24).join("") : "",
       route: ["express", "classic", "complete"].includes(input?.route) ? input.route : "express",
-      mode: ["formation", "scorers", "result"].includes(input?.mode) ? input.mode : "formation",
+      mode: ["formation", "scorers", "result", "random"].includes(input?.mode) ? input.mode : "formation",
     });
     try { const raw = storage.getItem(PROFILE_KEY); if (raw) value = clean(JSON.parse(raw)); }
     catch (error) { onError(error); }
