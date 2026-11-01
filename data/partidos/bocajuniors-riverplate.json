@@ -1,0 +1,1592 @@
+{
+  "partido": {
+    "local": "bocajuniors",
+    "visitante": "riverplate",
+    "local_nombre": "Boca Juniors",
+    "visitante_nombre": "River Plate",
+    "goles_local": 1,
+    "goles_visitante": 0,
+    "fecha": "2026-11-01",
+    "fecha_num": 15,
+    "ronda": null,
+    "estadio": "Alberto J. Armando, Buenos Aires",
+    "competicion": "Clausura 2026",
+    "api_id": "1493214",
+    "goles_detalle": {
+      "local": [
+        {
+          "min": 27,
+          "jugador": "Lautaro Di Lollo",
+          "asist": "Sebastián Villa"
+        }
+      ],
+      "visitante": []
+    },
+    "formacion": {
+      "bocajuniors": "4-3-3",
+      "riverplate": "4-3-1-2"
+    }
+  },
+  "top_stats": [
+    {
+      "label": "Posesion",
+      "local": 71,
+      "visitante": 29,
+      "tipo": "posesion",
+      "local_val": 71,
+      "visitante_val": 29
+    },
+    {
+      "label": "xG",
+      "local": 1.19,
+      "visitante": 0.11,
+      "tipo": "numero",
+      "local_val": 1.19,
+      "visitante_val": 0.11
+    },
+    {
+      "label": "Tiros totales",
+      "local": 16,
+      "visitante": 3,
+      "tipo": "numero",
+      "local_val": 16,
+      "visitante_val": 3
+    },
+    {
+      "label": "Tiros al arco",
+      "local": 6,
+      "visitante": 0,
+      "tipo": "numero",
+      "local_val": 6,
+      "visitante_val": 0
+    },
+    {
+      "label": "Toques en area rival",
+      "local": 16,
+      "visitante": 5,
+      "tipo": "numero",
+      "local_val": 16,
+      "visitante_val": 5
+    },
+    {
+      "label": "Corners",
+      "local": 10,
+      "visitante": 2,
+      "tipo": "numero",
+      "local_val": 10,
+      "visitante_val": 2
+    },
+    {
+      "label": "Faltas",
+      "local": 17,
+      "visitante": 8,
+      "tipo": "numero",
+      "local_val": 17,
+      "visitante_val": 8
+    },
+    {
+      "label": "Tarjetas amarillas",
+      "local": 7,
+      "visitante": 2,
+      "tipo": "numero",
+      "local_val": 7,
+      "visitante_val": 2
+    },
+    {
+      "label": "Tarjetas rojas",
+      "local": 0,
+      "visitante": 2,
+      "tipo": "numero",
+      "local_val": 0,
+      "visitante_val": 2
+    },
+    {
+      "label": "Pases precisos",
+      "local": "440 (86%)",
+      "visitante": "144 (67%)",
+      "tipo": "texto",
+      "local_val": 86,
+      "visitante_val": 67
+    }
+  ],
+  "jugadores": {
+    "bocajuniors": [
+      {
+        "nombre": "Á. Montero",
+        "id": 2481,
+        "tipo": "titular",
+        "portero": true,
+        "mvp": false,
+        "num": "1",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "acc_defensivas": 2,
+          "pases_precisos": 14
+        },
+        "ataque": {
+          "toques": 23,
+          "pases_ultimo_tercio": 2,
+          "tiros_largos": 4
+        },
+        "defensa": {
+          "acc_defensivas": 2,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 5,
+          "despejes": 2
+        },
+        "duelos": {
+          "faltas": 0
+        },
+        "portero_stats": {
+          "paradas": 0,
+          "goles_contra": 0,
+          "goles_evitados": null
+        },
+        "pos": {
+          "x": 10.0,
+          "y": 50.0
+        }
+      },
+      {
+        "nombre": "L. Lozano",
+        "id": 51332,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "17",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 7,
+          "pases_precisos": 41
+        },
+        "ataque": {
+          "toques": 74,
+          "toques_area": 0,
+          "regates": 0,
+          "pases_ultimo_tercio": 2,
+          "tiros_largos": 0,
+          "perdida_balon": 1
+        },
+        "defensa": {
+          "acc_defensivas": 7,
+          "entradas": 2,
+          "interceptaciones": 2,
+          "recuperaciones": 1,
+          "despejes": 3,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 4,
+          "perdidos": 4,
+          "terrestres": 3,
+          "aereos": 1,
+          "faltas": 2,
+          "faltas_recibidas": 1,
+          "terrestres_tot": 7,
+          "aereos_tot": 1
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 35.7,
+          "y": 87.5
+        }
+      },
+      {
+        "nombre": "L. Di Lollo",
+        "id": 369412,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": true,
+        "num": "2",
+        "min": 90,
+        "goles": 1,
+        "asist": 0,
+        "amarilla": true,
+        "roja": false,
+        "top": {
+          "tiros_totales": 3,
+          "disparos_puerta": 1,
+          "oport_creadas": 0,
+          "acc_defensivas": 10,
+          "pases_precisos": 66
+        },
+        "ataque": {
+          "toques": 92,
+          "toques_area": 3,
+          "pases_ultimo_tercio": 8,
+          "tiros_largos": 4,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 10,
+          "entradas": 2,
+          "interceptaciones": 2,
+          "recuperaciones": 2,
+          "despejes": 6,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 5,
+          "perdidos": 1,
+          "terrestres": 2,
+          "aereos": 3,
+          "faltas": 1,
+          "terrestres_tot": 3,
+          "aereos_tot": 3
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 35.7,
+          "y": 62.5
+        }
+      },
+      {
+        "nombre": "F. Herrera",
+        "id": 560376,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "42",
+        "min": 45,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": true,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 4,
+          "pases_precisos": 26
+        },
+        "ataque": {
+          "toques": 30,
+          "toques_area": 0,
+          "tiros_largos": 2,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 4,
+          "entradas": 2,
+          "interceptaciones": 0,
+          "recuperaciones": 1,
+          "despejes": 2,
+          "regateado": 3
+        },
+        "duelos": {
+          "ganados": 3,
+          "perdidos": 4,
+          "terrestres": 2,
+          "aereos": 1,
+          "faltas": 1,
+          "terrestres_tot": 6,
+          "aereos_tot": 1
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 35.7,
+          "y": 37.5
+        }
+      },
+      {
+        "nombre": "L. Blanco",
+        "id": 289444,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "3",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": true,
+        "roja": false,
+        "top": {
+          "oport_creadas": 2,
+          "acc_defensivas": 2,
+          "pases_precisos": 35
+        },
+        "ataque": {
+          "toques": 69,
+          "toques_area": 1,
+          "regates": 0,
+          "pases_ultimo_tercio": 6,
+          "tiros_largos": 1,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 2,
+          "entradas": 1,
+          "interceptaciones": 0,
+          "recuperaciones": 2,
+          "despejes": 1,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 2,
+          "perdidos": 3,
+          "terrestres": 2,
+          "aereos": 0,
+          "faltas": 2,
+          "faltas_recibidas": 1,
+          "terrestres_tot": 5,
+          "aereos_tot": 0
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 35.7,
+          "y": 12.5
+        }
+      },
+      {
+        "nombre": "S. Ascacíbar",
+        "id": 26305,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "25",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "tiros_totales": 5,
+          "disparos_puerta": 2,
+          "oport_creadas": 0,
+          "acc_defensivas": 7,
+          "pases_precisos": 23
+        },
+        "ataque": {
+          "toques": 54,
+          "toques_area": 7,
+          "regates": 1,
+          "pases_ultimo_tercio": 3,
+          "tiros_largos": 0,
+          "perdida_balon": 2
+        },
+        "defensa": {
+          "acc_defensivas": 7,
+          "entradas": 6,
+          "interceptaciones": 1,
+          "recuperaciones": 2,
+          "despejes": 0,
+          "bloqueos": 1,
+          "regateado": 1
+        },
+        "duelos": {
+          "ganados": 12,
+          "perdidos": 5,
+          "terrestres": 8,
+          "aereos": 4,
+          "faltas": 2,
+          "faltas_recibidas": 1,
+          "terrestres_tot": 13,
+          "aereos_tot": 4
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 61.3,
+          "y": 79.0
+        }
+      },
+      {
+        "nombre": "L. Paredes",
+        "id": 271,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "5",
+        "min": 88,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": true,
+        "roja": false,
+        "top": {
+          "tiros_totales": 3,
+          "disparos_puerta": 2,
+          "oport_creadas": 1,
+          "acc_defensivas": 5,
+          "pases_precisos": 59
+        },
+        "ataque": {
+          "toques": 86,
+          "toques_area": 0,
+          "pases_ultimo_tercio": 18,
+          "tiros_largos": 3,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 5,
+          "entradas": 1,
+          "interceptaciones": 2,
+          "recuperaciones": 5,
+          "despejes": 2,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 1,
+          "perdidos": 1,
+          "terrestres": 1,
+          "aereos": 0,
+          "faltas": 1,
+          "terrestres_tot": 2,
+          "aereos_tot": 0
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 61.3,
+          "y": 50.0
+        }
+      },
+      {
+        "nombre": "M. Delgado",
+        "id": 459876,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "18",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "tiros_totales": 1,
+          "disparos_puerta": 0,
+          "oport_creadas": 1,
+          "acc_defensivas": 5,
+          "pases_precisos": 77
+        },
+        "ataque": {
+          "toques": 96,
+          "toques_area": 1,
+          "regates": 0,
+          "pases_ultimo_tercio": 8,
+          "tiros_largos": 2,
+          "perdida_balon": 1
+        },
+        "defensa": {
+          "acc_defensivas": 5,
+          "entradas": 5,
+          "interceptaciones": 0,
+          "recuperaciones": 4,
+          "despejes": 0,
+          "regateado": 2
+        },
+        "duelos": {
+          "ganados": 7,
+          "perdidos": 9,
+          "terrestres": 7,
+          "aereos": 0,
+          "faltas": 2,
+          "faltas_recibidas": 2,
+          "terrestres_tot": 14,
+          "aereos_tot": 2
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 61.3,
+          "y": 21.0
+        }
+      },
+      {
+        "nombre": "L. Flores",
+        "id": 510586,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "19",
+        "min": 62,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 2,
+          "acc_defensivas": 1,
+          "pases_precisos": 6
+        },
+        "ataque": {
+          "toques": 20,
+          "toques_area": 1,
+          "regates": 1,
+          "pases_ultimo_tercio": 1,
+          "tiros_largos": 0,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 1,
+          "entradas": 1,
+          "interceptaciones": 0,
+          "recuperaciones": 5,
+          "despejes": 0,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 2,
+          "perdidos": 7,
+          "terrestres": 2,
+          "aereos": 0,
+          "faltas": 2,
+          "terrestres_tot": 9,
+          "aereos_tot": 0
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 87.0,
+          "y": 79.0
+        }
+      },
+      {
+        "nombre": "M. Merentiel",
+        "id": 6327,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "16",
+        "min": 76,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "tiros_totales": 2,
+          "disparos_puerta": 1,
+          "oport_creadas": 1,
+          "acc_defensivas": 0,
+          "pases_precisos": 9
+        },
+        "ataque": {
+          "toques": 13,
+          "toques_area": 2,
+          "pases_ultimo_tercio": 1,
+          "tiros_largos": 1,
+          "perdida_balon": 1
+        },
+        "defensa": {
+          "acc_defensivas": 0,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 3,
+          "despejes": 0,
+          "bloqueos": 1,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 1,
+          "perdidos": 5,
+          "terrestres": 1,
+          "aereos": 0,
+          "faltas": 1,
+          "faltas_recibidas": 1,
+          "terrestres_tot": 3,
+          "aereos_tot": 3
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 87.0,
+          "y": 50.0
+        }
+      },
+      {
+        "nombre": "S. Villa",
+        "id": 2494,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "22",
+        "min": 88,
+        "goles": 0,
+        "asist": 1,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "tiros_totales": 1,
+          "disparos_puerta": 0,
+          "oport_creadas": 2,
+          "grandes_oport": 1,
+          "acc_defensivas": 1,
+          "pases_precisos": 18
+        },
+        "ataque": {
+          "toques": 34,
+          "toques_area": 1,
+          "regates": 0,
+          "pases_ultimo_tercio": 1,
+          "tiros_largos": 3,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 1,
+          "entradas": 1,
+          "interceptaciones": 0,
+          "recuperaciones": 5,
+          "despejes": 0,
+          "regateado": 1
+        },
+        "duelos": {
+          "ganados": 2,
+          "perdidos": 2,
+          "terrestres": 2,
+          "aereos": 0,
+          "faltas": 0,
+          "faltas_recibidas": 1,
+          "terrestres_tot": 4,
+          "aereos_tot": 0
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 87.0,
+          "y": 21.0
+        }
+      },
+      {
+        "nombre": "A. Costa",
+        "id": 288750,
+        "tipo": "suplente",
+        "portero": false,
+        "mvp": false,
+        "num": "32",
+        "min": 45,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": true,
+        "roja": false,
+        "top": {
+          "oport_creadas": 1,
+          "acc_defensivas": 5,
+          "pases_precisos": 20
+        },
+        "ataque": {
+          "toques": 32,
+          "toques_area": 0,
+          "pases_ultimo_tercio": 2,
+          "tiros_largos": 0,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 5,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 0,
+          "despejes": 5,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 1,
+          "perdidos": 2,
+          "terrestres": 0,
+          "aereos": 1,
+          "faltas": 1,
+          "terrestres_tot": 1,
+          "aereos_tot": 2
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "A. Velasco",
+        "id": 6092,
+        "tipo": "suplente",
+        "portero": false,
+        "mvp": false,
+        "num": "20",
+        "min": 28,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": true,
+        "roja": false,
+        "top": {
+          "tiros_totales": 1,
+          "disparos_puerta": 0,
+          "oport_creadas": 2,
+          "acc_defensivas": 2,
+          "pases_precisos": 11
+        },
+        "ataque": {
+          "toques": 22,
+          "toques_area": 0,
+          "regates": 0,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 2,
+          "entradas": 1,
+          "interceptaciones": 0,
+          "recuperaciones": 2,
+          "despejes": 1,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 2,
+          "perdidos": 2,
+          "terrestres": 2,
+          "aereos": 0,
+          "faltas": 1,
+          "faltas_recibidas": 1,
+          "terrestres_tot": 4,
+          "aereos_tot": 0
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "E. Valencia",
+        "id": 35533,
+        "tipo": "suplente",
+        "portero": false,
+        "mvp": false,
+        "num": "13",
+        "min": 14,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": true,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 0,
+          "pases_precisos": 3
+        },
+        "ataque": {
+          "toques": 4,
+          "toques_area": 0,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 0,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 1,
+          "despejes": 0,
+          "regateado": 0
+        },
+        "duelos": {
+          "perdidos": 3,
+          "terrestres": 0,
+          "aereos": 0,
+          "faltas": 1,
+          "terrestres_tot": 1,
+          "aereos_tot": 2
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "C. Palacios",
+        "id": 11463,
+        "tipo": "suplente",
+        "portero": false,
+        "mvp": false,
+        "num": "7",
+        "min": 2,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 1,
+          "acc_defensivas": 1,
+          "pases_precisos": 19
+        },
+        "ataque": {
+          "toques": 26,
+          "toques_area": 0,
+          "regates": 1,
+          "pases_ultimo_tercio": 1,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 1,
+          "entradas": 1,
+          "interceptaciones": 0,
+          "recuperaciones": 0,
+          "despejes": 0,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 3,
+          "perdidos": 1,
+          "terrestres": 2,
+          "aereos": 1,
+          "faltas": 0,
+          "terrestres_tot": 3,
+          "aereos_tot": 1
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "T. Belmonte",
+        "id": 6209,
+        "tipo": "suplente",
+        "portero": false,
+        "mvp": false,
+        "num": "8",
+        "min": 2,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 1,
+          "pases_precisos": 13
+        },
+        "ataque": {
+          "toques": 14,
+          "toques_area": 0,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 1,
+          "entradas": 1,
+          "interceptaciones": 0,
+          "recuperaciones": 1,
+          "despejes": 0,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 1,
+          "terrestres": 1,
+          "aereos": 0,
+          "faltas": 0,
+          "terrestres_tot": 1,
+          "aereos_tot": 0
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "R. Arruabarrena",
+        "id": 1146,
+        "tipo": "dt",
+        "portero": false,
+        "mvp": false,
+        "num": "",
+        "min": null,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": null,
+        "ataque": null,
+        "defensa": null,
+        "duelos": null,
+        "portero_stats": null
+      }
+    ],
+    "riverplate": [
+      {
+        "nombre": "S. Beltrán",
+        "id": 414525,
+        "tipo": "titular",
+        "portero": true,
+        "mvp": false,
+        "num": "41",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 0,
+          "pases_precisos": 1
+        },
+        "ataque": {
+          "toques": 1,
+          "toques_area": 0,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 0,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 0,
+          "despejes": 0,
+          "regateado": 0
+        },
+        "duelos": {
+          "aereos": 0,
+          "faltas": 0,
+          "aereos_tot": 0
+        },
+        "portero_stats": {
+          "paradas": null,
+          "goles_contra": 1,
+          "goles_evitados": null
+        },
+        "pos": {
+          "x": 10.0,
+          "y": 50.0
+        }
+      },
+      {
+        "nombre": "G. Montiel",
+        "id": 2468,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "29",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": true,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 5,
+          "pases_precisos": 8
+        },
+        "ataque": {
+          "toques": 23,
+          "toques_area": 0,
+          "pases_ultimo_tercio": 1,
+          "tiros_largos": 1,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 5,
+          "entradas": 3,
+          "interceptaciones": 0,
+          "recuperaciones": 1,
+          "despejes": 2,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 4,
+          "perdidos": 1,
+          "terrestres": 4,
+          "aereos": 0,
+          "faltas": 1,
+          "faltas_recibidas": 1,
+          "terrestres_tot": 5,
+          "aereos_tot": 0
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 29.2,
+          "y": 87.5
+        }
+      },
+      {
+        "nombre": "L. Martínez",
+        "id": 6000,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "28",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": true,
+        "top": null,
+        "ataque": null,
+        "defensa": null,
+        "duelos": null,
+        "portero_stats": null,
+        "pos": {
+          "x": 29.2,
+          "y": 62.5
+        }
+      },
+      {
+        "nombre": "N. Otamendi",
+        "id": 624,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "30",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 11,
+          "pases_precisos": 26
+        },
+        "ataque": {
+          "toques": 48,
+          "toques_area": 1,
+          "pases_ultimo_tercio": 6,
+          "tiros_largos": 0,
+          "perdida_balon": 1
+        },
+        "defensa": {
+          "acc_defensivas": 11,
+          "entradas": 1,
+          "interceptaciones": 0,
+          "recuperaciones": 1,
+          "despejes": 9,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 8,
+          "perdidos": 2,
+          "terrestres": 3,
+          "aereos": 5,
+          "faltas": 1,
+          "faltas_recibidas": 2,
+          "terrestres_tot": 5,
+          "aereos_tot": 5
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 29.2,
+          "y": 37.5
+        }
+      },
+      {
+        "nombre": "M. Acuña",
+        "id": 1493,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "21",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": true,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 2,
+          "pases_precisos": 17
+        },
+        "ataque": {
+          "toques": 42,
+          "toques_area": 0,
+          "pases_ultimo_tercio": 10,
+          "tiros_largos": 4,
+          "perdida_balon": 1
+        },
+        "defensa": {
+          "acc_defensivas": 2,
+          "entradas": 2,
+          "interceptaciones": 0,
+          "recuperaciones": 3,
+          "despejes": 0,
+          "regateado": 1
+        },
+        "duelos": {
+          "ganados": 3,
+          "perdidos": 4,
+          "terrestres": 3,
+          "aereos": 0,
+          "faltas": 1,
+          "faltas_recibidas": 1,
+          "terrestres_tot": 6,
+          "aereos_tot": 1
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 29.2,
+          "y": 12.5
+        }
+      },
+      {
+        "nombre": "T. Andrada",
+        "id": 516771,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "50",
+        "min": 71,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 4,
+          "pases_precisos": 13
+        },
+        "ataque": {
+          "toques": 33,
+          "toques_area": 0,
+          "regates": 1,
+          "pases_ultimo_tercio": 2,
+          "tiros_largos": 0,
+          "perdida_balon": 1
+        },
+        "defensa": {
+          "acc_defensivas": 4,
+          "entradas": 2,
+          "interceptaciones": 1,
+          "recuperaciones": 4,
+          "despejes": 1,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 6,
+          "perdidos": 4,
+          "terrestres": 6,
+          "aereos": 0,
+          "faltas": 3,
+          "faltas_recibidas": 3,
+          "terrestres_tot": 10,
+          "aereos_tot": 0
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 48.5,
+          "y": 79.0
+        }
+      },
+      {
+        "nombre": "L. Silva",
+        "id": 657681,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "44",
+        "min": 45,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 2,
+          "pases_precisos": 12
+        },
+        "ataque": {
+          "toques": 22,
+          "toques_area": 0,
+          "pases_ultimo_tercio": 1,
+          "tiros_largos": 0,
+          "perdida_balon": 2
+        },
+        "defensa": {
+          "acc_defensivas": 2,
+          "entradas": 2,
+          "interceptaciones": 0,
+          "recuperaciones": 1,
+          "despejes": 0,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 3,
+          "perdidos": 2,
+          "terrestres": 2,
+          "aereos": 1,
+          "faltas": 0,
+          "terrestres_tot": 4,
+          "aereos_tot": 1
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 48.5,
+          "y": 50.0
+        }
+      },
+      {
+        "nombre": "T. Galván",
+        "id": 265912,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "26",
+        "min": 85,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "tiros_totales": 1,
+          "disparos_puerta": 0,
+          "oport_creadas": 0,
+          "acc_defensivas": 1,
+          "pases_precisos": 11
+        },
+        "ataque": {
+          "toques": 30,
+          "toques_area": 1,
+          "pases_ultimo_tercio": 2,
+          "tiros_largos": 0,
+          "perdida_balon": 2
+        },
+        "defensa": {
+          "acc_defensivas": 1,
+          "entradas": 1,
+          "interceptaciones": 0,
+          "recuperaciones": 1,
+          "despejes": 0,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 6,
+          "perdidos": 4,
+          "terrestres": 6,
+          "aereos": 0,
+          "faltas": 0,
+          "faltas_recibidas": 5,
+          "terrestres_tot": 8,
+          "aereos_tot": 2
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 48.5,
+          "y": 21.0
+        }
+      },
+      {
+        "nombre": "T. Almada",
+        "id": 6067,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "23",
+        "min": 71,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "tiros_totales": 2,
+          "disparos_puerta": 0,
+          "oport_creadas": 0,
+          "acc_defensivas": 2,
+          "pases_precisos": 14
+        },
+        "ataque": {
+          "toques": 28,
+          "toques_area": 1,
+          "regates": 0,
+          "pases_ultimo_tercio": 3,
+          "tiros_largos": 0,
+          "perdida_balon": 2
+        },
+        "defensa": {
+          "acc_defensivas": 2,
+          "entradas": 2,
+          "interceptaciones": 0,
+          "recuperaciones": 2,
+          "despejes": 0,
+          "regateado": 1
+        },
+        "duelos": {
+          "ganados": 3,
+          "perdidos": 6,
+          "terrestres": 3,
+          "aereos": 0,
+          "faltas": 1,
+          "faltas_recibidas": 1,
+          "terrestres_tot": 8,
+          "aereos_tot": 1
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 67.8,
+          "y": 50.0
+        }
+      },
+      {
+        "nombre": "Á. Correa",
+        "id": 53,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "10",
+        "min": 90,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 5,
+          "pases_precisos": 8
+        },
+        "ataque": {
+          "toques": 40,
+          "toques_area": 1,
+          "regates": 5,
+          "tiros_largos": 1,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 5,
+          "entradas": 0,
+          "interceptaciones": 1,
+          "recuperaciones": 4,
+          "despejes": 4,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 7,
+          "perdidos": 10,
+          "terrestres": 6,
+          "aereos": 1,
+          "faltas": 0,
+          "faltas_recibidas": 1,
+          "terrestres_tot": 15,
+          "aereos_tot": 2
+        },
+        "portero_stats": null,
+        "pos": {
+          "x": 87.0,
+          "y": 70.0
+        }
+      },
+      {
+        "nombre": "L. Beltrán",
+        "id": 6010,
+        "tipo": "titular",
+        "portero": false,
+        "mvp": false,
+        "num": "18",
+        "min": 13,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": null,
+        "ataque": null,
+        "defensa": null,
+        "duelos": null,
+        "portero_stats": null,
+        "pos": {
+          "x": 87.0,
+          "y": 30.0
+        }
+      },
+      {
+        "nombre": "L. Rivero",
+        "id": 463851,
+        "tipo": "suplente",
+        "portero": false,
+        "mvp": false,
+        "num": "13",
+        "min": 77,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 10,
+          "pases_precisos": 12
+        },
+        "ataque": {
+          "toques": 34,
+          "toques_area": 0,
+          "pases_ultimo_tercio": 4,
+          "tiros_largos": 2,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 10,
+          "entradas": 1,
+          "interceptaciones": 2,
+          "recuperaciones": 1,
+          "despejes": 6,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 3,
+          "perdidos": 3,
+          "terrestres": 2,
+          "aereos": 1,
+          "faltas": 0,
+          "faltas_recibidas": 1,
+          "terrestres_tot": 2,
+          "aereos_tot": 4
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "L. Pereyra",
+        "id": 642174,
+        "tipo": "suplente",
+        "portero": false,
+        "mvp": false,
+        "num": "25",
+        "min": 45,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 1,
+          "pases_precisos": 7
+        },
+        "ataque": {
+          "toques": 16,
+          "toques_area": 1,
+          "regates": 0,
+          "pases_ultimo_tercio": 1,
+          "tiros_largos": 0,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 1,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 0,
+          "despejes": 1,
+          "regateado": 0
+        },
+        "duelos": {
+          "perdidos": 4,
+          "terrestres": 0,
+          "aereos": 0,
+          "faltas": 0,
+          "terrestres_tot": 2,
+          "aereos_tot": 2
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "S. Driussi",
+        "id": 1222,
+        "tipo": "suplente",
+        "portero": false,
+        "mvp": false,
+        "num": "9",
+        "min": 19,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 3,
+          "pases_precisos": 3
+        },
+        "ataque": {
+          "toques": 11,
+          "toques_area": 0,
+          "regates": 1,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 3,
+          "entradas": 1,
+          "interceptaciones": 0,
+          "recuperaciones": 0,
+          "despejes": 2,
+          "regateado": 0
+        },
+        "duelos": {
+          "ganados": 3,
+          "perdidos": 3,
+          "terrestres": 3,
+          "aereos": 0,
+          "faltas": 0,
+          "faltas_recibidas": 1,
+          "terrestres_tot": 5,
+          "aereos_tot": 1
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "J. Meza",
+        "id": 472567,
+        "tipo": "suplente",
+        "portero": false,
+        "mvp": false,
+        "num": "24",
+        "min": 19,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 2,
+          "pases_precisos": 1
+        },
+        "ataque": {
+          "toques": 12,
+          "toques_area": 0,
+          "pases_ultimo_tercio": 3,
+          "tiros_largos": 0,
+          "perdida_balon": 1
+        },
+        "defensa": {
+          "acc_defensivas": 2,
+          "entradas": 2,
+          "interceptaciones": 0,
+          "recuperaciones": 0,
+          "despejes": 0,
+          "regateado": 1
+        },
+        "duelos": {
+          "ganados": 2,
+          "perdidos": 2,
+          "terrestres": 2,
+          "aereos": 0,
+          "faltas": 0,
+          "terrestres_tot": 4,
+          "aereos_tot": 0
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "G. González",
+        "id": 2610,
+        "tipo": "suplente",
+        "portero": false,
+        "mvp": false,
+        "num": "20",
+        "min": 5,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": {
+          "oport_creadas": 0,
+          "acc_defensivas": 1,
+          "pases_precisos": 1
+        },
+        "ataque": {
+          "toques": 4,
+          "toques_area": 0,
+          "pases_ultimo_tercio": 1,
+          "perdida_balon": 0
+        },
+        "defensa": {
+          "acc_defensivas": 1,
+          "entradas": 0,
+          "interceptaciones": 0,
+          "recuperaciones": 0,
+          "despejes": 1,
+          "regateado": 0
+        },
+        "duelos": {
+          "aereos": 0,
+          "faltas": 0,
+          "aereos_tot": 0
+        },
+        "portero_stats": null
+      },
+      {
+        "nombre": "Leonardo Ponzio",
+        "id": 0,
+        "tipo": "dt",
+        "portero": false,
+        "mvp": false,
+        "num": "",
+        "min": null,
+        "goles": 0,
+        "asist": 0,
+        "amarilla": false,
+        "roja": false,
+        "top": null,
+        "ataque": null,
+        "defensa": null,
+        "duelos": null,
+        "portero_stats": null
+      }
+    ]
+  },
+  "top_stats_fuente": "fotmob"
+}
