@@ -224,6 +224,30 @@ def _nombre(slug, fallback):
     return (NOM.get(slug) or fallback or '').upper()
 
 
+_PARTICULAS = {'de', 'del', 'la', 'las', 'los', 'da', 'das', 'do', 'dos', 'di', 'van', 'von', 'der'}
+
+
+def _apellido(nombre):
+    """Solo el apellido del goleador (pedido de Fede): 'Juan Cruz Policella' ->
+    'Policella', 'A. Cuello' -> 'Cuello', 'Rodrigo De Paul' -> 'De Paul'.
+    Con 3+ palabras y anteúltima en -ez se toma doble apellido ('Agustín Álvarez
+    Martínez' -> 'Álvarez Martínez'). Conserva el sufijo ' (e/c)' / ' (p)'."""
+    nombre = (nombre or '').strip()
+    suf = ''
+    m = re.search(r'\s*\((e/c|p)\)$', nombre)
+    if m:
+        suf, nombre = ' ' + m.group(0).strip(), nombre[:m.start()]
+    t = [x for x in re.split(r'[\s·]+', nombre) if x and not x.endswith('.')]
+    if len(t) <= 1:
+        return (t[0] if t else nombre) + suf
+    i = len(t) - 1
+    if len(t) >= 3 and t[i - 1].lower().endswith('ez'):
+        i -= 1
+    while i > 1 and t[i - 1].lower() in _PARTICULAS:
+        i -= 1
+    return ' '.join(t[i:]) + suf
+
+
 def _html(pl):
     ff = ''.join(
         "@font-face{font-family:'%s';font-weight:%s;src:url(%s) format('woff2');}"
@@ -239,7 +263,7 @@ def _html(pl):
     filas = ''.join(
         '<div class="gol"><span class="min">%s\'</span><span class="ball">%s</span>'
         '<span class="quien">%s</span>%s</div>'
-        % (g['min'], BALL, (g['jugador'] or '').upper(), esc_tag(g['slug'], 'mini'))
+        % (g['min'], BALL, _apellido(g['jugador']).upper(), esc_tag(g['slug'], 'mini'))
         for g in pl['goles'])
     caja = f'<div class="goles">{filas}</div>' if filas else ''
     pen = pl.get('pen') or {}

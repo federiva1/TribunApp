@@ -114,6 +114,7 @@ python scripts/social_resultado.py           # genera
 - Ventana: partidos que arrancaron hace **entre 100 y 300 minutos**.
 - Toma el estado de api-sports por `fixtures?id=`, que marca FT al toque.
 - Sale en `data/social/preview/ft-{api_id}-{local}-{visitante}.png`.
+- Los goleadores van **solo con el apellido** (`_apellido`: 'Juan Cruz Policella' → POLICELLA, 'A. Cuello' → CUELLO, 'Rodrigo De Paul' → DE PAUL; con 3+ palabras y anteúltima en -ez toma doble apellido, 'Agustín Álvarez Martínez' → ÁLVAREZ MARTÍNEZ). Si un apellido compuesto sale mal, corregirlo ahí.
 - Marca el partido como posteado en `data/social/resultados_posted.json`, así que no
   lo regenera. Para rehacerlo hay que sacar la entrada de ese archivo.
 - **Ojo con el orden**: la placa invita a puntuar, así que conviene **cerrar el
