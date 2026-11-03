@@ -111,10 +111,12 @@ def payload_desde_json(pid):
     d = json.loads((ROOT / 'data' / 'partidos' / f'{pid}.json').read_text(encoding='utf-8'))
     p = d['partido']
     goles = []
+    cand = [j.get('nombre') for jj in (d.get('jugadores') or {}).values() for j in jj]
     for lado in ('local', 'visitante'):
         slug = p[lado]
         for g in (p.get('goles_detalle') or {}).get(lado) or []:
             nombre = g.get('jugador') or ''
+            nombre = _resolver_apellido(nombre, cand) or nombre
             if g.get('en_contra'):
                 nombre += ' (e/c)'
             elif g.get('penal'):
@@ -246,6 +248,33 @@ def _apellido(nombre):
     while i > 1 and t[i - 1].lower() in _PARTICULAS:
         i -= 1
     return ' '.join(t[i:]) + suf
+
+
+def _sin_acentos(t):
+    import unicodedata
+    return ''.join(c for c in unicodedata.normalize('NFD', t or '') if unicodedata.category(c) != 'Mn').lower()
+
+
+def _resolver_apellido(nombre, candidatos):
+    """api-sports a veces manda el nombre completo con los dos apellidos
+    ('Clever Domingo Ferreira Ñamandu'). Si en la ficha del partido hay un jugador
+    abreviado ('C. Ferreira') cuyo apellido está en ese nombre y cuya inicial coincide,
+    se usa SU apellido ('Ferreira'). Devuelve None si no encuentra ninguno."""
+    suf = ''
+    m = re.search(r'\s*\((e/c|p)\)$', nombre or '')
+    base = nombre[:m.start()] if m else (nombre or '')
+    if m:
+        suf = ' ' + m.group(0).strip()
+    toks = [_sin_acentos(x) for x in re.split(r'[\s·]+', base) if x]
+    if len(toks) < 3:
+        return None
+    for c in candidatos:
+        ct = [x for x in re.split(r'\s+', (c or '').strip()) if x]
+        if len(ct) >= 2 and ct[0].endswith('.'):
+            ape = ct[1:]
+            if toks and _sin_acentos(ct[0])[0] == toks[0][0] and all(_sin_acentos(a) in toks for a in ape):
+                return ' '.join(ape) + suf
+    return None
 
 
 def _html(pl):
