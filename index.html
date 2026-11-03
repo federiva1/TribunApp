@@ -405,6 +405,12 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .sec-ronda { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; }
 .sec-ronda.lib { color: var(--lib-light); }
 .sec-ronda.sud { color: var(--sud-light); }
+.copa-fecha { text-align: center; margin: -2px 0 14px; font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 600;
+  letter-spacing: 2px; text-transform: uppercase; }
+.copa-fecha[hidden] { display: none; }
+.copa-fecha.lib { color: var(--lib-light); }
+.copa-fecha.sud { color: var(--sud-light); }
+.copa-fecha small { display: block; margin-top: 2px; font-size: 11px; font-weight: 400; letter-spacing: 1.5px; color: rgba(255,255,255,0.45); }
 .copa-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
 .copa-grid > .copa-card { flex: 0 1 calc(50% - 5px); }
 .copa-card {
@@ -515,6 +521,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
               <span class="sec-badge lib">2026</span>
             </span>
           </div>
+          <div class="copa-fecha lib" id="lib-fecha" hidden></div>
           <div class="copa-grid" id="lib-grid"></div>
         </section>
         <section>
@@ -525,6 +532,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
               <span class="sec-badge sud">2026</span>
             </span>
           </div>
+          <div class="copa-fecha sud" id="sud-fecha" hidden></div>
           <div class="copa-grid" id="sud-grid"></div>
         </section>
       </div>
@@ -616,6 +624,17 @@ function copaInfoEquipos(copa) {
   });
   return info;
 }
+// Fecha de la final (hora argentina), cuando la copa ya está en esa instancia.
+function fechaFinalCopa(copaObj) {
+  if (!/^final$/i.test((copaObj && copaObj.ronda) || '')) return '';
+  const ps = ((copaObj.partidos) || []).filter(p => p.utcTime).sort((a, b) => a.utcTime.localeCompare(b.utcTime));
+  if (!ps.length) return '';
+  const d = new Date(ps[0].utcTime);
+  const opt = { timeZone: 'America/Argentina/Buenos_Aires' };
+  const dia = new Intl.DateTimeFormat('es-AR', { ...opt, weekday: 'long', day: 'numeric', month: 'long' }).format(d);
+  const hora = new Intl.DateTimeFormat('es-AR', { ...opt, hour: '2-digit', minute: '2-digit', hour12: false }).format(d);
+  return `${dia}<small>${hora} hs · hora argentina</small>`;
+}
 function renderCopaGrid(copaObj, cls, gridId, rondaId) {
   copaObj = copaObj || {};
   // Con rondas solapadas (un club ya en la siguiente, otro debiendo la revancha
@@ -624,6 +643,9 @@ function renderCopaGrid(copaObj, cls, gridId, rondaId) {
   const rondas = [...new Set((copaObj.partidos || []).map(p => p.ronda || copaObj.ronda).filter(Boolean))];
   const mixtas = rondas.length > 1;
   document.getElementById(rondaId).textContent = mixtas ? '' : (copaObj.ronda || '');
+  const fEl = document.getElementById(gridId.replace('-grid', '-fecha'));
+  const fTxt = mixtas ? '' : fechaFinalCopa(copaObj);
+  if (fEl) { fEl.innerHTML = fTxt; fEl.hidden = !fTxt; }
   const grid = document.getElementById(gridId);
   grid.innerHTML = '';
   const slugs = [...new Set((copaObj.partidos || []).map(p => p.home.slug || p.away.slug).filter(Boolean))];
