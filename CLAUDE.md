@@ -89,6 +89,11 @@ python scripts/cerrar_partido_fotmob.py --api-id <api_id>                   # si
 python scripts/fetch_mapas.py <id> [--force]     # mapas de calor de un partido (salen solos al cerrar; esto es para reintentar)
 python scripts/build_tabla_xg.py
 python scripts/fetch_liga_fixtures.py            # liga.json (1 llamada)
+# Horarios confirmados por la AFA que la API aún no tiene (suele pasar con la última fecha):
+# cargarlos en data/horarios_overrides.json ({"local-visitante": {"hora": "2026-11-07T17:30:00-03:00",
+# "api_original": "<el horario de relleno que devuelve la API>"}}); fetch_liga_fixtures.py y
+# fetch_fixtures.py (scripts/horarios_overrides.py) los aplican SOLO mientras la API siga con
+# `api_original` y el partido no haya terminado: si la API cambia, gana la API.
 python scripts/fetch_copas_fixtures.py           # copas.json
 python scripts/exportar_datos.py                 # CSV (skill /exportar-datos)
 

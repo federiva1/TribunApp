@@ -54,6 +54,8 @@ CLUBES = {
     'estudiantesderiocuarto':   2424,
 }
 
+SLUG_POR_ID = {v: k for k, v in CLUBES.items()}
+
 # league_id → suffix
 COPAS = {
     13: {  # Libertadores
@@ -103,9 +105,18 @@ def build_entries(fixtures, team_id):
             goles   = [g_arg, g_rival]
         else:
             goles = None
+        fecha = f['fixture']['date'][:10]
+        if not played and f['league'].get('id') == 128:
+            # Horario confirmado por la AFA que la API todavía no trae (data/horarios_overrides.json)
+            import horarios_overrides as ho
+            from datetime import datetime, timezone, timedelta
+            hl, hv = SLUG_POR_ID.get(f['teams']['home']['id']), SLUG_POR_ID.get(f['teams']['away']['id'])
+            h = ho.hora_para(hl, hv, f['fixture']['date'], False) if hl and hv else None
+            if h:
+                fecha = datetime.fromisoformat(h).astimezone(timezone(timedelta(hours=-3))).strftime('%Y-%m-%d')
         entries.append({
             'num':   num,
-            'fecha': f['fixture']['date'][:10],
+            'fecha': fecha,
             'rival': opp['name'],
             'local': is_home,
             'goles': goles,
