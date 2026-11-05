@@ -447,7 +447,9 @@ def main():
                     help='una placa por partido (layout de escudos grandes) en vez de la lista del dia')
     ap.add_argument('--solo', nargs='+', metavar='LOCAL-VISITANTE',
                     help='solo estos cruces, por slug o alias (ej: instituto-boca racing-belgrano). '
-                         'Implica --cada-uno.')
+                         'Implica --cada-uno, salvo con --conjunta.')
+    ap.add_argument('--conjunta', action='store_true',
+                    help='con --solo: UNA placa con esos cruces (lista) en lugar de una por partido')
     ap.add_argument('--dias', nargs='+', metavar='YYYY-MM-DD',
                     help='placa apaisada 16:9 con los partidos de estos días, una columna por día (ej. hoy y mañana)')
     ap.add_argument('--resultados', action='store_true',
@@ -501,6 +503,10 @@ def main():
             return 1
     for m in partidos:
         print(f"  {m['ko'].strftime('%H:%M')}  {m['home']} vs {m['away']}  ({m['comp']})")
+    if args.solo and args.conjunta:
+        print('imagen:', generar(partidos, fecha, args.titulo.upper(), args.out,
+                                nombre=f'fecha-{fecha}-seleccion{sufijo}.png', escala=args.escala))
+        return 1 if sin_resolver else 0
     if args.cada_uno or args.solo:
         for m in partidos:
             print('imagen:', generar([m], fecha, args.titulo.upper(), args.out,
