@@ -268,6 +268,10 @@ def _resolver_apellido(nombre, candidatos):
     toks = [_sin_acentos(x) for x in re.split(r'[\s·]+', base) if x]
     if len(toks) < 3:
         return None
+    # Doble apellido en -ez ('Mateo Pérez Curci'): la ficha lo abrevia ('M. Perez'),
+    # pero el apellido es 'Pérez Curci' y lo resuelve _apellido.
+    if toks[-2].endswith('ez'):
+        return None
     for c in candidatos:
         ct = [x for x in re.split(r'\s+', (c or '').strip()) if x]
         if len(ct) >= 2 and ct[0].endswith('.'):
