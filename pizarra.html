@@ -102,6 +102,7 @@ button:disabled { opacity:.4; cursor:default; }
   <div class="sep"></div>
   <button id="btn-undo">Deshacer dibujo</button>
   <button id="btn-clear" class="danger">Borrar dibujos</button>
+  <button id="btn-lado" title="Los dos equipos pasan al lado contrario de la cancha">⇄ Cambiar lado</button>
   <button id="btn-reset" class="danger">Vaciar cancha</button>
 </div>
 
@@ -159,6 +160,7 @@ const state = {
   drag: null, drawing: null,
   teams: { A: 'sanlorenzo', B: 'union' },
   squads: { A: [], B: [] },
+  ladoInv: false,       // true = el equipo A ataca de derecha a izquierda (tras "Cambiar lado")
 };
 
 // ---------- canvas / DPR ----------
@@ -552,8 +554,23 @@ document.querySelectorAll('.swatch').forEach(b => b.onclick = () => {
 });
 document.getElementById('btn-undo').onclick = () => { state.shapes.pop(); render(); };
 document.getElementById('btn-clear').onclick = () => { state.shapes = []; render(); };
+// "Cambiar lado": los dos equipos pasan a la otra mitad. Se gira la cancha 180°
+// (x → W-x, y → H-y), igual que en un cambio de lado real: el lateral derecho sigue
+// siendo el derecho mirando hacia donde ataca. Se giran también la pelota, los
+// dibujos y las fotos de la animación, para que la jugada siga siendo la misma.
+function _girar(p) { return { ...p, x: W - p.x, y: H - p.y }; }
+document.getElementById('btn-lado').onclick = () => {
+  if (anim.playing) return;
+  state.players = state.players.map(_girar);
+  state.ball = _girar(state.ball);
+  state.shapes = state.shapes.map(sh => ({ ...sh, pts: sh.pts.map(_girar) }));
+  anim.frames = anim.frames.map(fr => ({ ...fr, players: fr.players.map(_girar), ball: _girar(fr.ball) }));
+  state.ladoInv = !state.ladoInv;
+  render();
+};
 document.getElementById('btn-reset').onclick = () => {
   state.players = []; state.shapes = []; state.ball = { x: W/2, y: H/2 };
+  state.ladoInv = false;
   renderBenches(); render();
 };
 document.getElementById('btn-png').onclick = () => {
@@ -1052,7 +1069,7 @@ function renderBenches() {
 
 function addPlayer(key, slug, j) {
   // lugar libre: columna según equipo, fila donde no moleste
-  const baseX = key === 'A' ? W * 0.25 : W * 0.75;
+  const baseX = (key === 'A') !== state.ladoInv ? W * 0.25 : W * 0.75;
   let x = baseX, y = H / 2, tries = 0;
   while (state.players.some(p => Math.hypot(p.x - x, p.y - y) < R * 2.4) && tries < 40) {
     const a = tries * 2.4; const rr = 40 + tries * 14;
@@ -1093,7 +1110,7 @@ async function loadMatch(id) {
   document.getElementById('sel-a').value = home;
   document.getElementById('sel-b').value = away;
   await setTeam('A', home); await setTeam('B', away);
-  state.players = [];
+  state.players = []; state.ladoInv = false;
   for (const [key, slug, mirror] of [['A', home, false], ['B', away, true]]) {
     const js = (d.jugadores && d.jugadores[slug]) || [];
     const xi = js.filter(j => j.pos).slice(0, 11);
