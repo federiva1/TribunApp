@@ -15,7 +15,7 @@ TribunApp is a static fan engagement SPA for all 30 clubs of the Argentine Liga 
 
 **Mapa rápido:** `index.html` (home + EN JUEGO) · `club.html?c={slug}` (app de cada club: formación, puntajes, stats) · `puntuar.html` (`/armar/…`, `/puntuar/…`) · `fixture.html` · `estadisticas.html?p={id}` (ficha del partido) · `equipo.html?c={slug}&s=estadisticas` (stats del club) · `estadisticas-torneo.html` · `estadisticas-tribunapp.html` + `tribunapp-equipo.html` (votos de la gente) · `tablas.html`. Datos en `data/` (fixtures, `partidos/`, planteles, overrides), votos en Supabase, en vivo por `api/apisports.js` + `api/fotmob.js`.
 
-**Ramas especiales** (no son producción): `pizarra` (pizarra táctica, en pruebas; se actualiza mergeándole `master`) y `video` (demo para un video promocional: partido simulado en vivo + puntajes que no se guardan — **nunca mergear**, borrar al terminar).
+**Ramas especiales** (no son producción): `pizarra` (pizarra táctica, en pruebas; se actualiza mergeándole `master`. **Su `vercel.json` lleva `Permissions-Policy: microphone=(self)`** (en producción es `microphone=()`): sin eso el navegador bloquea el micrófono y la grabación sale sin audio ni voz. Al mergear `master`, verificar que no se pise — ya pasó una vez) y `video` (demo para un video promocional: partido simulado en vivo + puntajes que no se guardan — **nunca mergear**, borrar al terminar).
 
 ## Dónde vive el código y cómo se publica (LEER PRIMERO)
 
