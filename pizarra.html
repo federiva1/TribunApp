@@ -93,6 +93,8 @@ button:disabled { opacity:.4; cursor:default; }
   <button data-tool="dash">Línea punteada</button>
   <button data-tool="zone">Zona</button>
   <button data-tool="pen">Lápiz</button>
+  <button data-tool="cam" title="Encuadrá el sector de la jugada: arrastrá un rectángulo, movelo o estiralo desde las esquinas">🎥 Cámara</button>
+  <button id="btn-full" title="La cámara vuelve a mostrar toda la cancha">⛶ Cancha completa</button>
   <div class="sep"></div>
   <span class="lbl">COLOR</span>
   <button class="swatch on" data-color="#ffffff" style="background:#ffffff"></button>
@@ -162,7 +164,8 @@ button:disabled { opacity:.4; cursor:default; }
 </div>
 <div class="hint">Tocá un jugador del banco para ponerlo en la cancha · arrastralo para moverlo ·
 doble click/doble tap lo saca · la pelota ⚽ se arrastra como un jugador ·
-<b>Grabar jugada</b> guarda los recorridos (no la pantalla) y tu voz: después se reproduce, se pausa, se adelanta y se guarda en un archivo para volver a abrirla.</div>
+<b>Grabar jugada</b> guarda los recorridos (no la pantalla) y tu voz: después se reproduce, se pausa, se adelanta y se guarda en un archivo para volver a abrirla ·
+<b>🎥 Cámara</b>: encuadrá el sector de la jugada (arrastrá un rectángulo, movelo o estiralo desde las esquinas) y volvé a Mover para trabajar con zoom; si la jugada progresa, estirá el cuadro. Las fichas que no moviste a mano se ven translúcidas: son posiciones estimadas.</div>
 
 <script src="js/clubes.js"></script>
 <script src="js/kits.js"></script>
@@ -189,7 +192,9 @@ const state = {
   drag: null, drawing: null,
   teams: { A: 'sanlorenzo', B: 'union' },
   squads: { A: [], B: [] },
-  ladoInv: false,       // true = el equipo A ataca de derecha a izquierda (tras "Cambiar lado")
+  ladoInv: false,
+  foco: { x0: 0, y0: 0, x1: 1600, y1: 1000 },   // encuadre de la cámara (coords de cancha); todo = sin zoom
+  focoUsado: false,     // se encuadró alguna vez: los jugadores "aproximados" se ven translúcidos       // true = el equipo A ataca de derecha a izquierda (tras "Cambiar lado")
 };
 
 // ---------- canvas / DPR ----------
@@ -235,7 +240,47 @@ window.addEventListener('resize', fit);
 
 function evPos(e) {
   const r = cv.getBoundingClientRect();
-  return { x: (e.clientX - r.left) / r.width * LW(), y: (e.clientY - r.top) / r.height * LH() };
+  const lx = (e.clientX - r.left) / r.width * LW(), ly = (e.clientY - r.top) / r.height * LH();
+  return { x: vista.v.x0 + lx / vista.s, y: vista.v.y0 + ly / vista.s };
+}
+
+// ---------- cámara ----------
+// La jugada se graba SIEMPRE con toda la cancha; la cámara solo decide qué parte se
+// ve (y sale en el video). El encuadre mantiene la proporción de la cancha, no baja
+// de un cuarto del ancho y no se sale de los bordes. Con la herramienta Cámara la
+// vista se abre a toda la cancha para editar el cuadro; al soltarla, vuelve al cuadro.
+const CAM_MIN = 400;                      // ancho mínimo del encuadre (zoom x4)
+const CAM_ANIM = 600;                     // ms de la transición de cámara
+const camFull = () => ({ x0: 0, y0: 0, x1: W, y1: H });
+const camEsFull = r => r.x1 - r.x0 >= W - 0.5;
+const camLerp = (a, b, k) => ({ x0: a.x0 + (b.x0 - a.x0) * k, y0: a.y0 + (b.y0 - a.y0) * k,
+                                x1: a.x1 + (b.x1 - a.x1) * k, y1: a.y1 + (b.y1 - a.y1) * k });
+const camEase = t => (t < .5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2) / 2);
+function camNorm(r) {
+  const cx = (r.x0 + r.x1) / 2, cy = (r.y0 + r.y1) / 2;
+  let w = Math.max(CAM_MIN, Math.abs(r.x1 - r.x0), Math.abs(r.y1 - r.y0) * W / H);
+  if (w >= W) return camFull();
+  const h = w * H / W;
+  const x0 = Math.max(0, Math.min(W - w, cx - w / 2)), y0 = Math.max(0, Math.min(H - h, cy - h / 2));
+  return { x0, y0, x1: x0 + w, y1: y0 + h };
+}
+let camAnim = { from: { x0: 0, y0: 0, x1: 1600, y1: 1000 }, to: { x0: 0, y0: 0, x1: 1600, y1: 1000 }, t0: 0, dur: 0 };
+let vista = { v: { x0: 0, y0: 0, x1: 1600, y1: 1000 }, s: 1, k: 1 };
+function camVista() {
+  const k = camAnim.dur ? Math.min(1, (performance.now() - camAnim.t0) / camAnim.dur) : 1;
+  return camLerp(camAnim.from, camAnim.to, camEase(k));
+}
+function camIr(r, dur = CAM_ANIM) {
+  camAnim = { from: camVista(), to: { ...r }, t0: performance.now(), dur };
+  const tick = () => { render(); if (performance.now() - camAnim.t0 < camAnim.dur) requestAnimationFrame(tick); };
+  requestAnimationFrame(tick);
+}
+function camFijar(r) { camAnim = { from: { ...r }, to: { ...r }, t0: 0, dur: 0 }; }
+// vista que corresponde a la herramienta activa: editando, toda la cancha; si no, el cuadro
+function camDestino() { return state.tool === 'cam' ? camFull() : state.foco; }
+function setFoco(r) {
+  state.foco = camNorm(r);
+  if (!camEsFull(state.foco)) state.focoUsado = true;
 }
 
 // ---------- cancha ----------
@@ -246,7 +291,7 @@ function drawPitch() {
   ctx.fillStyle = 'rgba(255,255,255,.035)';
   for (let i = 0; i < 16; i += 2) ctx.fillRect(i * W / 16, 0, W / 16, H);
 
-  ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 3;
+  ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 3 * vista.k;
   const iw = W - 2 * M, ih = H - 2 * M;
   ctx.strokeRect(M, M, iw, ih);
   ctx.beginPath(); ctx.moveTo(W/2, M); ctx.lineTo(W/2, H - M); ctx.stroke();
@@ -295,6 +340,13 @@ function paintKit(x, y, r, slug) {
 }
 
 function drawPlayer(p) {
+  ctx.save();
+  ctx.translate(p.x, p.y); ctx.scale(vista.k, vista.k); ctx.translate(-p.x, -p.y);
+  if (p.aprox && state.focoUsado) ctx.globalAlpha = 0.55;   // posición estimada, no marcada a mano
+  _drawPlayer(p);
+  ctx.restore();
+}
+function _drawPlayer(p) {
   paintKit(p.x, p.y, R, p.slug);
   ctx.beginPath(); ctx.arc(p.x, p.y, R, 0, Math.PI * 2);
   ctx.lineWidth = FICHAS_CHICAS ? 1.5 : 3; ctx.strokeStyle = 'rgba(255,255,255,.92)'; ctx.stroke();
@@ -332,6 +384,7 @@ function _poly(pts) {
 function drawBall() {
   const { x, y } = state.ball, r = BALL_R;
   ctx.save();
+  ctx.translate(x, y); ctx.scale(vista.k, vista.k); ctx.translate(-x, -y);
   // sombra en el césped
   ctx.beginPath(); ctx.ellipse(x + r * 0.25, y + r * 0.85, r * 0.95, r * 0.38, 0, 0, Math.PI * 2);
   ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fill();
@@ -370,8 +423,9 @@ function drawBall() {
 
 // ---------- dibujos ----------
 function drawShape(s) {
-  ctx.strokeStyle = s.color; ctx.fillStyle = s.color; ctx.lineWidth = 5;
-  ctx.setLineDash(s.type === 'dash' ? [14, 12] : []);
+  const kz = vista.k;
+  ctx.strokeStyle = s.color; ctx.fillStyle = s.color; ctx.lineWidth = 5 * kz;
+  ctx.setLineDash(s.type === 'dash' ? [14 * kz, 12 * kz] : []);
   const p = s.pts;
   if (s.type === 'pen') {
     ctx.beginPath(); ctx.moveTo(p[0].x, p[0].y);
@@ -383,7 +437,7 @@ function drawShape(s) {
     ctx.beginPath();
     ctx.ellipse((a.x+b.x)/2, (a.y+b.y)/2, Math.abs(b.x-a.x)/2 || 4, Math.abs(b.y-a.y)/2 || 4, 0, 0, Math.PI*2);
     ctx.fill(); ctx.restore();
-    ctx.globalAlpha = 0.9; ctx.lineWidth = 3;
+    ctx.globalAlpha = 0.9; ctx.lineWidth = 3 * kz;
     ctx.beginPath();
     ctx.ellipse((a.x+b.x)/2, (a.y+b.y)/2, Math.abs(b.x-a.x)/2 || 4, Math.abs(b.y-a.y)/2 || 4, 0, 0, Math.PI*2);
     ctx.stroke(); ctx.globalAlpha = 1;
@@ -394,20 +448,45 @@ function drawShape(s) {
     const ang = Math.atan2(b.y - a.y, b.x - a.x);
     ctx.beginPath();
     ctx.moveTo(b.x, b.y);
-    ctx.lineTo(b.x - 20*Math.cos(ang - 0.4), b.y - 20*Math.sin(ang - 0.4));
-    ctx.lineTo(b.x - 20*Math.cos(ang + 0.4), b.y - 20*Math.sin(ang + 0.4));
+    ctx.lineTo(b.x - 20*kz*Math.cos(ang - 0.4), b.y - 20*kz*Math.sin(ang - 0.4));
+    ctx.lineTo(b.x - 20*kz*Math.cos(ang + 0.4), b.y - 20*kz*Math.sin(ang + 0.4));
     ctx.closePath(); ctx.fill();
   }
   ctx.setLineDash([]);
 }
 
 function render() {
+  const v = camVista(), s = W / (v.x1 - v.x0);
+  // las fichas, la pelota y los trazos crecen menos que la cancha (raíz del zoom):
+  // con zoom x4 se ven el doble, no cuatro veces más grandes
+  vista = { v, s, k: 1 / Math.sqrt(s) };
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.clip();
+  ctx.translate(-v.x0 * s, -v.y0 * s); ctx.scale(s, s);
   drawPitch();
-  for (const s of state.shapes) drawShape(s);
+  for (const sh of state.shapes) drawShape(sh);
   if (state.drawing) drawShape(state.drawing);
   for (const p of state.players) drawPlayer(p);
   drawBall();
+  if (state.tool === 'cam' && !jug.playing) drawFocoEdit();
+  ctx.restore();
   drawSubs();
+}
+
+// Con la herramienta Cámara: afuera del cuadro se oscurece, borde y esquinas para estirarlo.
+function drawFocoEdit() {
+  const f = state.foco;
+  if (camEsFull(f)) return;
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.rect(f.x0, f.y0, f.x1 - f.x0, f.y1 - f.y0);
+  ctx.fillStyle = 'rgba(4,8,18,.55)'; ctx.fill('evenodd');
+  ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 4; ctx.setLineDash([16, 10]);
+  ctx.strokeRect(f.x0, f.y0, f.x1 - f.x0, f.y1 - f.y0);
+  ctx.setLineDash([]); ctx.fillStyle = '#38bdf8';
+  for (const [x, y] of [[f.x0, f.y0], [f.x1, f.y0], [f.x0, f.y1], [f.x1, f.y1]]) ctx.fillRect(x - 11, y - 11, 22, 22);
+  ctx.font = "26px 'Bebas Neue'"; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+  ctx.fillText('CÁMARA', f.x0 + 14, f.y0 + 12);
+  ctx.restore();
 }
 
 // ---------- subtítulos en vivo ----------
@@ -522,10 +601,10 @@ function bajarSrt() {
 // ---------- interacción ----------
 function hit(pos) {
   const b = state.ball;
-  if (Math.hypot(pos.x - b.x, pos.y - b.y) < 20) return { kind: 'ball' };
+  if (Math.hypot(pos.x - b.x, pos.y - b.y) < 20 * vista.k) return { kind: 'ball' };
   for (let i = state.players.length - 1; i >= 0; i--) {
     const p = state.players[i];
-    if (Math.hypot(pos.x - p.x, pos.y - p.y) < R + (FICHAS_CHICAS ? 14 : 6)) return { kind: 'player', p };
+    if (Math.hypot(pos.x - p.x, pos.y - p.y) < (R + (FICHAS_CHICAS ? 14 : 6)) * vista.k) return { kind: 'player', p };
   }
   return null;
 }
@@ -534,6 +613,7 @@ let lastTap = { t: 0, p: null };
 cv.addEventListener('pointerdown', e => {
   if (jug.playing) return;                   // reproduciendo una jugada grabada: la cancha es de solo lectura
   const pos = evPos(e);
+  if (state.tool === 'cam') { camDown(pos); cv.setPointerCapture(e.pointerId); return; }
   const h = hit(pos);
   if (state.tool === 'move' || h) {          // mover siempre gana sobre un jugador
     if (!h) return;
@@ -554,7 +634,9 @@ cv.addEventListener('pointerdown', e => {
 });
 cv.addEventListener('pointermove', e => {
   const pos = evPos(e);
+  if (camEd) { camMove(pos); return; }
   if (state.drag) {
+    if (state.drag !== state.ball && state.drag.aprox) state.drag.aprox = false;   // la movió a mano: pasa a "real"
     state.drag.x = Math.max(10, Math.min(W - 10, pos.x));
     state.drag.y = Math.max(10, Math.min(H - 10, pos.y));
     render();
@@ -565,6 +647,7 @@ cv.addEventListener('pointermove', e => {
   }
 });
 cv.addEventListener('pointerup', () => {
+  if (camEd) { camEd = null; render(); return; }
   if (state.drawing && state.drawing.pts.length > 1) {
     const a = state.drawing.pts[0], b = state.drawing.pts[state.drawing.pts.length - 1];
     if (Math.hypot(b.x - a.x, b.y - a.y) > 12) state.shapes.push(state.drawing);
@@ -572,12 +655,50 @@ cv.addEventListener('pointerup', () => {
   state.drag = null; state.drawing = null; render();
 });
 
+// Editar el cuadro: tocar una esquina lo estira (desde la esquina opuesta, con la
+// proporción de la cancha), tocar adentro lo mueve y tocar afuera arranca uno nuevo.
+let camEd = null;
+function camDown(pos) {
+  const f = state.foco, tol = 34;
+  if (!camEsFull(f)) {
+    for (const [cx, cy, ox, oy] of [[f.x0, f.y0, f.x1, f.y1], [f.x1, f.y0, f.x0, f.y1],
+                                    [f.x0, f.y1, f.x1, f.y0], [f.x1, f.y1, f.x0, f.y0]]) {
+      if (Math.abs(pos.x - cx) < tol && Math.abs(pos.y - cy) < tol) { camEd = { modo: 'esquina', ox, oy }; return; }
+    }
+    if (pos.x > f.x0 && pos.x < f.x1 && pos.y > f.y0 && pos.y < f.y1) {
+      camEd = { modo: 'mover', dx: pos.x - f.x0, dy: pos.y - f.y0 }; return;
+    }
+  }
+  camEd = { modo: 'esquina', ox: pos.x, oy: pos.y, nuevo: true };
+}
+function camMove(pos) {
+  const f = state.foco;
+  if (camEd.modo === 'mover') {
+    const w = f.x1 - f.x0, h = f.y1 - f.y0;
+    setFoco({ x0: pos.x - camEd.dx, y0: pos.y - camEd.dy, x1: pos.x - camEd.dx + w, y1: pos.y - camEd.dy + h });
+  } else {
+    // desde la esquina fija, el cuadro crece hacia donde está el mouse sin perder la proporción
+    const w = Math.min(W, Math.max(CAM_MIN, Math.abs(pos.x - camEd.ox), Math.abs(pos.y - camEd.oy) * W / H));
+    const h = w * H / W;
+    const x0 = pos.x >= camEd.ox ? camEd.ox : camEd.ox - w, y0 = pos.y >= camEd.oy ? camEd.oy : camEd.oy - h;
+    setFoco({ x0, y0, x1: x0 + w, y1: y0 + h });
+  }
+  render();
+}
+
 // ---------- toolbar ----------
 document.querySelectorAll('[data-tool]').forEach(b => b.onclick = () => {
+  const antes = state.tool;
   document.querySelectorAll('[data-tool]').forEach(x => x.classList.remove('on'));
   b.classList.add('on'); state.tool = b.dataset.tool;
   cv.style.cursor = state.tool === 'move' ? 'grab' : 'crosshair';
+  if ((antes === 'cam') !== (state.tool === 'cam') && !jug.playing) camIr(camDestino());
+  else render();
 });
+document.getElementById('btn-full').onclick = () => {
+  state.foco = camFull();
+  if (!jug.playing) camIr(camDestino());
+};
 document.querySelectorAll('.swatch').forEach(b => b.onclick = () => {
   document.querySelectorAll('.swatch').forEach(x => x.classList.remove('on'));
   b.classList.add('on'); state.color = b.dataset.color;
@@ -594,14 +715,16 @@ document.getElementById('btn-lado').onclick = () => {
   state.players = state.players.map(_girar);
   state.ball = _girar(state.ball);
   state.shapes = state.shapes.map(sh => ({ ...sh, pts: sh.pts.map(_girar) }));
-  anim.frames = anim.frames.map(fr => ({ ...fr, players: fr.players.map(_girar), ball: _girar(fr.ball) }));
+  const girarFoco = f => f && ({ x0: W - f.x1, y0: H - f.y1, x1: W - f.x0, y1: H - f.y0 });
+  anim.frames = anim.frames.map(fr => ({ ...fr, players: fr.players.map(_girar), ball: _girar(fr.ball), foco: girarFoco(fr.foco) }));
+  state.foco = girarFoco(state.foco);
   state.ladoInv = !state.ladoInv;
-  render();
+  camIr(camDestino());
 };
 document.getElementById('btn-reset').onclick = () => {
   state.players = []; state.shapes = []; state.ball = { x: W/2, y: H/2 };
-  state.ladoInv = false;
-  renderBenches(); render();
+  state.ladoInv = false; state.foco = camFull(); state.focoUsado = false;
+  renderBenches(); camIr(camDestino());
 };
 document.getElementById('btn-png').onclick = () => {
   const a = document.createElement('a');
@@ -619,12 +742,14 @@ const btnPlay = document.getElementById('btn-play');
 const framesBox = document.getElementById('frames');
 
 function snapshot() {
-  return { players: state.players.map(p => ({ ...p })), ball: { ...state.ball } };
+  return { players: state.players.map(p => ({ ...p })), ball: { ...state.ball }, foco: { ...state.foco } };
 }
 function applyFrame(f) {
   state.players = f.players.map(p => ({ ...p }));
   state.ball = { ...f.ball };
-  renderBenches(); render();
+  state.foco = f.foco ? { ...f.foco } : camFull();
+  renderBenches();
+  if (anim.playing) { camFijar(camDestino()); render(); } else camIr(camDestino(), 350);
 }
 function renderFrames() {
   framesBox.innerHTML = '';
@@ -675,6 +800,8 @@ function playAnim() {
     });
     state.ball = { x: a.ball.x + (b.ball.x - a.ball.x) * e,
                    y: a.ball.y + (b.ball.y - a.ball.y) * e };
+    state.foco = camLerp(a.foco || camFull(), b.foco || camFull(), e);
+    camFijar(camDestino());
     render();
     if (t >= 1) {
       seg++;
@@ -1068,7 +1195,11 @@ const JUG_LEEME = 'Jugada de la pizarra táctica de TribunApp. Cancha interna de
   + 'Si ladoInv es false el equipo A ataca hacia la derecha. t = segundos desde el inicio. '
   + 'inicio = cómo estaba la cancha al apretar Grabar. eventos: m = ficha {id} pasa a (x,y); '
   + 'b = pelota a (x,y); a = entra la ficha p; q = sale la ficha {id}; s = dibujos terminados '
-  + '(lista completa); d = dibujo en curso (o null). voz = frases reconocidas entre a y b segundos.';
+  + '(lista completa); d = dibujo en curso (o null); c = la cámara pasa a encuadrar (x0,y0)-(x1,y1) '
+  + '(toda la cancha = 0,0-1600,1000; es solo lo que se ve, los datos son siempre de toda la cancha); '
+  + 'r = la ficha {id} deja de ser aproximada (se la movió a mano); u = se empezó a usar la cámara. '
+  + 'aprox = true: posición estimada (formación o banco), no marcada a mano: no sacar conclusiones de esas fichas. '
+  + 'voz = frases reconocidas entre a y b segundos.';
 const JUG_DT = 33;                            // ms entre muestras (~30 por segundo)
 const jug = {
   rec: false, t0: 0, timer: 0, data: null, comp: null,
@@ -1083,7 +1214,8 @@ const jugEls = id => document.getElementById(id);
 const jugInfo = t => { jugEls('jug-info').textContent = t; };
 const _mmss = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 
-function _jugFicha(p) { return { id: jugId(p), team: p.team, slug: p.slug, num: p.num || '', name: p.name, x: r1(p.x), y: r1(p.y) }; }
+function _jugFicha(p) { return { id: jugId(p), team: p.team, slug: p.slug, num: p.num || '', name: p.name, x: r1(p.x), y: r1(p.y), aprox: !!p.aprox }; }
+const _jugRect = f => ({ x0: r1(f.x0), y0: r1(f.y0), x1: r1(f.x1), y1: r1(f.y1) });
 function _jugShapes(list) { return list.map(sh => ({ type: sh.type, color: sh.color, pts: sh.pts.map(q => ({ x: r1(q.x), y: r1(q.y) })) })); }
 function _jugMuestra() {
   const players = new Map(state.players.map(p => [jugId(p), p]));
@@ -1093,6 +1225,8 @@ function _jugMuestra() {
     shapesSig: state.shapes.length + ':' + state.shapes.map(sh => sh.pts.length).join(','),
     drawSig: d ? d.type + d.pts.length + ':' + r1(d.pts[d.pts.length - 1].x) + ',' + r1(d.pts[d.pts.length - 1].y) : '',
     pos: new Map(state.players.map(p => [jugId(p), [r1(p.x), r1(p.y)]])),
+    aprox: new Map(state.players.map(p => [jugId(p), !!p.aprox])),
+    foco: JSON.stringify(_jugRect(state.foco)), focoUsado: state.focoUsado,
   };
 }
 
@@ -1107,7 +1241,7 @@ async function jugStart() {
     cancha: { ancho: W, alto: H, margen: M },
     equipos: { A: state.teams.A, B: state.teams.B }, ladoInv: state.ladoInv,
     inicio: { players: state.players.map(_jugFicha), ball: { x: r1(state.ball.x), y: r1(state.ball.y) },
-              shapes: _jugShapes(state.shapes) },
+              shapes: _jugShapes(state.shapes), foco: _jugRect(state.foco), focoUsado: state.focoUsado },
     eventos: [], voz: [], audio: null,
   };
   jug.comp = null; jug.voz = []; jug.vozIni = 0;
@@ -1145,6 +1279,9 @@ function jugSample() {
   if (Math.abs(a.ball.x - b.ball.x) >= 0.5 || Math.abs(a.ball.y - b.ball.y) >= 0.5) ev.push({ t, k: 'b', x: b.ball.x, y: b.ball.y });
   if (a.shapesSig !== b.shapesSig) ev.push({ t, k: 's', v: _jugShapes(state.shapes) });
   if (a.drawSig !== b.drawSig) ev.push({ t, k: 'd', v: state.drawing ? _jugShapes([state.drawing])[0] : null });
+  for (const [id, ap] of b.aprox) if (!ap && a.aprox.get(id)) ev.push({ t, k: 'r', id });
+  if (a.foco !== b.foco) ev.push({ t, k: 'c', ..._jugRect(state.foco) });
+  if (b.focoUsado && !a.focoUsado) ev.push({ t, k: 'u' });
   // si lo movido es un jugador que se suelta y se vuelve a agarrar, la muestra sigue siendo la misma referencia
   jug.last = b;
 }
@@ -1250,6 +1387,8 @@ function _jugCompilar(d) {
   }
   const ball = [[0, d.inicio.ball.x, d.inicio.ball.y]];
   const shapes = [[0, d.inicio.shapes]], draw = [[0, null]];
+  const cams = [[0, d.inicio.foco || { x0: 0, y0: 0, x1: W, y1: H }]], real = new Map();
+  let usado = d.inicio.focoUsado ? 0 : Infinity;
   for (const e of d.eventos) {
     if (e.k === 'm') { (tracks.get(e.id) || tracks.set(e.id, []).get(e.id)).push([e.t, e.x, e.y]); }
     else if (e.k === 'a') {
@@ -1261,8 +1400,11 @@ function _jugCompilar(d) {
     else if (e.k === 'b') ball.push([e.t, e.x, e.y]);
     else if (e.k === 's') { shapes.push([e.t, e.v]); draw.push([e.t, null]); }
     else if (e.k === 'd') draw.push([e.t, e.v]);
+    else if (e.k === 'c') cams.push([e.t, { x0: e.x0, y0: e.y0, x1: e.x1, y1: e.y1 }]);
+    else if (e.k === 'r') { if (!real.has(e.id)) real.set(e.id, []); real.get(e.id).push(e.t); }
+    else if (e.k === 'u' && usado === Infinity) usado = e.t;
   }
-  return { tracks, pres, info, ball, shapes, draw };
+  return { tracks, pres, info, ball, shapes, draw, cams, real, usado };
 }
 // último índice con t <= tt (las listas vienen ordenadas por tiempo)
 function _jugIdx(arr, tt) {
@@ -1288,8 +1430,17 @@ function jugEstado(tt) {
     if (i < 0 || !pr[i][1]) continue;
     const pos = _jugPos(c.tracks.get(id) || [], tt);
     const p = c.info.get(id);
-    if (pos && p) players.push({ team: p.team, slug: p.slug, num: p.num, name: p.name, x: pos[0], y: pos[1] });
+    // aproximada hasta el primer "r" posterior a su última entrada
+    const entro = pr[i][0], rs = c.real.get(id) || [];
+    const aprox = !!p?.aprox && !rs.some(t => t >= entro && t <= tt);
+    if (pos && p) players.push({ team: p.team, slug: p.slug, num: p.num, name: p.name, x: pos[0], y: pos[1], aprox });
   }
+  // cámara: entre un encuadre y el siguiente, la misma transición suave que en vivo
+  const ci = _jugIdx(c.cams, tt), cAct = c.cams[ci], cAnt = c.cams[Math.max(0, ci - 1)];
+  const kc = ci > 0 ? Math.min(1, (tt - cAct[0]) / (CAM_ANIM / 1000)) : 1;
+  state.foco = { ...cAct[1] };
+  state.focoUsado = tt >= c.usado;
+  camFijar(camLerp(cAnt[1], cAct[1], camEase(kc)));
   state.players = players;
   const bp = _jugPos(c.ball, tt); state.ball = { x: bp[0], y: bp[1] };
   state.shapes = c.shapes[_jugIdx(c.shapes, tt)][1].map(sh => ({ ...sh, pts: sh.pts.map(q => ({ ...q })) }));
@@ -1362,7 +1513,7 @@ function jugPause() {
   if (jug.audio) jug.audio.pause();
   subs.texto = '';
   jugEls('jug-play').textContent = '▶ Reproducir';
-  render();
+  camIr(camDestino(), 300);
 }
 
 // ---- archivo ----
@@ -1469,7 +1620,7 @@ function addPlayer(key, slug, j) {
     const a = tries * 2.4; const rr = 40 + tries * 14;
     x = baseX + Math.cos(a) * rr; y = H/2 + Math.sin(a) * rr; tries++;
   }
-  state.players.push({ team: key, slug, num: j.num || '', name: j.name, x, y });
+  state.players.push({ team: key, slug, num: j.num || '', name: j.name, x, y, aprox: true });
   renderBenches(); render();
 }
 
@@ -1505,6 +1656,7 @@ async function loadMatch(id) {
   document.getElementById('sel-b').value = away;
   await setTeam('A', home); await setTeam('B', away);
   state.players = []; state.ladoInv = false;
+  state.foco = camFull(); state.focoUsado = false; camIr(camDestino());
   for (const [key, slug, mirror] of [['A', home, false], ['B', away, true]]) {
     const js = (d.jugadores && d.jugadores[slug]) || [];
     const xi = js.filter(j => j.pos).slice(0, 11);
@@ -1515,12 +1667,12 @@ async function loadMatch(id) {
       let py = M + (j.pos.y / 100) * (H - 2 * M);
       if (mirror) { px = 100 - px; py = H - py + 0; }
       state.players.push({ team: key, slug, num: numDe(j, key), name: j.nombre,
-                           x: px / 100 * W, y: py });
+                           x: px / 100 * W, y: py, aprox: true });
     }
     // los que no traen pos van en columna sobre su mitad
     resto.forEach((j, i) => state.players.push({
       team: key, slug, num: numDe(j, key), name: j.nombre,
-      x: (mirror ? W * 0.62 : W * 0.38), y: M + 60 + i * 70 }));
+      x: (mirror ? W * 0.62 : W * 0.38), y: M + 60 + i * 70, aprox: true }));
   }
   renderBenches(); render();
 }
