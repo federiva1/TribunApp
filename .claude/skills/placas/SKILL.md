@@ -37,6 +37,8 @@ python scripts/social_fecha.py --cada-uno --date 2026-09-06 --titulo "Partido de
   si se manda con anticipación (el subtítulo ya dice el día, así que "hoy" mentiría).
 - Sale en `data/social/preview/fecha-{fecha}-{local}-{visitante}.png`.
 - Para varios días, correr una vez por fecha.
+- **`--solo A-B C-D … --conjunta`**: UNA placa (lista) solo con esos cruces, en lugar de una por partido
+  (ej. `--date 2026-11-07 --solo boca-defensa central-erc argentinos-huracan --conjunta --titulo "Partidos del sábado"`).
 - **`--dias D1 D2 …`**: una placa apaisada 16:9 (4K) con los partidos de esos días, una columna por día
   (ej. hoy y mañana: `--dias 2026-10-31 2026-11-01`).
 - **`--resultados`**: la misma lista del día pero con el marcador en lugar de "VS" y "FINAL" en lugar de la hora
@@ -114,6 +116,7 @@ python scripts/social_resultado.py           # genera
 - Ventana: partidos que arrancaron hace **entre 100 y 300 minutos**.
 - Toma el estado de api-sports por `fixtures?id=`, que marca FT al toque.
 - Sale en `data/social/preview/ft-{api_id}-{local}-{visitante}.png`.
+- Los goleadores van **solo con el apellido** (`_apellido`: 'Juan Cruz Policella' → POLICELLA, 'A. Cuello' → CUELLO, 'Rodrigo De Paul' → DE PAUL; con 3+ palabras y anteúltima en -ez toma doble apellido, 'Agustín Álvarez Martínez' → ÁLVAREZ MARTÍNEZ). Si un apellido compuesto sale mal, corregirlo ahí.
 - Marca el partido como posteado en `data/social/resultados_posted.json`, así que no
   lo regenera. Para rehacerlo hay que sacar la entrada de ese archivo.
 - **Ojo con el orden**: la placa invita a puntuar, así que conviene **cerrar el

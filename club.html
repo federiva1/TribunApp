@@ -279,7 +279,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 #crear-modal input { width: 100%; box-sizing: border-box; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 9px 10px; color: #fff; font-size: 14px; }
 #crear-modal .btns { display: flex; gap: 8px; margin-top: 16px; }
 #crear-modal .btns button { flex: 1; font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 1px; border-radius: 8px; padding: 10px; cursor: pointer; }
-#custom-hint { display: none; font-size: 11px; color: #f0c05a; text-align: center; margin-top: 8px; line-height: 1.4; }
+#custom-hint, #nopartido-hint { display: none; font-size: 11px; color: #f0c05a; text-align: center; margin-top: 8px; line-height: 1.4; }
 .chip-num { font-size: 11px; color: var(--club-color); font-weight: 500; line-height: 1; }
 .chip-name { font-size: 8px; color: #ccc; text-align: center; line-height: 1.2; word-break: break-word; }
 .injury-badge {
@@ -873,13 +873,6 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   <button class="back-btn" onclick="closeSection('formation')">← Volver</button>
 
   <!-- Aviso: formación cerrada durante la ventana de puntajes -->
-  <div id="formation-closed" style="display:none;position:absolute;inset:0;background:var(--dark2);z-index:300;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;gap:10px;">
-    <div style="font-size:40px;">⭐</div>
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#fff;letter-spacing:1px;">Formación cerrada</div>
-    <div style="font-size:13px;color:#888;line-height:1.5;max-width:290px;">Ahora están abiertos los <b style="color:var(--club-color);">puntajes</b> del último partido. La formación de la próxima fecha se abre cuando cierran los puntajes.</div>
-    <button onclick="closeSection('formation')" style="margin-top:6px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;background:var(--club-color);color:#fff;border:none;border-radius:8px;padding:10px 24px;cursor:pointer;">← Volver</button>
-  </div>
-
   <!-- RESULTADOS FORMACIÓN -->
   <div id="results-screen">
     <h2>⚽ Resultados</h2>
@@ -940,6 +933,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
       <button id="confirm-btn" style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;background:var(--club-color);color:#fff;border:none;border-radius:8px;padding:9px 14px;cursor:not-allowed;opacity:0.3;transition:opacity 0.3s;" disabled>Enviar a encuesta</button>
     </div>
   </div>
+  <div id="nopartido-hint">Todavía no hay un próximo partido confirmado: podés armar, descargar y compartir tu formación, pero no enviarla a la encuesta.</div>
   <div id="custom-hint">Tenés un jugador creado: podés descargar y compartir, pero no enviar a la encuesta.</div>
   <!-- Los resultados de la gente viven en la sección Est. TribunApp -->
   <div style="margin-top:6px;display:none;">
@@ -1297,7 +1291,6 @@ function openSection(section) {
     const el = document.getElementById(s + '-screen');
     if (el) el.style.display = s === section ? 'block' : 'none';
   });
-  if (section === 'formation') { const fc = document.getElementById('formation-closed'); if (fc) fc.style.display = FORMACION_OPEN ? 'none' : 'flex'; }
   if (section === 'fechas') renderFechas();
   if (section === 'fixture') renderFixture();
   if (section === 'stats') renderStats();
@@ -2237,7 +2230,8 @@ function updateCounter() {
   document.getElementById('count2').textContent = n;
   const isReady = n === 11;                        // descargar / compartir
   const hasCustom = onPitch.some(p => p.custom);
-  const canSubmit = isReady && !hasCustom;         // encuesta: solo con 11 del plantel real
+  const hayPartido = FORMACION_OPEN && !!FECHA_ACTUAL;   // sin próximo partido no se vota
+  const canSubmit = isReady && !hasCustom && hayPartido; // encuesta: solo con 11 del plantel real
   const dlBtn = document.getElementById('download-pitch-btn');
   const cfBtn = document.getElementById('confirm-btn');
   const alreadyVoted = !!lsGet(lsFormKey());
@@ -2250,12 +2244,14 @@ function updateCounter() {
     b.style.cursor = isReady ? 'pointer' : 'not-allowed';
   });
   const hint = document.getElementById('custom-hint');
-  if (hint) hint.style.display = (hasCustom && !alreadyVoted) ? 'block' : 'none';
+  if (hint) hint.style.display = (hasCustom && !alreadyVoted && hayPartido) ? 'block' : 'none';
+  const npHint = document.getElementById('nopartido-hint');
+  if (npHint) npHint.style.display = (!hayPartido && !alreadyVoted) ? 'block' : 'none';
   if (alreadyVoted) {
     cfBtn.disabled = true; cfBtn.style.opacity = '0.3'; cfBtn.style.cursor = 'not-allowed'; cfBtn.textContent = 'Ya enviaste ✓';
   } else {
     cfBtn.disabled = !canSubmit; cfBtn.style.opacity = canSubmit ? '1' : '0.3'; cfBtn.style.cursor = canSubmit ? 'pointer' : 'not-allowed';
-    cfBtn.textContent = 'Enviar a encuesta';
+    cfBtn.textContent = hayPartido ? 'Enviar a encuesta' : 'Sin próximo partido';
     if (canSubmit && !wasReady) { cfBtn.style.animation = 'none'; void cfBtn.offsetWidth; cfBtn.style.animation = 'pulse-btn 1s ease-in-out 3'; }
   }
   if (!canSubmit) cfBtn.style.animation = '';
@@ -2330,6 +2326,7 @@ document.getElementById('save-pitch-btn').addEventListener('click', function () 
 document.getElementById('confirm-btn').addEventListener('click', async () => {
   if (onPitch.length !== 11 || sending || lsGet(lsFormKey())) return;
   if (onPitch.some(p => p.custom)) { showToast('Con un jugador creado no se puede enviar a la encuesta.'); return; }
+  if (!FORMACION_OPEN || !FECHA_ACTUAL) { showToast('No hay un próximo partido confirmado para votar.'); return; }
   sending = true;
   const btn = document.getElementById('confirm-btn');
   btn.textContent = 'Enviando...'; btn.disabled = true;
@@ -4107,12 +4104,17 @@ async function resolveMatchContext() {
         FECHA_NUM = proximo.fecha;
         const utc = proximo.status && proximo.status.utcTime;   // match_date = día local AR (UTC-3)
         if (utc) FECHA_ACTUAL = new Date(new Date(utc).getTime() - 3 * 3600 * 1000).toISOString().slice(0, 10);
+      } else {
+        // Sin próximo partido (terminó la fase regular, rival de playoffs sin definir):
+        // no se vota contra el rivalActual de clubes.js, que queda viejo. Cierra la formación.
+        RIVAL = 'Por definir'; RIVAL_SLUG = ''; FECHA_ACTUAL = '';
       }
       // Puntajes → último partido jugado (rival, fecha y plantel que jugó)
       await resolveScoresContext(ultimo);
       applyGating();
       refreshMatchTags();
       updateTilesGating();
+      updateCounter();
       return;
     }
     // Copa: mismo esquema que la liga — formación para el próximo partido y
@@ -4128,12 +4130,14 @@ async function resolveMatchContext() {
       // nombre api-sports, el mismo que va a la columna `rival` de Supabase.
       const match = fixtures.find(f => f.goles === null);
       if (match) { RIVAL = match.rival; FECHA_ACTUAL = match.fecha; }
+      else { RIVAL = 'Por definir'; FECHA_ACTUAL = ''; }   // eliminado o sin cruce definido
     }
     await resolveCopaRivalEscudo();
     await resolveCopaScoresContext();
     applyGating();
     refreshMatchTags();
     updateCopaTiles();
+    updateCounter();
   } catch(e) {}
 }
 // Deep-link ?s=puntajes (desde "Puntuar jugadores" en fixture.html): abre la

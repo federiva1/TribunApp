@@ -111,10 +111,12 @@ def payload_desde_json(pid):
     d = json.loads((ROOT / 'data' / 'partidos' / f'{pid}.json').read_text(encoding='utf-8'))
     p = d['partido']
     goles = []
+    cand = [j.get('nombre') for jj in (d.get('jugadores') or {}).values() for j in jj]
     for lado in ('local', 'visitante'):
         slug = p[lado]
         for g in (p.get('goles_detalle') or {}).get(lado) or []:
             nombre = g.get('jugador') or ''
+            nombre = _resolver_apellido(nombre, cand) or nombre
             if g.get('en_contra'):
                 nombre += ' (e/c)'
             elif g.get('penal'):
@@ -224,6 +226,61 @@ def _nombre(slug, fallback):
     return (NOM.get(slug) or fallback or '').upper()
 
 
+_PARTICULAS = {'de', 'del', 'la', 'las', 'los', 'da', 'das', 'do', 'dos', 'di', 'van', 'von', 'der'}
+
+
+def _apellido(nombre):
+    """Solo el apellido del goleador (pedido de Fede): 'Juan Cruz Policella' ->
+    'Policella', 'A. Cuello' -> 'Cuello', 'Rodrigo De Paul' -> 'De Paul'.
+    Con 3+ palabras y anteúltima en -ez se toma doble apellido ('Agustín Álvarez
+    Martínez' -> 'Álvarez Martínez'). Conserva el sufijo ' (e/c)' / ' (p)'."""
+    nombre = (nombre or '').strip()
+    suf = ''
+    m = re.search(r'\s*\((e/c|p)\)$', nombre)
+    if m:
+        suf, nombre = ' ' + m.group(0).strip(), nombre[:m.start()]
+    t = [x for x in re.split(r'[\s·]+', nombre) if x and not x.endswith('.')]
+    if len(t) <= 1:
+        return (t[0] if t else nombre) + suf
+    i = len(t) - 1
+    if len(t) >= 3 and t[i - 1].lower().endswith('ez'):
+        i -= 1
+    while i > 1 and t[i - 1].lower() in _PARTICULAS:
+        i -= 1
+    return ' '.join(t[i:]) + suf
+
+
+def _sin_acentos(t):
+    import unicodedata
+    return ''.join(c for c in unicodedata.normalize('NFD', t or '') if unicodedata.category(c) != 'Mn').lower()
+
+
+def _resolver_apellido(nombre, candidatos):
+    """api-sports a veces manda el nombre completo con los dos apellidos
+    ('Clever Domingo Ferreira Ñamandu'). Si en la ficha del partido hay un jugador
+    abreviado ('C. Ferreira') cuyo apellido está en ese nombre y cuya inicial coincide,
+    se usa SU apellido ('Ferreira'). Devuelve None si no encuentra ninguno."""
+    suf = ''
+    m = re.search(r'\s*\((e/c|p)\)$', nombre or '')
+    base = nombre[:m.start()] if m else (nombre or '')
+    if m:
+        suf = ' ' + m.group(0).strip()
+    toks = [_sin_acentos(x) for x in re.split(r'[\s·]+', base) if x]
+    if len(toks) < 3:
+        return None
+    # Doble apellido en -ez ('Mateo Pérez Curci'): la ficha lo abrevia ('M. Perez'),
+    # pero el apellido es 'Pérez Curci' y lo resuelve _apellido.
+    if toks[-2].endswith('ez'):
+        return None
+    for c in candidatos:
+        ct = [x for x in re.split(r'\s+', (c or '').strip()) if x]
+        if len(ct) >= 2 and ct[0].endswith('.'):
+            ape = ct[1:]
+            if toks and _sin_acentos(ct[0])[0] == toks[0][0] and all(_sin_acentos(a) in toks for a in ape):
+                return ' '.join(ape) + suf
+    return None
+
+
 def _html(pl):
     ff = ''.join(
         "@font-face{font-family:'%s';font-weight:%s;src:url(%s) format('woff2');}"
@@ -239,7 +296,7 @@ def _html(pl):
     filas = ''.join(
         '<div class="gol"><span class="min">%s\'</span><span class="ball">%s</span>'
         '<span class="quien">%s</span>%s</div>'
-        % (g['min'], BALL, (g['jugador'] or '').upper(), esc_tag(g['slug'], 'mini'))
+        % (g['min'], BALL, _apellido(g['jugador']).upper(), esc_tag(g['slug'], 'mini'))
         for g in pl['goles'])
     caja = f'<div class="goles">{filas}</div>' if filas else ''
     pen = pl.get('pen') or {}
