@@ -171,8 +171,9 @@ function subsOn() { return document.getElementById('chk-subs').checked; }
 function LW() { return W; }
 function LH() { return H + (subsOn() ? SUB_BAND : 0); }
 
-// Para grabar video: cancha a TODO el ancho de la ventana, sin tope por alto (la página
-// scrollea). ANTES (poné false para volver): la cancha entraba por ancho Y por alto
+// Para grabar video: cancha lo más grande posible, a todo el ancho de la ventana pero
+// con tope en el alto de la ventana (al scrollear hasta ella entra entera en la pantalla;
+// a todo el ancho y sin tope se cortaba arriba y abajo en 1920×1080). ANTES (poné false para volver): la cancha entraba por ancho Y por alto
 // (maxH = innerHeight - top - 16, piso 260) con 16 px de margen lateral (#wrap), así que
 // en 1920×1080 medía 1462×914 (76% del ancho), en 1440×900 1174×734 y en 1280×720 886×554.
 const CANCHA_GRANDE = true;
@@ -187,7 +188,8 @@ function fit() {
   }
   const maxW = cv.parentElement.clientWidth;
   const top = cv.getBoundingClientRect().top || 0;
-  const maxH = CANCHA_GRANDE ? Infinity : Math.max(260, window.innerHeight - top - 16);
+  const maxH = CANCHA_GRANDE ? Math.max(260, window.innerHeight - 8)
+                             : Math.max(260, window.innerHeight - top - 16);
   let w = maxW, h = w * LH() / LW();
   if (h > maxH) { h = maxH; w = h * LW() / LH(); }
   const dpr = window.devicePixelRatio || 1;
