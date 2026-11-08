@@ -120,6 +120,34 @@ button:disabled { opacity:.4; cursor:default; }
   <span class="lbl" id="anim-hint">Guardá una foto por cada momento de la jugada y reproducila (se puede grabar mientras).</span>
 </div>
 
+<div class="bar" id="jug-bar">
+  <span class="lbl">JUGADA</span>
+  <button id="jug-rec" title="Graba los recorridos de las fichas, la pelota y los dibujos (no la pantalla)">● Grabar jugada</button>
+  <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:#8b93a7;cursor:pointer"
+         title="Guarda tu voz y la pasa a texto, sincronizada con los movimientos">
+    <input type="checkbox" id="jug-voz" checked> con voz
+  </label>
+  <div class="sep"></div>
+  <button id="jug-play" disabled>▶ Reproducir</button>
+  <input type="range" id="jug-pos" min="0" max="1000" value="0" step="1" disabled style="width:180px;accent-color:#38bdf8">
+  <span id="jug-time" style="font-size:13px;color:#8b93a7;min-width:78px">0:00 / 0:00</span>
+  <select id="jug-speed">
+    <option value="0.5">x0,5</option>
+    <option value="1" selected>x1</option>
+    <option value="1.5">x1,5</option>
+    <option value="2">x2</option>
+  </select>
+  <div class="sep"></div>
+  <input id="jug-nombre" placeholder="Nombre de la jugada" maxlength="80"
+         style="background:#1a2338;color:#fff;border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:6px 10px;font-family:inherit;font-size:14px;width:190px">
+  <button id="jug-save" disabled>⬇ Guardar archivo</button>
+  <button id="jug-open">📂 Abrir jugada</button>
+  <input type="file" id="jug-file" accept=".json,application/json" style="display:none">
+  <span id="jug-info" class="lbl"></span>
+</div>
+<div id="jug-texto" style="display:none;margin:0 16px 6px;padding:7px 12px;border-radius:8px;background:#10182e;
+     border:1px solid rgba(56,189,248,.35);font-size:17px;color:#e8edf7;min-height:36px"></div>
+
 <div id="wrap"><canvas id="board"></canvas></div>
 
 <div class="benches">
@@ -133,7 +161,8 @@ button:disabled { opacity:.4; cursor:default; }
   </div>
 </div>
 <div class="hint">Tocá un jugador del banco para ponerlo en la cancha · arrastralo para moverlo ·
-doble click/doble tap lo saca · la pelota ⚽ se arrastra como un jugador.</div>
+doble click/doble tap lo saca · la pelota ⚽ se arrastra como un jugador ·
+<b>Grabar jugada</b> guarda los recorridos (no la pantalla) y tu voz: después se reproduce, se pausa, se adelanta y se guarda en un archivo para volver a abrirla.</div>
 
 <script src="js/clubes.js"></script>
 <script src="js/kits.js"></script>
@@ -503,6 +532,7 @@ function hit(pos) {
 
 let lastTap = { t: 0, p: null };
 cv.addEventListener('pointerdown', e => {
+  if (jug.playing) return;                   // reproduciendo una jugada grabada: la cancha es de solo lectura
   const pos = evPos(e);
   const h = hit(pos);
   if (state.tool === 'move' || h) {          // mover siempre gana sobre un jugador
@@ -662,7 +692,10 @@ function stopAnim(finished) {
   btnPlay.textContent = '▶ Reproducir';
   renderFrames();
 }
-btnPlay.onclick = () => (anim.playing ? stopAnim(false) : playAnim());
+btnPlay.onclick = () => {
+  if (jug.rec || jug.playing) return;        // no mezclar con la grabación/reproducción de jugadas
+  anim.playing ? stopAnim(false) : playAnim();
+};
 
 // ---------- grabación de video (canvas + micrófono) ----------
 // canvas.captureStream solo emite cuadros cuando el canvas se repinta, así que
@@ -1020,6 +1053,367 @@ async function regenVideo(btn) {
   btn.textContent = `Listo ✓ (${(blob.size / 1048576).toFixed(1)} MB)`;
   btn.disabled = false;
 }
+
+
+// ---------- jugadas grabadas (coordenadas, no pantalla) ----------
+// "Grabar jugada" guarda CÓMO se movió todo, no un video: cada ~33 ms compara la
+// cancha con la última muestra y anota solo lo que cambió (ficha que se movió,
+// que entró o salió, la pelota, los dibujos). La voz va aparte: el audio (opus,
+// liviano) y el texto que reconoce el navegador, con el segundo en que se dijo.
+// Todo entra en un JSON chico que se baja, se vuelve a abrir y se reproduce igual,
+// con pausa, velocidad y barra para ir y venir. Ese archivo es legible para
+// analizar la jugada afuera de la pizarra (formato en JUG_LEEME).
+const JUG_LEEME = 'Jugada de la pizarra táctica de TribunApp. Cancha interna de 1600 x 1000 '
+  + '(x de izquierda a derecha, y de arriba a abajo), líneas a 46 del borde, mitad en x=800. '
+  + 'Si ladoInv es false el equipo A ataca hacia la derecha. t = segundos desde el inicio. '
+  + 'inicio = cómo estaba la cancha al apretar Grabar. eventos: m = ficha {id} pasa a (x,y); '
+  + 'b = pelota a (x,y); a = entra la ficha p; q = sale la ficha {id}; s = dibujos terminados '
+  + '(lista completa); d = dibujo en curso (o null). voz = frases reconocidas entre a y b segundos.';
+const JUG_DT = 33;                            // ms entre muestras (~30 por segundo)
+const jug = {
+  rec: false, t0: 0, timer: 0, data: null, comp: null,
+  last: null,                                 // última muestra durante la grabación
+  playing: false, t: 0, raf: 0, clock0: 0, tBase: 0,
+  sr: null, voz: [], vozIni: 0, mic: null, ac: null, mr: null, chunks: [], audioUrl: '', audio: null,
+  guardada: true,
+};
+const r1 = v => Math.round(v * 10) / 10;
+const jugId = p => p.team + '|' + p.name;
+const jugEls = id => document.getElementById(id);
+const jugInfo = t => { jugEls('jug-info').textContent = t; };
+const _mmss = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+
+function _jugFicha(p) { return { id: jugId(p), team: p.team, slug: p.slug, num: p.num || '', name: p.name, x: r1(p.x), y: r1(p.y) }; }
+function _jugShapes(list) { return list.map(sh => ({ type: sh.type, color: sh.color, pts: sh.pts.map(q => ({ x: r1(q.x), y: r1(q.y) })) })); }
+function _jugMuestra() {
+  const players = new Map(state.players.map(p => [jugId(p), p]));
+  const d = state.drawing;
+  return {
+    players, ball: { x: r1(state.ball.x), y: r1(state.ball.y) },
+    shapesSig: state.shapes.length + ':' + state.shapes.map(sh => sh.pts.length).join(','),
+    drawSig: d ? d.type + d.pts.length + ':' + r1(d.pts[d.pts.length - 1].x) + ',' + r1(d.pts[d.pts.length - 1].y) : '',
+    pos: new Map(state.players.map(p => [jugId(p), [r1(p.x), r1(p.y)]])),
+  };
+}
+
+// ---- grabar ----
+async function jugStart() {
+  if (anim.playing) stopAnim(false);
+  if (jug.playing) jugPause();
+  if (!jug.guardada && jug.data && !confirm('La jugada anterior no se guardó en un archivo. ¿Grabar una nueva igual?')) return;
+  jug.data = {
+    v: 1, app: 'tribunapp-pizarra', leeme: JUG_LEEME,
+    nombre: jugEls('jug-nombre').value.trim(), creada: new Date().toISOString(), duracion: 0,
+    cancha: { ancho: W, alto: H, margen: M },
+    equipos: { A: state.teams.A, B: state.teams.B }, ladoInv: state.ladoInv,
+    inicio: { players: state.players.map(_jugFicha), ball: { x: r1(state.ball.x), y: r1(state.ball.y) },
+              shapes: _jugShapes(state.shapes) },
+    eventos: [], voz: [], audio: null,
+  };
+  jug.comp = null; jug.voz = []; jug.vozIni = 0;
+  // Si se está grabando video con subtítulos, el reconocimiento ya está tomado:
+  // al terminar se toman esas frases, corridas al reloj de la jugada.
+  jug.subsOff = subs.on ? (Date.now() - subs.t0) / 1000 : null;
+  jug.last = _jugMuestra();
+  jug.rec = true;
+  jug.t0 = performance.now();
+  jug.timer = setInterval(jugSample, JUG_DT);
+  _jugVozStart();
+  jugEls('jug-rec').classList.add('rec');
+  jugEls('jug-play').disabled = true; jugEls('jug-pos').disabled = true; jugEls('jug-save').disabled = true;
+  jugEls('jug-texto').style.display = 'none';
+  jugInfo('Grabando: mové las fichas y explicá la jugada');
+  _jugTick();
+}
+function _jugTick() {
+  if (!jug.rec) return;
+  const s = (performance.now() - jug.t0) / 1000;
+  jugEls('jug-rec').textContent = `■ Terminar (${_mmss(s)})`;
+  setTimeout(_jugTick, 250);
+}
+function jugSample() {
+  const t = Math.round(performance.now() - jug.t0) / 1000;      // segundos, al milisegundo
+  const ev = jug.data.eventos, a = jug.last, b = _jugMuestra();
+  for (const [id, p] of b.players) {
+    if (!a.players.has(id)) ev.push({ t, k: 'a', p: _jugFicha(p) });
+    else {
+      const pa = a.pos.get(id), pb = b.pos.get(id);
+      if (Math.abs(pa[0] - pb[0]) >= 0.5 || Math.abs(pa[1] - pb[1]) >= 0.5) ev.push({ t, k: 'm', id, x: pb[0], y: pb[1] });
+    }
+  }
+  for (const id of a.players.keys()) if (!b.players.has(id)) ev.push({ t, k: 'q', id });
+  if (Math.abs(a.ball.x - b.ball.x) >= 0.5 || Math.abs(a.ball.y - b.ball.y) >= 0.5) ev.push({ t, k: 'b', x: b.ball.x, y: b.ball.y });
+  if (a.shapesSig !== b.shapesSig) ev.push({ t, k: 's', v: _jugShapes(state.shapes) });
+  if (a.drawSig !== b.drawSig) ev.push({ t, k: 'd', v: state.drawing ? _jugShapes([state.drawing])[0] : null });
+  // si lo movido es un jugador que se suelta y se vuelve a agarrar, la muestra sigue siendo la misma referencia
+  jug.last = b;
+}
+async function jugStop() {
+  jugSample();
+  clearInterval(jug.timer);
+  jug.rec = false;
+  const dur = (performance.now() - jug.t0) / 1000;
+  jug.data.duracion = Math.round(dur * 100) / 100;
+  const audio = await _jugVozStop(dur);
+  if (!jug.voz.length && jug.subsOff != null)
+    jug.voz = subs.cues.filter(c => c.b > jug.subsOff && c.a < jug.subsOff + dur)
+      .map(c => ({ a: Math.round(Math.max(0, c.a - jug.subsOff) * 100) / 100, b: Math.round((c.b - jug.subsOff) * 100) / 100, txt: c.txt }));
+  jug.data.voz = jug.voz;
+  jug.data.audio = audio;
+  jug.guardada = false;
+  jugEls('jug-rec').classList.remove('rec');
+  jugEls('jug-rec').textContent = '● Grabar jugada';
+  _jugListo();
+  jugInfo(`Jugada lista: ${_mmss(dur)}, ${jug.data.eventos.length} movimientos`
+    + (jug.voz.length ? `, ${jug.voz.length} frases` : '') + (audio ? ', con audio' : '')
+    + ' · guardala en un archivo para no perderla');
+  jugSeek(0);
+}
+
+// ---- voz: texto (reconocimiento del navegador) + audio liviano ----
+async function _jugVozStart() {
+  jug.mic = null; jug.mr = null; jug.chunks = [];
+  if (!jugEls('jug-voz').checked) return;
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (SR && !subs.on) {                       // el navegador permite un solo reconocimiento a la vez
+    const sr = new SR();
+    sr.lang = 'es-AR'; sr.continuous = true; sr.interimResults = true;
+    sr.onresult = e => {
+      let parcial = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const r = e.results[i], txt = r[0].transcript.trim();
+        if (!txt) continue;
+        if (r.isFinal) {
+          const fin = Math.round((performance.now() - jug.t0) / 10) / 100;
+          jug.voz.push({ a: jug.vozIni, b: fin, txt });
+          jug.vozIni = fin;
+          _jugTexto(txt);
+        } else parcial += txt + ' ';
+      }
+      if (parcial) _jugTexto(parcial.trim(), true);
+    };
+    sr.onend = () => { if (jug.rec && jug.sr === sr) { try { sr.start(); } catch (err) {} } };
+    jug.sr = sr;
+    try { sr.start(); } catch (err) {}
+  }
+  try {
+    const m = await openMic();
+    jug.mic = m.mic; jug.ac = m.ac;
+    const mime = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'].find(x => window.MediaRecorder && MediaRecorder.isTypeSupported(x));
+    if (mime) {
+      jug.mr = new MediaRecorder(new MediaStream([m.track]), { mimeType: mime, audioBitsPerSecond: 32000 });
+      jug.mr.ondataavailable = e => e.data.size && jug.chunks.push(e.data);
+      jug.mr.start(500);
+    }
+    if (!rec.meter) startMeter(m.an);
+  } catch (e) {
+    jugInfo('Grabando sin audio — ' + _micErrorMsg(e));
+  }
+}
+function _jugTexto(txt, parcial) {
+  const el = jugEls('jug-texto');
+  el.style.display = txt ? '' : 'none';
+  el.style.opacity = parcial ? '.7' : '1';
+  el.textContent = txt;
+}
+async function _jugVozStop(dur) {
+  if (jug.sr) { const sr = jug.sr; jug.sr = null; try { sr.stop(); } catch (err) {} }
+  // la frase que quedó a medio reconocer se pierde; si hubo texto parcial al final, no se inventa
+  _jugTexto('');
+  stopMeter();
+  let audio = null;
+  if (jug.mr && jug.mr.state !== 'inactive') {
+    const fin = new Promise(res => { jug.mr.onstop = res; });
+    jug.mr.stop();
+    await fin;
+    const blob = new Blob(jug.chunks, { type: jug.mr.mimeType || 'audio/webm' });
+    if (blob.size) audio = { mime: blob.type, data: await _blobB64(blob) };
+  }
+  if (jug.mic) { jug.mic.getTracks().forEach(t => t.stop()); jug.mic = null; }
+  if (jug.ac) { jug.ac.close(); jug.ac = null; }
+  jug.mr = null; jug.chunks = [];
+  return audio;
+}
+function _blobB64(blob) {
+  return new Promise(res => {
+    const fr = new FileReader();
+    fr.onload = () => res(String(fr.result).split(',')[1] || '');
+    fr.readAsDataURL(blob);
+  });
+}
+
+// ---- compilar: de la lista de eventos a recorridos que se consultan por tiempo ----
+function _jugCompilar(d) {
+  const tracks = new Map(), pres = new Map(), info = new Map();
+  for (const p of d.inicio.players) {
+    tracks.set(p.id, [[0, p.x, p.y]]); pres.set(p.id, [[0, true]]); info.set(p.id, p);
+  }
+  const ball = [[0, d.inicio.ball.x, d.inicio.ball.y]];
+  const shapes = [[0, d.inicio.shapes]], draw = [[0, null]];
+  for (const e of d.eventos) {
+    if (e.k === 'm') { (tracks.get(e.id) || tracks.set(e.id, []).get(e.id)).push([e.t, e.x, e.y]); }
+    else if (e.k === 'a') {
+      info.set(e.p.id, e.p);
+      (tracks.get(e.p.id) || tracks.set(e.p.id, []).get(e.p.id)).push([e.t, e.p.x, e.p.y]);
+      (pres.get(e.p.id) || pres.set(e.p.id, []).get(e.p.id)).push([e.t, true]);
+    }
+    else if (e.k === 'q') (pres.get(e.id) || pres.set(e.id, []).get(e.id)).push([e.t, false]);
+    else if (e.k === 'b') ball.push([e.t, e.x, e.y]);
+    else if (e.k === 's') { shapes.push([e.t, e.v]); draw.push([e.t, null]); }
+    else if (e.k === 'd') draw.push([e.t, e.v]);
+  }
+  return { tracks, pres, info, ball, shapes, draw };
+}
+// último índice con t <= tt (las listas vienen ordenadas por tiempo)
+function _jugIdx(arr, tt) {
+  let lo = 0, hi = arr.length - 1, r = -1;
+  while (lo <= hi) { const m = (lo + hi) >> 1; if (arr[m][0] <= tt) { r = m; lo = m + 1; } else hi = m - 1; }
+  return r;
+}
+// posición en tt: entre dos muestras cercanas se interpola (a x0,5 no se ve a saltos);
+// si la ficha estuvo quieta un rato, la muestra siguiente no se adelanta.
+function _jugPos(arr, tt) {
+  const i = _jugIdx(arr, tt);
+  if (i < 0) return arr.length ? [arr[0][1], arr[0][2]] : null;
+  const a = arr[i], b = arr[i + 1];
+  if (!b || b[0] - a[0] > 0.12) return [a[1], a[2]];
+  const f = (tt - a[0]) / (b[0] - a[0]);
+  return [a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f];
+}
+function jugEstado(tt) {
+  const c = jug.comp;
+  const players = [];
+  for (const [id, pr] of c.pres) {
+    const i = _jugIdx(pr, tt);
+    if (i < 0 || !pr[i][1]) continue;
+    const pos = _jugPos(c.tracks.get(id) || [], tt);
+    const p = c.info.get(id);
+    if (pos && p) players.push({ team: p.team, slug: p.slug, num: p.num, name: p.name, x: pos[0], y: pos[1] });
+  }
+  state.players = players;
+  const bp = _jugPos(c.ball, tt); state.ball = { x: bp[0], y: bp[1] };
+  state.shapes = c.shapes[_jugIdx(c.shapes, tt)][1].map(sh => ({ ...sh, pts: sh.pts.map(q => ({ ...q })) }));
+  const dr = c.draw[_jugIdx(c.draw, tt)][1];
+  state.drawing = dr ? { ...dr, pts: dr.pts.map(q => ({ ...q })) } : null;
+  // texto: la frase que se estaba diciendo (se deja 1,5 s más para poder leerla)
+  const cue = (jug.data.voz || []).find(v => tt >= v.a && tt <= v.b + 1.5);
+  const txt = cue ? cue.txt : '';
+  _jugTexto(txt);
+  subs.texto = txt;                           // con "subtítulos" prendido sale también en la franja (y en el video)
+  render();
+}
+
+// ---- reproducir ----
+function _jugListo() {
+  jug.comp = _jugCompilar(jug.data);
+  if (jug.audioUrl) { URL.revokeObjectURL(jug.audioUrl); jug.audioUrl = ''; }
+  jug.audio = null;
+  if (jug.data.audio && jug.data.audio.data) {
+    const bin = atob(jug.data.audio.data), u8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+    jug.audioUrl = URL.createObjectURL(new Blob([u8], { type: jug.data.audio.mime || 'audio/webm' }));
+    jug.audio = new Audio(jug.audioUrl);
+    jug.audio.preservesPitch = true;
+  }
+  jugEls('jug-play').disabled = false; jugEls('jug-pos').disabled = false; jugEls('jug-save').disabled = false;
+  if (jug.data.nombre) jugEls('jug-nombre').value = jug.data.nombre;
+}
+function _jugUI() {
+  const d = jug.data.duracion || 0;
+  jugEls('jug-time').textContent = `${_mmss(jug.t)} / ${_mmss(d)}`;
+  jugEls('jug-pos').value = d ? Math.round(jug.t / d * 1000) : 0;
+}
+function jugSeek(tt) {
+  jug.t = Math.max(0, Math.min(jug.data.duracion || 0, tt));
+  if (jug.playing) { jug.tBase = jug.t; jug.clock0 = performance.now(); }
+  if (jug.audio) { try { jug.audio.currentTime = jug.t; } catch (e) {} }
+  jugEstado(jug.t);
+  _jugUI();
+}
+function jugPlay() {
+  if (!jug.comp || jug.rec) return;
+  if (anim.playing) stopAnim(false);
+  if (jug.t >= (jug.data.duracion || 0) - 0.05) jug.t = 0;
+  jug.playing = true;
+  jug.tBase = jug.t; jug.clock0 = performance.now();
+  const vel = Number(jugEls('jug-speed').value);
+  if (jug.audio) {
+    try { jug.audio.currentTime = jug.t; jug.audio.playbackRate = vel; jug.audio.play().catch(() => {}); } catch (e) {}
+  }
+  jugEls('jug-play').textContent = '❚❚ Pausa';
+  const step = () => {
+    if (!jug.playing) return;
+    const v = Number(jugEls('jug-speed').value);
+    let tt = jug.tBase + (performance.now() - jug.clock0) / 1000 * v;
+    // con audio, el audio manda (así la voz y las fichas no se desfasan)
+    if (jug.audio && !jug.audio.paused && !jug.audio.ended && Math.abs(jug.audio.currentTime - tt) > 0.25) {
+      tt = jug.audio.currentTime; jug.tBase = tt; jug.clock0 = performance.now();
+    }
+    if (tt >= jug.data.duracion) { jug.t = jug.data.duracion; jugEstado(jug.t); _jugUI(); jugPause(); return; }
+    jug.t = tt;
+    jugEstado(tt); _jugUI();
+    jug.raf = requestAnimationFrame(step);
+  };
+  jug.raf = requestAnimationFrame(step);
+}
+function jugPause() {
+  jug.playing = false;
+  cancelAnimationFrame(jug.raf);
+  if (jug.audio) jug.audio.pause();
+  subs.texto = '';
+  jugEls('jug-play').textContent = '▶ Reproducir';
+  render();
+}
+
+// ---- archivo ----
+function jugGuardar() {
+  if (!jug.data) return;
+  jug.data.nombre = jugEls('jug-nombre').value.trim();
+  const base = (jug.data.nombre || 'jugada').normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'jugada';
+  const f = new Date(jug.data.creada);
+  const sello = `${f.getFullYear()}${String(f.getMonth() + 1).padStart(2, '0')}${String(f.getDate()).padStart(2, '0')}`
+    + `-${String(f.getHours()).padStart(2, '0')}${String(f.getMinutes()).padStart(2, '0')}`;
+  _bajarBlob(new Blob([JSON.stringify(jug.data)], { type: 'application/json' }), `${base}-${sello}.jugada.json`);
+  jug.guardada = true;
+  jugInfo('Archivo guardado');
+}
+async function jugAbrir(file) {
+  let d;
+  try { d = JSON.parse(await file.text()); } catch (e) { jugInfo('⚠ El archivo no es una jugada válida'); return; }
+  if (!d || d.app !== 'tribunapp-pizarra' || !d.inicio || !Array.isArray(d.eventos)) {
+    jugInfo('⚠ El archivo no es una jugada de la pizarra'); return;
+  }
+  if (jug.playing) jugPause();
+  if (anim.playing) stopAnim(false);
+  for (const key of ['A', 'B']) {
+    const slug = d.equipos && d.equipos[key];
+    if (slug && slug !== state.teams[key] && CLUBES_CONFIG[slug]) {
+      jugEls('sel-' + key.toLowerCase()).value = slug;
+      await setTeam(key, slug);
+    }
+  }
+  state.ladoInv = !!d.ladoInv;
+  jug.data = d; jug.guardada = true;
+  _jugListo();
+  jugSeek(0);
+  renderBenches();
+  jugInfo(`Jugada abierta: ${d.nombre || file.name} (${_mmss(d.duracion || 0)})`);
+}
+
+jugEls('jug-rec').onclick = () => (jug.rec ? jugStop() : jugStart());
+jugEls('jug-play').onclick = () => (jug.playing ? jugPause() : jugPlay());
+jugEls('jug-pos').oninput = e => { if (jug.data) jugSeek(e.target.value / 1000 * (jug.data.duracion || 0)); };
+jugEls('jug-speed').onchange = () => {
+  if (jug.playing) { jug.tBase = jug.t; jug.clock0 = performance.now(); }
+  if (jug.audio) jug.audio.playbackRate = Number(jugEls('jug-speed').value);
+};
+jugEls('jug-save').onclick = jugGuardar;
+jugEls('jug-open').onclick = () => jugEls('jug-file').click();
+jugEls('jug-file').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) jugAbrir(f); };
+window.addEventListener('beforeunload', e => {
+  if (jug.rec || (jug.data && !jug.guardada)) { e.preventDefault(); e.returnValue = ''; }
+});
 
 // ---------- equipos / bancos ----------
 const SLUGS = Object.keys(CLUBES_CONFIG).sort(
