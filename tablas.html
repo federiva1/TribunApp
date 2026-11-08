@@ -183,13 +183,13 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   </div>
 
   <div class="tabs">
-    <div class="tab active" data-tab="actual" onclick="switchTab('actual', this)">Torneo actual</div>
-    <div class="tab" data-tab="anual" onclick="switchTab('anual', this)">Anual</div>
+    <div class="tab" data-tab="actual" onclick="switchTab('actual', this)">Torneo actual</div>
+    <div class="tab active" data-tab="anual" onclick="switchTab('anual', this)">Anual</div>
     <div class="tab" data-tab="promedios" onclick="switchTab('promedios', this)">Promedios</div>
   </div>
 
-  <!-- Zona A / Zona B (solo en tab actual) -->
-  <div class="subtabs" id="zona-subtabs">
+  <!-- Zona A / Zona B (solo en tab actual; la página abre en Anual, porque la home ya muestra las zonas) -->
+  <div class="subtabs" id="zona-subtabs" style="display:none;">
     <div class="subtab active" id="zona-btn-A" onclick="switchZona('A')">Zona A</div>
     <div class="subtab" id="zona-btn-B" onclick="switchZona('B')">Zona B</div>
   </div>
@@ -247,7 +247,7 @@ const PROMEDIO_HIST = {
 
 // Estado del módulo
 let DATA = null;          // { zonaA, zonaB, anual, promedios, torneoLabel }
-let tab = 'actual';       // 'actual' | 'anual' | 'promedios'
+let tab = 'anual';        // 'actual' | 'anual' | 'promedios' (abre en Anual: las zonas ya están en la home)
 let zona = 'A';           // 'A' | 'B' — aplica al tab actual
 // ---- Helpers ----
 function slugFromId(id) { return (typeof ESCUDO_MAP !== 'undefined' && ESCUDO_MAP[id]) || null; }

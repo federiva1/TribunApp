@@ -138,6 +138,13 @@ def main():
     # Solo Clausura
     clausura = [f for f in resp if f['league']['round'].startswith('Clausura')]
     entries = [build(f) for f in clausura]
+    # Horarios confirmados por la AFA que la API todavía no trae (data/horarios_overrides.json)
+    import horarios_overrides as ho
+    for e in entries:
+        h = ho.hora_para(e['home']['slug'], e['away']['slug'], e['status']['utcTime'], e['status']['finished'])
+        if h:
+            e['status']['utcTime'] = h
+            print(f"  Horario a mano: {e['home']['slug']} vs {e['away']['slug']} -> {h}")
     # El agregado de api-sports se atrasa al terminar un partido: se completa con
     # lo que ya haya en data/partidos (endpoint por-id, que marca FT al instante).
     reparados = reparar_estados(entries)
