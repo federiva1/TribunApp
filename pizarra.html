@@ -52,6 +52,14 @@ button.danger { border-color:rgba(255,90,90,.5); }
          font-family:'Bebas Neue'; font-size:15px; }
 .fchip.on { background:#38bdf8; color:#06121f; border-color:#38bdf8; }
 button:disabled { opacity:.4; cursor:default; }
+#rc-menu { position:fixed; z-index:70; min-width:210px; background:#0d1424; border:1px solid #2a3550;
+           border-radius:10px; padding:6px; box-shadow:0 12px 30px rgba(0,0,0,.55); }
+#rc-menu .t { font-family:'Bebas Neue'; font-size:13px; letter-spacing:2px; color:#5d6479; padding:4px 8px 2px; }
+#rc-menu button { display:flex; align-items:center; gap:10px; width:100%; text-align:left; border:none;
+                  background:none; padding:7px 8px; font-size:15px; border-radius:7px; }
+#rc-menu button:hover { background:#1a2338; }
+#rc-menu svg { width:30px; height:16px; flex:0 0 auto; }
+#rc-menu hr { border:none; border-top:1px solid #1f2940; margin:4px 0; }
 </style>
 </head>
 <body>
@@ -129,6 +137,7 @@ button:disabled { opacity:.4; cursor:default; }
          title="Guarda tu voz y la pasa a texto, sincronizada con los movimientos">
     <input type="checkbox" id="jug-voz" checked> con voz
   </label>
+  <span id="jug-lista" style="display:flex;gap:5px;flex-wrap:wrap"></span>
   <div class="sep"></div>
   <button id="jug-play" disabled>▶ Reproducir</button>
   <input type="range" id="jug-pos" min="0" max="1000" value="0" step="1" disabled style="width:180px;accent-color:#38bdf8">
@@ -143,6 +152,7 @@ button:disabled { opacity:.4; cursor:default; }
   <input id="jug-nombre" placeholder="Nombre de la jugada" maxlength="80"
          style="background:#1a2338;color:#fff;border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:6px 10px;font-family:inherit;font-size:14px;width:190px">
   <button id="jug-save" disabled>⬇ Guardar archivo</button>
+  <button id="jug-save-all" style="display:none" title="Todas las jugadas de esta sesión en un solo archivo">⬇ Guardar todas</button>
   <button id="jug-open">📂 Abrir jugada</button>
   <input type="file" id="jug-file" accept=".json,application/json" style="display:none">
   <span id="jug-info" class="lbl"></span>
@@ -151,6 +161,7 @@ button:disabled { opacity:.4; cursor:default; }
      border:1px solid rgba(56,189,248,.35);font-size:17px;color:#e8edf7;min-height:36px"></div>
 
 <div id="wrap"><canvas id="board"></canvas></div>
+<div id="rc-menu" hidden></div>
 
 <div class="benches">
   <div class="bench">
@@ -165,7 +176,9 @@ button:disabled { opacity:.4; cursor:default; }
 <div class="hint">Tocá un jugador del banco para ponerlo en la cancha · arrastralo para moverlo ·
 doble click/doble tap lo saca · la pelota ⚽ se arrastra como un jugador ·
 <b>Grabar jugada</b> guarda los recorridos (no la pantalla) y tu voz: después se reproduce, se pausa, se adelanta y se guarda en un archivo para volver a abrirla ·
-<b>🎥 Cámara</b>: encuadrá el sector de la jugada (arrastrá un rectángulo, movelo, o estiralo desde las esquinas o desde el medio de un lado para cambiar solo el ancho o solo el alto) y volvé a Mover para trabajar con zoom; si la jugada progresa, estirá el cuadro. Las fichas que no moviste a mano se ven translúcidas: son posiciones estimadas.</div>
+<b>🎥 Cámara</b>: encuadrá el sector de la jugada (arrastrá un rectángulo, movelo, o estiralo desde las esquinas o desde el medio de un lado para cambiar solo el ancho o solo el alto) y volvé a Mover para trabajar con zoom; si la jugada progresa, estirá el cuadro. Las fichas que no moviste a mano se ven translúcidas: son posiciones estimadas ·
+<b>Clic derecho</b> en la cancha: flecha recta, punteada o con curva, y zonas; en la <b>pelota</b>: la flecha que elijas es el recorrido que hace la pelota. Clic izquierdo termina el dibujo, otro clic derecho da vuelta la curva y Esc cancela ·
+Se pueden grabar varias jugadas seguidas (J1, J2…), también mientras se graba un video: cada una guarda en qué segundo del video arranca.</div>
 
 <script src="js/clubes.js"></script>
 <script src="js/kits.js"></script>
@@ -380,7 +393,7 @@ function apellido(n) { return (n || '').length <= 14 ? n : n.split(' ').slice(-1
 
 // Pelota clásica (tipo Telstar): esfera blanca con sombreado, pentágono negro al centro,
 // cinco pentágonos asomando por el borde y las costuras que arman los hexágonos.
-const BALL_R = 14;
+const BALL_R = 12;
 function _pent(cx, cy, rad, rot) {
   const pts = [];
   for (let k = 0; k < 5; k++) {
@@ -435,6 +448,19 @@ function drawBall() {
 }
 
 // ---------- dibujos ----------
+// Punto de control de la flecha curva: a mitad de camino, corrido hacia un costado un
+// 28 % del largo (lado = +1 / -1). Es la misma curva que recorre la pelota.
+function curvaCtrl(a, b, lado) {
+  const dx = b.x - a.x, dy = b.y - a.y, L = Math.hypot(dx, dy) || 1;
+  return { x: (a.x + b.x) / 2 - dy / L * L * 0.28 * lado, y: (a.y + b.y) / 2 + dx / L * L * 0.28 * lado };
+}
+function puntoEn(sh, t) {                    // punto del recorrido de una flecha en t (0..1)
+  const a = sh.pts[0], b = sh.pts[sh.pts.length - 1];
+  if (sh.type !== 'curve') return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
+  const c = curvaCtrl(a, b, sh.curva || 1), u = 1 - t;
+  return { x: u * u * a.x + 2 * u * t * c.x + t * t * b.x, y: u * u * a.y + 2 * u * t * c.y + t * t * b.y };
+}
+
 function drawShape(s) {
   const kz = vista.k;
   ctx.strokeStyle = s.color; ctx.fillStyle = s.color; ctx.lineWidth = 5 * kz;
@@ -444,6 +470,21 @@ function drawShape(s) {
     ctx.beginPath(); ctx.moveTo(p[0].x, p[0].y);
     for (const q of p) ctx.lineTo(q.x, q.y);
     ctx.stroke();
+  } else if (s.type === 'zrect') {           // zona rectangular
+    const a = p[0], b = p[p.length-1];
+    const x = Math.min(a.x, b.x), y = Math.min(a.y, b.y), w = Math.abs(b.x - a.x) || 4, h = Math.abs(b.y - a.y) || 4;
+    ctx.save(); ctx.globalAlpha = 0.22; ctx.fillRect(x, y, w, h); ctx.restore();
+    ctx.globalAlpha = 0.9; ctx.lineWidth = 3 * kz;
+    ctx.beginPath(); ctx.roundRect(x, y, w, h, 10 * kz); ctx.stroke(); ctx.globalAlpha = 1;
+  } else if (s.type === 'curve') {           // flecha con curva (comba): la curva sale sola
+    const a = p[0], b = p[p.length-1], c = curvaCtrl(a, b, s.curva || 1);
+    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.quadraticCurveTo(c.x, c.y, b.x, b.y); ctx.stroke();
+    const ang = Math.atan2(b.y - c.y, b.x - c.x);
+    ctx.beginPath();
+    ctx.moveTo(b.x, b.y);
+    ctx.lineTo(b.x - 20*kz*Math.cos(ang - 0.4), b.y - 20*kz*Math.sin(ang - 0.4));
+    ctx.lineTo(b.x - 20*kz*Math.cos(ang + 0.4), b.y - 20*kz*Math.sin(ang + 0.4));
+    ctx.closePath(); ctx.fill();
   } else if (s.type === 'zone') {
     const a = p[0], b = p[p.length-1];
     ctx.save(); ctx.globalAlpha = 0.22;
@@ -634,7 +675,9 @@ function hit(pos) {
 let lastTap = { t: 0, p: null };
 cv.addEventListener('pointerdown', e => {
   if (jug.playing) return;                   // reproduciendo una jugada grabada: la cancha es de solo lectura
+  if (e.button === 2) return;                // el derecho lo maneja el menú (contextmenu)
   const pos = evPos(e);
+  if (rcMode) { rcTerminar(pos); return; }   // termina la flecha/zona elegida en el menú
   if (state.tool === 'cam') { camDown(pos); cv.setPointerCapture(e.pointerId); return; }
   const h = hit(pos);
   if (state.tool === 'move' || h) {          // mover siempre gana sobre un jugador
@@ -656,6 +699,7 @@ cv.addEventListener('pointerdown', e => {
 });
 cv.addEventListener('pointermove', e => {
   const pos = evPos(e);
+  if (rcMode) { state.drawing.pts[1] = pos; render(); return; }
   if (camEd) { camMove(pos); return; }
   if (state.tool === 'cam' && !jug.playing) { cv.style.cursor = camCursor(camZona(pos)); return; }
   if (state.drag) {
@@ -670,6 +714,7 @@ cv.addEventListener('pointermove', e => {
   }
 });
 cv.addEventListener('pointerup', () => {
+  if (rcMode) return;
   if (camEd) { camEd = null; render(); return; }
   if (state.drawing && state.drawing.pts.length > 1) {
     const a = state.drawing.pts[0], b = state.drawing.pts[state.drawing.pts.length - 1];
@@ -677,6 +722,92 @@ cv.addEventListener('pointerup', () => {
   }
   state.drag = null; state.drawing = null; render();
 });
+
+// ---------- botón derecho: flechas y zonas ----------
+// Clic derecho sobre la cancha abre un menú: flecha recta, punteada (centros), con curva
+// (comba, sale sola), zona rectangular o circular. Se arranca donde se hizo el clic
+// derecho, el dibujo sigue al mouse y un clic izquierdo lo termina (Esc cancela; con la
+// flecha curva, otro clic derecho la da vuelta). Sobre la PELOTA el menú ofrece las tres
+// flechas y, al terminar, la pelota recorre la flecha hasta la punta (pase, centro, remate).
+const RC_ICO = {
+  arrow: '<svg viewBox="0 0 30 16"><path d="M2 8H24" stroke="#fff" stroke-width="2.4"/><path d="M22 3l6 5-6 5z" fill="#fff"/></svg>',
+  dash:  '<svg viewBox="0 0 30 16"><path d="M2 8H24" stroke="#fff" stroke-width="2.4" stroke-dasharray="4 3"/><path d="M22 3l6 5-6 5z" fill="#fff"/></svg>',
+  curve: '<svg viewBox="0 0 30 16"><path d="M2 13Q14 -3 25 10" stroke="#fff" stroke-width="2.4" fill="none"/><path d="M21 12.5l6.5-.5-2-6z" fill="#fff"/></svg>',
+  zrect: '<svg viewBox="0 0 30 16"><rect x="4" y="2" width="22" height="12" rx="2" fill="rgba(255,255,255,.25)" stroke="#fff" stroke-width="1.8"/></svg>',
+  zone:  '<svg viewBox="0 0 30 16"><ellipse cx="15" cy="8" rx="11" ry="6" fill="rgba(255,255,255,.25)" stroke="#fff" stroke-width="1.8"/></svg>',
+};
+const RC_NOM = { arrow: 'Flecha recta', dash: 'Flecha punteada (centro)', curve: 'Flecha con curva (comba)',
+                 zrect: 'Zona rectangular', zone: 'Zona circular' };
+let rcMode = null;            // { tipo, bola } mientras se está dibujando desde el menú
+const rcMenu = document.getElementById('rc-menu');
+function rcCerrarMenu() { rcMenu.hidden = true; }
+function rcAbrirMenu(e, pos, sobreBola) {
+  const tipos = sobreBola ? ['arrow', 'dash', 'curve'] : ['arrow', 'dash', 'curve', 'zrect', 'zone'];
+  rcMenu.innerHTML = `<div class="t">${sobreBola ? 'PELOTA: ¿HASTA DÓNDE VA?' : 'DIBUJAR'}</div>`
+    + tipos.map((t, i) => (i === 3 ? '<hr>' : '') + `<button data-t="${t}">${RC_ICO[t]}${RC_NOM[t]}</button>`).join('');
+  rcMenu.hidden = false;
+  const r = rcMenu.getBoundingClientRect();
+  rcMenu.style.left = Math.min(e.clientX, innerWidth - r.width - 8) + 'px';
+  rcMenu.style.top = Math.min(e.clientY, innerHeight - r.height - 8) + 'px';
+  rcMenu.onclick = ev => {
+    const b = ev.target.closest('button[data-t]');
+    if (!b) return;
+    rcCerrarMenu();
+    const desde = sobreBola ? { x: state.ball.x, y: state.ball.y } : pos;
+    rcMode = { tipo: b.dataset.t, bola: sobreBola };
+    state.drawing = { type: b.dataset.t, color: state.color, pts: [desde, { ...desde }],
+                      ...(b.dataset.t === 'curve' ? { curva: 1 } : {}) };
+    cv.style.cursor = 'crosshair';
+    render();
+  };
+}
+function rcCancelar() {
+  if (!rcMode) return;
+  rcMode = null; state.drawing = null;
+  cv.style.cursor = state.tool === 'move' ? 'grab' : 'crosshair';
+  render();
+}
+function rcTerminar(pos) {
+  const d = state.drawing, bola = rcMode.bola;
+  d.pts[1] = pos;
+  rcMode = null; state.drawing = null;
+  cv.style.cursor = state.tool === 'move' ? 'grab' : 'crosshair';
+  const a = d.pts[0];
+  if (Math.hypot(pos.x - a.x, pos.y - a.y) > 12) {
+    state.shapes.push(d);
+    if (bola) viajarPelota(d);
+  }
+  render();
+}
+// La pelota recorre la flecha (recta o curva), rápido al salir y frenando al llegar.
+let viaje = 0;
+function viajarPelota(sh) {
+  cancelAnimationFrame(viaje);
+  const a = sh.pts[0], b = sh.pts[sh.pts.length - 1];
+  const largo = sh.type === 'curve' ? Math.hypot(b.x - a.x, b.y - a.y) * 1.15 : Math.hypot(b.x - a.x, b.y - a.y);
+  const dur = Math.max(450, Math.min(1800, 300 + largo * 0.9));
+  const t0 = performance.now();
+  const paso = now => {
+    const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 2.2);
+    const p = puntoEn(sh, e);
+    state.ball = { x: Math.max(10, Math.min(W - 10, p.x)), y: Math.max(10, Math.min(H - 10, p.y)) };
+    render();
+    if (k < 1) viaje = requestAnimationFrame(paso);
+  };
+  viaje = requestAnimationFrame(paso);
+}
+cv.addEventListener('contextmenu', e => {
+  e.preventDefault();
+  if (jug.playing || anim.playing || state.tool === 'cam') return;
+  if (rcMode) {                               // dibujando: el derecho da vuelta la curva
+    if (state.drawing && state.drawing.type === 'curve') { state.drawing.curva *= -1; render(); }
+    return;
+  }
+  const pos = evPos(e), h = hit(pos);
+  rcAbrirMenu(e, pos, !!h && h.kind === 'ball');
+});
+document.addEventListener('pointerdown', e => { if (!rcMenu.hidden && !rcMenu.contains(e.target)) rcCerrarMenu(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { rcCerrarMenu(); rcCancelar(); } });
 
 // Editar el cuadro (libre, sin proporción fija): una esquina mueve los dos lados que
 // la forman, el medio de un lado mueve solo ese lado (solo ancho o solo alto), adentro
@@ -1013,6 +1144,7 @@ async function startRec() {
   rec.mr.onstop = saveRec;
   rec.mr.start(500);
   rec.t0 = Date.now();
+  rec.inicioISO = new Date(rec.t0).toISOString();
   const loop = () => { render(); rec.raf = requestAnimationFrame(loop); };
   rec.raf = requestAnimationFrame(loop);
   rec.timer = setInterval(() => {
@@ -1064,7 +1196,10 @@ function _liberarUrls() {
 function saveRec() {
   const type = rec.mr.mimeType || 'video/webm';
   const blob = new Blob(rec.chunks, { type });
-  const nombre = 'pizarra-tribunapp.' + (type.includes('mp4') ? 'mp4' : 'webm');
+  const nombre = `pizarra-tribunapp-${_jugSello(rec.inicioISO)}.` + (type.includes('mp4') ? 'mp4' : 'webm');
+  // las jugadas grabadas durante este video quedan atadas al archivo
+  jug.lista.forEach(d => { if (d.video && d.video.grabacion === rec.inicioISO) { d.video.archivo = nombre; d._guardada = false; } });
+  jugRenderLista();
   _bajarBlob(blob, nombre);
   rec.lastName = nombre;
   btnReDl.style.display = '';        // red de seguridad: una grabación larga no se rehace
@@ -1241,14 +1376,17 @@ const JUG_LEEME = 'Jugada de la pizarra táctica de TribunApp. Cancha interna de
   + '(toda la cancha = 0,0-1600,1000; es solo lo que se ve, los datos son siempre de toda la cancha); '
   + 'r = la ficha {id} deja de ser aproximada (se la movió a mano); u = se empezó a usar la cámara. '
   + 'aprox = true: posición estimada (formación o banco), no marcada a mano: no sacar conclusiones de esas fichas. '
-  + 'voz = frases reconocidas entre a y b segundos.';
+  + 'voz = frases reconocidas entre a y b segundos. Dibujos (type): arrow = flecha recta, dash = punteada, '
+  + 'curve = flecha con curva (curva = +1/-1, el lado hacia el que se arquea), zone = zona circular, '
+  + 'zrect = zona rectangular, pen = lápiz. video = grabada durante un video: inicio = segundo del video '
+  + 'en que arranca, archivo = nombre del video.';
 const JUG_DT = 33;                            // ms entre muestras (~30 por segundo)
 const jug = {
   rec: false, t0: 0, timer: 0, data: null, comp: null,
   last: null,                                 // última muestra durante la grabación
   playing: false, t: 0, raf: 0, clock0: 0, tBase: 0,
   sr: null, voz: [], vozIni: 0, mic: null, ac: null, mr: null, chunks: [], audioUrl: '', audio: null,
-  guardada: true,
+  lista: [], sel: -1,           // jugadas grabadas/abiertas en esta sesión (chips J1, J2…)
 };
 const r1 = v => Math.round(v * 10) / 10;
 const jugId = p => p.team + '|' + p.name;
@@ -1258,14 +1396,17 @@ const _mmss = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(
 
 function _jugFicha(p) { return { id: jugId(p), team: p.team, slug: p.slug, num: p.num || '', name: p.name, x: r1(p.x), y: r1(p.y), aprox: !!p.aprox }; }
 const _jugRect = f => ({ x0: r1(f.x0), y0: r1(f.y0), x1: r1(f.x1), y1: r1(f.y1) });
-function _jugShapes(list) { return list.map(sh => ({ type: sh.type, color: sh.color, pts: sh.pts.map(q => ({ x: r1(q.x), y: r1(q.y) })) })); }
+function _jugShapes(list) {
+  return list.map(sh => ({ type: sh.type, color: sh.color, pts: sh.pts.map(q => ({ x: r1(q.x), y: r1(q.y) })),
+                           ...(sh.curva ? { curva: sh.curva } : {}) }));
+}
 function _jugMuestra() {
   const players = new Map(state.players.map(p => [jugId(p), p]));
   const d = state.drawing;
   return {
     players, ball: { x: r1(state.ball.x), y: r1(state.ball.y) },
     shapesSig: state.shapes.length + ':' + state.shapes.map(sh => sh.pts.length).join(','),
-    drawSig: d ? d.type + d.pts.length + ':' + r1(d.pts[d.pts.length - 1].x) + ',' + r1(d.pts[d.pts.length - 1].y) : '',
+    drawSig: d ? d.type + (d.curva || '') + d.pts.length + ':' + r1(d.pts[d.pts.length - 1].x) + ',' + r1(d.pts[d.pts.length - 1].y) : '',
     pos: new Map(state.players.map(p => [jugId(p), [r1(p.x), r1(p.y)]])),
     aprox: new Map(state.players.map(p => [jugId(p), !!p.aprox])),
     foco: JSON.stringify(_jugRect(state.foco)), focoUsado: state.focoUsado,
@@ -1276,7 +1417,6 @@ function _jugMuestra() {
 async function jugStart() {
   if (anim.playing) stopAnim(false);
   if (jug.playing) jugPause();
-  if (!jug.guardada && jug.data && !confirm('La jugada anterior no se guardó en un archivo. ¿Grabar una nueva igual?')) return;
   jug.data = {
     v: 1, app: 'tribunapp-pizarra', leeme: JUG_LEEME,
     nombre: jugEls('jug-nombre').value.trim(), creada: new Date().toISOString(), duracion: 0,
@@ -1285,6 +1425,8 @@ async function jugStart() {
     inicio: { players: state.players.map(_jugFicha), ball: { x: r1(state.ball.x), y: r1(state.ball.y) },
               shapes: _jugShapes(state.shapes), foco: _jugRect(state.foco), focoUsado: state.focoUsado },
     eventos: [], voz: [], audio: null,
+    // grabada mientras corría "Grabar video": en qué segundo del video arranca
+    ...(rec.mr ? { video: { grabacion: rec.inicioISO, inicio: Math.round((Date.now() - rec.t0) / 100) / 10 } } : {}),
   };
   jug.comp = null; jug.voz = []; jug.vozIni = 0;
   // Si se está grabando video con subtítulos, el reconocimiento ya está tomado:
@@ -1339,14 +1481,19 @@ async function jugStop() {
       .map(c => ({ a: Math.round(Math.max(0, c.a - jug.subsOff) * 100) / 100, b: Math.round((c.b - jug.subsOff) * 100) / 100, txt: c.txt }));
   jug.data.voz = jug.voz;
   jug.data.audio = audio;
-  jug.guardada = false;
+  jug.data._guardada = false;
+  jug.lista.push(jug.data); jug.sel = jug.lista.length - 1;
+  jugRenderLista();
   jugEls('jug-rec').classList.remove('rec');
   jugEls('jug-rec').textContent = '● Grabar jugada';
   _jugListo();
   jugInfo(`Jugada lista: ${_mmss(dur)}, ${jug.data.eventos.length} movimientos`
     + (jug.voz.length ? `, ${jug.voz.length} frases` : '') + (audio ? ', con audio' : '')
+    + (jug.data.video ? ` · en el video desde ${_mmss(jug.data.video.inicio)}` : '')
     + ' · guardala en un archivo para no perderla');
-  jugSeek(0);
+  // la cancha queda como terminó la jugada: la siguiente (por ejemplo dentro del mismo
+  // video) arranca desde ahí; "Reproducir" la vuelve a pasar desde el principio
+  jugSeek(jug.data.duracion);
 }
 
 // ---- voz: texto (reconocimiento del navegador) + audio liviano ----
@@ -1558,25 +1705,33 @@ function jugPause() {
   camIr(camDestino(), 300);
 }
 
-// ---- archivo ----
-function jugGuardar() {
-  if (!jug.data) return;
-  jug.data.nombre = jugEls('jug-nombre').value.trim();
-  const base = (jug.data.nombre || 'jugada').normalize('NFD').replace(/[̀-ͯ]/g, '')
-    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'jugada';
-  const f = new Date(jug.data.creada);
-  const sello = `${f.getFullYear()}${String(f.getMonth() + 1).padStart(2, '0')}${String(f.getDate()).padStart(2, '0')}`
-    + `-${String(f.getHours()).padStart(2, '0')}${String(f.getMinutes()).padStart(2, '0')}`;
-  _bajarBlob(new Blob([JSON.stringify(jug.data)], { type: 'application/json' }), `${base}-${sello}.jugada.json`);
-  jug.guardada = true;
-  jugInfo('Archivo guardado');
+// ---- jugadas de la sesión ----
+// Cada jugada que se termina de grabar (o se abre) queda como un chip J1, J2…: se pueden
+// grabar varias seguidas, incluso dentro de un mismo "Grabar video", y elegir cuál
+// reproducir o guardar. Las grabadas durante un video guardan en qué segundo arrancan
+// (video.inicio) y, al terminar el video, el nombre del archivo (video.archivo).
+function jugRenderLista() {
+  const box = jugEls('jug-lista');
+  box.innerHTML = '';
+  jug.lista.forEach((d, i) => {
+    const b = document.createElement('button');
+    b.className = 'fchip' + (i === jug.sel ? ' on' : '');
+    b.textContent = 'J' + (i + 1) + (d._guardada ? '' : '•');
+    b.title = `${d.nombre || 'Jugada ' + (i + 1)} · ${_mmss(d.duracion || 0)}`
+      + (d.video ? ` · en el video desde ${_mmss(d.video.inicio)}` : '')
+      + (d._guardada ? '' : ' · sin guardar') + '\nClick: abrirla · doble click: sacarla de la lista';
+    b.onclick = () => { if (!jug.rec && i !== jug.sel) jugCargar(d); };
+    b.ondblclick = () => {
+      if (jug.rec || (!d._guardada && !confirm('Esta jugada no se guardó en un archivo. ¿Sacarla igual?'))) return;
+      jug.lista.splice(i, 1);
+      if (jug.sel >= jug.lista.length) jug.sel = jug.lista.length - 1;
+      jugRenderLista();
+    };
+    box.appendChild(b);
+  });
+  jugEls('jug-save-all').style.display = jug.lista.length > 1 ? '' : 'none';
 }
-async function jugAbrir(file) {
-  let d;
-  try { d = JSON.parse(await file.text()); } catch (e) { jugInfo('⚠ El archivo no es una jugada válida'); return; }
-  if (!d || d.app !== 'tribunapp-pizarra' || !d.inicio || !Array.isArray(d.eventos)) {
-    jugInfo('⚠ El archivo no es una jugada de la pizarra'); return;
-  }
+async function jugCargar(d) {
   if (jug.playing) jugPause();
   if (anim.playing) stopAnim(false);
   for (const key of ['A', 'B']) {
@@ -1587,11 +1742,53 @@ async function jugAbrir(file) {
     }
   }
   state.ladoInv = !!d.ladoInv;
-  jug.data = d; jug.guardada = true;
+  jug.data = d;
+  jug.sel = jug.lista.indexOf(d);
+  jugEls('jug-nombre').value = d.nombre || '';
   _jugListo();
   jugSeek(0);
   renderBenches();
-  jugInfo(`Jugada abierta: ${d.nombre || file.name} (${_mmss(d.duracion || 0)})`);
+  jugRenderLista();
+}
+
+// ---- archivo ----
+const _jugSinPrivados = (k, v) => (k.startsWith('_') ? undefined : v);
+function _jugSello(iso) {
+  const f = new Date(iso);
+  return `${f.getFullYear()}${String(f.getMonth() + 1).padStart(2, '0')}${String(f.getDate()).padStart(2, '0')}`
+    + `-${String(f.getHours()).padStart(2, '0')}${String(f.getMinutes()).padStart(2, '0')}`;
+}
+function jugGuardar() {
+  if (!jug.data) return;
+  jug.data.nombre = jugEls('jug-nombre').value.trim();
+  const base = (jug.data.nombre || 'jugada').normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'jugada';
+  _bajarBlob(new Blob([JSON.stringify(jug.data, _jugSinPrivados)], { type: 'application/json' }),
+             `${base}-${_jugSello(jug.data.creada)}.jugada.json`);
+  jug.data._guardada = true;
+  jugRenderLista();
+  jugInfo('Archivo guardado');
+}
+function jugGuardarTodas() {
+  if (jug.data) jug.data.nombre = jugEls('jug-nombre').value.trim();
+  const ses = { app: 'tribunapp-pizarra', v: 1, tipo: 'sesion', leeme: JUG_LEEME, creada: new Date().toISOString(),
+                jugadas: jug.lista };
+  _bajarBlob(new Blob([JSON.stringify(ses, _jugSinPrivados)], { type: 'application/json' }),
+             `jugadas-${_jugSello(ses.creada)}.jugadas.json`);
+  jug.lista.forEach(d => { d._guardada = true; });
+  jugRenderLista();
+  jugInfo(`${jug.lista.length} jugadas guardadas en un archivo`);
+}
+const _esJugada = d => d && d.app === 'tribunapp-pizarra' && d.inicio && Array.isArray(d.eventos);
+async function jugAbrir(file) {
+  let d;
+  try { d = JSON.parse(await file.text()); } catch (e) { jugInfo('⚠ El archivo no es una jugada válida'); return; }
+  const nuevas = (d && Array.isArray(d.jugadas)) ? d.jugadas.filter(_esJugada) : (_esJugada(d) ? [d] : []);
+  if (!nuevas.length) { jugInfo('⚠ El archivo no es una jugada de la pizarra'); return; }
+  nuevas.forEach(x => { x._guardada = true; jug.lista.push(x); });
+  await jugCargar(nuevas[0]);
+  jugInfo(nuevas.length > 1 ? `${nuevas.length} jugadas abiertas (${file.name})`
+                            : `Jugada abierta: ${nuevas[0].nombre || file.name} (${_mmss(nuevas[0].duracion || 0)})`);
 }
 
 jugEls('jug-rec').onclick = () => (jug.rec ? jugStop() : jugStart());
@@ -1602,10 +1799,11 @@ jugEls('jug-speed').onchange = () => {
   if (jug.audio) jug.audio.playbackRate = Number(jugEls('jug-speed').value);
 };
 jugEls('jug-save').onclick = jugGuardar;
+jugEls('jug-save-all').onclick = jugGuardarTodas;
 jugEls('jug-open').onclick = () => jugEls('jug-file').click();
 jugEls('jug-file').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) jugAbrir(f); };
 window.addEventListener('beforeunload', e => {
-  if (jug.rec || (jug.data && !jug.guardada)) { e.preventDefault(); e.returnValue = ''; }
+  if (jug.rec || jug.lista.some(d => !d._guardada)) { e.preventDefault(); e.returnValue = ''; }
 });
 
 // ---------- equipos / bancos ----------
