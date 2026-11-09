@@ -148,18 +148,29 @@ python scripts/social_tabla.py --sub "FECHA 11"
   se pidan. Si se cambian esos tamaños, verificar que la última fila no se salga
   (pasó con 6 filas de 112px).
 
-## 5. Playoffs — cruces de una instancia
+## 5. Playoffs — cuadro y cruces
 
-`social_cruces.py`. Una tarjeta por cruce con escudos, nombres y la posición de cada
+`social_cruces.py`. **Por defecto, el cuadro**: placa apaisada 16:9 (1280×720 ×2) con las
+llaves como en el cuadro del inicio (octavos → cuartos → semis → final desde los dos
+costados, cada llave con los dos equipos uno arriba del otro, posición en la zona y escudo).
+Las rondas siguientes se completan solas con los ganadores de `liga.json` (marcador y
+penales); lo que falta dice "A DEFINIR", y con campeón aparece su escudo y el trofeo se
+enciende.
+
+```bash
+python scripts/social_cruces.py --sub "OCTAVOS 21 Y 22 DE NOVIEMBRE · FINAL 12 DE DICIEMBRE EN LA PLATA"
+```
+
+Con `--lista`, una tarjeta por cruce con escudos, nombres y la posición de cada
 uno en su zona ("1° ZONA A"), en el orden del cuadro y de a pares (los dos cruces de
 cada par se enfrentan en la instancia siguiente).
 
 ```bash
-python scripts/social_cruces.py --sub "21 Y 22 DE NOVIEMBRE"   # octavos
-python scripts/social_cruces.py --fase cuartos                  # cuartos | semis | final
+python scripts/social_cruces.py --lista --sub "21 Y 22 DE NOVIEMBRE"   # octavos
+python scripts/social_cruces.py --lista --fase cuartos                  # cuartos | semis | final
 ```
 
-- Sale en `data/social/preview/cruces-{fase}.png`.
+- Salen en `data/social/preview/cuadro-playoffs.png` y `cruces-{fase}.png`.
 - Si `liga.json` ya trae los partidos de la instancia (campo `fase`), salen de ahí con
   día y hora en cada tarjeta. Si no, los octavos se arman con la tabla final de
   api-sports y el formato del torneo (`PL_OCTAVOS`, igual que el cuadro del index).
