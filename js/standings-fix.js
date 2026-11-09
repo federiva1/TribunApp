@@ -26,6 +26,7 @@
       var st = m.status || {};
       if (!st.finished) return;
       if (torneo && _norm(m.round).indexOf(torneo) < 0) return;
+      if (m.fase) return;                      // playoffs: no suman en la tabla
       var esLocal = String((m.home || {}).id) === id;
       if (!esLocal && String((m.away || {}).id) !== id) return;
       if (m.home_score == null || m.away_score == null) return;

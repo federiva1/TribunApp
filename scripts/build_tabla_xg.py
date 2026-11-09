@@ -49,6 +49,8 @@ def main() -> int:
         p = d.get('partido') or {}
         if 'clausura' not in (p.get('competicion') or '').lower():
             continue
+        if p.get('ronda'):          # playoffs: no son la fase regular
+            continue
         xg = next((s for s in d.get('top_stats', [])
                    if (s.get('label') or '').lower() == 'xg'), None)
         if not xg:

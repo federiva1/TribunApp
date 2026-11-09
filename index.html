@@ -732,7 +732,7 @@ renderGrid(ZONA_B, 'zonaB-grid');
     (liga || []).forEach(p => {
       if (!p.api_id) return;
       MATCHES[String(p.api_id)] = {
-        etiqueta: p.fecha ? `Fecha ${p.fecha}` : 'Liga', href: 'fixture.html',
+        etiqueta: p.fecha ? etiquetaFecha(p.fecha) : 'Liga', href: 'fixture.html',
         home: { slug: p.home.slug, name: p.home.name }, away: { slug: p.away.slug, name: p.away.name },
       };
     });

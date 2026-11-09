@@ -282,3 +282,15 @@ var SLUG_ALIAS = Object.fromEntries(Object.entries(URL_ALIAS).map(([a, s]) => [s
 // número estaba escrito a mano en los tres y podían quedar desfasados.
 // Extensión puntual de un partido: data/puntajes_abiertos.json.
 var PUNTAJES_VENTANA_H = 48;
+
+// Playoffs del torneo local. En liga.json las instancias siguen la numeración de las
+// fechas (la fase regular tiene 16): 17 = octavos, 18 = cuartos, 19 = semis, 20 = final,
+// y traen `fase` con el nombre (scripts/fetch_liga_fixtures.py). Así todo lo que ordena
+// o agrupa por número de fecha sigue andando, y los textos salen de etiquetaFecha().
+var FASES_PLAYOFF = { 17: 'Octavos de final', 18: 'Cuartos de final', 19: 'Semifinal', 20: 'Final' };
+var FASES_PLAYOFF_CORTAS = { 17: 'Octavos', 18: 'Cuartos', 19: 'Semis', 20: 'Final' };
+function etiquetaFecha(n, corta) {
+  if (n == null || n === '') return '';
+  if (FASES_PLAYOFF[n]) return corta ? FASES_PLAYOFF_CORTAS[n] : FASES_PLAYOFF[n];
+  return corta ? 'F' + n : 'Fecha ' + n;
+}

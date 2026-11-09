@@ -496,7 +496,7 @@ function renderClausura() {
     // Orden CRONOLÓGICO (por fecha real), no por número de fecha: un partido
     // pospuesto (ej. F2) puede quedar entre otras fechas (F3/F4) y no debe salir antes.
     partidos.slice().sort((a, b) => (a.status.utcTime||'').localeCompare(b.status.utcTime||''))
-      .forEach(p => lista.appendChild(cardLiga(p, `Fecha ${p.fecha}`)));
+      .forEach(p => lista.appendChild(cardLiga(p, etiquetaFecha(p.fecha))));
     wrap.appendChild(lista);
     return;
   }
@@ -524,7 +524,7 @@ function renderClausura() {
     acc.className = 'fecha-acc' + (abierta ? '' : ' colapsada');
     const head = document.createElement('button');
     head.className = 'fecha-head';
-    head.innerHTML = `<span class="fecha-num">FECHA ${n}</span><span class="fecha-estado ${cls}">${estado}</span><span class="fecha-chevron">▼</span>`;
+    head.innerHTML = `<span class="fecha-num">${etiquetaFecha(n).toUpperCase()}</span><span class="fecha-estado ${cls}">${estado}</span><span class="fecha-chevron">▼</span>`;
     head.onclick = () => acc.classList.toggle('colapsada');
     acc.appendChild(head);
     const body = document.createElement('div');
@@ -557,7 +557,7 @@ function renderClausura() {
   nav.className = 'fecha-nav';
   nav.innerHTML =
     `<button class="fecha-nav-arrow" id="fn-prev" ${idx <= 0 ? 'disabled' : ''} aria-label="Fecha anterior">←</button>
-     <div class="fecha-nav-tit"><span class="fecha-num">FECHA ${sel}</span><span class="fecha-estado ${cls}">${estado}</span></div>
+     <div class="fecha-nav-tit"><span class="fecha-num">${etiquetaFecha(sel).toUpperCase()}</span><span class="fecha-estado ${cls}">${estado}</span></div>
      <button class="fecha-nav-arrow" id="fn-next" ${idx >= fechas.length - 1 ? 'disabled' : ''} aria-label="Fecha siguiente">→</button>
      <button class="fechas-vista-btn" id="fn-todas">Ver todas</button>`;
   nav.querySelector('#fn-prev').onclick = () => { fechaSel = fechas[idx - 1]; render(); };

@@ -138,7 +138,9 @@ def cerrar(m, forzar=False) -> str:
             'local_nombre': m['home'].get('name') or '', 'visitante_nombre': m['away'].get('name') or '',
             'goles_local': gl, 'goles_visitante': gv,
             'fecha': ((m.get('status') or {}).get('utcTime') or '')[:10],
-            'fecha_num': m.get('fecha'), 'ronda': None,
+            # playoffs (liga.json trae `fase`): sin nº de fecha, la instancia va en `ronda`
+            'fecha_num': None if m.get('fase') else m.get('fecha'),
+            'ronda': (m.get('fase') or '').replace(' de final', '') or None,
             'estadio': estadio, 'competicion': competicion_de(m.get('round') or ''),
             'api_id': str(m.get('api_id') or ''),
             'goles_detalle': _goles_detalle(nd, home_es_local),
@@ -171,7 +173,7 @@ def cerrar(m, forzar=False) -> str:
     p = payload['partido']
     idx.append({'id': oid, 'local': ls, 'visitante': vs,
                 'local_nombre': p['local_nombre'], 'visitante_nombre': p['visitante_nombre'],
-                'fecha': p['fecha'], 'fecha_num': p['fecha_num'], 'ronda': None,
+                'fecha': p['fecha'], 'fecha_num': p['fecha_num'], 'ronda': p.get('ronda'),
                 'goles_local': gl, 'goles_visitante': gv,
                 'competicion': p['competicion'], 'estadio': p['estadio']})
     idx.sort(key=lambda e: (e.get('fecha') or '', e.get('id') or ''))
