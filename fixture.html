@@ -169,6 +169,9 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .equipo-lado.away { justify-content: flex-start; }
 .equipo-lado img { width: 30px; height: 30px; object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5)); }
 .escudo-ph { width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,0.09); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 0.3px; color: rgba(255,255,255,0.6); }
+.esc-def { width: 30px; height: 30px; flex: 0 0 auto; border-radius: 50%; border: 1.5px dashed rgba(255,255,255,0.22);
+           display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: rgba(255,255,255,0.3); }
+.equipo-lado .nom.nom-def { color: rgba(255,255,255,0.45); font-weight: 400; font-size: 13px; white-space: normal; line-height: 1.15; }
 .equipo-lado .nom { font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.85); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .equipo-lado.link:hover .nom { color: #fff; }
 .equipo-lado.ganador .nom { color: #fff; font-weight: 700; }
@@ -316,15 +319,61 @@ function nomEquipo(slug, nombre) {
 function horaAR(utc) { const d = new Date(utc); d.setHours(d.getHours()-3); return `${String(d.getUTCHours()).padStart(2,'0')}:${String(d.getUTCMinutes()).padStart(2,'0')}`; }
 function fechaAR(utc) { const d = new Date(utc); d.setHours(d.getHours()-3); return `${DIAS_ES[d.getUTCDay()]} ${d.getUTCDate()} ${MESES_ES[d.getUTCMonth()]}`; }
 
+// Playoffs que la API todavía no publicó: data/playoffs.json (a mano) trae el calendario
+// y los cruces de octavos. Se agregan como partidos "provisorios" (sin horario) solo para
+// las instancias que liga.json todavía no tiene; cuando entran los reales (campo `fase`),
+// esa instancia deja de salir de acá sola. Las rondas siguientes se arman con los
+// ganadores de la anterior (si ya se jugó) o con "Instituto o Huracán" / "Ganador cuartos 1".
+function playoffsProvisorios(po, liga) {
+  const out = [];
+  const reales = new Set(liga.filter(p => p.fase).map(p => p.fecha));
+  const jugado = (a, b) => liga.find(p => p.fase && ((p.home.slug === a && p.away.slug === b) || (p.home.slug === b && p.away.slug === a)));
+  const NOMBRE_RONDA = { 18: 'cuartos', 19: 'semi' };
+  let previas = null;              // llaves de la instancia anterior: [{a, b, ganador}]
+  for (const ins of (po.instancias || []).sort((x, y) => x.fecha - y.fecha)) {
+    let llaves;
+    if (ins.partidos) llaves = ins.partidos.map(m => ({ a: m.local, b: m.visitante }));
+    else if (previas) {
+      llaves = [];
+      for (let i = 0; i < previas.length; i += 2) {
+        const lado = (k, n) => {
+          const ll = previas[k];
+          if (ll.ganador) return { slug: ll.ganador };
+          if (ll.a && ll.b) return { desc: `${nombreCorto(ll.a)} o ${nombreCorto(ll.b)}` };
+          return { desc: `Ganador ${NOMBRE_RONDA[ins.fecha - 1] || 'llave'} ${n}` };
+        };
+        const x = lado(i, i + 1), y = lado(i + 1, i + 2);
+        llaves.push({ a: x.slug || null, b: y.slug || null, da: x.desc, db: y.desc });
+      }
+    } else break;
+    llaves.forEach(ll => {
+      const p = ll.a && ll.b ? jugado(ll.a, ll.b) : null;
+      ll.ganador = p && p.status && p.status.finished ? p.winner : null;
+    });
+    if (!reales.has(ins.fecha)) {
+      llaves.forEach(ll => out.push({
+        provisorio: true, cuando: ins.cuando, fecha: ins.fecha, fase: ins.fase, round: '', api_id: '',
+        home: { slug: ll.a, name: '', desc: ll.da }, away: { slug: ll.b, name: '', desc: ll.db },
+        home_score: null, away_score: null, home_pen: null, away_pen: null, winner: null,
+        status: { utcTime: '', started: false, finished: false, short: 'TBD', elapsed: null },
+      }));
+    }
+    previas = llaves;
+  }
+  return out;
+}
+
 async function cargar() {
   try {
-    const [rl, rc, ri, rh] = await Promise.all([
+    const [rl, rc, ri, rh, rpo] = await Promise.all([
       fetch(`data/fixtures/liga.json?t=${Date.now()}`),
       fetch(`data/fixtures/copas.json?t=${Date.now()}`).catch(() => null),
       fetch(`data/partidos/index.json?t=${Date.now()}`).catch(() => null),
       fetch(`data/puntajes_abiertos.json?t=${Date.now()}`).catch(() => null),
+      fetch(`data/playoffs.json?t=${Date.now()}`).catch(() => null),
     ]);
     LIGA = await rl.json();
+    try { if (rpo && rpo.ok) LIGA = LIGA.concat(playoffsProvisorios(await rpo.json(), LIGA)); } catch (e) {}
     COPAS = rc && rc.ok ? await rc.json() : {};
     // Extensión manual de la ventana de puntajes por partido (misma fuente que club.html).
     try { PUNTAJES_HASTA = rh && rh.ok ? await rh.json() : {}; } catch (e) { PUNTAJES_HASTA = {}; }
@@ -495,7 +544,9 @@ function renderClausura() {
     lista.className = 'lista-plana';
     // Orden CRONOLÓGICO (por fecha real), no por número de fecha: un partido
     // pospuesto (ej. F2) puede quedar entre otras fechas (F3/F4) y no debe salir antes.
-    partidos.slice().sort((a, b) => (a.status.utcTime||'').localeCompare(b.status.utcTime||''))
+    // los playoffs sin horario (provisorios) van al final
+    const k = p => p.status.utcTime || ('9999-' + String(p.fecha).padStart(2, '0'));
+    partidos.slice().sort((a, b) => k(a).localeCompare(k(b)))
       .forEach(p => lista.appendChild(cardLiga(p, etiquetaFecha(p.fecha))));
     wrap.appendChild(lista);
     return;
@@ -622,6 +673,11 @@ function renderCopas() {
 
 // ── Tarjetas ──────────────────────────────────────────────────────────────
 function ladoLiga(t, cls) {
+  if (!t.slug) {                     // llave de playoffs todavía sin definir
+    const esc = `<span class="esc-def">?</span>`;
+    const nom = `<span class="nom nom-def">${t.desc || 'A definir'}</span>`;
+    return `<div class="${cls}">${cls.includes('home') ? nom + esc : esc + nom}</div>`;
+  }
   const inner = cls.includes('home')
     ? `<span class="nom">${nombreCorto(t.slug)}</span><img src="escudos/${t.slug}.png" alt="" onerror="this.style.opacity=0.2">`
     : `<img src="escudos/${t.slug}.png" alt="" onerror="this.style.opacity=0.2"><span class="nom">${nombreCorto(t.slug)}</span>`;
@@ -645,6 +701,7 @@ function ganadorClases(p, homeIsA, awayIsA) {
 }
 
 function metaHora(p) {
+  if (p.provisorio) return `<span class="partido-hora">${p.cuando || 'A confirmar'}</span>`;
   const short = p.short || (p.status && p.status.short);
   const enCurso = EN_CURSO.has(short);
   const finished = (p.status ? p.status.finished : ['FT','AET','PEN'].includes(p.short));

@@ -1,0 +1,20 @@
+{
+  "_leeme": "Calendario de playoffs cargado a mano (la API todavía no publica estos partidos). fixture.html muestra cada instancia que liga.json todavía no tenga (campo fase); cuando entran los partidos reales, esta instancia deja de usarse sola. octavos en el orden del cuadro: cada par consecutivo se cruza en cuartos. El local es el mejor ubicado.",
+  "torneo": "Clausura 2026",
+  "instancias": [
+    {"fecha": 17, "fase": "Octavos de final", "cuando": "Sáb 21 o dom 22 nov · horario a confirmar",
+     "partidos": [
+       {"local": "instituto", "visitante": "huracan"},
+       {"local": "riverplate", "visitante": "lanus"},
+       {"local": "argentinosjuniors", "visitante": "independiente"},
+       {"local": "velezsarsfield", "visitante": "belgrano"},
+       {"local": "rosariocentral", "visitante": "gimnasiamendoza"},
+       {"local": "defensayjusticia", "visitante": "barracascentral"},
+       {"local": "bocajuniors", "visitante": "independienterivadavia"},
+       {"local": "gimnasialp", "visitante": "newellsoldboys"}
+     ]},
+    {"fecha": 18, "fase": "Cuartos de final", "cuando": "Fin de semana del 28 y 29 nov · a confirmar"},
+    {"fecha": 19, "fase": "Semifinal", "cuando": "Fin de semana del 5 y 6 dic · a confirmar"},
+    {"fecha": 20, "fase": "Final", "cuando": "Sáb 12 dic · Estadio Único de La Plata"}
+  ]
+}
