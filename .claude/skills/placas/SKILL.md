@@ -148,6 +148,24 @@ python scripts/social_tabla.py --sub "FECHA 11"
   se pidan. Si se cambian esos tamaños, verificar que la última fila no se salga
   (pasó con 6 filas de 112px).
 
+## 5. Playoffs — cruces de una instancia
+
+`social_cruces.py`. Una tarjeta por cruce con escudos, nombres y la posición de cada
+uno en su zona ("1° ZONA A"), en el orden del cuadro y de a pares (los dos cruces de
+cada par se enfrentan en la instancia siguiente).
+
+```bash
+python scripts/social_cruces.py --sub "21 Y 22 DE NOVIEMBRE"   # octavos
+python scripts/social_cruces.py --fase cuartos                  # cuartos | semis | final
+```
+
+- Sale en `data/social/preview/cruces-{fase}.png`.
+- Si `liga.json` ya trae los partidos de la instancia (campo `fase`), salen de ahí con
+  día y hora en cada tarjeta. Si no, los octavos se arman con la tabla final de
+  api-sports y el formato del torneo (`PL_OCTAVOS`, igual que el cuadro del index).
+- Tuit: `#Club vs #Club` por línea. X cuenta los emojis como 2 y el link como 23:
+  con los 8 octavos queda justo, contar antes de pasarlo.
+
 ---
 
 ## Detalles que ya costaron una corrección
