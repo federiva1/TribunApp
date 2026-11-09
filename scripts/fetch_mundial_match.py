@@ -190,6 +190,11 @@ def ronda_label(round_str: str):
     import re as _re
     r = (round_str or '').strip()
     rl = r.lower()
+    if ('clausura' in rl or 'apertura' in rl) and not _re.search(r'-\s*\d+\s*$', r):
+        # playoffs del torneo local ("Clausura - Round of 16")
+        for k, v in (('round of 16', 'Octavos'), ('quarter', 'Cuartos'), ('semi', 'Semifinal'), ('final', 'Final')):
+            if k in rl:
+                return v
     if 'clausura' in rl or 'apertura' in rl or 'regular season' in rl:
         return None
     m = _re.search(r'(\d+)\s*$', r)
@@ -274,8 +279,10 @@ def build_partidos_json(raw: dict, local_slug: str, visitante_slug: str,
     fecha   = fixture.get('date', '')[:10]
     import re as _re
     _round = fix.get('league', {}).get('round', '') or ''
-    _rm = _re.search(r'(\d+)\s*$', _round)
-    fecha_num = int(_rm.group(1)) if _rm else None   # nº de fecha (ej. "Clausura - 3" -> 3)
+    # nº de fecha solo si la ronda TERMINA en " - N" ("Clausura - 3" -> 3): "Clausura -
+    # Round of 16" no es la fecha 16, es un playoff (va en `ronda`).
+    _rm = _re.search(r'-\s*(\d+)\s*$', _round)
+    fecha_num = int(_rm.group(1)) if _rm else None
     ronda = ronda_label(_round)                       # label de ronda (copas); None en liga
     estadio = fixture.get('venue', {}).get('name') or ''
     ciudad  = fixture.get('venue', {}).get('city') or ''

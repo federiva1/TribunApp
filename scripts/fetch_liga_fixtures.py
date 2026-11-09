@@ -44,12 +44,32 @@ def get(path):
     with urllib.request.urlopen(req, timeout=25) as r:
         return json.loads(r.read())
 
+# Playoffs: api-sports los nombra "Clausura - Round of 16", "- Quarter-finals",
+# "- Semi-finals", "- Final". Siguen la numeración de las fechas (la fase regular
+# tiene 16) para que el frontend los ordene y agrupe igual; `fase` lleva el nombre
+# y es lo que excluye a esos partidos de la tabla (js/standings-fix.js).
+FASES = (('round of 16', 17, 'Octavos de final'), ('quarter', 18, 'Cuartos de final'),
+         ('semi', 19, 'Semifinal'), ('final', 20, 'Final'))
+
+
+def fecha_y_fase(round_s):
+    """'Clausura - 7' -> (7, None); 'Clausura - Round of 16' -> (17, 'Octavos de final')."""
+    suf = round_s.split('-', 1)[1].strip() if '-' in round_s else round_s
+    if suf.isdigit():
+        return int(suf), None
+    s = suf.lower()
+    for clave, num, nombre in FASES:
+        if clave in s:
+            return num, nombre
+    return None, suf or None
+
+
 def build(f):
     fix, teams, goals = f['fixture'], f['teams'], f['goals']
     score = f.get('score', {}) or {}
     pen = score.get('penalty') or {}
-    round_s = f['league']['round']                 # "Clausura - 7"
-    fecha = int(round_s.split('-')[1].strip()) if '-' in round_s else None
+    round_s = f['league']['round']                 # "Clausura - 7" | "Clausura - Round of 16"
+    fecha, fase = fecha_y_fase(round_s)
     short = fix['status']['short']
     started, finished = STATUS_MAP.get(short, (False, False))
     hid, aid = teams['home']['id'], teams['away']['id']
@@ -59,6 +79,7 @@ def build(f):
     return {
         'round':    round_s,
         'fecha':    fecha,
+        'fase':     fase,
         'api_id':   str(fix['id']),
         'home': {'name': teams['home']['name'], 'id': str(hid), 'slug': SLUG.get(hid, str(hid))},
         'away': {'name': teams['away']['name'], 'id': str(aid), 'slug': SLUG.get(aid, str(aid))},
