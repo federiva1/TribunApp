@@ -558,8 +558,10 @@ function renderClausura() {
   const fechas = Object.keys(porFecha).map(Number).sort((a, b) => a - b);
   // Fecha "actual" = la del próximo partido por fecha REAL (no el menor número de fecha):
   // con una postergación, la F2 puede ser posterior a la F3, así que se elige por utcTime.
+  // (los playoffs provisorios, sin horario, van detrás de los que ya tienen día)
+  const kUtc = p => p.status.utcTime || ('9999-' + String(p.fecha).padStart(2, '0'));
   const proxNoFin = partidos.filter(p => !p.status.finished)
-    .sort((a, b) => (a.status.utcTime||'').localeCompare(b.status.utcTime||''))[0];
+    .sort((a, b) => kUtc(a).localeCompare(kUtc(b)))[0];
   const fechaActual = proxNoFin ? proxNoFin.fecha : fechas[fechas.length - 1];
   const estadoDe = n => {
     const ms = porFecha[n];

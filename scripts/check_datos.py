@@ -101,6 +101,8 @@ def main() -> int:
                 if k not in nuevo:
                     problemas.append(f'CLAVE PERDIDA  {rel}: {k}')
                     continue
+                if not isinstance(viejo[k], dict) or not isinstance(nuevo[k], dict):
+                    continue              # p.ej. standings.json: valores que no son copas
                 pv, pn = (viejo[k] or {}).get('partidos'), (nuevo[k] or {}).get('partidos')
                 # copas.json solo trae la ronda en curso: al avanzar de ronda la lista
                 # cambia entera, así que acá solo se avisa, no se bloquea.
