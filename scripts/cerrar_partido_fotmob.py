@@ -38,7 +38,8 @@ AR = timezone(timedelta(hours=-3))
 
 
 def competicion_de(round_str: str) -> str:
-    r = (round_str or '').lower()
+    from clubes_map import ronda_liga
+    r = ronda_liga(round_str).lower()
     if 'clausura' in r:
         return 'Clausura 2026'
     if 'apertura' in r:

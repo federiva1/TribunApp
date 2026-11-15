@@ -156,7 +156,10 @@ def main():
     resp = get(f'/fixtures?league={LEAGUE}&season={SEASON}').get('response', [])
     if not resp:
         print('Sin respuesta de la API'); sys.exit(1)
-    # Solo Clausura
+    # Solo Clausura (con sus playoffs, que la API publica como "Round of 16" a secas)
+    from clubes_map import ronda_liga
+    for f in resp:
+        f['league']['round'] = ronda_liga(f['league']['round'])
     clausura = [f for f in resp if f['league']['round'].startswith('Clausura')]
     entries = [build(f) for f in clausura]
     # Horarios confirmados por la AFA que la API todavía no trae (data/horarios_overrides.json)
