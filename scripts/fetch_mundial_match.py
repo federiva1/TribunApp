@@ -315,6 +315,8 @@ def build_partidos_json(raw: dict, local_slug: str, visitante_slug: str,
         if etype == 'Goal':
             if detail == 'Missed Penalty':
                 continue  # penal errado: NO es gol
+            if (ev.get('comments') or '') == 'Penalty Shootout':
+                continue  # tanda de penales (playoffs): no son goles del partido
             if not pid:
                 continue  # evento gol sin jugador atribuido (glitch api-sports): descartar
             entry = {'min': minute, 'jugador': player.get('name', ''), 'asist': assist.get('name')}

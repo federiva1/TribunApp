@@ -171,6 +171,12 @@ python scripts/social_cruces.py --lista --fase cuartos                  # cuarto
 ```
 
 - Salen en `data/social/preview/cuadro-playoffs.png` y `cruces-{fase}.png`.
+- **Clasificado**: `python scripts/social_cruces.py --clasificado velezsarsfield` → placa vertical
+  "CLASIFICADO A CUARTOS DE FINAL" (o "CAMPEÓN" si ganó la final): escudo grande, el
+  resultado de la llave con los penales si los hubo, y el próximo rival ("Argentinos o
+  Independiente" si la otra llave no se jugó) con la fecha de `data/playoffs.json`. Sale de
+  `liga.json`, así que **primero hay que cerrar el partido** (con `home_pen`/`away_pen` y
+  `winner`, que el cierre rápido ya completa). Archivo `clasificado-{slug}.png`.
 - Si `liga.json` ya trae los partidos de la instancia (campo `fase`), salen de ahí con
   día y hora en cada tarjeta. Si no, los octavos se arman con la tabla final de
   api-sports y el formato del torneo (`PL_OCTAVOS`, igual que el cuadro del index).

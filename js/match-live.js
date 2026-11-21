@@ -40,6 +40,7 @@
       var pid = player.id, aid = assist.id;
       if (etype === 'Goal') {
         if (detail === 'Missed Penalty') return;
+        if ((ev.comments || '') === 'Penalty Shootout') return;   // tanda de penales: no son goles del partido
         if (!pid) return;
         var entry = { min: minute, jugador: player.name || '', asist: assist.name || null };
         if (detail === 'Own Goal') { entry.asist = null; entry.en_contra = true; }
