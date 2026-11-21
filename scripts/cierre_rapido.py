@@ -104,8 +104,18 @@ def cerrar_liga(entry, fx):
     if gl is None or gv is None:
         return False
     entry['home_score'], entry['away_score'] = gl, gv
-    entry['winner'] = None if gl == gv else (
-        entry['home']['slug'] if gl > gv else entry['away']['slug'])
+    # Playoffs: empate en el alargue → penales. El ganador sale de teams.X.winner
+    # (cubre penales); si la API no lo marca, se compara el marcador.
+    pen = ((fx.get('score') or {}).get('penalty')) or {}
+    entry['home_pen'], entry['away_pen'] = pen.get('home'), pen.get('away')
+    teams = fx.get('teams') or {}
+    if (teams.get('home') or {}).get('winner'):
+        entry['winner'] = entry['home']['slug']
+    elif (teams.get('away') or {}).get('winner'):
+        entry['winner'] = entry['away']['slug']
+    else:
+        entry['winner'] = None if gl == gv else (
+            entry['home']['slug'] if gl > gv else entry['away']['slug'])
     entry['status'].update({'started': True, 'finished': True,
                             'short': st.get('short') or 'FT',
                             'elapsed': st.get('elapsed') or 90})

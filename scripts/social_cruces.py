@@ -276,6 +276,120 @@ def generar_cuadro(nodos, sub, path, escala=2):
     return path
 
 
+# ── CLASIFICADO: placa de un club que pasó de ronda ─────────────────────────
+SIGUIENTE = {'q': 'CUARTOS DE FINAL', 's': 'SEMIFINALES', 'f': 'LA FINAL'}
+PADRE = {'o1': 'q1', 'o2': 'q1', 'o3': 'q2', 'o4': 'q2', 'o5': 'q3', 'o6': 'q3', 'o7': 'q4', 'o8': 'q4',
+         'q1': 's1', 'q2': 's1', 'q3': 's2', 'q4': 's2', 's1': 'f', 's2': 'f'}
+
+
+def clasificacion(nodos, slug):
+    """La última llave que ganó `slug`: (llave, nodo, llave siguiente, nodo siguiente)."""
+    ganadas = [k for k in ('o1', 'o2', 'o3', 'o4', 'o5', 'o6', 'o7', 'o8', 'q1', 'q2', 'q3', 'q4', 's1', 's2', 'f')
+               if nodos[k].get('ganador') == slug]
+    if not ganadas:
+        return None
+    k = ganadas[-1]
+    sig = PADRE.get(k)
+    return k, nodos[k], sig, (nodos[sig] if sig else None)
+
+
+def _html_clasificado(slug, k, c, sig, nsig, cuando):
+    def esc(sl, cls):
+        p = esc_placa(sl) if sl else None
+        return f'<img class="{cls}" src="{_b64(p, "image/png")}">' if p and p.exists() else ''
+    nom = lambda sl: NOM.get(sl, sl).upper()
+    campeon = k == 'f'
+    titulo = 'CAMPEÓN' if campeon else 'CLASIFICADO'
+    sub = 'TORNEO CLAUSURA 2026' if campeon else f'A {SIGUIENTE[sig[0]]}'
+    pen = (f'<div class="pen">{c["hp"]}-{c["ap"]} EN PENALES</div>'
+           if c.get('hp') is not None and c.get('ap') is not None else '')
+    resultado = (f'<div class="res">{esc(c["home"], "mini")}<span>{nom(c["home"])}</span>'
+                 f'<b>{c["hs"]} - {c["as"]}</b><span>{nom(c["away"])}</span>{esc(c["away"], "mini")}</div>{pen}')
+    prox = ''
+    if nsig:
+        otro_lado = [x for x in (nsig.get('home'), nsig.get('away')) if x and x != slug]
+        if otro_lado:
+            rival = nom(otro_lado[0])
+        else:      # el rival sale de la otra llave del par, que todavía no se jugó
+            hermana = [x for x, p in PADRE.items() if p == sig and x != k][0]
+            h = nodos_global[hermana]
+            rival = f'{nom(h["home"])} O {nom(h["away"])}' if h.get('home') and h.get('away') else 'A DEFINIR'
+        prox = (f'<div class="prox"><div class="pt">PRÓXIMO RIVAL</div><div class="pr">{rival}</div>'
+                + (f'<div class="pc">{cuando.upper()}</div>' if cuando else '') + '</div>')
+    ronda = {'o': 'OCTAVOS DE FINAL', 'q': 'CUARTOS DE FINAL', 's': 'SEMIFINAL', 'f': 'FINAL'}[k[0]]
+    return """<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+%s
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:760px;height:950px;font-family:'Barlow Condensed',sans-serif;color:#fff;position:relative;overflow:hidden;background:#080c17}
+.bg{position:absolute;inset:0;background:linear-gradient(180deg,#080c17 0%%,#0a1122 55%%,#070b16 100%%)}
+.wrap{position:relative;height:100%%;padding:30px 34px 26px;display:flex;flex-direction:column;align-items:center}
+.logo{height:38px;width:auto;align-self:flex-start}
+.torneo{font-family:'Bebas Neue';font-size:19px;letter-spacing:5px;color:#38bdf8;margin-top:22px}
+.tit{font-family:'Bebas Neue';font-size:76px;letter-spacing:12px;line-height:1;margin-top:6px;
+     background:linear-gradient(180deg,#fff 30%%,#f5c542);-webkit-background-clip:text;color:transparent}
+.sub{font-family:'Bebas Neue';font-size:30px;letter-spacing:7px;color:#e8edf7;margin-top:4px}
+.esc{width:250px;height:250px;object-fit:contain;margin-top:30px;filter:drop-shadow(0 0 34px rgba(56,189,248,.35)) drop-shadow(0 10px 22px rgba(0,0,0,.6))}
+.nom{font-family:'Bebas Neue';font-size:54px;letter-spacing:8px;margin-top:8px}
+.caja{margin-top:18px;border:1px solid rgba(255,255,255,.14);border-radius:16px;background:rgba(13,20,36,.75);padding:14px 26px;text-align:center}
+.ronda{font-family:'Bebas Neue';font-size:15px;letter-spacing:4px;color:#8b93a7}
+.res{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:6px}
+.res span{font-family:'Bebas Neue';font-size:26px;letter-spacing:2px}
+.res b{font-family:'Bebas Neue';font-weight:400;font-size:40px;letter-spacing:3px;padding:0 8px}
+.mini{width:40px;height:40px;object-fit:contain}
+.pen{font-family:'Bebas Neue';font-size:20px;letter-spacing:3px;color:#38bdf8;margin-top:2px}
+.prox{margin-top:auto;text-align:center}
+.pt{font-family:'Bebas Neue';font-size:16px;letter-spacing:5px;color:#38bdf8}
+.pr{font-family:'Bebas Neue';font-size:30px;letter-spacing:4px;margin-top:2px}
+.pc{font-family:'Bebas Neue';font-size:16px;letter-spacing:3px;color:#8b93a7;margin-top:2px}
+.pie{font-family:'Bebas Neue';font-size:18px;letter-spacing:3px;color:#e8edf7;margin-top:16px}
+.pie b{color:#38bdf8;font-weight:400}
+</style></head><body><div class="bg"></div>
+<div class="wrap">
+  <img class="logo" src="%s">
+  <div class="torneo">TORNEO CLAUSURA 2026 · PLAYOFFS</div>
+  <div class="tit">%s</div><div class="sub">%s</div>
+  %s
+  <div class="nom">%s</div>
+  <div class="caja"><div class="ronda">%s</div>%s</div>
+  %s
+  <div class="pie">ARMÁ TU 11 Y PUNTUÁ A LOS JUGADORES EN <b>TRIBUNAPP.COM.AR</b></div>
+</div></body></html>""" % (_fuentes(), _logo_datauri(), titulo, sub, esc(slug, 'esc'), nom(slug), ronda,
+                              resultado, prox)
+
+
+nodos_global = {}
+
+
+def generar_clasificado(slug, nodos, path, escala=2):
+    from playwright.sync_api import sync_playwright
+    import os
+    global nodos_global
+    nodos_global = nodos
+    cl = clasificacion(nodos, slug)
+    if not cl:
+        print(f'{slug} no ganó ninguna llave todavía (¿está cerrado el partido en liga.json?)')
+        return None
+    k, c, sig, nsig = cl
+    try:
+        po = json.loads((ROOT / 'data' / 'playoffs.json').read_text(encoding='utf-8'))
+        num = {'q': 18, 's': 19, 'f': 20}.get((sig or 'x')[0])
+        cuando = next((i.get('cuando') for i in po['instancias'] if i['fecha'] == num), '')
+        cuando = cuando.replace(' · a confirmar', '').replace(' · horario a confirmar', '')
+    except Exception:
+        cuando = ''
+    exe = os.environ.get('PLAYWRIGHT_CHROMIUM') or None
+    path.parent.mkdir(parents=True, exist_ok=True)
+    html = aplicar_fondo_tribuna(_html_clasificado(slug, k, c, sig, nsig, cuando))
+    with sync_playwright() as pw:
+        b = pw.chromium.launch(executable_path=exe) if exe else pw.chromium.launch()
+        pg = b.new_page(viewport={'width': 760, 'height': 950}, device_scale_factor=escala)
+        pg.set_content(html)
+        pg.wait_for_timeout(700)
+        pg.screenshot(path=str(path))
+        b.close()
+    return path
+
+
 def _html(cruces, titulo, sub):
     ff = ''.join(
         "@font-face{font-family:'%s';font-weight:%s;src:url(%s) format('woff2');}"
@@ -376,10 +490,19 @@ def main():
                     help='lista de cruces de una instancia en vez del cuadro completo')
     ap.add_argument('--fase', default='octavos', choices=list(FASES), help='(con --lista) instancia')
     ap.add_argument('--sub', default='', help='línea debajo del título (ej. "21 Y 22 DE NOVIEMBRE")')
+    ap.add_argument('--clasificado', metavar='SLUG',
+                    help='placa de un club que pasó de ronda (o campeón), con resultado y próximo rival')
     ap.add_argument('--escala', type=int, default=2)
     ap.add_argument('--out', default=str(PREVIEW))
     args = ap.parse_args()
     sufijo = '' if args.escala == 2 else f'-x{args.escala}'
+    if args.clasificado:
+        seeds = seeds_de_la_tabla()
+        octavos = [{'home': seeds[a], 'away': seeds[b], 'sh': a, 'sa': b} for a, b in PL_OCTAVOS]
+        r = generar_clasificado(args.clasificado, armar_cuadro(octavos),
+                                Path(args.out) / f'clasificado-{args.clasificado}{sufijo}.png', escala=args.escala)
+        print('imagen:', r)
+        return 0 if r else 1
     if not args.lista:
         seeds = seeds_de_la_tabla()
         pos = {v: k for k, v in seeds.items()}
