@@ -240,6 +240,7 @@ svg.lin{position:absolute;inset:0;width:%dpx;height:720px}
 .f .e{width:22px;height:22px;object-fit:contain;flex:0 0 auto}
 .f .n{font-family:'Bebas Neue';font-size:16.5px;letter-spacing:1.2px;white-space:nowrap;overflow:hidden;flex:1}
 .f .g{font-family:'Bebas Neue';font-size:17px;color:#fff;min-width:12px;text-align:right}
+.f .g:empty{display:none}
 .f .g i{font-style:normal;font-size:12px;color:#8b93a7;margin-left:2px}
 .f.vacia .n{color:#3c4560;font-size:14px;letter-spacing:2px}
 .f.perdio{opacity:.4}

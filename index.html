@@ -292,6 +292,11 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .pl-eq:last-child { border-radius: 0 0 9px 9px; }
 .pl-eq[data-slug]:hover { background: rgba(79,195,247,0.12); }
 .pl-eq.vacio { cursor: default; }
+.pl-eq.real { cursor: default; }
+.pl-eq.real:hover { background: none; }
+.pl-eq.real.gana:hover { background: rgba(79,195,247,0.14); }
+.pl-gol { flex: 0 0 auto; font-family: 'Bebas Neue', sans-serif; font-size: 15px; color: #fff; letter-spacing: .5px; }
+.pl-gol i { font-style: normal; font-size: 11px; color: rgba(255,255,255,0.55); margin-left: 2px; }
 .pl-seed { font-family: 'Bebas Neue', sans-serif; font-size: 12px; letter-spacing: 0.5px; color: rgba(255,255,255,0.38);
   width: 18px; flex: 0 0 auto; text-align: center; }
 .pl-eq img { width: 18px; height: 18px; object-fit: contain; flex: 0 0 auto; }
@@ -905,22 +910,45 @@ const PL_SEEDS = Object.values(PL_OCTAVOS).flat();
 let _plBase = null, _plFirma = '';
 let _plSt = { ov: {}, picks: {} };
 try { localStorage.removeItem('tribunapp_playoffs_v1'); } catch (e) {}   // lo que guardaba la versión anterior
+// Resultados REALES de los playoffs (liga.json, partidos con `fase`): una llave ya
+// jugada muestra el marcador (y los penales) y su ganador pasa solo a la ronda
+// siguiente; esa llave no se puede tocar. Lo que falta jugar sigue simulable.
+let _plReales = {};   // 'slugA|slugB' (ordenados) → partido de liga.json
+fetch(`data/fixtures/liga.json?t=${Date.now()}`).then(r => r.ok ? r.json() : []).then(liga => {
+  _plReales = {};
+  (liga || []).filter(p => p.fase).forEach(p => { _plReales[[p.home.slug, p.away.slug].sort().join('|')] = p; });
+  if (_plBase) plRender();
+}).catch(() => {});
+function _plReal(m) {           // partido real de la llave m, si los dos equipos ya están definidos
+  const eq = _plEquipos(m);
+  if (!eq[0] || !eq[1] || !eq[0].slug || !eq[1].slug) return null;
+  return _plReales[[eq[0].slug, eq[1].slug].sort().join('|')] || null;
+}
 function _plSeed(k) { return _plSt.ov[k] || (_plBase && _plBase[k]) || null; }
 function _plEquipos(m) {
   if (PL_OCTAVOS[m]) return PL_OCTAVOS[m].map(k => ({ slug: _plSeed(k), seed: k }));
   return PL_HIJOS[m].map(_plGanador);
 }
 function _plGanador(m) {
+  const r = _plReal(m);
+  if (r && r.status && r.status.finished && r.winner) return _plEquipos(m).find(e => e && e.slug === r.winner) || null;
   const p = _plSt.picks[m];
   return p ? (_plEquipos(m).find(e => e && e.slug === p) || null) : null;
 }
 function _plFila(m, e, g) {
   if (!e || !e.slug) return '<div class="pl-eq vacio"><span class="pl-seed"></span><span class="pl-nom">A definir</span></div>';
   const cls = (g ? (g.slug === e.slug ? ' gana' : ' pierde') : '') + (_plSt.ov[e.seed] ? ' mod' : '');
-  const edit = PL_OCTAVOS[m] ? `<button class="pl-edit" data-seed="${e.seed}" title="Cambiar equipo" aria-label="Cambiar equipo">✎</button>` : '';
-  return `<div class="pl-eq${cls}" data-m="${m}" data-slug="${e.slug}">` +
+  const r = _plReal(m), jugado = r && r.status && r.status.finished;
+  const edit = (PL_OCTAVOS[m] && !jugado) ? `<button class="pl-edit" data-seed="${e.seed}" title="Cambiar equipo" aria-label="Cambiar equipo">✎</button>` : '';
+  let gol = '';
+  if (r && (jugado || r.status.started) && r.home_score != null) {
+    const local = r.home.slug === e.slug;
+    const g = local ? r.home_score : r.away_score, pen = local ? r.home_pen : r.away_pen;
+    gol = `<span class="pl-gol">${g}${pen != null ? `<i>(${pen})</i>` : ''}</span>`;
+  }
+  return `<div class="pl-eq${cls}${jugado ? ' real' : ''}" data-m="${m}" data-slug="${e.slug}">` +
     `<span class="pl-seed">${e.seed[1]}${e.seed[0]}</span><img src="escudos/${e.slug}.png" alt="">` +
-    `<span class="pl-nom">${nombreCorto(e.slug)}</span>${edit}</div>`;
+    `<span class="pl-nom">${nombreCorto(e.slug)}</span>${gol}${edit}</div>`;
 }
 function _plPartido(m) {
   const eq = _plEquipos(m), g = _plGanador(m);
@@ -1005,6 +1033,8 @@ document.getElementById('pl-cuadro').addEventListener('click', ev => {
   const f = ev.target.closest('.pl-eq[data-slug]');
   if (!f) return;
   const m = f.dataset.m, s = f.dataset.slug;
+  const r = _plReal(m);
+  if (r && r.status && r.status.finished) return;      // llave ya jugada: el resultado manda
   if (_plSt.picks[m] === s) delete _plSt.picks[m]; else _plSt.picks[m] = s;
   plRender();
 });
