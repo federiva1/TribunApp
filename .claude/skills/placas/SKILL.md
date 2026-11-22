@@ -177,6 +177,11 @@ python scripts/social_cruces.py --lista --fase cuartos                  # cuarto
   Independiente" si la otra llave no se jugó) con la fecha de `data/playoffs.json`. Sale de
   `liga.json`, así que **primero hay que cerrar el partido** (con `home_pen`/`away_pen` y
   `winner`, que el cierre rápido ya completa). Archivo `clasificado-{slug}.png`.
+- **Campeón de copa**: `python scripts/social_cruces.py --campeon-copa sudamericana` (o
+  `libertadores`) → mismo diseño que *Clasificado*, con "CAMPEÓN · COPA SUDAMERICANA 2026", ciudad y
+  día de la final arriba y el resultado. Sale de `copas.json` (correr antes `fetch_copas_fixtures.py`).
+  El rival extranjero necesita `escudos/{slug}.png` (slug del nombre api-sports, ej. `atleticomg`;
+  se baja de `images.fotmob.com/image_resources/logo/teamlogo/{fotmob_id}.png`). Archivo `campeon-{copa}.png`.
 - Si `liga.json` ya trae los partidos de la instancia (campo `fase`), salen de ahí con
   día y hora en cada tarjeta. Si no, los octavos se arman con la tabla final de
   api-sports y el formato del torneo (`PL_OCTAVOS`, igual que el cuadro del index).
