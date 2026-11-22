@@ -24,6 +24,7 @@ Uso:
 Sale en data/social/preview/cuadro-playoffs.png / cruces-{fase}.png (gitignored): no publica nada.
 """
 import argparse
+import unicodedata
 import json
 import sys
 import urllib.request
@@ -294,14 +295,15 @@ def clasificacion(nodos, slug):
     return k, nodos[k], sig, (nodos[sig] if sig else None)
 
 
-def _html_clasificado(slug, k, c, sig, nsig, cuando):
+def _html_clasificado(slug, k, c, sig, nsig, cuando, torneo='TORNEO CLAUSURA 2026 · PLAYOFFS',
+                      sub=None, nombres=None):
     def esc(sl, cls):
         p = esc_placa(sl) if sl else None
         return f'<img class="{cls}" src="{_b64(p, "image/png")}">' if p and p.exists() else ''
-    nom = lambda sl: NOM.get(sl, sl).upper()
+    nom = lambda sl: ((nombres or {}).get(sl) or NOM.get(sl, sl)).upper()
     campeon = k == 'f'
     titulo = 'CAMPEÓN' if campeon else 'CLASIFICADO'
-    sub = 'TORNEO CLAUSURA 2026' if campeon else f'A {SIGUIENTE[sig[0]]}'
+    sub = sub or ('TORNEO CLAUSURA 2026' if campeon else f'A {SIGUIENTE[sig[0]]}')
     pen = (f'<div class="pen">{c["hp"]}-{c["ap"]} EN PENALES</div>'
            if c.get('hp') is not None and c.get('ap') is not None else '')
     resultado = (f'<div class="res">{esc(c["home"], "mini")}<span>{nom(c["home"])}</span>'
@@ -344,21 +346,74 @@ body{width:760px;height:950px;font-family:'Barlow Condensed',sans-serif;color:#f
 .pc{font-family:'Bebas Neue';font-size:16px;letter-spacing:3px;color:#8b93a7;margin-top:2px}
 .pie{font-family:'Bebas Neue';font-size:18px;letter-spacing:3px;color:#e8edf7;margin-top:16px}
 .pie b{color:#38bdf8;font-weight:400}
-</style></head><body><div class="bg"></div>
+.caja + .pie{margin-top:auto}
+.campeon .esc{width:320px;height:320px;margin-top:40px}
+.campeon .nom{margin-top:14px}
+.campeon .caja{margin-top:26px}
+</style></head><body class="%s"><div class="bg"></div>
 <div class="wrap">
   <img class="logo" src="%s">
-  <div class="torneo">TORNEO CLAUSURA 2026 · PLAYOFFS</div>
+  <div class="torneo">%s</div>
   <div class="tit">%s</div><div class="sub">%s</div>
   %s
   <div class="nom">%s</div>
   <div class="caja"><div class="ronda">%s</div>%s</div>
   %s
   <div class="pie">ARMÁ TU 11 Y PUNTUÁ A LOS JUGADORES EN <b>TRIBUNAPP.COM.AR</b></div>
-</div></body></html>""" % (_fuentes(), _logo_datauri(), titulo, sub, esc(slug, 'esc'), nom(slug), ronda,
+</div></body></html>""" % (_fuentes(), 'campeon' if campeon else '', _logo_datauri(), torneo, titulo, sub, esc(slug, 'esc'), nom(slug), ronda,
                               resultado, prox)
 
 
 nodos_global = {}
+
+
+COPAS_NOMBRE = {'libertadores': 'COPA LIBERTADORES', 'sudamericana': 'COPA SUDAMERICANA'}
+
+
+def generar_campeon_copa(copa, path, escala=2):
+    """Placa CAMPEÓN de un club argentino en la final de una copa (copas.json),
+    con el mismo diseño que la de los playoffs. El rival extranjero usa
+    escudos/{slug}.png, con el slug derivado del nombre api-sports (atleticomg)."""
+    import os, re
+    data = json.loads((ROOT / 'data' / 'fixtures' / 'copas.json').read_text(encoding='utf-8'))
+    final = next((p for p in reversed((data.get(copa) or {}).get('partidos') or [])
+                  if p.get('ronda') == 'Final' and p.get('winner')), None)
+    if not final:
+        print(f'{copa}: la final no está terminada en copas.json (correr fetch_copas_fixtures.py)')
+        return None
+    lado = lambda t: t.get('slug') or re.sub(r'[^a-z0-9]', '', unicodedata.normalize('NFD', t['name']).encode('ascii', 'ignore').decode().lower())
+    home, away = lado(final['home']), lado(final['away'])
+    slug = home if final['winner'] == 'home' else away
+    nombres = {lado(t): t['name'].replace('-', ' ').replace('Atletico', 'Atlético') for t in (final['home'], final['away']) if not t.get('slug')}
+    c = {'home': home, 'away': away, 'hs': final['home_score'], 'as': final['away_score'],
+         'hp': final.get('home_pen'), 'ap': final.get('away_pen')}
+    anio = (final.get('utcTime') or '2026')[:4]
+    # arriba: ciudad y día de la final (la ficha trae "Estadio, Ciudad")
+    MESES = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 'JULIO', 'AGOSTO',
+             'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE']
+    from datetime import datetime, timedelta
+    ko = datetime.fromisoformat(final['utcTime']) - timedelta(hours=3)
+    torneo = f'FINAL · {ko.day} DE {MESES[ko.month - 1]}'
+    try:
+        ficha = json.loads((ROOT / 'data' / 'partidos' / f'{home}-{away}.json').read_text(encoding='utf-8'))
+        ciudad = (ficha['partido'].get('estadio') or '').split(', ')[-1]
+        if ciudad:
+            torneo = f'FINAL · {ciudad.upper()} · {ko.day} DE {MESES[ko.month - 1]}'
+    except (FileNotFoundError, KeyError, ValueError):
+        pass
+    html = aplicar_fondo_tribuna(_html_clasificado(slug, 'f', c, None, None, '', torneo=torneo,
+                                                   sub=f'{COPAS_NOMBRE[copa]} {anio}', nombres=nombres))
+    exe = os.environ.get('PLAYWRIGHT_CHROMIUM') or None
+    path.parent.mkdir(parents=True, exist_ok=True)
+    from playwright.sync_api import sync_playwright
+    with sync_playwright() as pw:
+        b = pw.chromium.launch(executable_path=exe) if exe else pw.chromium.launch()
+        pg = b.new_page(viewport={'width': 760, 'height': 950}, device_scale_factor=escala)
+        pg.set_content(html)
+        pg.wait_for_timeout(700)
+        pg.screenshot(path=str(path))
+        b.close()
+    return path
 
 
 def generar_clasificado(slug, nodos, path, escala=2):
@@ -493,10 +548,17 @@ def main():
     ap.add_argument('--sub', default='', help='línea debajo del título (ej. "21 Y 22 DE NOVIEMBRE")')
     ap.add_argument('--clasificado', metavar='SLUG',
                     help='placa de un club que pasó de ronda (o campeón), con resultado y próximo rival')
+    ap.add_argument('--campeon-copa', choices=list(COPAS_NOMBRE),
+                    help='placa CAMPEÓN del club argentino que ganó la final de esa copa')
     ap.add_argument('--escala', type=int, default=2)
     ap.add_argument('--out', default=str(PREVIEW))
     args = ap.parse_args()
     sufijo = '' if args.escala == 2 else f'-x{args.escala}'
+    if args.campeon_copa:
+        r = generar_campeon_copa(args.campeon_copa, Path(args.out) / f'campeon-{args.campeon_copa}{sufijo}.png',
+                                 escala=args.escala)
+        print('imagen:', r)
+        return 0 if r else 1
     if args.clasificado:
         seeds = seeds_de_la_tabla()
         octavos = [{'home': seeds[a], 'away': seeds[b], 'sh': a, 'sa': b} for a, b in PL_OCTAVOS]
