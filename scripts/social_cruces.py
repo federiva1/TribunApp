@@ -133,6 +133,7 @@ def armar_cuadro(octavos):
             local = p['home']['slug'] == c['home']
             c['hs'], c['as'] = (p['home_score'], p['away_score']) if local else (p['away_score'], p['home_score'])
             c['hp'], c['ap'] = (p.get('home_pen'), p.get('away_pen')) if local else (p.get('away_pen'), p.get('home_pen'))
+            c['aet'] = (p.get('status') or {}).get('short') == 'AET'
             g = p.get('winner')
             if not g and c['hs'] is not None and c['hs'] != c['as']:
                 g = c['home'] if c['hs'] > c['as'] else c['away']
@@ -305,7 +306,8 @@ def _html_clasificado(slug, k, c, sig, nsig, cuando, torneo='TORNEO CLAUSURA 202
     titulo = 'CAMPEÓN' if campeon else 'CLASIFICADO'
     sub = sub or ('TORNEO CLAUSURA 2026' if campeon else f'A {SIGUIENTE[sig[0]]}')
     pen = (f'<div class="pen">{c["hp"]}-{c["ap"]} EN PENALES</div>'
-           if c.get('hp') is not None and c.get('ap') is not None else '')
+           if c.get('hp') is not None and c.get('ap') is not None
+           else '<div class="pen">EN TIEMPO EXTRA</div>' if c.get('aet') else '')
     resultado = (f'<div class="res">{esc(c["home"], "mini")}<span>{nom(c["home"])}</span>'
                  f'<b>{c["hs"]} - {c["as"]}</b><span>{nom(c["away"])}</span>{esc(c["away"], "mini")}</div>{pen}')
     prox = ''
