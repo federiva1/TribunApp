@@ -332,7 +332,7 @@ function playoffsProvisorios(po, liga) {
   let previas = null;              // llaves de la instancia anterior: [{a, b, ganador}]
   for (const ins of (po.instancias || []).sort((x, y) => x.fecha - y.fecha)) {
     let llaves;
-    if (ins.partidos) llaves = ins.partidos.map(m => ({ a: m.local, b: m.visitante }));
+    if (ins.partidos) llaves = ins.partidos.map(m => ({ a: m.local || null, b: m.visitante || null, da: m.local_desc, db: m.visitante_desc }));
     else if (previas) {
       llaves = [];
       for (let i = 0; i < previas.length; i += 2) {
