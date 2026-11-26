@@ -86,11 +86,18 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark
   color:rgba(255,255,255,.4);text-align:center;text-transform:uppercase;margin-bottom:16px;
 }
 .match-score-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
-.match-team{display:flex;flex-direction:column;align-items:center;gap:8px;flex:1;}
+.match-team{display:flex;flex-direction:column;align-items:center;gap:8px;flex:1;min-width:0;}
 .match-team-flag{width:54px;height:54px;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(0,0,0,.5));}
 .match-team-name{
   font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1.5px;
-  color:#fff;text-align:center;
+  color:#fff;text-align:center;overflow-wrap:anywhere;
+}
+/* Pantallas muy angostas: nombres y escudos más chicos, y las pestañas sin relleno de más */
+@media(max-width:319px){
+  .match-team-flag{width:42px;height:42px;}
+  .match-team-name{font-size:15px;letter-spacing:.8px;}
+  .match-score{font-size:42px;}
+  .tab{padding:12px 4px;letter-spacing:.3px;min-width:0;}
 }
 .match-score-center{display:flex;flex-direction:column;align-items:center;gap:4px;padding:0 8px;}
 .match-score{
@@ -1303,5 +1310,6 @@ function renderMatchTable(){
 init();
 </script>
 <script src="js/ui-help.js"></script>
+<script src="js/header-menu.js" defer></script>
 </body>
 </html>
