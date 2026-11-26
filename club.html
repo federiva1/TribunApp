@@ -238,6 +238,24 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   border: none; background: none; padding: 0;
 }
 .back-btn:hover { color: #fff; }
+/* Barra fija de cada sección del club: flecha grande para volver al menú del club (siempre a la vista, también sobre los
+   resultados) y acceso al inicio. Antes quedaba un "← Volver" gris de 13 px arriba de todo que los resultados tapaban. */
+.ov-bar { position: sticky; top: 0; z-index: 250; display: flex; align-items: center; gap: 8px; margin: -12px -12px 12px; padding: 8px 12px;
+  min-height: 54px; background: rgba(19,19,31,0.97); backdrop-filter: blur(8px); border-bottom: 1px solid rgba(255,255,255,0.1); }
+.ov-back { display: flex; align-items: center; gap: 7px; flex: 0 0 auto; max-width: 46%; height: 38px; padding: 0 12px 0 9px; border-radius: 10px; cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.07); color: #fff; font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 1px; }
+.ov-back:hover { background: rgba(255,255,255,0.14); }
+.ov-back .ar { font-size: 22px; line-height: 1; margin-top: -2px; }
+.ov-back img { width: 24px; height: 24px; object-fit: contain; flex: 0 0 auto; }
+.ov-back .ov-club { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ov-title { flex: 1; min-width: 0; text-align: center; font-family: 'Bebas Neue', sans-serif; font-size: 17px; letter-spacing: 2px; color: #fff;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ov-home { flex: 0 0 auto; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; border-radius: 10px; color: rgba(255,255,255,0.85);
+  border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.07); text-decoration: none; }
+body.ov-abierto #lang-hint-bar { display: none; }
+.ov-home:hover { background: rgba(255,255,255,0.14); color: #fff; }
+@media (max-width: 430px) { .ov-back .ov-club { display: none; } .ov-back { padding: 0 11px 0 9px; } }   /* en el celular alcanza con la flecha y el escudo: el título entra completo */
+@media (max-width: 380px) { .ov-title { font-size: 15px; letter-spacing: 1.2px; } .ov-back { padding: 0 9px 0 7px; } }
 .screen-title {
   font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px;
   color: #fff; text-align: center; margin-bottom: 4px;
@@ -348,7 +366,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 #results-screen {
   display: none; position: absolute; inset: 0;
   background: var(--dark2); flex-direction: column;
-  z-index: 200; padding: 16px; overflow-y: auto;
+  z-index: 200; padding: 70px 16px 16px; overflow-y: auto;
 }
 #results-screen h2 { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: #fff; letter-spacing: 2px; text-align: center; margin-bottom: 4px; }
 .subtitle { font-size: 11px; color: #666; text-align: center; margin-bottom: 14px; }
@@ -425,7 +443,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 
 #scores-results-screen {
   display: none; position: absolute; inset: 0; background: var(--dark2);
-  flex-direction: column; z-index: 200; padding: 16px; overflow-y: auto;
+  flex-direction: column; z-index: 200; padding: 70px 16px 16px; overflow-y: auto;
 }
 #scores-results-screen h2 { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: #fff; letter-spacing: 2px; text-align: center; margin-bottom: 4px; }
 
@@ -881,7 +899,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 <!-- ===== PANTALLA FORMACIÓN ===== -->
 <div class="overlay-screen" id="formation-screen">
 <div class="overlay-inner" id="formation-app">
-  <button class="back-btn" onclick="closeSection('formation')">← Volver</button>
+  <div class="ov-bar"><button class="ov-back" onclick="volverClub('formation')" aria-label="Volver"><span class="ar">←</span><img class="ov-esc" alt=""><span class="ov-club"></span></button><div class="ov-title">ARMÁ TU FORMACIÓN</div><a class="ov-home" href="index.html" title="Inicio" aria-label="Ir al inicio"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></a></div>
 
   <!-- Aviso: formación cerrada durante la ventana de puntajes -->
   <!-- RESULTADOS FORMACIÓN -->
@@ -892,7 +910,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
     <div id="results-list"><div style="text-align:center;color:#666;padding:20px;font-size:13px;">Cargando...</div></div>
     <!-- Equipos de la gente, inline bajo las barras (mismas cards que Est. TribunApp) -->
     <div id="results-feed"></div>
-    <button id="back-results-btn" style="font-family:'Bebas Neue',sans-serif;font-size:15px;color:#aaa;background:none;border:1px solid #333;border-radius:8px;padding:8px 20px;cursor:pointer;width:100%;margin-top:8px;">← Volver</button>
+    <button id="back-results-btn" style="font-family:'Bebas Neue',sans-serif;font-size:15px;color:#aaa;background:none;border:1px solid #333;border-radius:8px;padding:8px 20px;cursor:pointer;width:100%;margin-top:8px;">← Ver mi cancha</button>
   </div>
 
   <!-- FORMACIÓN principal -->
@@ -956,7 +974,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 <!-- ===== PANTALLA PUNTAJES ===== -->
 <div class="overlay-screen" id="scores-screen">
 <div class="overlay-inner" id="scores-app">
-  <button class="back-btn" onclick="closeSection('scores')">← Volver</button>
+  <div class="ov-bar"><button class="ov-back" onclick="volverClub('scores')" aria-label="Volver"><span class="ar">←</span><img class="ov-esc" alt=""><span class="ov-club"></span></button><div class="ov-title">PONÉ TU PUNTAJE</div><a class="ov-home" href="index.html" title="Inicio" aria-label="Ir al inicio"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></a></div>
   <div style="width:100%;height:110px;background:url('fotos/bg-puntajes.png') center/cover no-repeat;border-radius:10px;margin-bottom:14px;position:relative;overflow:hidden;">
     <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.15) 0%,rgba(26,26,46,0.88) 100%);display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;padding:10px 14px;gap:2px;">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:#fff;line-height:1;">⭐ PUNTUÁ EL PARTIDO</div>
@@ -994,7 +1012,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 <!-- ===== PANTALLA FECHAS ===== -->
 <div class="overlay-screen" id="fechas-screen">
 <div class="overlay-inner">
-  <button class="back-btn" onclick="closeSection('fechas')">← Volver</button>
+  <div class="ov-bar"><button class="ov-back" onclick="volverClub('fechas')" aria-label="Volver"><span class="ar">←</span><img class="ov-esc" alt=""><span class="ov-club"></span></button><div class="ov-title">FECHAS</div><a class="ov-home" href="index.html" title="Inicio" aria-label="Ir al inicio"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></a></div>
   <div style="text-align:center;margin-bottom:18px;">
     <h1 id="fechas-screen-title" style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#fff;letter-spacing:2px;">📅 Apertura 2026</h1>
     <div style="font-size:11px;color:#888;margin-top:3px;">Seleccioná una fecha</div>
@@ -1006,7 +1024,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 <!-- PANTALLA FECHA ANTERIOR -->
 <div id="prev-fecha-screen" style="display:none;position:fixed;inset:0;z-index:300;background:var(--dark);overflow-y:auto;">
 <div style="background:var(--dark2);padding:12px;max-width:560px;margin:0 auto;min-height:100vh;">
-  <button class="back-btn" id="back-prev-fecha-btn">← Volver</button>
+  <div class="ov-bar"><button class="ov-back" id="back-prev-fecha-btn" aria-label="Volver"><span class="ar">←</span><img class="ov-esc" alt=""><span class="ov-club"></span></button><div class="ov-title">FECHA ANTERIOR</div><a class="ov-home" href="index.html" title="Inicio" aria-label="Ir al inicio"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></a></div>
   <div id="prev-fecha-header" style="text-align:center;margin-bottom:14px;"></div>
   <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2px;color:#555;text-transform:uppercase;margin:14px 0 8px;">⚽ Formaciones de la gente</div>
   <div id="prev-fecha-formations"><div style="text-align:center;color:#555;padding:20px;font-size:13px;">Cargando...</div></div>
@@ -1020,7 +1038,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 <!-- PANTALLA FIXTURE -->
 <div class="overlay-screen" id="fixture-screen">
 <div class="overlay-inner">
-  <button class="back-btn" onclick="closeSection('fixture')">← Volver</button>
+  <div class="ov-bar"><button class="ov-back" onclick="volverClub('fixture')" aria-label="Volver"><span class="ar">←</span><img class="ov-esc" alt=""><span class="ov-club"></span></button><div class="ov-title">FIXTURE</div><a class="ov-home" href="index.html" title="Inicio" aria-label="Ir al inicio"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></a></div>
   <div style="text-align:center;margin-bottom:18px;">
     <h1 id="fixture-screen-title" style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#fff;letter-spacing:2px;">📋 FIXTURE 2026</h1>
     <div id="fixture-screen-sub" style="font-size:11px;color:#888;margin-top:3px;">Apertura · Liga Profesional</div>
@@ -1036,7 +1054,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 <!-- PANTALLA ESTADÍSTICAS -->
 <div class="overlay-screen" id="stats-screen">
 <div class="overlay-inner">
-  <button class="back-btn" onclick="closeSection('stats')">← Volver</button>
+  <div class="ov-bar"><button class="ov-back" onclick="volverClub('stats')" aria-label="Volver"><span class="ar">←</span><img class="ov-esc" alt=""><span class="ov-club"></span></button><div class="ov-title">ESTADÍSTICAS</div><a class="ov-home" href="index.html" title="Inicio" aria-label="Ir al inicio"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></a></div>
   <div style="text-align:center;margin-bottom:18px;">
     <h1 style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#fff;letter-spacing:2px;">📊 ESTADÍSTICAS</h1>
     <div id="stats-season-label" style="font-size:11px;color:#888;margin-top:3px;">Temporada 2026</div>
@@ -1048,7 +1066,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 <!-- ===== PANTALLA ESTADÍSTICAS DEL CLUB (individual, por fecha) ===== -->
 <div class="overlay-screen" id="estad-screen">
 <div class="overlay-inner">
-  <button class="back-btn" onclick="closeSection('estad')">← Volver</button>
+  <div class="ov-bar"><button class="ov-back" onclick="volverClub('estad')" aria-label="Volver"><span class="ar">←</span><img class="ov-esc" alt=""><span class="ov-club"></span></button><div class="ov-title">ESTADÍSTICAS</div><a class="ov-home" href="index.html" title="Inicio" aria-label="Ir al inicio"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></a></div>
   <div style="text-align:center;margin-bottom:14px;">
     <h1 style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#fff;letter-spacing:2px;">📊 ESTADÍSTICAS</h1>
     <div id="estad-club-label" style="font-size:11px;color:#888;margin-top:3px;"></div>
@@ -1061,7 +1079,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 <!-- ===== PANTALLA EST. TRIBUNAPP (votos de la gente) ===== -->
 <div class="overlay-screen" id="tribunapp-screen">
 <div class="overlay-inner">
-  <button class="back-btn" onclick="closeSection('tribunapp')">← Volver</button>
+  <div class="ov-bar"><button class="ov-back" onclick="volverClub('tribunapp')" aria-label="Volver"><span class="ar">←</span><img class="ov-esc" alt=""><span class="ov-club"></span></button><div class="ov-title">EST. TRIBUNAPP</div><a class="ov-home" href="index.html" title="Inicio" aria-label="Ir al inicio"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></a></div>
   <div style="text-align:center;margin-bottom:14px;">
     <h1 style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#fff;letter-spacing:2px;">👥 EST. TRIBUNAPP</h1>
     <div id="tribunapp-label" style="font-size:11px;color:#888;margin-top:3px;">Lo que vota la gente</div>
@@ -1240,6 +1258,9 @@ document.getElementById('back-btn').onclick = () => {
 };
 document.title = `${CLUB.nombre} — TribunApp`;
 document.getElementById('club-escudo-header').src = `escudos/${CLUB_SLUG}.png`;
+document.querySelectorAll('.ov-esc').forEach(i => { i.src = `escudos/${CLUB_SLUG}.png`; i.onerror = () => i.remove(); });
+document.querySelectorAll('.ov-club').forEach(e => { e.textContent = CLUB.nombreCorto || CLUB.nombre; });
+{ const pf = document.querySelector('#back-prev-fecha-btn .ov-club'); if (pf) pf.textContent = 'Fechas'; }   // ese botón vuelve a la lista de fechas, no al menú
 document.getElementById('club-nombre-header').textContent = CLUB.nombre;
 // Escudo del club en el extremo derecho del header (reemplazó a las esferas de
 // color). Si el PNG no carga, el onerror lo oculta y el header queda limpio.
@@ -1297,6 +1318,7 @@ function showToast(msg) { toast.textContent = msg; toast.classList.add('show'); 
 
 // ---- Navegación ----
 function openSection(section) {
+  document.body.classList.add('ov-abierto');     // oculta el aviso de idioma de ui-help.js: taparía la barra de arriba
   document.getElementById('home-screen').style.display = 'none';
   ['formation', 'scores', 'fechas', 'fixture', 'stats', 'estad', 'tribunapp'].forEach(s => {
     const el = document.getElementById(s + '-screen');
@@ -1340,8 +1362,15 @@ function openSection(section) {
 }
 
 function closeSection(section) {
+  document.body.classList.remove('ov-abierto');
   document.getElementById(section + '-screen').style.display = 'none';
   document.getElementById('home-screen').style.display = 'block';
+}
+// Flecha de la barra de arriba: de cualquier pantalla (incluidos los resultados) vuelve directo al menú del club
+function volverClub(section) {
+  ['results-screen', 'scores-results-screen'].forEach(id => { const e = document.getElementById(id); if (e) e.style.display = 'none'; });
+  closeSection(section);
+  window.scrollTo(0, 0);
 }
 
 // ---- Utilidades ----

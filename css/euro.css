@@ -9,6 +9,7 @@
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: var(--dark); color: #fff; overflow-x: hidden; }
+body { overflow-x: clip; }       /* "hidden" en el body lo vuelve contenedor de scroll y rompe el position: sticky de las barras */
 a { color: inherit; }
 
 /* ===== HEADER (igual al del resto de las páginas) ===== */
@@ -17,7 +18,7 @@ a { color: inherit; }
   padding: 12px 18px 10px; gap: 12px;
   /* dorado: así se distingue de un vistazo que estás en el modo Euro */
   background: linear-gradient(180deg, #e8b923 0%, #b78d12 100%);
-  border-bottom: 2px solid #ffe082;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
   position: sticky; top: 0; z-index: 50; backdrop-filter: blur(10px);
   --corte: 198px;                      /* hasta dónde llega el fondo oscuro detrás del logo */
 }
@@ -314,7 +315,11 @@ a.tile { display: block; text-decoration: none; color: #fff; }
   background: #151a2b; border: 1px solid rgba(255,213,79,0.6); color: #fff; padding: 10px 16px; border-radius: 10px;
   font-family: 'Barlow Condensed', sans-serif; font-size: 15px; transition: opacity .2s, transform .2s; text-align: center; }
 .toast.on { opacity: 1; transform: translate(-50%, 0); }
-.sub .bk { color: var(--euro); }
+/* Pantallas con flecha de volver (club, formación, puntajes, TribunApp del club): la barra queda fija arriba y la flecha es un botón grande */
+.sub:has(.bk) { position: sticky; top: 0; z-index: 40; background: linear-gradient(90deg, var(--cc, rgba(255,213,79,0.16)), transparent 75%), var(--dark); }
+.sub .bk { color: #fff; display: inline-flex; align-items: center; flex: 0 0 auto; height: 38px; padding: 0 13px; border-radius: 10px; font-size: 16px; font-weight: 600;
+  border: 1px solid rgba(255,213,79,0.5); background: rgba(255,213,79,0.12); }
+.sub .bk:hover { background: rgba(255,213,79,0.24); }
 
 /* ===== FORMACIÓN ===== */
 .fbar { display: flex; align-items: center; gap: 8px; margin: 12px 16px 0; font-family: 'Barlow Condensed', sans-serif; }
