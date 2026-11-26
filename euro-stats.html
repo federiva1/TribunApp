@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estadísticas · Eurotribunapp — TribunApp</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="Logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/euro.css">
+</head>
+<body>
+<!-- EUROTRIBUNAPP (prototipo, rama eurotribunapp): la Champions y las 5 grandes ligas de Europa con datos de
+     FotMob (data/euro/, scripts/fetch_euro.py). Header propio (dorado) armado por EURO.header() en js/euro.js:
+     Fixture y Tablas de la competición que se está mirando; el logo y "Argentina" vuelven al home argentino. -->
+<header id="site-header">
+  <a class="logo-wrap" href="index.html" title="Volver a TribunApp Argentina"><img src="logo-header.png" alt="TribunApp"></a>
+  <div class="header-actions"></div>
+</header>
+<script src="js/euro.js"></script>
+<script>EURO.header('stats');</script>
+
+<main id="main">
+  <div class="sub" id="sub">
+    <div class="tt"><h1 id="liga-nombre">Cargando…</h1><span id="liga-sub"></span></div>
+    <img class="lg fondo" id="liga-logo" src="" alt="" onerror="this.style.display='none'">
+  </div>
+  <div class="ligas-bar" id="bar"></div>
+  <div class="info" id="info"></div>
+
+  <div class="h2">LO MEJOR DE LA FECHA</div>
+  <div class="lead3" id="lideres"></div>
+
+  <div class="h2">PARTIDOS <small>tocá "Ver estadísticas" para el detalle</small></div>
+  <div id="partidos"></div>
+
+  <p class="nota">Datos de FotMob · estadísticas de la última fecha jugada (ejemplo del prototipo)</p>
+</main>
+
+<script>
+(async function () {
+  const id = EURO.liga();
+  document.getElementById('bar').innerHTML = EURO.selector(id, 'euro-stats.html');
+  let L, S;
+  try { [L, S] = await Promise.all([EURO.json(`data/euro/${id}.json`), EURO.json(`data/euro/stats/${id}.json`)]); }
+  catch (e) { document.getElementById('liga-nombre').textContent = 'Sin estadísticas'; return; }
+  document.title = `${L.nombre} · Estadísticas · Eurotribunapp — TribunApp`;
+  document.getElementById('liga-nombre').textContent = L.nombre.toUpperCase();
+  document.getElementById('liga-sub').textContent = `${L.pais} · Temporada ${L.temporada || ''}`;
+  document.getElementById('liga-logo').src = EURO.logoLiga(id);
+  document.getElementById('sub').style.setProperty('--cc', L.color + '55');
+  const P = S.partidos || [];
+  document.getElementById('info').textContent = P.length
+    ? `${EURO.ronda(S.ronda, id)} · última jugada · ${P.length} partidos con estadísticas`
+    : 'Todavía no hay partidos jugados con estadísticas.';
+  if (!P.length) return;
+  const q = `&l=${id}`;
+
+  // ---- Líderes de la fecha: goles, asistencias y mejores notas
+  const jug = [];
+  P.forEach(m => ['local', 'visitante'].forEach(lado => m.jugadores[lado].forEach(j => jug.push(Object.assign({ club: m[lado] }, j)))));
+  const suma = campo => {
+    const por = {};
+    jug.forEach(j => { if (j[campo] > 0) { const o = por[j.id] || (por[j.id] = Object.assign({}, j, { v: 0 })); o.v += j[campo]; } });
+    return Object.values(por).sort((a, b) => b.v - a.v || (a.nombre > b.nombre ? 1 : -1)).slice(0, 5);
+  };
+  const fila = (j, i, extra) => `<a class="lr" href="euro-club.html?id=${j.club.id}${q}"><span class="pp">${i + 1}</span>`
+    + `<img src="${EURO.escudo(j.club.id)}" alt="" loading="lazy"><span class="nn">${EURO.esc(EURO.jug(j.nombre))}</span>${extra || ''}<span class="vv">${j.v}</span></a>`;
+  const notas = jug.filter(j => j.nota != null && (j.min || 0) >= 45).sort((a, b) => b.nota - a.nota).slice(0, 5).map(j => Object.assign({}, j, { v: j.nota.toFixed(1) }));
+  const caja = (t, arr, vacio) => `<div class="lead"><h3>${t}</h3>` + (arr.length ? arr.map((j, i) => fila(j, i)).join('') : `<div class="vacio" style="margin:6px 0">${vacio}</div>`) + '</div>';
+  document.getElementById('lideres').innerHTML = caja('GOLEADORES', suma('goles'), 'Sin goles.') + caja('ASISTENCIAS', suma('asist'), 'Sin asistencias.') + caja('MEJORES NOTAS', notas, 'Sin notas.');
+
+  // ---- Partidos
+  const golTxt = g => `${EURO.esc(EURO.jug(g.jugador))} ${EURO.min(g.min, g.extra)}${g.penal ? ' (p)' : ''}${g.autogol ? ' (e/c)' : ''}`;
+  const barras = m => '<div class="sq"><i class="a">' + EURO.esc(m.local.nombre) + '</i><i class="b">' + EURO.esc(m.visitante.nombre) + '</i></div>'
+    + m.stats.map(s => {
+      const f = x => s.k === 'xg' ? Number(x).toFixed(2) : s.k === 'posesion' ? x + '%' : x;
+      const lv = s.k === 'pases' ? `${s.l} (${s.lp}%)` : f(s.l), vv = s.k === 'pases' ? `${s.v} (${s.vp}%)` : f(s.v);
+      const tot = (Number(s.l) || 0) + (Number(s.v) || 0), pl = tot ? Math.round((Number(s.l) || 0) / tot * 100) : 50;
+      return `<div class="sr"><div class="lb"><b>${lv}</b><span>${s.label}</span><b>${vv}</b></div><div class="br"><i class="a" style="width:${pl}%"></i><i class="b" style="width:${100 - pl}%"></i></div></div>`;
+    }).join('');
+  const tabla = (m, lado) => {
+    const js = m.jugadores[lado], eq = m[lado];
+    return `<div class="tw"><table class="pt"><caption>${EURO.esc(eq.nombre)}${m.formacion[lado] ? ' · ' + m.formacion[lado] : ''}</caption>`
+      + `<thead><tr><th>#</th><th class="n1">Jugador</th><th>Min</th><th>Nota</th><th>G</th><th>A</th><th class="opc">Tiros</th><th class="opc">xG</th><th class="opc">Pases</th></tr></thead><tbody>`
+      + js.map(j => `<tr class="${j.titular ? '' : 'sup'}"><td>${j.num != null ? j.num : ''}</td><td class="n1">${EURO.esc(EURO.jug(j.nombre))}</td><td>${j.min != null ? j.min : '–'}</td>`
+        + `<td>${j.nota != null ? `<span class="nt ${EURO.notaClase(j.nota)}">${j.nota.toFixed(1)}</span>` : '–'}</td><td>${j.goles || ''}</td><td>${j.asist || ''}</td>`
+        + `<td class="opc">${j.tiros != null ? j.tiros : ''}</td><td class="opc">${j.xg != null ? j.xg : ''}</td><td class="opc">${j.pases != null ? j.pases : ''}</td></tr>`).join('')
+      + '</tbody></table></div>';
+  };
+  document.getElementById('partidos').innerHTML = P.map((m, i) => {
+    const gl = m.goles.filter(g => g.equipo === 'local').map(golTxt).join('<br>'), gv = m.goles.filter(g => g.equipo === 'visitante').map(golTxt).join('<br>');
+    return `<div class="mc" data-i="${i}">`
+      + EURO.partido(Object.assign({ terminado: true }, m), { liga: id })
+      + (gl || gv ? `<div class="gl"><div>${gl ? '⚽ ' + gl : ''}</div><div>${gv ? gv + ' ⚽' : ''}</div></div>` : '')
+      + (m.mvp ? `<div class="mvp">★ Figura: <b>${EURO.esc(m.mvp.nombre)}</b> · ${m.mvp.nota != null ? m.mvp.nota.toFixed(1) : ''}</div>` : '')
+      + `<button type="button" class="bt">VER ESTADÍSTICAS ▾</button><div class="det" hidden></div></div>`;
+  }).join('');
+
+  document.getElementById('partidos').addEventListener('click', ev => {
+    const card = ev.target.closest('.mc'); if (!card) return;
+    const m = P[card.dataset.i], det = card.querySelector('.det'), bt = card.querySelector('.bt');
+    if (ev.target.closest('.bt')) {
+      const abrir = det.hidden;
+      if (abrir && !det.innerHTML) {
+        det.innerHTML = '<div class="stabs"><button type="button" class="on" data-t="eq">EQUIPO</button><button type="button" data-t="jug">JUGADORES</button></div><div class="cuerpo"></div>';
+        det.querySelector('.cuerpo').innerHTML = barras(m);
+      }
+      det.hidden = !abrir; bt.textContent = abrir ? 'OCULTAR ▴' : 'VER ESTADÍSTICAS ▾';
+    } else if (ev.target.closest('.stabs button')) {
+      const b = ev.target.closest('.stabs button');
+      det.querySelectorAll('.stabs button').forEach(x => x.classList.toggle('on', x === b));
+      det.querySelector('.cuerpo').innerHTML = b.dataset.t === 'eq' ? barras(m) : tabla(m, 'local') + tabla(m, 'visitante');
+    }
+  });
+})();
+</script>
+<script src="js/cuenta.js" defer></script>
+<script src="js/header-menu.js" defer></script>
+</body>
+</html>
