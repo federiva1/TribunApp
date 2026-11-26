@@ -451,6 +451,22 @@ Title "TribunApp — Fútbol Argentino". Header con pills Fixture / Tablas / Est
 ### tablas.html
 Tabs **Torneo actual** (zonas A/B), **Anual** y **Promedios**. La **Tabla xG** se sacó de la web el 2026-10-11 (pedido de Fede): `data/tabla_xg.json` se sigue generando en cada cierre, pero ninguna página lo lee; para volver a mostrarla, recuperar el tab desde el historial de `tablas.html`. Las tres tablas salen de un solo `standings` corregido por `sfCorregirConLiga`. El promedio usa `PROMEDIO_HIST` **hardcodeado** (puntos/PJ de temporadas anteriores) — recalcular en 2027.
 
+### Eurotribunapp (rama eurotribunapp, prototipo)
+Sección **EUROTRIBUNAPP** con las 5 grandes ligas de Europa (Premier 47, LaLiga 87, Serie A 55, Bundesliga 54, Ligue 1 53 = ids FotMob). Es **solo un prototipo en su rama**: no está en `master`. Se entra por la pill dorada **★ EURO** del header de `index.html`, que también aparece en el menú ☰, y por el banner `.euroban`, que está debajo del toggle LOCAL/COPAS.
+- **Páginas**:
+  - `euro.html`: las 5 ligas y un partido destacado por liga, que es el de la próxima fecha con la menor suma de posiciones.
+  - `euro-liga.html?l={id}`: tabs Tabla (con leyenda de clasificación), Fechas (la última jugada y la próxima) y Equipos.
+  - `euro-club.html?id={fotmob_id}`: próximo partido, forma de los últimos 5 y plantel por puesto con su DT. Los tiles de Formación, Puntajes y Estadísticas dicen **"Próximamente"**: todavía no hay votos ni stats.
+  - Estilos en `css/euro.css`, con Bebas/Barlow locales de `fonts/`. Helpers en `js/euro.js` (`EURO.ar()` es la hora AR = UTC-3).
+- **Datos**: los arma `python scripts/fetch_euro.py`, que lee el `__NEXT_DATA__` por HTTP con `_next_data_http` de `scrape_fotmob_mundial`. Opciones: `--sin-clubes` saltea los planteles, y un id de liga baja solo esa. Escribe:
+  - `data/euro/{id}.json`: tabla, leyenda, última fecha y próxima.
+  - `data/euro/clubes/{id}.json`: los 96 clubes.
+  - `data/euro/index.json`.
+  - **Última fecha** = la de número más alto con todos sus partidos terminados o cancelados; **próxima** = la primera sin terminar después de esa. Así un partido postergado no arrastra la fecha.
+  - Es una **foto fija**: para actualizarla hay que volver a correr el script.
+- **Escudos y logos**: hotlink a `images.fotmob.com`. La CSP ya permite `img-src https:`, así que no hubo que tocar `vercel.json`.
+- **Header**: `js/header-menu.js` mide el header (`medir()`, al cargar y en resize). Si las pills no entran (`scrollWidth > clientWidth`), le pone `.hm-compacto` y pasa al ☰ a cualquier ancho. Rige para todas las páginas y hace falta porque con 5 pills el header puede desbordar.
+
 ## Mundial 2026 Module (terminado — módulo conservado)
 
 El Mundial ya se jugó. Las páginas quedaron en el repo y varias se **reutilizan para la liga** (`equipo.html`, `estadisticas.html`, `estadisticas-torneo.html` son club-aware; el schema `data/partidos/{id}.json` es el mismo para liga y copas). Lo que sigue documenta ese módulo y su pipeline; no hace falta tocarlo salvo para esas páginas compartidas.

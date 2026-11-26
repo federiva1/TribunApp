@@ -4,7 +4,9 @@
    ~360 px no entran: el header ensanchaba la página entera y todo lo demás (la grilla de
    equipos del index, por ejemplo) quedaba cortado en vez de reacomodarse. Acá, en esas
    pantallas, los botones se agrupan en uno solo (☰) que despliega la lista con sus nombres,
-   y el logo se achica si hace falta. Arriba de 360 px no cambia nada.
+   y el logo se achica si hace falta. Arriba de 360 px no cambia nada, salvo que los botones
+   no entren (por ejemplo el index con el ★ EURO de la rama eurotribunapp): ahí también se
+   agrupan (clase .hm-compacto, se mide al cargar y al cambiar el tamaño de la ventana).
 
    Los estilos van inyectados desde acá para no tocar el CSS repetido de cada página. */
 (function () {
@@ -37,7 +39,12 @@
       #site-header { padding-left: 12px; padding-right: 12px; }
       #site-header .header-actions .header-pill { display: none !important; }
       .header-menu-btn { display: flex; }
-    }`;
+    }
+    /* Además, en cualquier ancho en que los botones no entren (ej. el index con el ★ EURO) */
+    #site-header.hm-compacto .header-actions .header-pill { display: none !important; }
+    #site-header.hm-compacto .header-menu-btn { display: flex; }
+    .header-menu-panel a.euro { color: var(--euro, #ffd54f); }
+    .header-menu-panel a.euro svg { color: var(--euro, #ffd54f); }`;
   document.head.appendChild(css);
 
   const btn = document.createElement('button');
@@ -53,6 +60,7 @@
   pills.forEach(p => {
     const a = document.createElement('a');
     a.href = p.getAttribute('href');
+    if (p.classList.contains('euro')) a.className = 'euro';
     const ico = p.querySelector('svg');
     if (ico) a.appendChild(ico.cloneNode(true));
     const lbl = p.querySelector('.header-pill-label');
@@ -69,8 +77,17 @@
   });
   document.addEventListener('click', e => { if (!panel.contains(e.target)) cerrar(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrar(); });
-  window.addEventListener('resize', () => { if (window.innerWidth >= 360) cerrar(); });
+  // Modo compacto si los botones no entran: se mide con los botones visibles
+  const medir = () => {
+    header.classList.remove('hm-compacto');
+    if (header.scrollWidth > header.clientWidth + 1) header.classList.add('hm-compacto');
+    if (!header.classList.contains('hm-compacto') && window.innerWidth >= 360) cerrar();
+  };
+  let tMedir;
+  window.addEventListener('resize', () => { clearTimeout(tMedir); tMedir = setTimeout(medir, 100); });
+  window.addEventListener('load', medir);
 
   acts.appendChild(btn);
   header.appendChild(panel);
+  medir();
 })();
