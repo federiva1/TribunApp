@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kits · Eurotribunapp — TribunApp</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="Logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/euro.css">
+</head>
+<body>
+<!-- EUROTRIBUNAPP (prototipo, rama eurotribunapp): la Champions y las 5 grandes ligas de Europa con datos de
+     FotMob (data/euro/, scripts/fetch_euro.py). Header propio (dorado) armado por EURO.header() en js/euro.js:
+     Fixture y Tablas de la competición que se está mirando; el logo y "Argentina" vuelven al home argentino. -->
+<header id="site-header">
+  <a class="logo-wrap" href="index.html" title="Volver a TribunApp Argentina"><img src="logo-header.png" alt="TribunApp"></a>
+  <div class="header-actions"></div>
+</header>
+<script src="js/euro.js"></script>
+<script>EURO.header('home');</script>
+
+<main id="main" class="ancho">
+  <div class="sub"><div class="tt"><h1>KITS DE EUROPA</h1><span>Camiseta titular de cada club (aproximada, para revisar y corregir en js/euro-kits.js)</span></div></div>
+  <div id="kits"></div>
+</main>
+<script src="js/kits.js"></script>
+<script src="js/euro-kits.js"></script>
+<script>
+(async function () {
+  let html = '';
+  for (const l of EURO.LIGAS) {
+    const L = await EURO.json(`data/euro/${l.id}.json`);
+    html += `<div class="h2">${EURO.esc(l.nombre.toUpperCase())}</div><div class="kgrid">` + L.tabla.map(f =>
+      `<div class="kcard">${EURO.ficha(f.id, f.color, 10, 38)}<span class="t">${EURO.esc(f.corto)}${EURO_KITS[f.id] ? '' : ' <b style="color:#ff9f43">(sin kit)</b>'}</span></div>`).join('') + '</div>';
+  }
+  document.getElementById('kits').innerHTML = html;
+})();
+</script>
+<script src="js/cuenta.js" defer></script>
+<script src="js/header-menu.js" defer></script>
+</body>
+</html>

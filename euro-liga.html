@@ -29,10 +29,10 @@
   </div>
   <div class="ligas-bar" id="bar"></div>
 
+  <div class="leg" id="leyenda"></div>
   <div class="dos">
     <section>
       <div class="grid-eq" id="grilla"></div>
-      <div class="leg" id="leyenda"></div>
     </section>
     <section>
       <div class="tabla" id="tabla"></div>
@@ -56,7 +56,8 @@
   document.getElementById('sub').style.setProperty('--cc', L.color + '55');
   const q = `&l=${L.id}`;
 
-  // Equipos: 4 por fila (como la Zona A del index), con el color de clasificación de FotMob
+  // Equipos (4 por fila en el celular, 3 en compu y estirados al alto de la tabla), con el color de clasificación de FotMob
+  document.getElementById('grilla').style.setProperty('--filas', Math.ceil(L.tabla.length / 3));
   document.getElementById('grilla').innerHTML = L.tabla.map(f =>
     `<a class="cell" href="euro-club.html?id=${f.id}${q}" style="${f.color ? 'border-color:' + f.color + '88' : ''}">`
     + `<div class="p">${f.pos}°</div><img src="${EURO.escudo(f.id)}" alt="" loading="lazy">`

@@ -30,7 +30,7 @@
   <div class="ligas-bar" id="bar"></div>
   <div class="info" id="info"></div>
 
-  <div class="h2">LO MEJOR DE LA FECHA</div>
+  <div class="h2" id="h-lid">LO MEJOR DE LA FECHA</div>
   <div class="lead3" id="lideres"></div>
 
   <div class="h2">PARTIDOS <small>tocá "Ver estadísticas" para el detalle</small></div>
@@ -42,7 +42,8 @@
 <script>
 (async function () {
   const id = EURO.liga();
-  document.getElementById('bar').innerHTML = EURO.selector(id, 'euro-stats.html');
+  const cid = (new URLSearchParams(location.search).get('c') || '').replace(/\D/g, '');     // ?c= → solo los partidos de ese club
+  document.getElementById('bar').innerHTML = EURO.selector(id, 'euro-stats.html', cid ? '&c=' + cid : '');
   let L, S;
   try { [L, S] = await Promise.all([EURO.json(`data/euro/${id}.json`), EURO.json(`data/euro/stats/${id}.json`)]); }
   catch (e) { document.getElementById('liga-nombre').textContent = 'Sin estadísticas'; return; }
@@ -51,11 +52,15 @@
   document.getElementById('liga-sub').textContent = `${L.pais} · Temporada ${L.temporada || ''}`;
   document.getElementById('liga-logo').src = EURO.logoLiga(id);
   document.getElementById('sub').style.setProperty('--cc', L.color + '55');
-  const P = S.partidos || [];
+  let P = S.partidos || [];
+  if (cid) P = P.filter(m => String(m.local.id) === cid || String(m.visitante.id) === cid);
   document.getElementById('info').textContent = P.length
-    ? `${EURO.ronda(S.ronda, id)} · última jugada · ${P.length} partidos con estadísticas`
-    : 'Todavía no hay partidos jugados con estadísticas.';
-  if (!P.length) return;
+    ? (cid ? `${EURO.ronda(S.ronda, id)} · el último partido del club en esta competición`
+           : `${EURO.ronda(S.ronda, id)} · última jugada · ${P.length} partidos con estadísticas`)
+    : cid ? 'Este club no jugó en la última fecha de esta competición: probá con otra competición arriba.'
+          : 'Todavía no hay partidos jugados con estadísticas.';
+  if (!P.length) { document.getElementById('lideres').innerHTML = ''; return; }
+  if (cid) document.getElementById('h-lid').textContent = 'LO MEJOR DEL PARTIDO';
   const q = `&l=${id}`;
 
   // ---- Líderes de la fecha: goles, asistencias y mejores notas
@@ -115,6 +120,7 @@
       det.querySelector('.cuerpo').innerHTML = b.dataset.t === 'eq' ? barras(m) : tabla(m, 'local') + tabla(m, 'visitante');
     }
   });
+  if (cid) { const b = document.querySelector('.mc .bt'); if (b) b.click(); }
 })();
 </script>
 <script src="js/cuenta.js" defer></script>

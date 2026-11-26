@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Poné tu puntaje · Eurotribunapp — TribunApp</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="Logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/euro.css">
+</head>
+<body>
+<!-- EUROTRIBUNAPP (prototipo, rama eurotribunapp): la Champions y las 5 grandes ligas de Europa con datos de
+     FotMob (data/euro/, scripts/fetch_euro.py). Header propio (dorado) armado por EURO.header() en js/euro.js:
+     Fixture y Tablas de la competición que se está mirando; el logo y "Argentina" vuelven al home argentino. -->
+<header id="site-header">
+  <a class="logo-wrap" href="index.html" title="Volver a TribunApp Argentina"><img src="logo-header.png" alt="TribunApp"></a>
+  <div class="header-actions"></div>
+</header>
+<script src="js/euro.js"></script>
+<script>EURO.header('club');</script>
+
+<main id="main">
+  <div class="sub" id="sub">
+    <a class="bk" id="volver" href="euro.html">← Club</a>
+    <div class="tt"><h1>PONÉ TU PUNTAJE</h1><span id="sub-txt">Cargando…</span></div>
+    <img class="lg" id="club-escudo" src="" alt="" onerror="this.style.display='none'">
+  </div>
+
+  <div class="fbar" id="fbar" hidden>
+    <div class="cnt"><span id="n">0</span>/<span id="tot">11</span><small>titulares puntuados</small></div>
+    <div class="sp"></div>
+    <button type="button" class="btn pri" id="enviar" disabled>ENVIAR PUNTAJES</button>
+  </div>
+  <div id="vacio"></div>
+  <div class="sec-t" id="t-tit" hidden>TITULARES</div>
+  <div id="titulares"></div>
+  <div class="sec-t" id="t-sup" hidden>SUPLENTES <span style="font-size:13px;letter-spacing:.5px;color:rgba(255,255,255,.4)">· si no jugó lo suficiente, S/P</span></div>
+  <div id="suplentes"></div>
+
+  <p class="nota">Puntuá del 1 al 10 · el promedio de la gente aparece cuando enviás tus puntajes</p>
+</main>
+
+<script src="js/kits.js"></script>
+<script src="js/euro-kits.js"></script>
+<script src="js/config.js"></script>
+<script>
+(async function () {
+  const $ = s => document.querySelector(s);
+  const id = (new URLSearchParams(location.search).get('id') || '').replace(/\D/g, '');
+  let C;
+  try { C = await EURO.json(`data/euro/clubes/${id}.json`); }
+  catch (e) { $('#sub-txt').textContent = 'Club no encontrado'; return; }
+  const lid = EURO.liga();
+  document.title = `Poné tu puntaje · ${C.nombre} · Eurotribunapp`;
+  $('#club-escudo').src = EURO.escudo(C.id);
+  const v = $('#volver'); v.href = `euro-club.html?id=${C.id}&l=${lid}`; v.textContent = '← ' + C.corto;
+
+  // Último partido jugado del club entre los que tienen detalle (la última fecha de su liga y de la Champions)
+  const ligas = [...new Set([C.liga.id, lid, 42])];
+  let mejor = null;
+  for (const l of ligas) {
+    let S; try { S = await EURO.json(`data/euro/stats/${l}.json`); } catch (e) { continue; }
+    (S.partidos || []).forEach(m => {
+      if ((Number(m.local.id) === Number(C.id) || Number(m.visitante.id) === Number(C.id)) && (!mejor || m.utcTime > mejor.utcTime)) mejor = Object.assign({ ligaId: l }, m);
+    });
+  }
+  if (!mejor) { $('#sub-txt').textContent = C.nombre; $('#vacio').innerHTML = `<div class="vacioc">Todavía no tenemos los datos del último partido de ${EURO.esc(C.nombre)}.<br>Cuando se cargue, vas a poder puntuar a cada jugador.</div>`; return; }
+
+  const m = mejor, lado = Number(m.local.id) === Number(C.id) ? 'local' : 'visitante', rival = lado === 'local' ? m.visitante : m.local;
+  const dia = EURO.diaAR(m.utcTime), t = EURO.ar(m.utcTime);
+  $('#sub-txt').textContent = `${m.local.nombre} ${m.goles_local}-${m.goles_visitante} ${m.visitante.nombre} · ${t ? t.dia : ''}`;
+  const LSK = `euro_punt_${C.id}_${dia}`;
+  let yaEnvio = !!EURO.ls.get(LSK), puntos = {};
+  try { puntos = JSON.parse(EURO.ls.get(LSK + '_data') || '{}'); } catch (e) {}
+  let gente = {};
+
+  const js = m.jugadores[lado];
+  const tit = js.filter(j => j.titular), sup = js.filter(j => !j.titular);
+  $('#fbar').hidden = false; $('#tot').textContent = tit.length;
+  const fila = (j, esSup) => {
+    const val = puntos[j.id];
+    const g = gente[j.id];
+    return `<div class="pj${val !== undefined ? ' hecho' : ''}" data-id="${j.id}"><div class="top">${EURO.ficha(C.id, C.color, j.num, 32)}`
+      + `<span class="nn">${EURO.esc(EURO.apellido(j.nombre))}</span><span class="mn">${j.min != null ? j.min + "'" : ''}</span>`
+      + (g ? `<span class="gente" title="Promedio de la gente">${g.avg.toFixed(1)} <small style="font-size:11px">(${g.n})</small></span>` : '') + '</div>'
+      + '<div class="esc">' + Array.from({ length: 10 }, (_, i) => `<button type="button" data-v="${i + 1}" class="${val === i + 1 ? 'on' : ''}"${yaEnvio ? ' disabled' : ''}>${i + 1}</button>`).join('')
+      + (esSup ? `<button type="button" class="sp${val === null ? ' on' : ''}" data-v="sp"${yaEnvio ? ' disabled' : ''}>S/P</button>` : '') + '</div></div>';
+  };
+  function pintar() {
+    $('#titulares').innerHTML = tit.map(j => fila(j, false)).join('');
+    $('#suplentes').innerHTML = sup.map(j => fila(j, true)).join('');
+    $('#t-tit').hidden = false; $('#t-sup').hidden = !sup.length;
+    const n = tit.filter(j => puntos[j.id] != null).length;
+    $('#n').textContent = n;
+    $('#enviar').disabled = yaEnvio || n < tit.length;
+    $('#enviar').textContent = yaEnvio ? 'YA ENVIASTE ✓' : 'ENVIAR PUNTAJES';
+  }
+  document.addEventListener('click', ev => {
+    const b = ev.target.closest('.pj .esc button'); if (!b || yaEnvio) return;
+    const jid = Number(b.closest('.pj').dataset.id);
+    puntos[jid] = b.dataset.v === 'sp' ? null : Number(b.dataset.v);
+    pintar();
+  });
+
+  async function promedios() {
+    let filas = [];
+    try { filas = await EURO.sb.get(`puntajes?club=eq.${EURO.clubKey(C.id)}&match_date=eq.${dia}&select=puntajes&limit=1000`); } catch (e) { return; }
+    const acc = {};
+    filas.forEach(f => Object.entries(f.puntajes || {}).forEach(([pid, s]) => { if (s != null) { const o = acc[pid] || (acc[pid] = { sum: 0, n: 0 }); o.sum += Number(s); o.n++; } }));
+    gente = {}; Object.entries(acc).forEach(([pid, o]) => { gente[pid] = { avg: o.sum / o.n, n: o.n }; });
+    pintar();
+  }
+
+  $('#enviar').onclick = async () => {
+    const btn = $('#enviar'); btn.disabled = true; btn.textContent = 'ENVIANDO…';
+    const cuerpo = {}; js.forEach(j => { cuerpo[j.id] = puntos[j.id] === undefined ? null : puntos[j.id]; });   // suplente sin tocar = S/P
+    try {
+      const st = await EURO.sb.votar('puntajes', { club: EURO.clubKey(C.id), rival: rival.nombre, match_date: dia, puntajes: cuerpo });
+      if (st === 201 || st === 200 || st === 409) {
+        EURO.ls.set(LSK, '1'); EURO.ls.set(LSK + '_data', JSON.stringify(puntos)); yaEnvio = true;
+        EURO.toast(st === 409 ? 'Ya habías puntuado este partido.' : `¡Puntajes enviados! Vamos ${C.corto} 🔥`);
+        await promedios(); window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else { EURO.toast('No se pudo enviar (error ' + st + '). Probá de nuevo.'); pintar(); }
+    } catch (e) { EURO.toast('Error de conexión. Probá de nuevo.'); pintar(); }
+  };
+
+  pintar();
+  if (yaEnvio) promedios();
+})();
+</script>
+<script src="js/cuenta.js" defer></script>
+<script src="js/header-menu.js" defer></script>
+</body>
+</html>

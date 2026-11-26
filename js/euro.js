@@ -49,10 +49,10 @@ const EURO = {
       + pill(`euro-tribunapp.html?l=${l}`, 'tribunapp', 'TribunApp', '', 'Lo que vota la gente')
       + pill('index.html', 'arg', 'Argentina', '', 'Volver a TribunApp Argentina');
   },
-  // Fila de botones con las competiciones (cambia de liga sin salir de la página)
-  selector(activo, pagina) {
+  // Fila de botones con las competiciones (cambia de liga sin salir de la página); `extra` = "&c=123" para conservar el club
+  selector(activo, pagina, extra) {
     return EURO.LIGAS.map(l =>
-      `<a class="chip-liga${l.id === Number(activo) ? ' on' : ''}" href="${pagina}?l=${l.id}">`
+      `<a class="chip-liga${l.id === Number(activo) ? ' on' : ''}" href="${pagina}?l=${l.id}${extra || ''}">`
       + `<img src="${EURO.logoLiga(l.id)}" alt=""><span>${EURO.esc(l.corto)}</span></a>`).join('');
   },
   // "Gianluigi Donnarumma" → "G. Donnarumma" (para listas angostas)
@@ -120,3 +120,48 @@ const EURO = {
       + `</div>`;
   },
 };
+
+/* ---------- Votos de la gente (Supabase) y utilidades de las páginas con formación y puntajes ----------
+   Los votos de Europa van a las MISMAS tablas que los de Argentina (formaciones y puntajes); el club se guarda
+   como "euro-{id de FotMob}" y los jugadores por su id de FotMob. Requieren js/config.js (SUPABASE_URL / KEY). */
+EURO.clubKey = id => 'euro-' + id;
+EURO.diaAR = utc => utc ? new Date(new Date(utc).getTime() - 3 * 3600e3).toISOString().slice(0, 10) : '';   // día local argentino del partido
+EURO.deviceId = function () {
+  try {
+    let d = localStorage.getItem('tribunapp_device_id');
+    if (!d) { d = 'dev_' + Math.random().toString(36).substr(2, 12) + Date.now().toString(36); localStorage.setItem('tribunapp_device_id', d); }
+    return d;
+  } catch (e) { return 'dev_' + Math.random().toString(36).substr(2, 12); }
+};
+EURO.ls = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+};
+EURO.sb = {
+  async get(path) {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } });
+    if (!r.ok) throw new Error('supabase ' + r.status);
+    return r.json();
+  },
+  // Inserta un voto; con sesión va firmado con el usuario (js/cuenta.js). Devuelve el status (201 ok, 409 ya votó)
+  async votar(tabla, cuerpo) {
+    const f = window.TA_CUENTA && TA_CUENTA.firmaVoto ? await TA_CUENTA.firmaVoto()
+      : { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }, extra: {} };
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/${tabla}`, {
+      method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json', Prefer: 'return=minimal' }, f.headers),
+      body: JSON.stringify(Object.assign({}, cuerpo, f.extra)),
+    });
+    return r.status;
+  },
+};
+EURO.toast = function (msg) {
+  let t = document.getElementById('toast');
+  if (!t) { t = document.createElement('div'); t.id = 'toast'; t.className = 'toast'; document.body.appendChild(t); }
+  t.textContent = msg; t.classList.add('on');
+  clearTimeout(EURO._tt); EURO._tt = setTimeout(() => t.classList.remove('on'), 2600);
+};
+// "Rúben Dias" → "Dias"; "Kevin De Bruyne" → "De Bruyne" (para fichas con poco lugar)
+EURO.apellido = n => { const p = String(n || '').trim().split(/\s+/); return p.length > 1 ? p.slice(1).join(' ') : p[0] || ''; };
+// Ficha (círculo con el kit del club y el dorsal)
+EURO.ficha = (clubId, color, num, px) =>
+  `<span class="kk" style="width:${px}px;height:${px}px;background:${EURO.kitFondo(clubId, px, color)};font-size:${Math.round(px * 0.46)}px">${num != null && num !== '' ? num : ''}</span>`;
