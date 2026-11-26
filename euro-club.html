@@ -15,34 +15,18 @@
 <!-- EUROTRIBUNAPP (prototipo, rama eurotribunapp): las 5 grandes ligas de Europa con datos de
      FotMob (data/euro/, scripts/fetch_euro.py). Cada liga → euro-liga.html, cada club → euro-club.html. -->
 <header id="site-header">
-  <a class="logo-wrap" href="index.html"><img src="logo-header.png" alt="TribunApp"></a>
-  <div class="header-actions">
-    <a class="header-pill euro" href="euro.html">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5-4.8-4.6 6.6-.9z"/></svg>
-      <span class="header-pill-label">EURO</span>
-    </a>
-    <a class="header-pill" href="fixture.html">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-      <span class="header-pill-label">Fixture</span>
-    </a>
-    <a class="header-pill" href="tablas.html">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-      <span class="header-pill-label">Tablas</span>
-    </a>
-    <a class="header-pill" href="estadisticas-torneo.html">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-      <span class="header-pill-label">Estadísticas</span>
-    </a>
-    <a class="header-pill" href="estadisticas-tribunapp.html">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      <span class="header-pill-label">TribunApp</span>
-    </a>
-  </div>
+  <a class="logo-wrap" href="index.html" title="Volver a TribunApp Argentina"><img src="logo-header.png" alt="TribunApp"></a>
+  <div class="header-actions"></div>
 </header>
+<script src="js/euro.js"></script>
+<script>
+  EURO.header('club');
+  // header-menu.js clona los botones del header: se carga recién cuando ya están los de la competición del club
+  window.__euroClubListo = () => { const s = document.createElement('script'); s.src = 'js/header-menu.js'; document.body.appendChild(s); };
+</script>
 
 <main id="main">
   <div class="sub" id="sub">
-    <a class="bk" id="volver" href="euro.html">←</a>
     <div class="tt"><h1 id="club-nombre">Cargando…</h1><span id="club-sub"></span></div>
     <img class="lg" id="club-escudo" src="" alt="" onerror="this.style.display='none'">
   </div>
@@ -64,13 +48,12 @@
   <p class="nota">Datos de FotMob · formación y puntajes para las ligas de Europa, próximamente</p>
 </main>
 
-<script src="js/euro.js"></script>
 <script>
 (async function () {
   const id = (new URLSearchParams(location.search).get('id') || '8586').replace(/\D/g, '');
   let C;
   try { C = await EURO.json(`data/euro/clubes/${id}.json`); }
-  catch (e) { document.getElementById('club-nombre').textContent = 'Club no encontrado'; return; }
+  catch (e) { document.getElementById('club-nombre').textContent = 'Club no encontrado'; window.__euroClubListo(); return; }
   document.title = `${C.nombre} · Eurotribunapp — TribunApp`;
   const color = C.color && C.color !== '#ffffff' ? C.color : '#4fc3f7';
   document.getElementById('sub').style.setProperty('--cc', color + '66');
@@ -78,7 +61,10 @@
   document.getElementById('club-nombre').textContent = C.nombre.toUpperCase();
   document.getElementById('club-sub').textContent = `${C.liga.nombre} · ${C.pos}° · ${C.pts} pts` + (C.dt ? ` · DT ${C.dt}` : '');
   document.getElementById('club-escudo').src = EURO.escudo(C.id);
-  document.getElementById('volver').href = `euro-liga.html?l=${C.liga.id}`;
+  // Sin ?l= (se entró directo al club): el header pasa a la competición del club
+  if (!new URLSearchParams(location.search).get('l') && EURO.LIGAS.some(l => l.id === Number(C.liga.id))) {
+    EURO.recordar(C.liga.id); EURO.header('club', C.liga.id);
+  }
 
   // Próximo partido
   const p = C.proximo;
@@ -109,9 +95,9 @@
       + `<div class="ap">${EURO.esc(apellido(j.nombre))}</div>${j.puesto ? `<div class="pu">${EURO.esc(j.puesto)}</div>` : ''}</div>`).join('') + '</div>';
   }).join('') || '<div class="vacio">Sin plantel cargado.</div>';
   if (C.dt) document.getElementById('dt').innerHTML = `Director técnico: <b>${EURO.esc(C.dt)}</b>`;
+  window.__euroClubListo();
 })();
 </script>
 <script src="js/cuenta.js" defer></script>
-<script src="js/header-menu.js" defer></script>
 </body>
 </html>

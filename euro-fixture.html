@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fixture · Eurotribunapp — TribunApp</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="Logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/euro.css">
+</head>
+<body>
+<!-- EUROTRIBUNAPP (prototipo, rama eurotribunapp): la Champions y las 5 grandes ligas de Europa con datos de
+     FotMob (data/euro/, scripts/fetch_euro.py). Header propio (dorado) armado por EURO.header() en js/euro.js:
+     Fixture y Tablas de la competición que se está mirando; el logo y "Argentina" vuelven al home argentino. -->
+<header id="site-header">
+  <a class="logo-wrap" href="index.html" title="Volver a TribunApp Argentina"><img src="logo-header.png" alt="TribunApp"></a>
+  <div class="header-actions"></div>
+</header>
+<script src="js/euro.js"></script>
+<script>EURO.header('fixture');</script>
+
+<main id="main">
+  <div class="sub" id="sub">
+    <div class="tt"><h1 id="liga-nombre">Cargando…</h1><span id="liga-sub"></span></div>
+    <img class="lg fondo" id="liga-logo" src="" alt="" onerror="this.style.display='none'">
+  </div>
+  <div class="ligas-bar" id="bar"></div>
+
+  <div class="rnav">
+    <button type="button" id="prev" aria-label="Fecha anterior">‹</button>
+    <div class="rt"><select id="rsel" aria-label="Elegir fecha"></select><small id="restado"></small></div>
+    <button type="button" id="next" aria-label="Fecha siguiente">›</button>
+  </div>
+  <div id="partidos"></div>
+
+  <p class="nota">Datos de FotMob · hora argentina · tocá un equipo para ver el club</p>
+</main>
+
+<script>
+(async function () {
+  const id = EURO.liga();
+  document.getElementById('bar').innerHTML = EURO.selector(id, 'euro-fixture.html');
+  let F, meta;
+  try { [F, meta] = await Promise.all([EURO.json(`data/euro/fixture/${id}.json`), EURO.json(`data/euro/${id}.json`)]); }
+  catch (e) { document.getElementById('liga-nombre').textContent = 'Fixture no encontrado'; return; }
+  document.title = `${F.nombre} · Fixture · Eurotribunapp — TribunApp`;
+  document.getElementById('liga-nombre').textContent = F.nombre.toUpperCase();
+  document.getElementById('liga-sub').textContent = `${meta.pais} · Temporada ${F.temporada || ''}`;
+  document.getElementById('liga-logo').src = EURO.logoLiga(id);
+  document.getElementById('sub').style.setProperty('--cc', meta.color + '55');
+
+  const R = F.rondas;
+  const sel = document.getElementById('rsel');
+  sel.innerHTML = R.map((r, i) => `<option value="${i}">${EURO.esc(EURO.ronda(r.ronda, id))}</option>`).join('');
+  const pedida = new URLSearchParams(location.search).get('r');
+  let i = R.findIndex(r => r.ronda === pedida);
+  if (i < 0) i = R.findIndex(r => r.ronda === F.proxima);      // por defecto: la próxima fecha
+  if (i < 0) i = R.findIndex(r => r.ronda === F.ultima);
+  if (i < 0) i = 0;
+
+  function pintar() {
+    const r = R[i];
+    sel.value = String(i);
+    document.getElementById('prev').disabled = i === 0;
+    document.getElementById('next').disabled = i === R.length - 1;
+    document.getElementById('restado').textContent =
+      r.ronda === F.proxima ? 'Próxima fecha' : r.ronda === F.ultima ? 'Última jugada' : r.partidos.every(p => p.terminado) ? 'Jugada' : 'Por jugar';
+    // Agrupados por día (hora argentina)
+    let html = '', dia = null;
+    r.partidos.forEach(p => {
+      const t = EURO.ar(p.utcTime), d = t ? t.dia : 'A confirmar';
+      if (d !== dia) { dia = d; html += `<div class="dia">${EURO.esc(d)}</div>`; }
+      html += EURO.partido(p, { liga: id, sinDia: true });
+    });
+    document.getElementById('partidos').innerHTML = html || '<div class="vacio">Sin partidos.</div>';
+  }
+  document.getElementById('prev').onclick = () => { if (i > 0) { i--; pintar(); } };
+  document.getElementById('next').onclick = () => { if (i < R.length - 1) { i++; pintar(); } };
+  sel.onchange = () => { i = Number(sel.value); pintar(); };
+  pintar();
+})();
+</script>
+<script src="js/cuenta.js" defer></script>
+<script src="js/header-menu.js" defer></script>
+</body>
+</html>
