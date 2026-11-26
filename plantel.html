@@ -113,22 +113,34 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .cancha-img { background: #2d7a3a !important; }
 .cancha-img .linea:nth-child(even) { background: #2a7236; }
 .fila-z { display: flex; gap: 5px; position: relative; z-index: 1; }
-.zona { flex: 1 1 0; min-width: 0; position: relative; border: 1px dashed rgba(255,255,255,0.2); border-radius: 8px; padding: 17px 2px 6px; min-height: 76px; transition: background 0.15s, border-color 0.15s; }
+.zona { flex: 1 1 0; min-width: 0; position: relative; border: 1px dashed rgba(255,255,255,0.2); border-radius: 8px; padding: 17px 2px 6px; min-height: 76px; transition: background 0.15s, border-color 0.15s, min-height 0.15s; display: flex; flex-direction: column; }
+/* Zona vacía sola en su fila (ej. Enganche): se comprime a una franja hasta que alguien la usa.
+   Mientras se arrastra un jugador se agranda, para que sea fácil soltarlo ahí. */
+.zona.colapsada { min-height: 26px; padding: 4px 2px; }
+.zona.colapsada .zl { position: static; color: rgba(255,255,255,0.45); }
+.zona.colapsada .chips { display: none; }
+body.arrastrando .zona.colapsada { min-height: 64px; border-color: rgba(255,255,255,0.45); }
 .zona.chica { flex: 0 0 46%; margin: 0 auto; }
-.zona.ancha { flex: 2 1 0; }
-.zona .zl { position: absolute; left: 0; right: 0; top: 3px; text-align: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 11px; letter-spacing: 0.8px; text-transform: uppercase; color: rgba(255,255,255,0.62); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px; }
-.zona .chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 2px; }
+.zona.ancha { flex: 1.4 1 0; }   /* laterales/extremos más anchos: en el celular entran 2 por fila */
+.zona .zl { position: absolute; left: 0; right: 0; top: 3px; text-align: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 10.5px; letter-spacing: 0.4px; text-transform: uppercase; color: rgba(255,255,255,0.62); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px; }
+.zona .chips { display: flex; flex-wrap: wrap-reverse; justify-content: center; align-content: flex-start; gap: 6px 2px; margin-top: auto; }
 .zona.drop { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.7); border-style: solid; }
 .zona .vacia { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; color: rgba(255,255,255,0.4); padding: 10px 0 4px; text-align: center; width: 100%; }
 
-.chip { width: 60px; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: grab; touch-action: pan-y; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; position: relative; }
-.chip .kit { position: relative; width: 40px; height: 40px; border-radius: 50%; overflow: hidden; border: 2px solid rgba(255,255,255,0.9); box-shadow: 0 2px 5px rgba(0,0,0,0.45); }
+.chip { width: var(--cw, 60px); display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: grab; touch-action: pan-y; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; position: relative; }
+.chip .kit { position: relative; width: var(--kw, 40px); height: var(--kw, 40px); border-radius: 50%; overflow: hidden; border: 2px solid rgba(255,255,255,0.9); box-shadow: 0 2px 5px rgba(0,0,0,0.45); }
 .chip .kit canvas { width: 100%; height: 100%; display: block; }
-.chip .kit span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 19px; color: #fff; line-height: 1; }
-.chip .ap { font-family: 'Barlow Condensed', sans-serif; font-size: 12.5px; font-weight: 600; line-height: 1.05; text-align: center; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.7); max-width: 60px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.chip .badge { position: absolute; top: -4px; right: 4px; width: 18px; height: 18px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.5); z-index: 2; }
-.chip .badge img { width: 14px; height: 14px; object-fit: contain; }
-.chip .badge.creado { background: var(--gold); color: #111; font-size: 11px; font-weight: 700; }
+.chip .kit span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: var(--nf, 19px); color: #fff; line-height: 1; }
+.chip .ap { font-family: 'Barlow Condensed', sans-serif; font-size: var(--fs, 12.5px); font-weight: 600; line-height: 1.05; text-align: center; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.7); max-width: var(--cw, 60px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip .xbtn {
+  position: absolute; top: -5px; left: calc(50% + var(--kw, 40px) / 2 - 9px);
+  width: 17px; height: 17px; border-radius: 50%; background: #c62828; border: 1.5px solid #fff; color: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.5);   /* borde blanco: sobre camisetas rojas la X roja no se veía */
+  font-size: 9px; cursor: pointer; display: none; align-items: center; justify-content: center; z-index: 5; padding: 0;
+}
+.chip:hover .xbtn { display: flex; }
+@media (hover: none) { .chip .xbtn { display: flex; } }
+#descarte .chip .xbtn { display: none; }
 .chip.nuevo .kit { border-color: var(--gold); }
 .chip.dragging { opacity: 0.3; }
 #ghost { position: fixed; z-index: 999; pointer-events: none; transform: translate(-50%, -60%) scale(1.12); display: none; }
@@ -172,7 +184,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 <body>
 <div id="app">
   <header id="site-header">
-    <a class="logo-wrap" href="index.html"><img src="Logo.png" alt="TribunApp"></a>
+    <a class="logo-wrap" href="index.html"><img src="logo-header.png" alt="TribunApp"></a>
   </header>
 
   <div class="club-bar">
@@ -181,7 +193,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
     <img id="club-escudo" src="" alt="" onerror="this.style.display='none'">
   </div>
 
-  <p class="intro">Arrancás con los jugadores que tiene hoy el club, cada uno en su puesto. Arrastralos a otra zona si los ves en otro lugar, tocalos para descartarlos y sumá refuerzos de cualquier equipo de la liga con el buscador. Si no está, crealo.</p>
+  <p class="intro">Arrancás con los jugadores que tiene hoy el club, cada uno en su puesto. Arrastralos a otra zona si los ves en otro lugar, sacalos con la ✕ y sumá refuerzos de cualquier equipo de la liga con el buscador. Si no está, crealo.</p>
 
   <div class="buscar">
     <svg class="lupa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.6" y2="16.6"/></svg>
@@ -193,7 +205,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   <div id="cancha"></div>
 
   <div id="descarte">
-    <h4>DESCARTADOS <small id="descarte-txt">Arrastrá acá a los que no van más</small></h4>
+    <h4>DESCARTADOS <small id="descarte-txt">Los que saques con la ✕ quedan acá</small></h4>
     <div class="chips" id="descarte-chips"></div>
   </div>
 
@@ -205,11 +217,6 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 
 <div id="ghost"></div>
 
-<!-- Hoja: acciones sobre un jugador -->
-<div class="velo" id="velo-jug"><div class="hoja">
-  <h3 id="hj-nombre"></h3><div class="sub" id="hj-sub"></div>
-  <div class="fila"><button class="btn rojo" id="hj-quitar"></button><button class="btn gris" id="hj-cerrar">CERRAR</button></div>
-</div></div>
 
 <!-- Modal: crear jugador -->
 <div class="velo" id="velo-crear"><div class="hoja">
@@ -346,7 +353,7 @@ const ordenNum = (a, b) => (a.origen === 'plantel' ? 0 : 1) - (b.origen === 'pla
   || (parseInt(a.num, 10) || 999) - (parseInt(b.num, 10) || 999) || a.name.localeCompare(b.name);
 
 // ---------- Render ----------
-function chipEl(j) {
+function chipEl(j, imagen) {
   const d = document.createElement('div');
   d.className = 'chip' + (j.origen !== 'plantel' ? ' nuevo' : '');
   d.dataset.key = j.key;
@@ -354,15 +361,41 @@ function chipEl(j) {
   k.appendChild(kitCanvas(SLUG, 40));          // todos con la camiseta del club: es SU plantel
   const n = document.createElement('span'); n.textContent = j.num || ''; n.style.textShadow = NUM_OUTLINE;
   k.appendChild(n); d.appendChild(k);
-  if (j.origen === 'refuerzo') {
-    const b = document.createElement('div'); b.className = 'badge';
-    b.innerHTML = `<img src="escudos/${esc(j.club)}.png" alt="">`; d.appendChild(b);
-  } else if (j.origen === 'creado') {
-    const b = document.createElement('div'); b.className = 'badge creado'; b.textContent = '+'; d.appendChild(b);
+  if (!imagen && j.estado === 'cancha') {
+    const x = document.createElement('button'); x.className = 'xbtn'; x.textContent = '✕'; x.title = 'Sacar del plantel';
+    x.addEventListener('pointerdown', e => e.stopPropagation());
+    x.addEventListener('click', e => { e.stopPropagation(); quitar(j.key); });
+    d.appendChild(x);
   }
   const a = document.createElement('div'); a.className = 'ap'; a.textContent = apellido(j.name); d.appendChild(a);
   d.title = j.name;
   return d;
+}
+
+// Tamaño de las fichas: uno solo por FILA de zonas (laterales y centrales iguales), el que necesita
+// menos filas de jugadores; a igual cantidad, el más grande. Se achican solo si se ahorra una fila.
+const TAMANOS = [
+  { cw: 60, kw: 40, nf: 19, fs: 12.5 },
+  { cw: 54, kw: 36, nf: 17, fs: 11.5 },
+  { cw: 48, kw: 32, nf: 15, fs: 10.5 },
+  { cw: 44, kw: 30, nf: 14, fs: 10 },     // celular con zonas cargadas
+];
+function ajustarTamanos(raiz) {
+  raiz.querySelectorAll('.fila-z').forEach(fila => {
+    const zonas = [...fila.querySelectorAll('.zona')].map(z => ({
+      z, n: z.querySelectorAll('.chip').length,
+      W: (z.querySelector('.chips') || z).clientWidth || (z.clientWidth - 4),
+    })).filter(x => x.n && x.W);
+    if (!zonas.length) return;
+    // filas de la zona más cargada de la fila: se busca la menor; a igual cantidad, la ficha más grande
+    const filas = t => Math.max(...zonas.map(x => Math.ceil(x.n / Math.max(1, Math.floor((x.W + 2) / (t.cw + 2))))));
+    let mejor = TAMANOS[0];
+    TAMANOS.forEach(t => { if (filas(t) < filas(mejor)) mejor = t; });
+    zonas.forEach(({ z }) => {
+      z.style.setProperty('--cw', mejor.cw + 'px'); z.style.setProperty('--kw', mejor.kw + 'px');
+      z.style.setProperty('--nf', mejor.nf + 'px'); z.style.setProperty('--fs', mejor.fs + 'px');
+    });
+  });
 }
 
 function pintarCancha(cancha, imagen) {
@@ -380,14 +413,16 @@ function pintarCancha(cancha, imagen) {
         const lista = jug.filter(j => j.pos === zk).sort(ordenNum);
         if (imagen && !lista.length && fila.length === 1) return;          // en la imagen no van zonas vacías
         const z = document.createElement('div');
-        z.className = 'zona ' + (Z.cls || ''); z.dataset.pos = zk;
+        z.className = 'zona ' + (Z.cls || '') + (!lista.length && fila.length === 1 ? ' colapsada' : '');
+        z.dataset.pos = zk;
         if (L.filas.length > 1 || fila.length > 1) {                     // una línea de una sola zona ya tiene su rótulo
           const zl = document.createElement('div'); zl.className = 'zl';
-          zl.textContent = Z.nombre + (lista.length ? ' · ' + lista.length : ''); z.appendChild(zl);
+          zl.textContent = Z.nombre + (lista.length ? ' · ' + lista.length : fila.length === 1 ? ' · arrastrá un jugador acá' : '');
+          z.appendChild(zl);
         } else z.style.paddingTop = '8px';
         const chips = document.createElement('div'); chips.className = 'chips';
-        if (!lista.length && !imagen) chips.innerHTML = '<div class="vacia">Arrastrá acá</div>';
-        lista.forEach(j => chips.appendChild(chipEl(j)));
+        if (!lista.length && !imagen && fila.length > 1) chips.innerHTML = '<div class="vacia">Arrastrá acá</div>';
+        lista.forEach(j => chips.appendChild(chipEl(j, imagen)));
         z.appendChild(chips); f.appendChild(z);
       });
       if (f.children.length) div.appendChild(f);
@@ -399,12 +434,13 @@ function pintarCancha(cancha, imagen) {
 
 function render() {
   const jug = pintarCancha(document.getElementById('cancha'), false);
+  ajustarTamanos(document.getElementById('cancha'));
   const des = ST.jugadores.filter(j => j.estado === 'descartado').sort(ordenNum);
   const dc = document.getElementById('descarte-chips');
   dc.innerHTML = '';
   des.forEach(j => dc.appendChild(chipEl(j)));
   document.getElementById('descarte-txt').textContent = des.length
-    ? `${des.length} · tocá uno para devolverlo` : 'Arrastrá acá a los que no van más';
+    ? `${des.length} · tocá uno (o arrastralo a la cancha) para devolverlo` : 'Los que saques con la ✕ quedan acá';
   const cnt = k => jug.filter(j => lineaDe(j.pos) === k).length;
   const nuevos = jug.filter(j => j.origen !== 'plantel').length;
   document.getElementById('resumen').innerHTML =
@@ -429,7 +465,7 @@ function marcar(z) {
 }
 function empezarDrag(st) {
   drag = st; drag.activo = true;
-  st.el.classList.add('dragging');
+  st.el.classList.add('dragging'); document.body.classList.add('arrastrando');
   ghost.innerHTML = ''; ghost.appendChild(st.el.cloneNode(true)); ghost.style.display = 'block';
   moverGhost(st.x, st.y);
   if (navigator.vibrate) try { navigator.vibrate(15); } catch (e) {}
@@ -455,8 +491,12 @@ document.addEventListener('touchmove', e => { if (drag && drag.activo) e.prevent
 function terminar(e, cancelado) {
   if (!drag) return;
   const st = drag; drag = null; clearTimeout(st.timer);
-  if (!st.activo) { if (!cancelado) abrirJugador(st.key); return; }      // fue un toque
-  st.el.classList.remove('dragging'); ghost.style.display = 'none'; marcar(null);
+  if (!st.activo) {                                                       // fue un toque
+    const j = ST.jugadores.find(x => x.key === st.key);
+    if (!cancelado && j && j.estado === 'descartado') { j.estado = 'cancha'; render(); toast(`${apellido(j.name)} vuelve al plantel`); }
+    return;
+  }
+  st.el.classList.remove('dragging'); document.body.classList.remove('arrastrando'); ghost.style.display = 'none'; marcar(null);
   if (cancelado) return;
   const z = zonaEn(st.x, st.y); const j = ST.jugadores.find(x => x.key === st.key);
   if (!z || !j) return;
@@ -473,21 +513,12 @@ function descartar(j) {
   if (j.origen === 'plantel') j.estado = 'descartado';
   else ST.jugadores = ST.jugadores.filter(x => x.key !== j.key);    // un refuerzo o creado se quita del todo
 }
-function abrirJugador(key) {
+function quitar(key) {
   const j = ST.jugadores.find(x => x.key === key); if (!j) return;
-  const des = j.estado === 'descartado';
-  document.getElementById('hj-nombre').textContent = (j.num ? j.num + ' · ' : '') + j.name;
-  const origen = j.origen === 'refuerzo' ? `Refuerzo de ${CLUBES_CONFIG[j.club] ? CLUBES_CONFIG[j.club].nombreCorto : j.club}`
-    : j.origen === 'creado' ? 'Jugador creado por vos' : `Plantel actual de ${CLUB.nombreCorto}`;
-  document.getElementById('hj-sub').textContent = `${(ZONAS[j.pos] || ZONAS.INT).corto} · ${origen}` + (des ? ' · descartado' : '');
-  const q = document.getElementById('hj-quitar');
-  q.textContent = des ? 'VOLVER AL PLANTEL' : j.origen === 'plantel' ? 'DESCARTAR' : 'QUITAR';
-  q.className = des ? 'btn' : 'btn rojo';
-  q.onclick = () => { if (des) j.estado = 'cancha'; else descartar(j); cerrarHoja(); render(); };
-  document.getElementById('velo-jug').classList.add('on');
+  descartar(j); render();
+  toast(j.origen === 'plantel' ? `${apellido(j.name)} pasa a descartados` : `${apellido(j.name)} sale del plantel`);
 }
 function cerrarHoja() { document.querySelectorAll('.velo').forEach(v => v.classList.remove('on')); }
-document.getElementById('hj-cerrar').onclick = cerrarHoja;
 document.querySelectorAll('.velo').forEach(v => v.addEventListener('click', e => { if (e.target === v) cerrarHoja(); }));
 
 // ---------- Buscador (los 30 planteles, a demanda) ----------
@@ -616,12 +647,13 @@ async function descargar() {
   cab.innerHTML = `<img src="${location.origin}/escudos/${SLUG}.png" style="width:52px;height:52px;object-fit:contain">`
     + `<div style="flex:1"><div style="font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:3px;line-height:1">MI PLANTEL ${TEMPORADA}</div>`
     + `<div style="font-size:16px;color:rgba(255,255,255,.6)">${esc(CLUB.nombre)} · ${jug.length} jugadores</div></div>`
-    + `<img src="${location.origin}/Logo.png" style="height:40px;object-fit:contain">`;
+    + `<img src="${location.origin}/logo-header.png" style="height:44px;object-fit:contain">`;
   wrap.appendChild(cab);
   const ca = document.createElement('div');
   ca.id = 'cancha'; ca.style.margin = '0';
   wrap.appendChild(ca);
   pintarCancha(ca, true);
+  ajustarTamanos(ca);
   ca.removeAttribute('id'); ca.className = 'cancha-img';
   ca.querySelectorAll('img').forEach(im => { im.src = location.origin + '/' + im.getAttribute('src'); });
   const pie = document.createElement('div');
@@ -645,6 +677,9 @@ function toast(t) {
   const el = document.getElementById('toast'); el.textContent = t; el.style.display = 'block';
   clearTimeout(toast._t); toast._t = setTimeout(() => { el.style.display = 'none'; }, 2200);
 }
+
+let tResize;
+window.addEventListener('resize', () => { clearTimeout(tResize); tResize = setTimeout(() => ajustarTamanos(document.getElementById('cancha')), 150); });
 
 // ---------- Inicio ----------
 (async function init() {
