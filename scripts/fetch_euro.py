@@ -314,6 +314,34 @@ def destacados(ligas):
     return sorted(out, key=lambda p: p['utcTime'] or '')
 
 
+def escudos(ids_clubes, ids_ligas):
+    """Guarda los escudos y logos en escudos/euro/ (96 px máx.): se sirven desde el propio sitio y se pueden
+    dibujar en un canvas (los de FotMob no traen CORS y lo "contaminan"). Solo baja los que faltan."""
+    import io
+    import urllib.request
+    from PIL import Image
+    dest = ROOT / 'escudos' / 'euro'
+    dest.mkdir(parents=True, exist_ok=True)
+    ok = fallan = 0
+    pedidos = [(f'{i}.png', f'https://images.fotmob.com/image_resources/logo/teamlogo/{i}.png') for i in sorted(ids_clubes)]
+    pedidos += [(f'liga-{i}.png', f'https://images.fotmob.com/image_resources/logo/leaguelogo/{i}.png') for i in sorted(ids_ligas)]
+    for nombre, url in pedidos:
+        f = dest / nombre
+        if f.exists():
+            continue
+        try:
+            req = urllib.request.Request(url, headers={'User-Agent': sfm.UA})
+            im = Image.open(io.BytesIO(urllib.request.urlopen(req, timeout=30).read())).convert('RGBA')
+            im.thumbnail((96, 96), Image.LANCZOS)
+            im.save(f, 'PNG', optimize=True)
+            ok += 1
+        except Exception as e:
+            fallan += 1
+            print(f'   ! escudo {nombre}: {e}')
+        time.sleep(0.15)
+    print(f'Escudos: {ok} nuevos, {fallan} con error')
+
+
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith('-')]
     sin_clubes = '--sin-clubes' in sys.argv
@@ -357,6 +385,12 @@ def main():
         f = OUT / f"{meta['id']}.json"
         if f.exists():
             ligas.append(json.loads(f.read_text(encoding='utf-8')))
+    if '--sin-escudos' not in sys.argv:
+        ids = {f['id'] for L in ligas for f in L['tabla']}
+        for L in ligas:
+            for fx in ((L.get('proxima_fecha') or {}).get('partidos') or []) + ((L.get('ultima_fecha') or {}).get('partidos') or []):
+                ids.add(fx['local']['id']); ids.add(fx['visitante']['id'])
+        escudos(ids, {m['id'] for m in LIGAS})
     idx = {
         'ligas': [{'id': L['id'], 'nombre': L['nombre'], 'pais': L['pais'], 'color': L['color'],
                    'temporada': L['temporada'],

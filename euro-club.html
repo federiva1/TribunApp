@@ -52,9 +52,11 @@
     <a class="tile" id="t-trib" href="euro-tribunapp.html" style="background-image:url(fotos/secciones/est-tribunapp.jpg)"><div class="ac"></div><div class="t">EST. TRIBUNAPP</div><div class="s">Lo que vota la gente</div></a>
   </div>
 
-  <div class="h2">PLANTEL</div>
-  <div class="plantel" id="plantel"></div>
-  <div class="dt" id="dt"></div>
+  <div class="caja">
+    <h2>PLANTEL</h2>
+    <div class="plantel" id="plantel"></div>
+    <div class="dt" id="dt"></div>
+  </div>
 
   <p class="nota">Datos de FotMob · la formación y los puntajes se votan con la misma mecánica que en Argentina</p>
 </main>
@@ -95,12 +97,10 @@
   // Próximo partido
   const p = C.proximo;
   if (p) {
-    const local = Number(p.local.id) === Number(C.id), rival = local ? p.visitante : p.local;
     const t = EURO.ar(p.utcTime);
-    document.getElementById('proximo').innerHTML = `<div class="nextm"><img src="${EURO.escudo(rival.id)}" alt="">`
-      + `<div class="x"><div>VS ${EURO.esc(rival.nombre).toUpperCase()} (${local ? 'L' : 'V'})</div>`
-      + `<span>${EURO.esc(p.torneo || C.liga.nombre)}${t ? ' · ' + t.dia + ' · ' + t.hora + ' hs' : ''}</span></div>`
-      + `<a class="btn" href="euro-formacion.html?id=${C.id}&l=${lidClub}">ARMAR 11<small>tu formación</small></a></div>`;
+    const eq = (x, lado) => `<a class="eq${Number(x.id) === Number(C.id) ? ' yo' : ''}" href="euro-club.html?id=${x.id}&l=${lidClub}" style="text-decoration:none;color:inherit"><img src="${EURO.escudo(x.id)}" alt=""><span>${EURO.esc(x.nombre)}</span></a>`;
+    document.getElementById('proximo').innerHTML = `<div class="nextm2"><div class="cab">Próximo partido · ${EURO.esc(p.torneo || C.liga.nombre)}</div>`
+      + eq(p.local) + `<div class="vs"><b>VS</b>${t ? t.dia + '<br>' + t.hora + ' hs' : 'A confirmar'}</div>` + eq(p.visitante) + '</div>';
   }
 
   // Últimos 5
@@ -116,9 +116,9 @@
   document.getElementById('plantel').innerHTML = Object.keys(nombres).map(k => {
     const js = (C.plantel || {})[k] || [];
     if (!js.length) return '';
-    return `<h3>${nombres[k]} · ${js.length}</h3><div class="chips">` + js.map(j =>
+    return `<div class="sbox"><h3>${nombres[k]} · ${js.length}</h3><div class="chips">` + js.map(j =>
       `<div class="chip" title="${EURO.esc(j.nombre)}">${EURO.ficha(C.id, C.color, j.num, 40)}`
-      + `<div class="ap">${EURO.esc(apellido(j.nombre))}</div>${j.puesto ? `<div class="pu">${EURO.esc(j.puesto)}</div>` : ''}</div>`).join('') + '</div>';
+      + `<div class="ap">${EURO.esc(apellido(j.nombre))}</div>${j.puesto ? `<div class="pu">${EURO.esc(j.puesto)}</div>` : ''}</div>`).join('') + '</div></div>';
   }).join('') || '<div class="vacio">Sin plantel cargado.</div>';
   if (C.dt) document.getElementById('dt').innerHTML = `Director técnico: <b>${EURO.esc(C.dt)}</b>`;
   window.__euroClubListo();

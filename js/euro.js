@@ -1,6 +1,6 @@
 /* EUROTRIBUNAPP (prototipo): utilidades compartidas de euro.html, euro-liga.html (tabla),
    euro-fixture.html, euro-stats.html, euro-tribunapp.html y euro-club.html. Los datos salen de data/euro/ (scripts/fetch_euro.py,
-   FotMob); escudos y logos se piden a images.fotmob.com (no se guardan en el repo).
+   FotMob); escudos y logos: copias propias en escudos/euro/ (fetch_euro.py), con respaldo a images.fotmob.com.
 
    En el modo Euro el header es otro (dorado, con Fixture y Tablas de la competición que se está
    mirando): EURO.header() lo arma. La competición sale de ?l= o, si no, de la última que se miró
@@ -44,7 +44,7 @@ const EURO = {
     acts.innerHTML =
       pill('euro.html', 'euro', 'EURO', 'euro', 'Inicio de Eurotribunapp')
       + pill(`euro-fixture.html?l=${l}`, 'fixture', 'Fixture', '', 'Fixture de la competición')
-      + pill(`euro-liga.html?l=${l}`, 'tablas', 'Tablas', '', 'Tabla de posiciones y equipos')
+      + pill(`euro-liga.html?l=${l}`, 'tablas', 'Tablas/Equipos', '', 'Tabla de posiciones y equipos')
       + pill(`euro-stats.html?l=${l}`, 'stats', 'Estadísticas', '', 'Estadísticas de la última fecha')
       + pill(`euro-tribunapp.html?l=${l}`, 'tribunapp', 'TribunApp', '', 'Lo que vota la gente')
       + pill('index.html', 'arg', 'Argentina', '', 'Volver a TribunApp Argentina');
@@ -71,8 +71,9 @@ const EURO = {
     const ko = { '1/32': 'Dieciseisavos', '1/16': 'Playoff', 'playoff': 'Playoff', '1/8': 'Octavos', '1/4': 'Cuartos', '1/2': 'Semifinales', 'final': 'Final' };
     return ko[s.toLowerCase()] || s;
   },
-  escudo: id => `https://images.fotmob.com/image_resources/logo/teamlogo/${id}.png`,
-  logoLiga: id => `https://images.fotmob.com/image_resources/logo/leaguelogo/${id}.png`,
+  // Escudos y logos: copias propias en escudos/euro/ (scripts/fetch_euro.py); si alguno falta, se pide a FotMob (ver abajo)
+  escudo: id => `escudos/euro/${id}.png`,
+  logoLiga: id => `escudos/euro/liga-${id}.png`,
   esc: s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])),
   async json(path) {
     const r = await fetch(path + (path.includes('?') ? '&' : '?') + 't=' + Date.now());
@@ -165,3 +166,28 @@ EURO.apellido = n => { const p = String(n || '').trim().split(/\s+/); return p.l
 // Ficha (círculo con el kit del club y el dorsal)
 EURO.ficha = (clubId, color, num, px) =>
   `<span class="kk" style="width:${px}px;height:${px}px;background:${EURO.kitFondo(clubId, px, color)};font-size:${Math.round(px * 0.46)}px">${num != null && num !== '' ? num : ''}</span>`;
+
+/* Escudo que falta en escudos/euro/ (por ejemplo un rival de copa): se reintenta una vez con el de FotMob */
+document.addEventListener('error', function (e) {
+  const i = e.target;
+  if (!i || i.tagName !== 'IMG' || i.dataset.fb) return;
+  const m = /escudos\/euro\/(liga-)?(\d+)\.png/.exec(i.getAttribute('src') || '');
+  if (!m) return;
+  i.dataset.fb = '1';
+  i.src = `https://images.fotmob.com/image_resources/logo/${m[1] ? 'leaguelogo' : 'teamlogo'}/${m[2]}.png`;
+}, true);
+
+/* ---------- Equipos de la gente: mini cancha con las fichas del club ---------- */
+EURO.PITCH_SVG = '<svg viewBox="0 0 100 122" preserveAspectRatio="none" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="0.7">'
+  + '<rect x="3" y="3" width="94" height="116"/><line x1="3" y1="61" x2="97" y2="61"/><circle cx="50" cy="61" r="11"/>'
+  + '<rect x="25" y="3" width="50" height="18"/><rect x="38" y="3" width="24" height="7"/><rect x="25" y="101" width="50" height="18"/><rect x="38" y="112" width="24" height="7"/></svg>';
+EURO.miniCancha = function (jugadores, clubId, color, pie) {
+  const fichas = (jugadores || []).map(j =>
+    `<span class="mp" style="left:${j.x}%;top:${j.y}%">${EURO.ficha(clubId, color, j.num, 24)}</span>`).join('');
+  return `<div class="mini"><div class="mini-c">${EURO.PITCH_SVG}${fichas}</div>${pie ? `<div class="mini-p">${pie}</div>` : ''}</div>`;
+};
+// "hace 3 h" / "hace 2 días" desde un timestamp de Supabase
+EURO.hace = function (iso) {
+  const m = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+  return m < 60 ? `hace ${m || 1} min` : m < 1440 ? `hace ${Math.round(m / 60)} h` : `hace ${Math.round(m / 1440)} d`;
+};

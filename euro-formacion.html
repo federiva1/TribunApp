@@ -55,15 +55,25 @@
     </svg>
   </div>
 
-  <div class="bank" id="bank"></div>
+  <div class="acc">
+    <button type="button" class="btn" id="bajar" disabled>⬇ DESCARGAR</button>
+    <button type="button" class="btn" id="compartir" disabled>COMPARTIR</button>
+    <button type="button" class="btn" id="ver-gente">👥 EQUIPOS DE LA GENTE</button>
+  </div>
+
+  <div class="caja">
+    <h2>BANCO <small>tocá un jugador para ponerlo · arrastralo para moverlo · ✕ para sacarlo</small></h2>
+    <div class="bank" id="bank"></div>
+  </div>
   <div id="resultados"></div>
 
-  <p class="nota">Tocá un jugador del banco para ponerlo en la cancha · arrastralo para moverlo · ✕ para sacarlo</p>
+  <p class="nota">Tu formación se puede descargar o compartir aunque no la envíes a la encuesta</p>
 </main>
 
 <script src="js/kits.js"></script>
 <script src="js/euro-kits.js"></script>
 <script src="js/config.js"></script>
+<script src="js/euro-placa.js"></script>
 <script>
 (async function () {
   const $ = s => document.querySelector(s);
@@ -93,8 +103,8 @@
   // ---- Banco
   $('#bank').innerHTML = GRUPOS.map(([k, tit]) => {
     const js = squad.filter(j => j.grupo === k);
-    return js.length ? `<h3>${tit} · ${js.length}</h3><div class="g">` + js.map(j =>
-      `<button type="button" class="bchip" data-id="${j.id}" title="${EURO.esc(j.nombre)}">${EURO.ficha(C.id, C.color, j.num, 34)}<span class="ap">${EURO.esc(EURO.apellido(j.nombre))}</span></button>`).join('') + '</div>' : '';
+    return js.length ? `<div class="sbox"><h3>${tit} · ${js.length}</h3><div class="g">` + js.map(j =>
+      `<button type="button" class="bchip" data-id="${j.id}" title="${EURO.esc(j.nombre)}">${EURO.ficha(C.id, C.color, j.num, 34)}<span class="ap">${EURO.esc(EURO.apellido(j.nombre))}</span></button>`).join('') + '</div></div>' : '';
   }).join('') || '<div class="vacio">Sin plantel cargado.</div>';
 
   // ---- Cancha
@@ -112,6 +122,7 @@
     const abierto = !!p && !yaEnvio;
     $('#enviar').disabled = !(onPitch.length === 11 && abierto);
     $('#enviar').textContent = yaEnvio ? 'YA ENVIASTE ✓' : 'ENVIAR A ENCUESTA';
+    $('#bajar').disabled = $('#compartir').disabled = onPitch.length !== 11;
     $('#aviso').textContent = !p ? 'Este club no tiene próximo partido: podés armar el equipo pero no enviarlo.' : '';
   }
   function colocar(j) {
@@ -154,19 +165,45 @@
   const soltar = () => { if (arr) { arr.el.classList.remove('drag'); arr = null; } };
   $('#pitch').addEventListener('pointerup', soltar); $('#pitch').addEventListener('pointercancel', soltar);
 
-  // ---- Resultados de la gente (todas las formaciones enviadas de este partido)
+  // ---- Resultados de la gente: % de elección por jugador + los equipos que armó cada hincha
+  let verTodos = 6;
   async function resultados() {
-    if (!p) return;
+    if (!p) { $('#resultados').innerHTML = '<div class="res"><div class="sm">Este club no tiene próximo partido.</div></div>'; return; }
     let filas = [];
-    try { filas = await EURO.sb.get(`formaciones?club=eq.${EURO.clubKey(C.id)}&match_date=eq.${dia}&select=jugadores&limit=1000`); } catch (e) { return; }
+    try { filas = await EURO.sb.get(`formaciones?club=eq.${EURO.clubKey(C.id)}&match_date=eq.${dia}&select=jugadores,created_at&order=created_at.desc&limit=1000`); } catch (e) { return; }
     const n = filas.length, cuenta = {};
     filas.forEach(f => (f.jugadores || []).forEach(j => { cuenta[j.fid] = (cuenta[j.fid] || 0) + 1; }));
     const top = Object.entries(cuenta).sort((a, b) => b[1] - a[1]).slice(0, 15);
+    const equipos = filas.slice(0, verTodos).map((f, i) => EURO.miniCancha(f.jugadores, C.id, C.color, `Hincha ${n - i} · ${EURO.hace(f.created_at)}`)).join('');
     $('#resultados').innerHTML = `<div class="res"><h3>LO QUE ELIGE LA GENTE</h3><div class="sm">${n} ${n === 1 ? 'hincha armó' : 'hinchas armaron'} su formación para este partido</div>`
       + (top.length ? top.map(([fid, c]) => { const j = porId[fid]; const pc = Math.round(c / n * 100);
         return `<div class="rb"><span class="nn">${EURO.esc(j ? EURO.apellido(j.nombre) : '#' + fid)}</span><span class="bar"><i style="width:${pc}%"></i></span><span class="v">${pc}%</span></div>`; }).join('')
-        : '<div class="vacio" style="margin:6px 0">Todavía nadie envió su formación. ¡Sé el primero!</div>') + '</div>';
+        : '<div class="vacio" style="margin:6px 0">Todavía nadie envió su formación. ¡Sé el primero!</div>')
+      + (n ? `<h4>EQUIPOS DE LA GENTE</h4><div class="minis">${equipos}</div>`
+        + (n > verTodos ? `<button type="button" class="btn mas" id="mas-eq">VER MÁS EQUIPOS (${n - verTodos})</button>` : '')
+        + `<a class="btn mas" style="display:block;text-align:center" href="euro-tribunapp.html?c=${C.id}&l=${lid}">VER TODO EN EST. TRIBUNAPP →</a>` : '') + '</div>';
+    const mas = $('#mas-eq'); if (mas) mas.onclick = () => { verTodos += 6; resultados(); };
   }
+  $('#ver-gente').onclick = async () => { await resultados(); $('#resultados').scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+
+  // ---- Descargar / compartir la imagen de la formación
+  async function hacerPlaca() {
+    const jugadores = onPitch.map(o => ({ num: porId[o.id].num, nombre: porId[o.id].nombre, x: o.x, y: o.y }));
+    const cuando = p ? `${t ? t.dia + ' · ' + t.hora + ' hs' : ''}` : '';
+    return EURO.placaFormacion({ club: { id: C.id, nombre: C.nombre, color: C.color }, rival: rival ? rival.nombre : '', cuando, jugadores });
+  }
+  const NOMBRE_IMG = `formacion-${C.nombre.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.png`;
+  $('#bajar').onclick = async () => {
+    const b = $('#bajar'); b.disabled = true; b.textContent = 'GENERANDO…';
+    try { EURO.bajarPlaca(await hacerPlaca(), NOMBRE_IMG); EURO.toast('Imagen descargada'); } catch (e) { EURO.toast('No se pudo generar la imagen'); }
+    b.textContent = '⬇ DESCARGAR'; pintar();
+  };
+  $('#compartir').onclick = async () => {
+    const b = $('#compartir'); b.disabled = true;
+    try { const r = await EURO.compartirPlaca(await hacerPlaca(), `Mi formación de ${C.nombre}`, NOMBRE_IMG); if (r === 'descargado') EURO.toast('Tu navegador no comparte archivos: se descargó la imagen'); }
+    catch (e) { EURO.toast('No se pudo generar la imagen'); }
+    pintar();
+  };
 
   // ---- Enviar
   $('#enviar').onclick = async () => {

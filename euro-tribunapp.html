@@ -88,15 +88,26 @@ async function vistaClub(cid) {
     const local = Number(p.local.id) === Number(C.id), rival = local ? p.visitante : p.local, dia = EURO.diaAR(p.utcTime);
     document.getElementById('cf-sub').textContent = `vs ${rival.nombre}`;
     let filas = [];
-    try { filas = await EURO.sb.get(`formaciones?club=eq.${EURO.clubKey(C.id)}&match_date=eq.${dia}&select=jugadores&limit=1000`); } catch (e) {}
+    try { filas = await EURO.sb.get(`formaciones?club=eq.${EURO.clubKey(C.id)}&match_date=eq.${dia}&select=jugadores,created_at&order=created_at.desc&limit=1000`); } catch (e) {}
     const n = filas.length, cuenta = {};
     filas.forEach(f => (f.jugadores || []).forEach(j => { cuenta[j.fid] = cuenta[j.fid] || { c: 0, name: j.name }; cuenta[j.fid].c++; }));
     const top = Object.entries(cuenta).sort((a, b) => b[1].c - a[1].c).slice(0, 11);
     document.getElementById('cf').innerHTML = n
       ? `<div class="res" style="margin-top:0"><div class="sm">${n} ${n === 1 ? 'hincha armó' : 'hinchas armaron'} su formación · los 11 más elegidos</div>`
         + top.map(([fid, o]) => { const pc = Math.round(o.c / n * 100);
-          return `<div class="rb"><span class="nn">${nombre(fid, o.name)}</span><span class="bar"><i style="width:${pc}%"></i></span><span class="v">${pc}%</span></div>`; }).join('') + '</div>'
+          return `<div class="rb"><span class="nn">${nombre(fid, o.name)}</span><span class="bar"><i style="width:${pc}%"></i></span><span class="v">${pc}%</span></div>`; }).join('')
+        + `<h4>EQUIPOS DE LA GENTE</h4><div class="minis" id="minis"></div><button type="button" class="btn mas" id="mas-eq" hidden></button>`
+        + `<a class="btn mas" style="display:block;text-align:center" href="euro-formacion.html?id=${C.id}&l=${lid}">ARMÁ LA TUYA</a></div>`
       : `<div class="vacioc">Todavía nadie armó su formación para este partido.<br><a class="btn pri" href="euro-formacion.html?id=${C.id}&l=${lid}">ARMÁ LA TUYA</a></div>`;
+    if (n) {                                   // mini canchas con los equipos que armó cada hincha (de a 6)
+      let mostrar = 6;
+      const pintar = () => {
+        document.getElementById('minis').innerHTML = filas.slice(0, mostrar).map((f, i) => EURO.miniCancha(f.jugadores, C.id, C.color, `Hincha ${n - i} · ${EURO.hace(f.created_at)}`)).join('');
+        const mas = document.getElementById('mas-eq'); mas.hidden = n <= mostrar; mas.textContent = `VER MÁS EQUIPOS (${n - mostrar})`;
+      };
+      document.getElementById('mas-eq').onclick = () => { mostrar += 6; pintar(); };
+      pintar();
+    }
   }
 
   // 2) Puntajes: el último partido del club con datos

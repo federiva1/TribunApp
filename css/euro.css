@@ -19,6 +19,7 @@ a { color: inherit; }
   /* dorado: así se distingue de un vistazo que estás en el modo Euro */
   background: linear-gradient(180deg, #e8b923 0%, #b78d12 100%);
   border-bottom: 1px solid rgba(255,255,255,0.07);
+  background-clip: padding-box;        /* sin esto el dorado se pintaba también debajo del borde (translúcido) y quedaba una línea amarilla */
   position: sticky; top: 0; z-index: 50; backdrop-filter: blur(10px);
   --corte: 198px;                      /* hasta dónde llega el fondo oscuro detrás del logo */
 }
@@ -33,22 +34,24 @@ a { color: inherit; }
 .header-actions { display: flex; gap: 8px; align-items: center; }
 .header-pill {
   display: flex; align-items: center; gap: 7px;
-  background: rgba(10,10,26,0.30); border: 1px solid rgba(255,255,255,0.30);
+  background: rgba(13,13,26,0.88); border: 1px solid rgba(255,255,255,0.16);
   border-radius: 10px; padding: 7px 13px;
   font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 0.5px;
   color: #fff; cursor: pointer; text-decoration: none;
   transition: background 0.2s, color 0.2s, border-color 0.2s;
 }
 .header-pill svg { width: 15px; height: 15px; flex-shrink: 0; }
-.header-pill:hover { background: rgba(10,10,26,0.5); border-color: rgba(255,255,255,0.6); color: #fff; }
-.header-pill.on { background: #0d0d1a; border-color: #0d0d1a; color: var(--euro); }
+.header-pill:hover { background: #0d0d1a; border-color: rgba(255,255,255,0.5); color: #fff; }
+.header-pill.on { background: #fff; border-color: #fff; color: #0d0d1a; }
+.header-pill.on svg { color: #0d0d1a; }
+.header-pill-label { font-weight: 600; }
 /* el logo no se achica para hacerle lugar a los botones: si no entran, pasan al ☰ (header-menu.js) */
 body #site-header .logo-wrap { flex-shrink: 0; min-width: auto; }
 /* menú ☰ (js/header-menu.js inyecta su CSS después de este: la especificidad lo hace ganar acá) */
-#site-header .header-menu-btn { background: rgba(10,10,26,0.30); border-color: rgba(255,255,255,0.30); color: #fff; }
+#site-header .header-menu-btn { background: rgba(13,13,26,0.88); border-color: rgba(255,255,255,0.16); color: #fff; }
 #site-header .header-menu-btn[aria-expanded="true"] { background: #0d0d1a; border-color: #0d0d1a; color: var(--euro); }
-#site-header .cuenta-btn { background: rgba(10,10,26,0.30); border-color: rgba(255,255,255,0.30); }
-#site-header .cuenta-btn:hover { background: rgba(10,10,26,0.5); }
+#site-header .cuenta-btn { background: rgba(13,13,26,0.88); border-color: rgba(255,255,255,0.16); }
+#site-header .cuenta-btn:hover { background: #0d0d1a; }
 #site-header .cuenta-btn svg { color: #fff; }
 body .header-menu-panel { border-color: rgba(255,213,79,0.4); }
 body .header-menu-panel a:hover, body .header-menu-panel a:active { background: rgba(255,213,79,0.16); }
@@ -381,3 +384,40 @@ a.tile { display: block; text-decoration: none; color: #fff; }
 .kcard { display: flex; align-items: center; gap: 9px; padding: 7px 9px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03);
   font-family: 'Barlow Condensed', sans-serif; font-size: 14px; min-width: 0; }
 .kcard span.t { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ===== CLUB: próximo partido con los dos equipos ===== */
+.nextm2 { margin: 14px 16px 10px; border-radius: 14px; border: 1px solid rgba(79,195,247,0.35); background: rgba(79,195,247,0.07); padding: 12px 10px 10px;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 6px; }
+.nextm2 .eq { display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 0; text-align: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 15px; line-height: 1.15; }
+.nextm2 .eq img { width: 44px; height: 44px; object-fit: contain; }
+.nextm2 .eq.yo { color: var(--euro); }
+.nextm2 .vs { text-align: center; font-family: 'Barlow Condensed', sans-serif; font-size: 12.5px; color: rgba(255,255,255,0.6); line-height: 1.3; }
+.nextm2 .vs b { display: block; font-family: 'Bebas Neue', sans-serif; font-weight: 400; font-size: 26px; letter-spacing: 2px; color: #fff; line-height: 1; }
+.nextm2 .cab { grid-column: 1 / -1; text-align: center; font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--celeste); margin-bottom: 2px; }
+
+/* ===== CAJAS: plantel y banco de jugadores ===== */
+.caja { margin: 14px 16px 0; padding: 12px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.09); background: rgba(255,255,255,0.025); }
+.caja > h2 { font-family: 'Bebas Neue', sans-serif; font-weight: 400; letter-spacing: 3px; font-size: 18px; color: #e8edf7; margin: 0 0 10px 2px; }
+.caja > h2 small { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 0.5px; color: rgba(255,255,255,0.45); margin-left: 6px; }
+.sbox { padding: 9px 10px 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.07); background: rgba(0,0,0,0.22); margin-bottom: 9px; }
+.sbox:last-child { margin-bottom: 0; }
+.sbox > h3 { font-family: 'Bebas Neue', sans-serif; font-weight: 400; letter-spacing: 2px; font-size: 15px; color: rgba(255,255,255,0.65); margin: 0 0 8px; }
+.caja .bank { margin: 0; }
+.caja .bank h3 { margin: 0 0 8px; }
+.caja .plantel { margin: 0; }
+.caja .plantel h3 { margin: 0 0 8px; }
+.caja .dt { margin: 10px 2px 0; }
+
+/* ===== FORMACIÓN: acciones y equipos de la gente ===== */
+.acc { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 16px 0; justify-content: center; max-width: 460px; margin-left: auto; margin-right: auto; }
+.acc .btn { flex: 1 1 130px; text-align: center; }
+.mini { min-width: 0; }
+.mini-c { position: relative; aspect-ratio: 0.82; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.18);
+  background: repeating-linear-gradient(90deg, #2d7a3a 0 12.5%, #2a7336 12.5% 25%); }
+.mini-c svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.mini-c .mp { position: absolute; transform: translate(-50%, -50%); line-height: 0; }
+.mini-p { margin-top: 4px; font-family: 'Barlow Condensed', sans-serif; font-size: 12.5px; color: rgba(255,255,255,0.55); text-align: center; }
+.minis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 8px; }
+@media (min-width: 560px) { .minis { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.res .mas { margin-top: 10px; width: 100%; }
+.res h4 { font-family: 'Bebas Neue', sans-serif; font-weight: 400; letter-spacing: 2px; font-size: 16px; color: #e8edf7; margin: 14px 0 0; }
