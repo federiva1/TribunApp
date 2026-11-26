@@ -267,7 +267,7 @@ def club(cid, liga_meta, fila):
             if tit == 'coach':
                 dt = m.get('name')
             elif tit in plantel:
-                plantel[tit].append({'num': m.get('shirtNumber'), 'nombre': m.get('name'),
+                plantel[tit].append({'id': m.get('id'), 'num': m.get('shirtNumber'), 'nombre': m.get('name'),
                                      'puesto': (m.get('positionIdsDesc') or '').split(',')[0] or None})
     for k in plantel:
         plantel[k].sort(key=lambda j: (j['num'] is None, j['num'] or 0))

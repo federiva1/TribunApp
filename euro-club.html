@@ -27,6 +27,7 @@
 
 <main id="main">
   <div class="sub" id="sub">
+    <a class="bk" id="volver" href="euro-liga.html">← Tablas</a>
     <div class="tt"><h1 id="club-nombre">Cargando…</h1><span id="club-sub"></span></div>
     <img class="lg" id="club-escudo" src="" alt="" onerror="this.style.display='none'">
   </div>
@@ -35,19 +36,21 @@
   <div class="form" id="forma"></div>
 
   <div class="tiles" id="tiles">
-    <div class="tile" style="background-image:url(fotos/secciones/formacion.jpg)"><div class="ac"></div><div class="pronto">PRÓXIMAMENTE</div><div class="t">ARMÁ TU FORMACIÓN</div><div class="s">Elegí los 11 para el próximo partido</div></div>
-    <div class="tile" style="background-image:url(fotos/secciones/puntajes.jpg)"><div class="ac"></div><div class="pronto">PRÓXIMAMENTE</div><div class="t">PONÉ TU PUNTAJE</div><div class="s">Calificá a cada jugador</div></div>
-    <div class="tile" style="background-image:url(fotos/secciones/estadisticas.jpg)"><div class="ac"></div><div class="pronto">PRÓXIMAMENTE</div><div class="t">ESTADÍSTICAS</div><div class="s">Stats FotMob de cada partido</div></div>
-    <div class="tile" style="background-image:url(fotos/secciones/est-tribunapp.jpg)"><div class="ac"></div><div class="pronto">PRÓXIMAMENTE</div><div class="t">EST. TRIBUNAPP</div><div class="s">Lo que vota la gente</div></div>
+    <a class="tile" id="t-form" href="euro-formacion.html" style="background-image:url(fotos/secciones/formacion.jpg)"><div class="ac"></div><div class="t">ARMÁ TU FORMACIÓN</div><div class="s">Elegí los 11 para el próximo partido</div></a>
+    <a class="tile" id="t-punt" href="euro-puntajes.html" style="background-image:url(fotos/secciones/puntajes.jpg)"><div class="ac"></div><div class="t">PONÉ TU PUNTAJE</div><div class="s">Calificá a cada jugador del último partido</div></a>
+    <a class="tile" id="t-stats" href="euro-stats.html" style="background-image:url(fotos/secciones/estadisticas.jpg)"><div class="ac"></div><div class="t">ESTADÍSTICAS</div><div class="s">Stats FotMob del último partido</div></a>
+    <a class="tile" id="t-trib" href="euro-tribunapp.html" style="background-image:url(fotos/secciones/est-tribunapp.jpg)"><div class="ac"></div><div class="t">EST. TRIBUNAPP</div><div class="s">Lo que vota la gente</div></a>
   </div>
 
   <div class="h2">PLANTEL</div>
   <div class="plantel" id="plantel"></div>
   <div class="dt" id="dt"></div>
 
-  <p class="nota">Datos de FotMob · formación y puntajes para las ligas de Europa, próximamente</p>
+  <p class="nota">Datos de FotMob · la formación y los puntajes se votan con la misma mecánica que en Argentina</p>
 </main>
 
+<script src="js/kits.js"></script>
+<script src="js/euro-kits.js"></script>
 <script>
 (async function () {
   const id = (new URLSearchParams(location.search).get('id') || '8586').replace(/\D/g, '');
@@ -61,10 +64,23 @@
   document.getElementById('club-nombre').textContent = C.nombre.toUpperCase();
   document.getElementById('club-sub').textContent = `${C.liga.nombre} · ${C.pos}° · ${C.pts} pts` + (C.dt ? ` · DT ${C.dt}` : '');
   document.getElementById('club-escudo').src = EURO.escudo(C.id);
+  // Vuelta a la tabla de la competición desde la que se entró
+  const ponerVolver = () => {
+    const lid = EURO.liga(), l = EURO.LIGAS.find(x => x.id === lid);
+    const v = document.getElementById('volver'); v.href = `euro-liga.html?l=${lid}`; v.textContent = '← ' + (l ? l.corto : 'Tablas');
+  };
+  ponerVolver();
   // Sin ?l= (se entró directo al club): el header pasa a la competición del club
   if (!new URLSearchParams(location.search).get('l') && EURO.LIGAS.some(l => l.id === Number(C.liga.id))) {
-    EURO.recordar(C.liga.id); EURO.header('club', C.liga.id);
+    EURO.recordar(C.liga.id); EURO.header('club', C.liga.id); ponerVolver();
   }
+
+  // Secciones del club (con la competición desde la que se entró)
+  const lidClub = EURO.liga();
+  document.getElementById('t-form').href = `euro-formacion.html?id=${C.id}&l=${lidClub}`;
+  document.getElementById('t-punt').href = `euro-puntajes.html?id=${C.id}&l=${lidClub}`;
+  document.getElementById('t-stats').href = `euro-stats.html?l=${C.liga.id}&c=${C.id}`;
+  document.getElementById('t-trib').href = `euro-tribunapp.html?c=${C.id}&l=${lidClub}`;
 
   // Próximo partido
   const p = C.proximo;
@@ -74,7 +90,7 @@
     document.getElementById('proximo').innerHTML = `<div class="nextm"><img src="${EURO.escudo(rival.id)}" alt="">`
       + `<div class="x"><div>VS ${EURO.esc(rival.nombre).toUpperCase()} (${local ? 'L' : 'V'})</div>`
       + `<span>${EURO.esc(p.torneo || C.liga.nombre)}${t ? ' · ' + t.dia + ' · ' + t.hora + ' hs' : ''}</span></div>`
-      + `<div class="btn">ARMAR 11<small>próximamente</small></div></div>`;
+      + `<a class="btn" href="euro-formacion.html?id=${C.id}&l=${lidClub}">ARMAR 11<small>tu formación</small></a></div>`;
   }
 
   // Últimos 5
@@ -91,7 +107,7 @@
     const js = (C.plantel || {})[k] || [];
     if (!js.length) return '';
     return `<h3>${nombres[k]} · ${js.length}</h3><div class="chips">` + js.map(j =>
-      `<div class="chip" title="${EURO.esc(j.nombre)}"><div class="k" style="background:${C.color || '#444'};color:${texto}">${j.num != null ? j.num : ''}</div>`
+      `<div class="chip" title="${EURO.esc(j.nombre)}">${EURO.ficha(C.id, C.color, j.num, 40)}`
       + `<div class="ap">${EURO.esc(apellido(j.nombre))}</div>${j.puesto ? `<div class="pu">${EURO.esc(j.puesto)}</div>` : ''}</div>`).join('') + '</div>';
   }).join('') || '<div class="vacio">Sin plantel cargado.</div>';
   if (C.dt) document.getElementById('dt').innerHTML = `Director técnico: <b>${EURO.esc(C.dt)}</b>`;

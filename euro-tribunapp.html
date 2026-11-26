@@ -24,12 +24,20 @@
 
 <main id="main">
   <div class="sub" id="sub">
+    <a class="bk" id="volver" href="euro.html" hidden>← Club</a>
     <div class="tt"><h1 id="liga-nombre">Cargando…</h1><span id="liga-sub"></span></div>
     <img class="lg fondo" id="liga-logo" src="" alt="" onerror="this.style.display='none'">
   </div>
   <div class="ligas-bar" id="bar"></div>
-  <div class="aviso"><b>VISTA DE EJEMPLO.</b> En Europa todavía no se vota: para mostrar cómo quedaría usamos las <b>notas de FotMob</b> de la última fecha en lugar de los puntajes de la gente. Cuando haya votos, acá va el promedio de los hinchas.</div>
+  <div id="club-view" hidden>
+    <div class="h2">FORMACIÓN DE LA GENTE <small id="cf-sub"></small></div>
+    <div id="cf"></div>
+    <div class="h2">PUNTAJES DE LA GENTE <small id="cp-sub"></small></div>
+    <div id="cp"></div>
+  </div>
+  <div class="aviso" id="aviso-ej"><b>VISTA DE EJEMPLO.</b> En Europa todavía no se vota: para mostrar cómo quedaría usamos las <b>notas de FotMob</b> de la última fecha en lugar de los puntajes de la gente. Cuando haya votos, acá va el promedio de los hinchas.</div>
 
+  <div id="ej-view">
   <div class="h2">MEJORES PUNTUADOS <small id="rt"></small></div>
   <div class="panel" style="margin:0 16px" id="ranking"></div>
 
@@ -37,12 +45,73 @@
   <div class="mchips" id="chips"></div>
   <div id="figura"></div>
   <div class="cols2" id="cols"></div>
+  </div>
 
   <p class="nota">Datos de FotMob · ejemplo del prototipo</p>
 </main>
 
+<script src="js/kits.js"></script>
+<script src="js/euro-kits.js"></script>
+<script src="js/config.js"></script>
 <script>
+// ---------- Vista de UN CLUB (?c=): lo que vota la gente de verdad (tablas formaciones y puntajes de Supabase) ----------
+async function vistaClub(cid) {
+  const lid = EURO.liga();
+  document.getElementById('ej-view').hidden = true; document.getElementById('aviso-ej').hidden = true;
+  document.getElementById('bar').hidden = true; document.getElementById('club-view').hidden = false;
+  let C;
+  try { C = await EURO.json(`data/euro/clubes/${cid}.json`); } catch (e) { document.getElementById('liga-nombre').textContent = 'Club no encontrado'; return; }
+  document.title = `${C.nombre} · TribunApp · Eurotribunapp`;
+  document.getElementById('liga-nombre').textContent = C.nombre.toUpperCase();
+  document.getElementById('liga-sub').textContent = 'Lo que vota la gente';
+  document.getElementById('liga-logo').src = EURO.escudo(C.id);
+  document.getElementById('sub').style.setProperty('--cc', (C.color && C.color !== '#ffffff' ? C.color : '#4fc3f7') + '66');
+  const v = document.getElementById('volver'); v.hidden = false; v.href = `euro-club.html?id=${C.id}&l=${lid}`; v.textContent = '← ' + C.corto;
+  const porId = {};
+  ['keepers', 'defenders', 'midfielders', 'attackers'].forEach(k => ((C.plantel || {})[k] || []).forEach(j => { porId[j.id] = j; }));
+  const nombre = (fid, fallback) => EURO.esc(porId[fid] ? EURO.apellido(porId[fid].nombre) : (fallback ? EURO.apellido(fallback) : '#' + fid));
+
+  // 1) Formación: el próximo partido del club
+  const p = C.proximo;
+  if (!p) { document.getElementById('cf').innerHTML = '<div class="vacioc">Este club no tiene próximo partido.</div>'; }
+  else {
+    const local = Number(p.local.id) === Number(C.id), rival = local ? p.visitante : p.local, dia = EURO.diaAR(p.utcTime);
+    document.getElementById('cf-sub').textContent = `vs ${rival.nombre}`;
+    let filas = [];
+    try { filas = await EURO.sb.get(`formaciones?club=eq.${EURO.clubKey(C.id)}&match_date=eq.${dia}&select=jugadores&limit=1000`); } catch (e) {}
+    const n = filas.length, cuenta = {};
+    filas.forEach(f => (f.jugadores || []).forEach(j => { cuenta[j.fid] = cuenta[j.fid] || { c: 0, name: j.name }; cuenta[j.fid].c++; }));
+    const top = Object.entries(cuenta).sort((a, b) => b[1].c - a[1].c).slice(0, 11);
+    document.getElementById('cf').innerHTML = n
+      ? `<div class="res" style="margin-top:0"><div class="sm">${n} ${n === 1 ? 'hincha armó' : 'hinchas armaron'} su formación · los 11 más elegidos</div>`
+        + top.map(([fid, o]) => { const pc = Math.round(o.c / n * 100);
+          return `<div class="rb"><span class="nn">${nombre(fid, o.name)}</span><span class="bar"><i style="width:${pc}%"></i></span><span class="v">${pc}%</span></div>`; }).join('') + '</div>'
+      : `<div class="vacioc">Todavía nadie armó su formación para este partido.<br><a class="btn pri" href="euro-formacion.html?id=${C.id}&l=${lid}">ARMÁ LA TUYA</a></div>`;
+  }
+
+  // 2) Puntajes: el último partido del club con datos
+  let mejor = null;
+  for (const l of [...new Set([C.liga.id, lid, 42])]) {
+    let S; try { S = await EURO.json(`data/euro/stats/${l}.json`); } catch (e) { continue; }
+    (S.partidos || []).forEach(m => { if ((Number(m.local.id) === Number(C.id) || Number(m.visitante.id) === Number(C.id)) && (!mejor || m.utcTime > mejor.utcTime)) mejor = m; });
+  }
+  if (!mejor) { document.getElementById('cp').innerHTML = '<div class="vacioc">Todavía no tenemos los datos del último partido de este club.</div>'; return; }
+  const lado = Number(mejor.local.id) === Number(C.id) ? 'local' : 'visitante', rival2 = lado === 'local' ? mejor.visitante : mejor.local, dia2 = EURO.diaAR(mejor.utcTime);
+  document.getElementById('cp-sub').textContent = `vs ${rival2.nombre} · ${mejor.goles_local}-${mejor.goles_visitante}`;
+  let filas2 = [];
+  try { filas2 = await EURO.sb.get(`puntajes?club=eq.${EURO.clubKey(C.id)}&match_date=eq.${dia2}&select=puntajes&limit=1000`); } catch (e) {}
+  const acc = {}; filas2.forEach(f => Object.entries(f.puntajes || {}).forEach(([pid, s]) => { if (s != null) { const o = acc[pid] || (acc[pid] = { sum: 0, n: 0 }); o.sum += Number(s); o.n++; } }));
+  const jug = mejor.jugadores[lado].filter(j => acc[j.id]);
+  document.getElementById('cp').innerHTML = jug.length
+    ? `<div class="res" style="margin-top:0"><div class="sm">${filas2.length} ${filas2.length === 1 ? 'hincha puntuó' : 'hinchas puntuaron'} este partido · promedio por jugador</div>`
+      + jug.map(j => ({ j, avg: acc[j.id].sum / acc[j.id].n, n: acc[j.id].n })).sort((a, b) => b.avg - a.avg).map(o =>
+        `<div class="rb"><span class="nn">${EURO.esc(EURO.apellido(o.j.nombre))}</span><span class="bar"><i class="" style="width:${o.avg * 10}%"></i></span><span class="v">${o.avg.toFixed(1)}</span></div>`).join('') + '</div>'
+    : `<div class="vacioc">Todavía nadie puntuó este partido.<br><a class="btn pri" href="euro-puntajes.html?id=${C.id}&l=${lid}">PUNTUÁ A LOS JUGADORES</a></div>`;
+}
+
 (async function () {
+  const cid = (new URLSearchParams(location.search).get('c') || '').replace(/\D/g, '');
+  if (cid) { await vistaClub(cid); return; }
   const id = EURO.liga();
   document.getElementById('bar').innerHTML = EURO.selector(id, 'euro-tribunapp.html');
   let L, S;
