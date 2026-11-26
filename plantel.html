@@ -114,12 +114,17 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .cancha-img .linea:nth-child(even) { background: #2a7236; }
 .fila-z { display: flex; gap: 5px; position: relative; z-index: 1; }
 .zona { flex: 1 1 0; min-width: 0; position: relative; border: 1px dashed rgba(255,255,255,0.2); border-radius: 8px; padding: 17px 2px 6px; min-height: 76px; transition: background 0.15s, border-color 0.15s, min-height 0.15s; display: flex; flex-direction: column; }
-/* Zona vacía sola en su fila (ej. Enganche): se comprime a una franja hasta que alguien la usa.
-   Mientras se arrastra un jugador se agranda, para que sea fácil soltarlo ahí. */
-.zona.colapsada { min-height: 26px; padding: 4px 2px; }
-.zona.colapsada .zl { position: static; color: rgba(255,255,255,0.45); }
+/* Zona vacía sola en su fila (ej. Enganche): se muestra los primeros 5 s (body.mostrar-vacias) para
+   que el hincha sepa que existe y después se pliega del todo (la cancha se acomoda sola). Mientras se
+   arrastra un jugador (body.arrastrando) vuelve a desplegarse para poder soltarlo ahí. */
+.zona.colapsada { max-height: 90px; overflow: hidden;
+  transition: max-height 0.45s ease, min-height 0.45s ease, padding 0.45s ease, opacity 0.35s ease, border-color 0.2s, background 0.15s; }
+.zona.colapsada .zl { position: static; color: rgba(255,255,255,0.55); padding-top: 4px; }
 .zona.colapsada .chips { display: none; }
-body.arrastrando .zona.colapsada { min-height: 64px; border-color: rgba(255,255,255,0.45); }
+body:not(.mostrar-vacias):not(.arrastrando) .zona.colapsada {
+  max-height: 0; min-height: 0; padding-top: 0; padding-bottom: 0; opacity: 0; border-width: 0; }
+body:not(.mostrar-vacias):not(.arrastrando) .fila-z:has(> .zona.colapsada:only-child) { margin-top: -5px; }
+body.arrastrando .zona.colapsada { min-height: 64px; border-color: rgba(255,255,255,0.5); }
 .zona.chica { flex: 0 0 46%; margin: 0 auto; }
 .zona.ancha { flex: 1.4 1 0; }   /* laterales/extremos más anchos: en el celular entran 2 por fila */
 .zona .zl { position: absolute; left: 0; right: 0; top: 3px; text-align: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 10.5px; letter-spacing: 0.4px; text-transform: uppercase; color: rgba(255,255,255,0.62); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px; }
@@ -240,15 +245,15 @@ const CLUB = CLUBES_CONFIG[SLUG];
 const TEMPORADA = '2027';
 // Zonas de la cancha. Cada línea tiene filas de zonas, de arriba (ataque) a abajo (arco).
 const ZONAS = {
-  EXI: { nombre: 'Extremo izq.', corto: 'Extremo izquierdo', linea: 'DEL' },
+  EXI: { nombre: 'Ext. izq.', corto: 'Extremo izquierdo', linea: 'DEL' },
   DC:  { nombre: 'Centrodelanteros', corto: 'Centrodelantero', linea: 'DEL', cls: 'ancha' },
-  EXD: { nombre: 'Extremo der.', corto: 'Extremo derecho', linea: 'DEL' },
+  EXD: { nombre: 'Ext. der.', corto: 'Extremo derecho', linea: 'DEL' },
   ENG: { nombre: 'Enganche / organizador', corto: 'Enganche', linea: 'MED', cls: 'chica' },
   INT: { nombre: 'Internos', corto: 'Interno', linea: 'MED' },
   VC:  { nombre: 'Volantes centrales', corto: 'Volante central', linea: 'MED' },
-  LI:  { nombre: 'Lateral izq.', corto: 'Lateral izquierdo', linea: 'DEF' },
+  LI:  { nombre: 'Lat. izq.', corto: 'Lateral izquierdo', linea: 'DEF' },
   CEN: { nombre: 'Centrales', corto: 'Central', linea: 'DEF', cls: 'ancha' },
-  LD:  { nombre: 'Lateral der.', corto: 'Lateral derecho', linea: 'DEF' },
+  LD:  { nombre: 'Lat. der.', corto: 'Lateral derecho', linea: 'DEF' },
   ARQ: { nombre: 'Arqueros', corto: 'Arquero', linea: 'ARQ' },
 };
 const LINEAS = [
@@ -372,13 +377,17 @@ function chipEl(j, imagen) {
   return d;
 }
 
-// Tamaño de las fichas: uno solo por FILA de zonas (laterales y centrales iguales), el que necesita
-// menos filas de jugadores; a igual cantidad, el más grande. Se achican solo si se ahorra una fila.
+// Tamaño de las fichas: uno solo por FILA de zonas (laterales y centrales iguales), el más grande con
+// el que ninguna zona pasa de 2 filas de jugadores (pedido de Fede). Si ni el más chico alcanza, el que
+// menos filas deja.
+const MAX_FILAS = 2;
 const TAMANOS = [
   { cw: 60, kw: 40, nf: 19, fs: 12.5 },
   { cw: 54, kw: 36, nf: 17, fs: 11.5 },
   { cw: 48, kw: 32, nf: 15, fs: 10.5 },
-  { cw: 44, kw: 30, nf: 14, fs: 10 },     // celular con zonas cargadas
+  { cw: 44, kw: 30, nf: 14, fs: 10 },
+  { cw: 40, kw: 27, nf: 13, fs: 9.5 },
+  { cw: 36, kw: 25, nf: 12, fs: 9 },
 ];
 function ajustarTamanos(raiz) {
   raiz.querySelectorAll('.fila-z').forEach(fila => {
@@ -387,10 +396,9 @@ function ajustarTamanos(raiz) {
       W: (z.querySelector('.chips') || z).clientWidth || (z.clientWidth - 4),
     })).filter(x => x.n && x.W);
     if (!zonas.length) return;
-    // filas de la zona más cargada de la fila: se busca la menor; a igual cantidad, la ficha más grande
     const filas = t => Math.max(...zonas.map(x => Math.ceil(x.n / Math.max(1, Math.floor((x.W + 2) / (t.cw + 2))))));
-    let mejor = TAMANOS[0];
-    TAMANOS.forEach(t => { if (filas(t) < filas(mejor)) mejor = t; });
+    let mejor = TAMANOS.find(t => filas(t) <= MAX_FILAS);
+    if (!mejor) { mejor = TAMANOS[0]; TAMANOS.forEach(t => { if (filas(t) < filas(mejor)) mejor = t; }); }
     zonas.forEach(({ z }) => {
       z.style.setProperty('--cw', mejor.cw + 'px'); z.style.setProperty('--kw', mejor.kw + 'px');
       z.style.setProperty('--nf', mejor.nf + 'px'); z.style.setProperty('--fs', mejor.fs + 'px');
@@ -415,6 +423,9 @@ function pintarCancha(cancha, imagen) {
         const z = document.createElement('div');
         z.className = 'zona ' + (Z.cls || '') + (!lista.length && fila.length === 1 ? ' colapsada' : '');
         z.dataset.pos = zk;
+        // En las filas de 3 zonas (laterales y centrales, extremos y 9) el ancho se reparte según
+        // cuántos jugadores tiene cada una: así ninguna pasa de 2 filas sin achicar de más las fichas.
+        if (fila.length > 1) z.style.flex = `${Math.max(1.2, Math.ceil(lista.length / 2))} 1 0`;
         if (L.filas.length > 1 || fila.length > 1) {                     // una línea de una sola zona ya tiene su rótulo
           const zl = document.createElement('div'); zl.className = 'zl';
           zl.textContent = Z.nombre + (lista.length ? ' · ' + lista.length : fila.length === 1 ? ' · arrastrá un jugador acá' : '');
@@ -693,7 +704,9 @@ window.addEventListener('resize', () => { clearTimeout(tResize); tResize = setTi
   try { PUESTOS = await (await fetch('data/planteles_puestos.json')).json(); } catch (e) { PUESTOS = {}; }
   try { PLANTEL_ACTUAL = await (await fetch(`data/planteles/${SLUG}.json?t=${Date.now()}`)).json(); } catch (e) { PLANTEL_ACTUAL = []; }
   ST = cargarGuardado() || { jugadores: desdePlantel(PLANTEL_ACTUAL) };
+  document.body.classList.add('mostrar-vacias');          // el Enganche vacío se ve 5 s y se pliega
   render();
+  setTimeout(() => document.body.classList.remove('mostrar-vacias'), 5000);
 })();
 </script>
 </body>
