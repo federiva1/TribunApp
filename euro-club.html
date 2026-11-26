@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Club · Eurotribunapp — TribunApp</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="Logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/euro.css">
+</head>
+<body>
+<!-- EUROTRIBUNAPP (prototipo, rama eurotribunapp): las 5 grandes ligas de Europa con datos de
+     FotMob (data/euro/, scripts/fetch_euro.py). Cada liga → euro-liga.html, cada club → euro-club.html. -->
+<header id="site-header">
+  <a class="logo-wrap" href="index.html"><img src="logo-header.png" alt="TribunApp"></a>
+  <div class="header-actions">
+    <a class="header-pill euro" href="euro.html">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5-4.8-4.6 6.6-.9z"/></svg>
+      <span class="header-pill-label">EURO</span>
+    </a>
+    <a class="header-pill" href="fixture.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span class="header-pill-label">Fixture</span>
+    </a>
+    <a class="header-pill" href="tablas.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      <span class="header-pill-label">Tablas</span>
+    </a>
+    <a class="header-pill" href="estadisticas-torneo.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span class="header-pill-label">Estadísticas</span>
+    </a>
+    <a class="header-pill" href="estadisticas-tribunapp.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span class="header-pill-label">TribunApp</span>
+    </a>
+  </div>
+</header>
+
+<main id="main">
+  <div class="sub" id="sub">
+    <a class="bk" id="volver" href="euro.html">←</a>
+    <div class="tt"><h1 id="club-nombre">Cargando…</h1><span id="club-sub"></span></div>
+    <img class="lg" id="club-escudo" src="" alt="" onerror="this.style.display='none'">
+  </div>
+
+  <div id="proximo"></div>
+  <div class="form" id="forma"></div>
+
+  <div class="tiles" id="tiles">
+    <div class="tile" style="background-image:url(fotos/secciones/formacion.jpg)"><div class="ac"></div><div class="pronto">PRÓXIMAMENTE</div><div class="t">ARMÁ TU FORMACIÓN</div><div class="s">Elegí los 11 para el próximo partido</div></div>
+    <div class="tile" style="background-image:url(fotos/secciones/puntajes.jpg)"><div class="ac"></div><div class="pronto">PRÓXIMAMENTE</div><div class="t">PONÉ TU PUNTAJE</div><div class="s">Calificá a cada jugador</div></div>
+    <div class="tile" style="background-image:url(fotos/secciones/estadisticas.jpg)"><div class="ac"></div><div class="pronto">PRÓXIMAMENTE</div><div class="t">ESTADÍSTICAS</div><div class="s">Stats FotMob de cada partido</div></div>
+    <div class="tile" style="background-image:url(fotos/secciones/est-tribunapp.jpg)"><div class="ac"></div><div class="pronto">PRÓXIMAMENTE</div><div class="t">EST. TRIBUNAPP</div><div class="s">Lo que vota la gente</div></div>
+  </div>
+
+  <div class="h2">PLANTEL</div>
+  <div class="plantel" id="plantel"></div>
+  <div class="dt" id="dt"></div>
+
+  <p class="nota">Datos de FotMob · formación y puntajes para las ligas de Europa, próximamente</p>
+</main>
+
+<script src="js/euro.js"></script>
+<script>
+(async function () {
+  const id = (new URLSearchParams(location.search).get('id') || '8586').replace(/\D/g, '');
+  let C;
+  try { C = await EURO.json(`data/euro/clubes/${id}.json`); }
+  catch (e) { document.getElementById('club-nombre').textContent = 'Club no encontrado'; return; }
+  document.title = `${C.nombre} · Eurotribunapp — TribunApp`;
+  const color = C.color && C.color !== '#ffffff' ? C.color : '#4fc3f7';
+  document.getElementById('sub').style.setProperty('--cc', color + '66');
+  document.querySelectorAll('.tile .ac').forEach(a => a.style.background = color);
+  document.getElementById('club-nombre').textContent = C.nombre.toUpperCase();
+  document.getElementById('club-sub').textContent = `${C.liga.nombre} · ${C.pos}° · ${C.pts} pts` + (C.dt ? ` · DT ${C.dt}` : '');
+  document.getElementById('club-escudo').src = EURO.escudo(C.id);
+  document.getElementById('volver').href = `euro-liga.html?l=${C.liga.id}`;
+
+  // Próximo partido
+  const p = C.proximo;
+  if (p) {
+    const local = Number(p.local.id) === Number(C.id), rival = local ? p.visitante : p.local;
+    const t = EURO.ar(p.utcTime);
+    document.getElementById('proximo').innerHTML = `<div class="nextm"><img src="${EURO.escudo(rival.id)}" alt="">`
+      + `<div class="x"><div>VS ${EURO.esc(rival.nombre).toUpperCase()} (${local ? 'L' : 'V'})</div>`
+      + `<span>${EURO.esc(p.torneo || C.liga.nombre)}${t ? ' · ' + t.dia + ' · ' + t.hora + ' hs' : ''}</span></div>`
+      + `<div class="btn">ARMAR 11<small>próximamente</small></div></div>`;
+  }
+
+  // Últimos 5
+  const letra = { W: 'G', D: 'E', L: 'P' };
+  document.getElementById('forma').innerHTML = (C.forma || []).length
+    ? 'Últimos: ' + C.forma.map(f => `<div class="f ${f.r}" title="${EURO.esc((f.local ? 'vs ' : 'en cancha de ') + (f.rival || '') + ' · ' + (f.marcador || ''))}">${letra[f.r] || f.r}</div>`).join('')
+    : '';
+
+  // Plantel por puesto, en fichas con el color del club
+  const nombres = { keepers: 'ARQUEROS', defenders: 'DEFENSORES', midfielders: 'MEDIOCAMPISTAS', attackers: 'DELANTEROS' };
+  const apellido = n => { const p = (n || '').trim().split(/\s+/); return p.length > 1 ? p.slice(1).join(' ') : n; };
+  const texto = C.color && /^#f{3,6}$/i.test(C.color) ? '#132036' : '#fff';
+  document.getElementById('plantel').innerHTML = Object.keys(nombres).map(k => {
+    const js = (C.plantel || {})[k] || [];
+    if (!js.length) return '';
+    return `<h3>${nombres[k]} · ${js.length}</h3><div class="chips">` + js.map(j =>
+      `<div class="chip" title="${EURO.esc(j.nombre)}"><div class="k" style="background:${C.color || '#444'};color:${texto}">${j.num != null ? j.num : ''}</div>`
+      + `<div class="ap">${EURO.esc(apellido(j.nombre))}</div>${j.puesto ? `<div class="pu">${EURO.esc(j.puesto)}</div>` : ''}</div>`).join('') + '</div>';
+  }).join('') || '<div class="vacio">Sin plantel cargado.</div>';
+  if (C.dt) document.getElementById('dt').innerHTML = `Director técnico: <b>${EURO.esc(C.dt)}</b>`;
+})();
+</script>
+<script src="js/header-menu.js" defer></script>
+</body>
+</html>

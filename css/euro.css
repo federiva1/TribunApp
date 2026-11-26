@@ -1,0 +1,169 @@
+/* EUROTRIBUNAPP (prototipo, rama eurotribunapp): estilos compartidos de euro.html,
+   euro-liga.html y euro-club.html. Misma estética que el resto del sitio (index.html). */
+/* Fuentes locales (fonts/): no depender de Google Fonts para los títulos */
+@font-face { font-family: 'Bebas Neue'; font-weight: 400; src: url(../fonts/bebas-neue-latin-400-normal.woff2) format('woff2'); font-display: swap; }
+@font-face { font-family: 'Barlow Condensed'; font-weight: 400; src: url(../fonts/barlow-condensed-latin-400-normal.woff2) format('woff2'); font-display: swap; }
+@font-face { font-family: 'Barlow Condensed'; font-weight: 600; src: url(../fonts/barlow-condensed-latin-600-normal.woff2) format('woff2'); font-display: swap; }
+:root {
+  --dark: #0d0d1a; --dark2: #13131f; --celeste: #4fc3f7; --gold: #f5c518; --euro: #ffd54f;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: var(--dark); color: #fff; overflow-x: hidden; }
+a { color: inherit; }
+
+/* ===== HEADER (igual al del resto de las páginas) ===== */
+#site-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 18px 10px; gap: 12px;
+  background: linear-gradient(180deg, rgba(79,195,247,0.12) 0%, transparent 100%);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  position: sticky; top: 0; z-index: 50; backdrop-filter: blur(10px);
+}
+.logo-wrap { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.logo-wrap img { height: 72px; object-fit: contain; }
+@media (max-width: 430px) { .logo-wrap img { height: 60px; } }
+.header-actions { display: flex; gap: 8px; align-items: center; }
+.header-pill {
+  display: flex; align-items: center; gap: 7px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px; padding: 7px 13px;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 0.5px;
+  color: rgba(255,255,255,0.85); cursor: pointer; text-decoration: none;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+.header-pill svg { width: 15px; height: 15px; flex-shrink: 0; }
+.header-pill:hover { background: rgba(79,195,247,0.16); border-color: rgba(79,195,247,0.45); color: #fff; }
+.header-pill-label { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 0.5px; }
+.header-pill.euro { color: var(--euro); border-color: rgba(255,213,79,0.45); background: rgba(255,213,79,0.08); }
+.header-pill.euro:hover { background: rgba(255,213,79,0.16); border-color: rgba(255,213,79,0.7); color: #fff; }
+.header-pill.euro .header-pill-label { font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 1.5px; }
+@media (max-width: 560px) {
+  .header-pill-label { display: none; }
+  .header-pill { width: 36px; height: 36px; padding: 0; gap: 0; justify-content: center; }
+  .header-actions { gap: 6px; }
+}
+
+#main { max-width: 760px; margin: 0 auto; padding: 0 0 50px; }
+
+/* ===== BARRA DE SECCIÓN ===== */
+.sub {
+  display: flex; align-items: center; gap: 12px; padding: 14px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  background: linear-gradient(90deg, var(--cc, rgba(255,213,79,0.16)), transparent 75%);
+}
+.sub .bk { font-family: 'Barlow Condensed', sans-serif; font-size: 14px; color: rgba(255,255,255,0.6); text-decoration: none; white-space: nowrap; }
+.sub .bk:hover { color: #fff; }
+.sub .tt { flex: 1; min-width: 0; }
+.sub .tt h1 { font-family: 'Bebas Neue', sans-serif; font-weight: 400; font-size: 26px; letter-spacing: 2.5px; line-height: 1; }
+.sub .tt h1 b { color: var(--euro); font-weight: 400; }
+.sub .tt span { font-family: 'Barlow Condensed', sans-serif; font-size: 13.5px; color: rgba(255,255,255,0.58); }
+.sub .lg { width: 44px; height: 44px; object-fit: contain; flex: 0 0 auto; }
+.sub .lg.fondo { background: #fff; border-radius: 9px; padding: 4px; }
+
+.h2 { font-family: 'Bebas Neue', sans-serif; font-weight: 400; letter-spacing: 3px; font-size: 20px; margin: 20px 16px 10px; color: #e8edf7; }
+.h2 small { font-family: 'Barlow Condensed', sans-serif; font-size: 13.5px; letter-spacing: 0.5px; color: rgba(255,255,255,0.5); margin-left: 6px; }
+.vacio { font-family: 'Barlow Condensed', sans-serif; font-size: 14px; color: rgba(255,255,255,0.5); margin: 0 16px; }
+
+/* ===== LIGAS ===== */
+.ligas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0 16px; }
+@media (min-width: 700px) { .ligas { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 359px) { .ligas { grid-template-columns: minmax(0, 1fr); } }
+.lc { display: block; text-decoration: none; border-radius: 14px; border: 1px solid rgba(255,255,255,0.09);
+  background: linear-gradient(160deg, rgba(255,255,255,0.06), rgba(255,255,255,0.015)); padding: 11px 11px 10px 14px;
+  position: relative; overflow: hidden; transition: border-color 0.2s, transform 0.12s; }
+.lc:hover { border-color: rgba(255,213,79,0.5); }
+.lc:active { transform: scale(0.98); }
+.lc .bar { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+.lc .top1 { display: flex; align-items: center; gap: 9px; }
+.lc .top1 img { width: 38px; height: 38px; object-fit: contain; background: #fff; border-radius: 9px; padding: 3px; flex: 0 0 auto; }
+.lc .nm { font-family: 'Bebas Neue', sans-serif; letter-spacing: 1.5px; font-size: 20px; line-height: 1; }
+.lc .ps { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; color: rgba(255,255,255,0.55); }
+.lc .ld { display: flex; align-items: center; gap: 6px; margin-top: 9px; font-family: 'Barlow Condensed', sans-serif; font-size: 14px; color: #cfd6e6; min-width: 0; }
+.lc .ld img { width: 20px; height: 20px; object-fit: contain; flex: 0 0 auto; }
+.lc .ld span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lc .ld b { margin-left: auto; font-weight: 600; color: #fff; white-space: nowrap; }
+
+/* ===== PARTIDOS ===== */
+.mt { margin: 0 16px 8px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); border-radius: 12px;
+  padding: 9px 10px; display: flex; align-items: center; gap: 6px; }
+.mt .tm { flex: 1; min-width: 0; display: flex; align-items: center; gap: 7px; font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 15.5px; text-decoration: none; }
+.mt .tm span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mt .tm.r { justify-content: flex-end; text-align: right; }
+.mt img { width: 26px; height: 26px; object-fit: contain; flex: 0 0 auto; }
+.mt .c { width: 78px; flex: 0 0 auto; text-align: center; font-family: 'Barlow Condensed', sans-serif; font-size: 12px; color: rgba(255,255,255,0.55); line-height: 1.25; }
+.mt .c b { display: block; font-family: 'Bebas Neue', sans-serif; font-size: 17px; color: var(--celeste); letter-spacing: 1px; font-weight: 400; }
+.mt .c b.res { color: #fff; font-size: 21px; letter-spacing: 2px; }
+.mt .lgm { width: 18px; height: 18px; background: #fff; border-radius: 4px; padding: 1px; }
+.mt .gana { color: #fff; }
+.mt .pierde { color: rgba(255,255,255,0.55); }
+@media (max-width: 359px) { .mt .tm { font-size: 14px; } .mt img { width: 22px; height: 22px; } .mt .c { width: 64px; } }
+
+/* ===== TABS ===== */
+.tabs { display: flex; gap: 6px; margin: 14px 16px 6px; }
+.tabs button { flex: 1; font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; font-size: 16px; padding: 8px 0; border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.55); background: transparent; cursor: pointer; }
+.tabs button.on { color: #fff; border-color: rgba(79,195,247,0.5); background: rgba(79,195,247,0.14); }
+
+/* ===== GRILLA DE ESCUDOS (como la Zona A del index) ===== */
+.grid-eq { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; margin: 10px 16px 0; }
+.cell { display: block; text-decoration: none; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03);
+  border-radius: 12px; padding: 7px 4px 6px; text-align: center; position: relative; min-width: 0; transition: background 0.15s; }
+.cell:hover { background: rgba(255,255,255,0.07); }
+.cell .p { position: absolute; left: 7px; top: 5px; font-family: 'Barlow Condensed', sans-serif; font-size: 11.5px; color: rgba(255,255,255,0.45); }
+.cell img { width: 36px; height: 36px; object-fit: contain; margin-top: 7px; }
+.cell .n { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 600; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cell .pts { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; color: rgba(255,255,255,0.5); text-align: right; padding-right: 4px; }
+.leg { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 10px 16px 0; font-family: 'Barlow Condensed', sans-serif; font-size: 12.5px; color: rgba(255,255,255,0.6); }
+.leg i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+
+/* ===== TABLA COMPLETA ===== */
+.tabla { margin: 16px 16px 0; border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; overflow: hidden; background: rgba(255,255,255,0.02); }
+.tr { display: grid; grid-template-columns: 26px 22px minmax(0, 1fr) 26px 26px 26px 26px 32px 32px; gap: 3px; align-items: center;
+  padding: 6px 10px; border-bottom: 1px solid rgba(255,255,255,0.04); font-family: 'Barlow Condensed', sans-serif; font-size: 14px;
+  text-decoration: none; position: relative; }
+.tr:last-child { border-bottom: none; }
+.tr.head { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.03); }
+.tr .n { text-align: center; color: rgba(255,255,255,0.7); }
+.tr .pt { text-align: right; font-family: 'Bebas Neue', sans-serif; font-size: 17px; letter-spacing: 0.5px; }
+.tr.head .pt { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; }
+.tr .ps { text-align: center; font-family: 'Bebas Neue', sans-serif; font-size: 15px; color: rgba(255,255,255,0.55); }
+.tr img { width: 20px; height: 20px; object-fit: contain; }
+.tr .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+.tr .marca { position: absolute; left: 0; top: 4px; bottom: 4px; width: 3px; border-radius: 0 2px 2px 0; }
+a.tr:hover { background: rgba(255,255,255,0.04); }
+@media (max-width: 420px) { .tr { grid-template-columns: 22px 20px minmax(0, 1fr) 24px 24px 30px 30px; } .tr .gep { display: none; } }
+
+/* ===== CLUB ===== */
+.nextm { margin: 14px 16px 10px; border-radius: 14px; border: 1px solid rgba(79,195,247,0.35); background: rgba(79,195,247,0.07);
+  padding: 11px 12px; display: flex; align-items: center; gap: 11px; }
+.nextm img { width: 34px; height: 34px; object-fit: contain; flex: 0 0 auto; }
+.nextm .x { flex: 1; min-width: 0; }
+.nextm .x div { font-family: 'Bebas Neue', sans-serif; letter-spacing: 1.5px; font-size: 19px; line-height: 1.05; }
+.nextm .x span { font-family: 'Barlow Condensed', sans-serif; font-size: 13.5px; color: rgba(255,255,255,0.58); }
+.nextm .btn { font-family: 'Bebas Neue', sans-serif; letter-spacing: 1.5px; font-size: 15px; padding: 7px 10px; border-radius: 9px;
+  background: rgba(79,195,247,0.25); color: rgba(255,255,255,0.75); white-space: nowrap; text-align: center; line-height: 1.05; }
+.nextm .btn small { display: block; font-family: 'Barlow Condensed', sans-serif; font-size: 10.5px; letter-spacing: 0.5px; color: rgba(255,255,255,0.6); }
+.form { display: flex; gap: 6px; margin: 0 16px 14px; align-items: center; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; color: rgba(255,255,255,0.55); flex-wrap: wrap; }
+.form .f { width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 13px; color: #06120a; cursor: default; }
+.f.W { background: #2ad572; } .f.D { background: #9aa3b5; } .f.L { background: #ef5350; color: #fff; }
+.tiles { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin: 0 16px; }   /* una columna, como club.html */
+@media (min-width: 600px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.tile { position: relative; aspect-ratio: 1.78; border-radius: 14px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); background-size: cover; background-position: center; }
+.tile::before { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.05) 30%, rgba(5,8,18,0.9)); }
+.tile .ac { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--club, var(--celeste)); }
+.tile .t { position: absolute; left: 14px; bottom: 26px; font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 1.8px; }
+.tile .s { position: absolute; left: 14px; bottom: 8px; font-family: 'Barlow Condensed', sans-serif; font-size: 12.5px; color: rgba(255,255,255,0.7); }
+.tile .pronto { position: absolute; top: 10px; right: 10px; font-family: 'Bebas Neue', sans-serif; letter-spacing: 1.5px; font-size: 12.5px;
+  color: #111; background: var(--euro); border-radius: 6px; padding: 2px 7px; }
+.plantel { margin: 0 16px; }
+.plantel h3 { font-family: 'Bebas Neue', sans-serif; font-weight: 400; letter-spacing: 2px; font-size: 16px; color: rgba(255,255,255,0.7); margin: 14px 0 8px; }
+.chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 10px 6px; }
+.chip { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; }
+.chip .k { width: 40px; height: 40px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.9); box-shadow: 0 2px 5px rgba(0,0,0,0.45);
+  display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 19px; color: #fff;
+  text-shadow: -1px -1px 0 rgba(0,0,0,.55), 1px -1px 0 rgba(0,0,0,.55), -1px 1px 0 rgba(0,0,0,.55), 1px 1px 0 rgba(0,0,0,.55); }
+.chip .ap { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 600; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chip .pu { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; color: rgba(255,255,255,0.45); margin-top: -3px; }
+.dt { margin: 14px 16px 0; font-family: 'Barlow Condensed', sans-serif; font-size: 15px; color: rgba(255,255,255,0.7); }
+.dt b { color: #fff; font-weight: 600; }
+.nota { margin: 22px 16px 0; font-family: 'Barlow Condensed', sans-serif; font-size: 12.5px; color: rgba(255,255,255,0.38); text-align: center; }
