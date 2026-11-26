@@ -331,7 +331,7 @@ function playoffsProvisorios(po, liga) {
   let previas = null;              // llaves de la instancia anterior: [{a, b, ganador}]
   for (const ins of (po.instancias || []).sort((x, y) => x.fecha - y.fecha)) {
     let llaves;
-    if (ins.partidos) llaves = ins.partidos.map(m => ({ a: m.local || null, b: m.visitante || null, da: m.local_desc, db: m.visitante_desc }));
+    if (ins.partidos) llaves = ins.partidos.map(m => ({ a: m.local || null, b: m.visitante || null, da: m.local_desc, db: m.visitante_desc, cuando: m.cuando }));
     else if (previas) {
       llaves = [];
       for (let i = 0; i < previas.length; i += 2) {
@@ -354,7 +354,7 @@ function playoffsProvisorios(po, liga) {
     const enLiga = new Set(liga.filter(p => p.fase && p.fecha === ins.fecha)
       .flatMap(p => [p.home.slug, p.away.slug]));
     llaves.filter(ll => !enLiga.has(ll.a) && !enLiga.has(ll.b)).forEach(ll => out.push({
-      provisorio: true, cuando: ins.cuando, fecha: ins.fecha, fase: ins.fase, round: '', api_id: '',
+      provisorio: true, cuando: ll.cuando || ins.cuando, fecha: ins.fecha, fase: ins.fase, round: '', api_id: '',
       home: { slug: ll.a, name: '', desc: ll.da }, away: { slug: ll.b, name: '', desc: ll.db },
       home_score: null, away_score: null, home_pen: null, away_pen: null, winner: null,
       status: { utcTime: '', started: false, finished: false, short: 'TBD', elapsed: null },
