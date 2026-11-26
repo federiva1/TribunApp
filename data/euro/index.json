@@ -1,6 +1,28 @@
 {
  "ligas": [
   {
+   "id": 42,
+   "nombre": "Champions League",
+   "pais": "Europa",
+   "color": "#1d4ed8",
+   "temporada": "2026/2027",
+   "fecha": "6",
+   "lider": {
+    "pos": 1,
+    "id": 8633,
+    "nombre": "Real Madrid",
+    "corto": "Real Madrid",
+    "pj": 5,
+    "g": 5,
+    "e": 0,
+    "p": 0,
+    "goles": "18-8",
+    "dg": 10,
+    "pts": 15,
+    "color": "#2AD572"
+   }
+  },
+  {
    "id": 47,
    "nombre": "Premier League",
    "pais": "Inglaterra",
@@ -124,6 +146,7 @@
    },
    "utcTime": "2026-11-27T19:45:00Z",
    "terminado": false,
+   "cancelado": false,
    "goles_local": null,
    "goles_visitante": null,
    "liga": 53
@@ -140,6 +163,7 @@
    },
    "utcTime": "2026-11-28T20:00:00Z",
    "terminado": false,
+   "cancelado": false,
    "goles_local": null,
    "goles_visitante": null,
    "liga": 87
@@ -156,6 +180,7 @@
    },
    "utcTime": "2026-11-29T16:30:00Z",
    "terminado": false,
+   "cancelado": false,
    "goles_local": null,
    "goles_visitante": null,
    "liga": 47
@@ -172,6 +197,7 @@
    },
    "utcTime": "2026-11-29T18:30:00Z",
    "terminado": false,
+   "cancelado": false,
    "goles_local": null,
    "goles_visitante": null,
    "liga": 54
@@ -188,10 +214,28 @@
    },
    "utcTime": "2026-11-29T19:45:00Z",
    "terminado": false,
+   "cancelado": false,
    "goles_local": null,
    "goles_visitante": null,
    "liga": 55
+  },
+  {
+   "id": "6106258",
+   "local": {
+    "id": 9825,
+    "nombre": "Arsenal"
+   },
+   "visitante": {
+    "id": 8633,
+    "nombre": "Real Madrid"
+   },
+   "utcTime": "2026-12-09T20:00:00Z",
+   "terminado": false,
+   "cancelado": false,
+   "goles_local": null,
+   "goles_visitante": null,
+   "liga": 42
   }
  ],
- "actualizado": "2026-11-26T15:58:59Z"
+ "actualizado": "2026-11-26T17:10:22Z"
 }

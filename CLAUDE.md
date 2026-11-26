@@ -460,20 +460,24 @@ Title "TribunApp — Fútbol Argentino". Header con pills Fixture / Tablas / Est
 Tabs **Torneo actual** (zonas A/B), **Anual** y **Promedios**. La **Tabla xG** se sacó de la web el 2026-10-11 (pedido de Fede): `data/tabla_xg.json` se sigue generando en cada cierre, pero ninguna página lo lee; para volver a mostrarla, recuperar el tab desde el historial de `tablas.html`. Las tres tablas salen de un solo `standings` corregido por `sfCorregirConLiga`. El promedio usa `PROMEDIO_HIST` **hardcodeado** (puntos/PJ de temporadas anteriores) — recalcular en 2027.
 
 ### Eurotribunapp (rama eurotribunapp, prototipo)
-Sección **EUROTRIBUNAPP** con las 5 grandes ligas de Europa (Premier 47, LaLiga 87, Serie A 55, Bundesliga 54, Ligue 1 53 = ids FotMob). Es **solo un prototipo en su rama**: no está en `master`. Se entra por la pill dorada **★ EURO** del header de `index.html`, que también aparece en el menú ☰, y por el banner `.euroban`, que está debajo del toggle LOCAL/COPAS.
-- **Páginas**:
-  - `euro.html`: las 5 ligas y un partido destacado por liga, que es el de la próxima fecha con la menor suma de posiciones.
-  - `euro-liga.html?l={id}`: tabs Tabla (con leyenda de clasificación), Fechas (la última jugada y la próxima) y Equipos.
+Sección **EUROTRIBUNAPP**: la **Champions League** y las 5 grandes ligas de Europa (Premier 47, LaLiga 87, Serie A 55, Bundesliga 54, Ligue 1 53, Champions 42 = ids FotMob). Es **solo un prototipo en su rama**: no está en `master`. Se entra por la pill dorada **★ EURO** del header de `index.html` (también en el menú ☰) y por el banner `.euroban` debajo del toggle LOCAL/COPAS.
+- **Modo Euro = otro header** (pedido de Fede): dorado pleno, con **EURO** (inicio), **Fixture** y **Tablas** *de la competición que se está mirando* y **Argentina** (vuelve al home argentino; el logo también). Lo arma `EURO.header(donde, lid)` en `js/euro.js` — las páginas Euro no repiten los botones a mano. La competición sale de `?l=` y si no de la última mirada (`localStorage.euro_liga`), por defecto la Champions; todos los links a un club llevan `&l=`. En `euro-club.html` el menú ☰ (`js/header-menu.js`) se carga recién cuando el club ya cargó (clona los botones del header). No hay botones Estadísticas/TribunApp: todavía no existen para Europa. Fuera del modo Euro (el resto del sitio) el header es el de siempre.
+- **Páginas** (sin flechas de "volver": el logo, EURO y Argentina ya navegan):
+  - `euro.html`: las 6 competiciones (líder y fecha) y **partidos destacados**, uno por competición (el de la próxima fecha con menor suma de posiciones).
+  - `euro-liga.html?l={id}` (**Tablas**): dos columnas — a la izquierda los equipos en grilla de **4 por fila** (5 filas con 20 equipos; la Champions, 9) con el color de clasificación, a la derecha la **tabla de posiciones**; en el celular una debajo de la otra. Arriba, una barra con las 6 competiciones para cambiar sin volver (`EURO.selector`).
+  - `euro-fixture.html?l={id}[&r={ronda}]` (**Fixture**): navegación por fecha (‹ select ›) con **todas** las rondas de la temporada, agrupadas por día en hora argentina; abre en la próxima fecha. Las fechas ya no están en la página de la liga. Etiquetas con `EURO.ronda()`: "Fecha N", "Jornada N" en la Champions, y las eliminatorias por su nombre (Playoff, Octavos, Cuartos, Semifinales, Final).
   - `euro-club.html?id={fotmob_id}`: próximo partido, forma de los últimos 5 y plantel por puesto con su DT. Los tiles de Formación, Puntajes y Estadísticas dicen **"Próximamente"**: todavía no hay votos ni stats.
   - Estilos en `css/euro.css`, con Bebas/Barlow locales de `fonts/`. Helpers en `js/euro.js` (`EURO.ar()` es la hora AR = UTC-3).
-- **Datos**: los arma `python scripts/fetch_euro.py`, que lee el `__NEXT_DATA__` por HTTP con `_next_data_http` de `scrape_fotmob_mundial`. Opciones: `--sin-clubes` saltea los planteles, y un id de liga baja solo esa. Escribe:
+- **Champions League**: la tabla es la fase de liga (36 equipos, una sola tabla con la leyenda de clasificación a octavos y a playoff). Los clubes que no juegan en las 5 ligas (Feyenoord, Benfica…) tienen su archivo con la Champions como "liga". Las eliminatorias aparecen solas como rondas nuevas cuando FotMob las publica (`RONDAS_KO` en `fetch_euro.py` las ordena).
+- **Datos**: los arma `python scripts/fetch_euro.py`, que lee el `__NEXT_DATA__` por HTTP con `_next_data_http` de `scrape_fotmob_mundial`. Opciones: `--sin-clubes` saltea los planteles, `--faltantes` baja solo los clubes sin archivo (lo normal al sumar una liga) y un id de liga baja solo esa. Escribe:
   - `data/euro/{id}.json`: tabla, leyenda, última fecha y próxima.
-  - `data/euro/clubes/{id}.json`: los 96 clubes.
+  - `data/euro/fixture/{id}.json`: todas las rondas (para `euro-fixture.html`).
+  - `data/euro/clubes/{id}.json`: los 111 clubes.
   - `data/euro/index.json`.
   - **Última fecha** = la de número más alto con todos sus partidos terminados o cancelados; **próxima** = la primera sin terminar después de esa. Así un partido postergado no arrastra la fecha.
   - Es una **foto fija**: para actualizarla hay que volver a correr el script.
-- **Escudos y logos**: hotlink a `images.fotmob.com`. La CSP ya permite `img-src https:`, así que no hubo que tocar `vercel.json`.
-- **Header**: `js/header-menu.js` mide el header (`medir()`, al cargar y en resize). Si las pills no entran (`scrollWidth > clientWidth`), le pone `.hm-compacto` y pasa al ☰ a cualquier ancho. Rige para todas las páginas y hace falta porque con 5 pills el header puede desbordar.
+- **Escudos y logos**: hotlink a `images.fotmob.com`. La CSP ya permite `img-src https:`, así que no hubo que tocar `vercel.json`. (En el entorno de la nube están bloqueados: en las pruebas con Playwright se ven rotos, el resto anda.)
+- **Header**: `js/header-menu.js` mide el header (`medir()`, al cargar y en resize). Si las pills no entran (`scrollWidth > clientWidth`), le pone `.hm-compacto` y pasa al ☰ a cualquier ancho. En las páginas Euro, `css/euro.css` repinta el ☰ y el botón de cuenta para el header dorado (con `#site-header` delante para ganarle a los estilos que inyectan esos scripts).
 
 ## Mundial 2026 Module (terminado — módulo conservado)
 

@@ -1,5 +1,5 @@
 /* EUROTRIBUNAPP (prototipo, rama eurotribunapp): estilos compartidos de euro.html,
-   euro-liga.html y euro-club.html. Misma estética que el resto del sitio (index.html). */
+   euro-liga.html (tabla), euro-fixture.html y euro-club.html. Misma estética que el resto del sitio (index.html). */
 /* Fuentes locales (fonts/): no depender de Google Fonts para los títulos */
 @font-face { font-family: 'Bebas Neue'; font-weight: 400; src: url(../fonts/bebas-neue-latin-400-normal.woff2) format('woff2'); font-display: swap; }
 @font-face { font-family: 'Barlow Condensed'; font-weight: 400; src: url(../fonts/barlow-condensed-latin-400-normal.woff2) format('woff2'); font-display: swap; }
@@ -15,8 +15,9 @@ a { color: inherit; }
 #site-header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 12px 18px 10px; gap: 12px;
-  background: linear-gradient(180deg, rgba(79,195,247,0.12) 0%, transparent 100%);
-  border-bottom: 1px solid rgba(255,255,255,0.07);
+  /* dorado: así se distingue de un vistazo que estás en el modo Euro */
+  background: linear-gradient(180deg, #e8b923 0%, #b78d12 100%);
+  border-bottom: 2px solid #ffe082;
   position: sticky; top: 0; z-index: 50; backdrop-filter: blur(10px);
 }
 .logo-wrap { display: flex; align-items: center; gap: 10px; text-decoration: none; }
@@ -25,17 +26,27 @@ a { color: inherit; }
 .header-actions { display: flex; gap: 8px; align-items: center; }
 .header-pill {
   display: flex; align-items: center; gap: 7px;
-  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(10,10,26,0.30); border: 1px solid rgba(255,255,255,0.30);
   border-radius: 10px; padding: 7px 13px;
   font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 0.5px;
-  color: rgba(255,255,255,0.85); cursor: pointer; text-decoration: none;
+  color: #fff; cursor: pointer; text-decoration: none;
   transition: background 0.2s, color 0.2s, border-color 0.2s;
 }
 .header-pill svg { width: 15px; height: 15px; flex-shrink: 0; }
-.header-pill:hover { background: rgba(79,195,247,0.16); border-color: rgba(79,195,247,0.45); color: #fff; }
+.header-pill:hover { background: rgba(10,10,26,0.5); border-color: rgba(255,255,255,0.6); color: #fff; }
+.header-pill.on { background: #0d0d1a; border-color: #0d0d1a; color: var(--euro); }
+/* menú ☰ (js/header-menu.js inyecta su CSS después de este: la especificidad lo hace ganar acá) */
+#site-header .header-menu-btn { background: rgba(10,10,26,0.30); border-color: rgba(255,255,255,0.30); color: #fff; }
+#site-header .header-menu-btn[aria-expanded="true"] { background: #0d0d1a; border-color: #0d0d1a; color: var(--euro); }
+#site-header .cuenta-btn { background: rgba(10,10,26,0.30); border-color: rgba(255,255,255,0.30); }
+#site-header .cuenta-btn:hover { background: rgba(10,10,26,0.5); }
+#site-header .cuenta-btn svg { color: #fff; }
+body .header-menu-panel { border-color: rgba(255,213,79,0.4); }
+body .header-menu-panel a:hover, body .header-menu-panel a:active { background: rgba(255,213,79,0.16); }
+body .header-menu-panel a svg { color: var(--euro); }
 .header-pill-label { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 0.5px; }
-.header-pill.euro { color: var(--euro); border-color: rgba(255,213,79,0.45); background: rgba(255,213,79,0.08); }
-.header-pill.euro:hover { background: rgba(255,213,79,0.16); border-color: rgba(255,213,79,0.7); color: #fff; }
+.header-pill.euro .header-pill-label { color: var(--euro); }
+.header-pill.euro svg { color: var(--euro); }
 .header-pill.euro .header-pill-label { font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 1.5px; }
 @media (max-width: 560px) {
   .header-pill-label { display: none; }
@@ -44,6 +55,7 @@ a { color: inherit; }
 }
 
 #main { max-width: 760px; margin: 0 auto; padding: 0 0 50px; }
+#main.ancho { max-width: 1100px; }     /* la liga: equipos a la izquierda y tabla a la derecha */
 
 /* ===== BARRA DE SECCIÓN ===== */
 .sub {
@@ -63,6 +75,16 @@ a { color: inherit; }
 .h2 { font-family: 'Bebas Neue', sans-serif; font-weight: 400; letter-spacing: 3px; font-size: 20px; margin: 20px 16px 10px; color: #e8edf7; }
 .h2 small { font-family: 'Barlow Condensed', sans-serif; font-size: 13.5px; letter-spacing: 0.5px; color: rgba(255,255,255,0.5); margin-left: 6px; }
 .vacio { font-family: 'Barlow Condensed', sans-serif; font-size: 14px; color: rgba(255,255,255,0.5); margin: 0 16px; }
+
+/* ===== SELECTOR DE COMPETICIONES ===== */
+.ligas-bar { display: flex; gap: 6px; overflow-x: auto; padding: 12px 16px 2px; scrollbar-width: none; }
+.ligas-bar::-webkit-scrollbar { display: none; }
+.chip-liga { flex: 0 0 auto; display: flex; align-items: center; gap: 6px; padding: 5px 12px 5px 6px; border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.12); text-decoration: none; font-family: 'Barlow Condensed', sans-serif; font-size: 14.5px;
+  color: rgba(255,255,255,0.7); transition: background 0.15s, border-color 0.15s; }
+.chip-liga img { width: 21px; height: 21px; object-fit: contain; background: #fff; border-radius: 6px; padding: 1px; }
+.chip-liga:hover { background: rgba(255,255,255,0.06); }
+.chip-liga.on { border-color: var(--euro); background: rgba(255,213,79,0.14); color: #fff; }
 
 /* ===== LIGAS ===== */
 .ligas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0 16px; }
@@ -98,14 +120,30 @@ a { color: inherit; }
 .mt .pierde { color: rgba(255,255,255,0.55); }
 @media (max-width: 359px) { .mt .tm { font-size: 14px; } .mt img { width: 22px; height: 22px; } .mt .c { width: 64px; } }
 
-/* ===== TABS ===== */
-.tabs { display: flex; gap: 6px; margin: 14px 16px 6px; }
-.tabs button { flex: 1; font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; font-size: 16px; padding: 8px 0; border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.55); background: transparent; cursor: pointer; }
-.tabs button.on { color: #fff; border-color: rgba(79,195,247,0.5); background: rgba(79,195,247,0.14); }
+/* ===== FIXTURE: navegación por fecha ===== */
+.rnav { display: flex; align-items: center; gap: 8px; margin: 14px 16px 2px; }
+.rnav button { width: 40px; height: 40px; flex: 0 0 auto; border-radius: 10px; border: 1px solid rgba(255,213,79,0.35); background: rgba(255,213,79,0.08);
+  color: #fff; font-size: 20px; line-height: 1; cursor: pointer; }
+.rnav button:hover:not(:disabled) { background: rgba(255,213,79,0.22); }
+.rnav button:disabled { opacity: 0.25; cursor: default; }
+.rnav .rt { flex: 1; min-width: 0; text-align: center; }
+.rnav select { appearance: none; -webkit-appearance: none; background: transparent; border: 0; color: #fff; text-align: center; text-align-last: center;
+  font-family: 'Bebas Neue', sans-serif; letter-spacing: 2.5px; font-size: 24px; line-height: 1.1; cursor: pointer; max-width: 100%; padding: 0 4px; }
+.rnav select option { background: #151a2b; color: #fff; font-size: 16px; letter-spacing: 0; }
+.rnav .rt small { display: block; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; color: rgba(255,255,255,0.55); }
+.dia { margin: 16px 16px 6px; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.45); }
 
-/* ===== GRILLA DE ESCUDOS (como la Zona A del index) ===== */
-.grid-eq { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; margin: 10px 16px 0; }
+/* ===== LIGA: dos columnas (equipos | tabla) ===== */
+.dos { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; align-items: start; }
+@media (min-width: 880px) {
+  .dos { grid-template-columns: minmax(0, 440px) minmax(0, 1fr); gap: 22px; padding: 0 16px; }
+  .dos .grid-eq, .dos .leg, .dos .tabla { margin-left: 0; margin-right: 0; }
+}
+.dos .tabla { margin-top: 12px; }
+
+/* ===== GRILLA DE ESCUDOS (como la Zona A del index): 4 equipos por fila ===== */
+.grid-eq { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 12px 16px 0; }
+@media (max-width: 360px) { .grid-eq { gap: 6px; } .cell .n { font-size: 12px; } .cell img { width: 30px; height: 30px; } }
 .cell { display: block; text-decoration: none; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03);
   border-radius: 12px; padding: 7px 4px 6px; text-align: center; position: relative; min-width: 0; transition: background 0.15s; }
 .cell:hover { background: rgba(255,255,255,0.07); }

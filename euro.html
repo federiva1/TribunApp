@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Eurotribunapp — Las grandes ligas de Europa · TribunApp</title>
+<title>Eurotribunapp — Champions y grandes ligas de Europa · TribunApp</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="Logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,41 +12,22 @@
 <link rel="stylesheet" href="css/euro.css">
 </head>
 <body>
-<!-- EUROTRIBUNAPP (prototipo, rama eurotribunapp): las 5 grandes ligas de Europa con datos de
-     FotMob (data/euro/, scripts/fetch_euro.py). Cada liga → euro-liga.html, cada club → euro-club.html. -->
+<!-- EUROTRIBUNAPP (prototipo, rama eurotribunapp): la Champions y las 5 grandes ligas de Europa con datos de
+     FotMob (data/euro/, scripts/fetch_euro.py). Header propio (dorado) armado por EURO.header() en js/euro.js:
+     Fixture y Tablas de la competición que se está mirando; el logo y "Argentina" vuelven al home argentino. -->
 <header id="site-header">
-  <a class="logo-wrap" href="index.html"><img src="logo-header.png" alt="TribunApp"></a>
-  <div class="header-actions">
-    <a class="header-pill euro" href="euro.html">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5-4.8-4.6 6.6-.9z"/></svg>
-      <span class="header-pill-label">EURO</span>
-    </a>
-    <a class="header-pill" href="fixture.html">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-      <span class="header-pill-label">Fixture</span>
-    </a>
-    <a class="header-pill" href="tablas.html">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-      <span class="header-pill-label">Tablas</span>
-    </a>
-    <a class="header-pill" href="estadisticas-torneo.html">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-      <span class="header-pill-label">Estadísticas</span>
-    </a>
-    <a class="header-pill" href="estadisticas-tribunapp.html">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      <span class="header-pill-label">TribunApp</span>
-    </a>
-  </div>
+  <a class="logo-wrap" href="index.html" title="Volver a TribunApp Argentina"><img src="logo-header.png" alt="TribunApp"></a>
+  <div class="header-actions"></div>
 </header>
+<script src="js/euro.js"></script>
+<script>EURO.header('home');</script>
 
 <main id="main">
   <div class="sub">
-    <a class="bk" href="index.html">← TribunApp</a>
-    <div class="tt"><h1>EURO<b>TRIBUNAPP</b></h1><span>Las 5 grandes ligas de Europa, con la mecánica de siempre</span></div>
+    <div class="tt"><h1>EURO<b>TRIBUNAPP</b></h1><span>La Champions y las 5 grandes ligas de Europa, con la mecánica de siempre</span></div>
   </div>
 
-  <div class="h2">LIGAS</div>
+  <div class="h2">COMPETICIONES</div>
   <div class="ligas" id="ligas"><div class="vacio">Cargando…</div></div>
 
   <div class="h2">PARTIDOS DESTACADOS <small>próxima fecha · hora argentina</small></div>
@@ -55,7 +36,6 @@
   <p class="nota" id="nota"></p>
 </main>
 
-<script src="js/euro.js"></script>
 <script>
 (async function () {
   let idx;
@@ -65,13 +45,13 @@
     const ld = L.lider;
     return `<a class="lc" href="euro-liga.html?l=${L.id}"><div class="bar" style="background:${L.color}"></div>`
       + `<div class="top1"><img src="${EURO.logoLiga(L.id)}" alt=""><div><div class="nm">${EURO.esc(L.nombre)}</div>`
-      + `<div class="ps">${EURO.esc(L.pais)}${L.fecha ? ' · Fecha ' + EURO.esc(L.fecha) : ''}</div></div></div>`
+      + `<div class="ps">${EURO.esc(L.pais)}${L.fecha ? ' · ' + EURO.esc(EURO.ronda(L.fecha, L.id)) : ''}</div></div></div>`
       + (ld ? `<div class="ld"><img src="${EURO.escudo(ld.id)}" alt=""><span>${EURO.esc(ld.corto)}</span><b>${ld.pts} pts</b></div>` : '')
       + `</a>`;
   }).join('');
   const d = idx.destacados || [];
   document.getElementById('destacados').innerHTML = d.length
-    ? d.map(p => EURO.partido(p, { liga: p.liga })).join('')
+    ? d.map(p => EURO.partido(p, { liga: p.liga, logo: true })).join('')
     : '<div class="vacio">Sin partidos en los próximos días.</div>';
   if (idx.actualizado) {
     const t = EURO.ar(idx.actualizado);
