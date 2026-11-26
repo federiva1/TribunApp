@@ -254,6 +254,15 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   .sec-header.lib .sec-box, .sec-header.sud .sec-box { padding: 8px 14px; gap: 8px; }
 }
 
+/* Pantallas muy angostas (< 360 px): la botonera y las columnas se achican para no ensanchar
+   la página; si no, la grilla de equipos quedaba cortada en vez de pasar a menos columnas. */
+@media (max-width: 359px) {
+  .vista-toggle { max-width: 100%; }
+  .vista-btn { font-size: 15px; letter-spacing: 1.5px; padding: 6px 11px 4px; }
+  .dos-cols > section { min-width: 0; }
+}
+@media (max-width: 259px) { .tz-row { padding: 6px 5px; gap: 2px; } }
+
 /* ===== COMPACTO (escritorio): que la home entera entre en pantallas de poco alto ===== */
 @media (min-width: 901px) {
   #main { padding-top: 14px; padding-bottom: 30px; }
@@ -354,7 +363,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 }
 /* celular: una ronda debajo de la otra */
 .pl-m-ronda { margin-bottom: 16px; }
-.pl-m-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pl-m-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }   /* minmax(0,…): los nombres no ensanchan la columna */
 .pl-m-grid.uno { grid-template-columns: minmax(0, 260px); justify-content: center; }
 .pl-mob .pl-camp { margin-bottom: 8px; }
 .pl-mob .pl-trofeo { margin-top: 12px; }
@@ -880,7 +889,7 @@ async function fetchPosiciones() {
 function renderTablaZona(letra, teams) {
   const cont = document.getElementById('tabla-' + letra);
   if (!cont || !teams || !teams.length) return;
-  cont.style.setProperty('--tz-cols', '22px 22px 1fr 26px 30px 32px');
+  cont.style.setProperty('--tz-cols', '22px 22px minmax(0, 1fr) 26px 30px 32px');
   let html = '<div class="tz-wrap"><div class="tz-row tz-head"><div class="r">#</div><div></div><div>Equipo</div>' +
     '<div class="n">PJ</div><div class="n">DG</div><div class="p">Pts</div></div>';
   teams.forEach((t, i) => {
@@ -1077,5 +1086,6 @@ document.getElementById('loading-state').style.display = 'none';
 document.getElementById('contenido').style.display = '';
 </script>
 <script src="js/ui-help.js"></script>
+<script src="js/header-menu.js" defer></script>
 </body>
 </html>
