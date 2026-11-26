@@ -1,0 +1,21 @@
+{
+  "name": "TribunApp",
+  "short_name": "TribunApp",
+  "description": "Armá tu formación antes de cada partido, seguilo en vivo y puntuá a los jugadores. Fútbol argentino y europeo.",
+  "lang": "es-AR",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0d0d1a",
+  "theme_color": "#0d0d1a",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Fixture", "url": "/fixture.html", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Tablas", "url": "/tablas.html", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] }
+  ]
+}
