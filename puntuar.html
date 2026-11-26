@@ -324,7 +324,7 @@ async function init() {
 
   const compLbl = copa
     ? `${copa === 'libertadores' ? 'Copa Libertadores' : 'Copa Sudamericana'}${m.ronda ? ' · ' + m.ronda.replace(/\s+de\s+Final$/i, '') : ''}${m.leg ? ' · ' + m.leg : ''}`
-    : (m.round ? m.round.replace(/\s*-\s*/, ' · Fecha ') : (m.fecha_num ? 'Fecha ' + m.fecha_num : 'Liga Profesional'));
+    : (m.fecha_num ? `${/apertura/i.test(m.round) ? 'Apertura' : 'Clausura'} · ${etiquetaFecha(m.fecha_num)}` : 'Liga Profesional');
   const escudo = s => esArg(s) ? `escudos/${s}.png` : (m.logos[s] || `escudos/${s}.png`);
   const hs = entry ? entry.goles_local : m.hs, as = entry ? entry.goles_visitante : m.as;
   const jugado = estado !== 'pre' && hs != null && as != null;

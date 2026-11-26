@@ -148,6 +148,46 @@ python scripts/social_tabla.py --sub "FECHA 11"
   se pidan. Si se cambian esos tamaños, verificar que la última fila no se salga
   (pasó con 6 filas de 112px).
 
+## 5. Playoffs — cuadro y cruces
+
+`social_cruces.py`. **Por defecto, el cuadro**: placa apaisada 16:9 (1280×720 ×2) con las
+llaves como en el cuadro del inicio (octavos → cuartos → semis → final desde los dos
+costados, cada llave con los dos equipos uno arriba del otro, posición en la zona y escudo).
+Las rondas siguientes se completan solas con los ganadores de `liga.json` (marcador y
+penales); lo que falta dice "A DEFINIR", y con campeón aparece su escudo y el trofeo se
+enciende.
+
+```bash
+python scripts/social_cruces.py --sub "OCTAVOS 21 Y 22 DE NOVIEMBRE · FINAL 12 DE DICIEMBRE EN LA PLATA"
+```
+
+Con `--lista`, una tarjeta por cruce con escudos, nombres y la posición de cada
+uno en su zona ("1° ZONA A"), en el orden del cuadro y de a pares (los dos cruces de
+cada par se enfrentan en la instancia siguiente).
+
+```bash
+python scripts/social_cruces.py --lista --sub "21 Y 22 DE NOVIEMBRE"   # octavos
+python scripts/social_cruces.py --lista --fase cuartos                  # cuartos | semis | final
+```
+
+- Salen en `data/social/preview/cuadro-playoffs.png` y `cruces-{fase}.png`.
+- **Clasificado**: `python scripts/social_cruces.py --clasificado velezsarsfield` → placa vertical
+  "CLASIFICADO A CUARTOS DE FINAL" (o "CAMPEÓN" si ganó la final): escudo grande, el
+  resultado de la llave con los penales si los hubo, y el próximo rival ("Argentinos o
+  Independiente" si la otra llave no se jugó) con la fecha de `data/playoffs.json`. Sale de
+  `liga.json`, así que **primero hay que cerrar el partido** (con `home_pen`/`away_pen` y
+  `winner`, que el cierre rápido ya completa). Archivo `clasificado-{slug}.png`.
+- **Campeón de copa**: `python scripts/social_cruces.py --campeon-copa sudamericana` (o
+  `libertadores`) → mismo diseño que *Clasificado*, con "CAMPEÓN · COPA SUDAMERICANA 2026", ciudad y
+  día de la final arriba y el resultado. Sale de `copas.json` (correr antes `fetch_copas_fixtures.py`).
+  El rival extranjero necesita `escudos/{slug}.png` (slug del nombre api-sports, ej. `atleticomg`;
+  se baja de `images.fotmob.com/image_resources/logo/teamlogo/{fotmob_id}.png`). Archivo `campeon-{copa}.png`.
+- Si `liga.json` ya trae los partidos de la instancia (campo `fase`), salen de ahí con
+  día y hora en cada tarjeta. Si no, los octavos se arman con la tabla final de
+  api-sports y el formato del torneo (`PL_OCTAVOS`, igual que el cuadro del index).
+- Tuit: `#Club vs #Club` por línea. X cuenta los emojis como 2 y el link como 23:
+  con los 8 octavos queda justo, contar antes de pasarlo.
+
 ---
 
 ## Detalles que ya costaron una corrección
