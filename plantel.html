@@ -233,8 +233,9 @@ const CLUB = CLUBES_CONFIG[SLUG];
 const TEMPORADA = '2027';
 // Zonas de la cancha. Cada línea tiene filas de zonas, de arriba (ataque) a abajo (arco).
 const ZONAS = {
-  DC:  { nombre: 'Centrodelanteros', corto: 'Centrodelantero', linea: 'DEL' },
-  EXT: { nombre: 'Extremos', corto: 'Extremo', linea: 'DEL' },
+  EXI: { nombre: 'Extremo izq.', corto: 'Extremo izquierdo', linea: 'DEL' },
+  DC:  { nombre: 'Centrodelanteros', corto: 'Centrodelantero', linea: 'DEL', cls: 'ancha' },
+  EXD: { nombre: 'Extremo der.', corto: 'Extremo derecho', linea: 'DEL' },
   ENG: { nombre: 'Enganche / organizador', corto: 'Enganche', linea: 'MED', cls: 'chica' },
   INT: { nombre: 'Internos', corto: 'Interno', linea: 'MED' },
   VC:  { nombre: 'Volantes centrales', corto: 'Volante central', linea: 'MED' },
@@ -244,7 +245,7 @@ const ZONAS = {
   ARQ: { nombre: 'Arqueros', corto: 'Arquero', linea: 'ARQ' },
 };
 const LINEAS = [
-  { k: 'DEL', nombre: 'Delanteros', cls: 'del', filas: [['DC'], ['EXT']] },
+  { k: 'DEL', nombre: 'Delanteros', cls: 'del', filas: [['EXI', 'DC', 'EXD']] },
   { k: 'MED', nombre: 'Mediocampistas', cls: '', filas: [['ENG'], ['INT'], ['VC']] },
   { k: 'DEF', nombre: 'Defensores', cls: 'mitad', filas: [['LI', 'CEN', 'LD']] },
   { k: 'ARQ', nombre: 'Arqueros', cls: 'arq', filas: [['ARQ']] },
@@ -253,7 +254,7 @@ const LINEAS = [
 const ZONA_FM = {
   GK: 'ARQ', RB: 'LD', RWB: 'LD', LB: 'LI', LWB: 'LI', CB: 'CEN',
   CDM: 'VC', DM: 'VC', CM: 'INT', CAM: 'ENG', AM: 'ENG',
-  LM: 'EXT', RM: 'EXT', LW: 'EXT', RW: 'EXT', ST: 'DC', CF: 'DC',
+  LM: 'EXI', LW: 'EXI', RM: 'EXD', RW: 'EXD', ST: 'DC', CF: 'DC',
 };
 // Sin puesto en FotMob: la línea del plantel decide (juveniles, recién llegados).
 const ZONA_LINEA = { keepers: 'ARQ', defenders: 'CEN', midfielders: 'INT', attackers: 'DC' };
@@ -328,7 +329,16 @@ function desdePlantel(arr) {
 }
 function guardar() { try { localStorage.setItem(LS_KEY, JSON.stringify(ST)); } catch (e) {} }
 function cargarGuardado() {
-  try { const s = JSON.parse(localStorage.getItem(LS_KEY) || 'null'); if (s && Array.isArray(s.jugadores)) return s; } catch (e) {}
+  try {
+    const s = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
+    if (s && Array.isArray(s.jugadores)) {
+      s.jugadores.forEach(j => {                       // "Extremos" (una sola zona) se separó en izq./der.
+        if (j.pos === 'EXT') j.pos = ZONA_FM[(PUESTOS[j.club] || {})[String(j.fid)]] === 'EXD' ? 'EXD' : 'EXI';
+        if (!ZONAS[j.pos]) j.pos = 'INT';
+      });
+      return s;
+    }
+  } catch (e) {}
   return null;
 }
 const enCancha = () => ST.jugadores.filter(j => j.estado === 'cancha');
@@ -569,7 +579,7 @@ function abrirCrear(nombre) {
 }
 function pintarCrPos() {
   const pz = document.getElementById('cr-puestos'); pz.innerHTML = '';
-  ['DC', 'EXT', 'ENG', 'INT', 'VC', 'LI', 'CEN', 'LD', 'ARQ'].forEach(k => {
+  ['EXI', 'DC', 'EXD', 'ENG', 'INT', 'VC', 'LI', 'CEN', 'LD', 'ARQ'].forEach(k => {
     const b = document.createElement('button'); b.textContent = ZONAS[k].corto; if (k === crPos) b.classList.add('on');
     b.onclick = () => { crPos = k; pintarCrPos(); }; pz.appendChild(b);
   });
