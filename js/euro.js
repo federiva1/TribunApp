@@ -1,5 +1,5 @@
 /* EUROTRIBUNAPP (prototipo): utilidades compartidas de euro.html, euro-liga.html (tabla),
-   euro-fixture.html y euro-club.html. Los datos salen de data/euro/ (scripts/fetch_euro.py,
+   euro-fixture.html, euro-stats.html, euro-tribunapp.html y euro-club.html. Los datos salen de data/euro/ (scripts/fetch_euro.py,
    FotMob); escudos y logos se piden a images.fotmob.com (no se guardan en el repo).
 
    En el modo Euro el header es otro (dorado, con Fixture y Tablas de la competición que se está
@@ -26,7 +26,7 @@ const EURO = {
     return Number(v);
   },
   recordar(id) { try { localStorage.setItem('euro_liga', String(id)); } catch (e) {} },
-  // Botones del header del modo Euro. `donde` = página actual ('home' | 'fixture' | 'tablas' | 'club')
+  // Botones del header del modo Euro. `donde` = página actual ('home' | 'fixture' | 'tablas' | 'stats' | 'tribunapp' | 'club')
   header(donde, lid) {
     const acts = document.querySelector('#site-header .header-actions');
     if (!acts) return;
@@ -35,6 +35,8 @@ const EURO = {
       euro: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5-4.8-4.6 6.6-.9z"/></svg>',
       fixture: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
       tablas: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
+      stats: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
+      tribunapp: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
       arg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
     };
     const pill = (href, k, label, extra, tip) =>
@@ -43,6 +45,8 @@ const EURO = {
       pill('euro.html', 'euro', 'EURO', 'euro', 'Inicio de Eurotribunapp')
       + pill(`euro-fixture.html?l=${l}`, 'fixture', 'Fixture', '', 'Fixture de la competición')
       + pill(`euro-liga.html?l=${l}`, 'tablas', 'Tablas', '', 'Tabla de posiciones y equipos')
+      + pill(`euro-stats.html?l=${l}`, 'stats', 'Estadísticas', '', 'Estadísticas de la última fecha')
+      + pill(`euro-tribunapp.html?l=${l}`, 'tribunapp', 'TribunApp', '', 'Lo que vota la gente')
       + pill('index.html', 'arg', 'Argentina', '', 'Volver a TribunApp Argentina');
   },
   // Fila de botones con las competiciones (cambia de liga sin salir de la página)
@@ -51,6 +55,15 @@ const EURO = {
       `<a class="chip-liga${l.id === Number(activo) ? ' on' : ''}" href="${pagina}?l=${l.id}">`
       + `<img src="${EURO.logoLiga(l.id)}" alt=""><span>${EURO.esc(l.corto)}</span></a>`).join('');
   },
+  // "Gianluigi Donnarumma" → "G. Donnarumma" (para listas angostas)
+  jug(n) {
+    const p = String(n || '').trim().split(/\s+/);
+    return p.length < 2 ? p[0] || '' : p[0][0] + '. ' + p.slice(1).join(' ');
+  },
+  // Minuto de un gol: 90 + extra → "90+3'"
+  min(m, extra) { return m == null ? '' : `${m}${extra ? '+' + extra : ''}'`; },
+  // Color de la nota (escala de FotMob): 8+ verde fuerte … menos de 6 rojo
+  notaClase(n) { return n == null ? '' : n >= 8 ? 't1' : n >= 7 ? 't2' : n >= 6.5 ? 't3' : n >= 6 ? 't4' : 't5'; },
   // "12" → "Fecha 12" ("Jornada 5" en la Champions); las eliminatorias, por su nombre
   ronda(r, lid) {
     const s = String(r == null ? '' : r);

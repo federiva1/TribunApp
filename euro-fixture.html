@@ -30,9 +30,9 @@
   <div class="ligas-bar" id="bar"></div>
 
   <div class="rnav">
-    <button type="button" id="prev" aria-label="Fecha anterior">‹</button>
-    <div class="rt"><select id="rsel" aria-label="Elegir fecha"></select><small id="restado"></small></div>
-    <button type="button" id="next" aria-label="Fecha siguiente">›</button>
+    <button type="button" id="prev" aria-label="Fechas anteriores">‹</button>
+    <div class="rt"><select id="rsel" aria-label="Empezar desde la fecha"></select><small id="restado"></small></div>
+    <button type="button" id="next" aria-label="Fechas siguientes">›</button>
   </div>
   <div id="partidos"></div>
 
@@ -60,25 +60,30 @@
   if (i < 0) i = R.findIndex(r => r.ronda === F.proxima);      // por defecto: la próxima fecha
   if (i < 0) i = R.findIndex(r => r.ronda === F.ultima);
   if (i < 0) i = 0;
+  const VENTANA = 3;                                           // fechas que se muestran juntas
 
   function pintar() {
-    const r = R[i];
     sel.value = String(i);
+    const fin = Math.min(i + VENTANA, R.length);
     document.getElementById('prev').disabled = i === 0;
-    document.getElementById('next').disabled = i === R.length - 1;
-    document.getElementById('restado').textContent =
-      r.ronda === F.proxima ? 'Próxima fecha' : r.ronda === F.ultima ? 'Última jugada' : r.partidos.every(p => p.terminado) ? 'Jugada' : 'Por jugar';
-    // Agrupados por día (hora argentina)
-    let html = '', dia = null;
-    r.partidos.forEach(p => {
-      const t = EURO.ar(p.utcTime), d = t ? t.dia : 'A confirmar';
-      if (d !== dia) { dia = d; html += `<div class="dia">${EURO.esc(d)}</div>`; }
-      html += EURO.partido(p, { liga: id, sinDia: true });
+    document.getElementById('next').disabled = i + VENTANA >= R.length;
+    document.getElementById('restado').textContent = `${fin - i === 1 ? 'Fecha' : 'Fechas'} ${R.slice(i, fin).map(r => EURO.ronda(r.ronda, id).replace(/^(Fecha|Jornada) /, '')).join(' · ')}`;
+    let html = '';
+    R.slice(i, fin).forEach(r => {
+      const estado = r.ronda === F.proxima ? 'próxima fecha' : r.ronda === F.ultima ? 'última jugada' : r.partidos.every(p => p.terminado) ? 'jugada' : '';
+      html += `<div class="rhead">${EURO.esc(EURO.ronda(r.ronda, id).toUpperCase())}${estado ? ` <small>${estado}</small>` : ''}</div>`;
+      // Agrupados por día (hora argentina)
+      let dia = null;
+      r.partidos.forEach(p => {
+        const t = EURO.ar(p.utcTime), d = t ? t.dia : 'A confirmar';
+        if (d !== dia) { dia = d; html += `<div class="dia">${EURO.esc(d)}</div>`; }
+        html += EURO.partido(p, { liga: id, sinDia: true });
+      });
     });
     document.getElementById('partidos').innerHTML = html || '<div class="vacio">Sin partidos.</div>';
   }
-  document.getElementById('prev').onclick = () => { if (i > 0) { i--; pintar(); } };
-  document.getElementById('next').onclick = () => { if (i < R.length - 1) { i++; pintar(); } };
+  document.getElementById('prev').onclick = () => { i = Math.max(0, i - VENTANA); pintar(); };
+  document.getElementById('next').onclick = () => { i = Math.min(R.length - 1, i + VENTANA); pintar(); };
   sel.onchange = () => { i = Number(sel.value); pintar(); };
   pintar();
 })();

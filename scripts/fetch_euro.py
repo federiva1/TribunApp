@@ -7,6 +7,8 @@ Por cada liga baja la página de la liga (mismo __NEXT_DATA__ que el resto de lo
     data/euro/clubes/{id}.json un archivo por club de la tabla: posición, próximo partido,
                                últimos 5 resultados y plantel por puesto + DT
     data/euro/fixture/{liga_id}.json  el fixture completo de la liga (todas las rondas) para euro-fixture.html
+    data/euro/stats/{liga_id}.json    el detalle de los partidos de la ÚLTIMA fecha (stats de equipo, goles, mejor
+                                      jugador, nota y stats de cada jugador) para euro-stats.html y euro-tribunapp.html
     data/euro/index.json       resumen de las ligas (líder, fecha) + partidos destacados
 
 "Última fecha" = la ronda más reciente con TODOS sus partidos terminados; "próxima fecha" =
@@ -14,7 +16,8 @@ los partidos no jugados de la ronda siguiente (utcTime en UTC, el front los pasa
 Un club que falla no corta el resto: queda sin archivo y la página lo muestra sin plantel.
 
     python scripts/fetch_euro.py              # las 5 ligas + la Champions + todos los clubes (~115 pedidos)
-    python scripts/fetch_euro.py --sin-clubes # solo ligas, fixtures e index
+    python scripts/fetch_euro.py --sin-clubes # solo ligas, fixtures, stats e index
+    python scripts/fetch_euro.py --sin-stats  # sin el detalle de los partidos de la última fecha (~70 pedidos)
     python scripts/fetch_euro.py --faltantes  # ligas e index + solo los clubes que todavía no tienen archivo
     python scripts/fetch_euro.py 47           # una liga (y sus clubes)
 
@@ -112,7 +115,8 @@ def _fechas(pp):
     ordena = lambda r: sorted(rondas[r], key=lambda x: (x.get('status') or {}).get('utcTime') or '')
     arma = lambda r: ({'ronda': r, 'partidos': [_partido(x) for x in ordena(r)]} if r else None)
     todas = [{'ronda': r, 'partidos': [_partido(x) for x in ordena(r)]} for r in orden]
-    return arma(ultima), arma(proxima), todas
+    urls = {str(x['id']): x.get('pageUrl') for x in rondas[ultima]} if ultima else {}
+    return arma(ultima), arma(proxima), todas, urls
 
 
 def liga(meta):
@@ -121,7 +125,7 @@ def liga(meta):
         raise RuntimeError('FotMob no respondió')
     pp = d['props']['pageProps']
     det = pp.get('details') or {}
-    ultima, proxima, todas = _fechas(pp)
+    ultima, proxima, todas, urls = _fechas(pp)
     L = {
         'id': meta['id'], 'nombre': meta['nombre'], 'pais': meta['pais'], 'color': meta['color'],
         'temporada': det.get('selectedSeason') or det.get('latestSeason'),
@@ -130,7 +134,122 @@ def liga(meta):
     }
     F = {'id': meta['id'], 'nombre': meta['nombre'], 'temporada': L['temporada'],
          'ultima': ultima and ultima['ronda'], 'proxima': proxima and proxima['ronda'], 'rondas': todas}
-    return L, F
+    return L, F, urls
+
+
+# ---------------------------------------------------------------- detalle de un partido (última fecha)
+# Estadísticas de equipo que se guardan: (key de FotMob, clave nuestra, etiqueta)
+STATS_EQUIPO = [
+    ('BallPossesion', 'posesion', 'Posesión'), ('expected_goals', 'xg', 'xG'), ('total_shots', 'tiros', 'Tiros'),
+    ('ShotsOnTarget', 'tiros_arco', 'Tiros al arco'), ('big_chance', 'grandes', 'Grandes ocasiones'),
+    ('accurate_passes', 'pases', 'Pases acertados'), ('corners', 'corners', 'Córners'),
+    ('fouls', 'faltas', 'Faltas'), ('yellow_cards', 'amarillas', 'Amarillas'), ('red_cards', 'rojas', 'Rojas'),
+]
+
+
+def _num(v):
+    """'526 (88%)' -> 526 · '1.87' -> 1.87 · 58 -> 58."""
+    if isinstance(v, (int, float)):
+        return v
+    try:
+        return sfm.to_num(str(v).split('(')[0].strip())
+    except Exception:
+        return None
+
+
+def _stats_equipo(c):
+    por_key = {}
+    for sec in ((c.get('stats') or {}).get('Periods') or {}).get('All', {}).get('stats') or []:
+        for it in sec.get('stats') or []:
+            st = it.get('stats') or []
+            if it.get('key') and len(st) == 2 and st[0] is not None and it['key'] not in por_key:
+                por_key[it['key']] = st
+    out = []
+    for key, k, label in STATS_EQUIPO:
+        st = por_key.get(key)
+        if not st:
+            continue
+        e = {'k': k, 'label': label, 'l': _num(st[0]), 'v': _num(st[1])}
+        if k == 'pases':                                  # "526 (88%)": acertados y porcentaje
+            pct = lambda t: sfm.to_int(str(t).split('(')[1].rstrip('%)')) if '(' in str(t) else None
+            e['lp'], e['vp'] = pct(st[0]), pct(st[1])
+        out.append(e)
+    return out
+
+
+def _jugadores(c, lado):
+    """Titulares + suplentes que jugaron de un equipo (lineup de FotMob + playerStats por id)."""
+    team = (c.get('lineup') or {}).get('homeTeam' if lado == 'local' else 'awayTeam') or {}
+    ps = c.get('playerStats') or {}
+    out = []
+    for titular, grupo in ((True, team.get('starters') or []), (False, team.get('subs') or [])):
+        for j in grupo:
+            perf = j.get('performance') or {}
+            flat = sfm.flatten_stats((ps.get(str(j.get('id'))) or {}).get('stats') or [])
+            minutos = sfm.to_int(flat.get('Minutes played'))
+            nota = perf.get('rating')
+            if not titular and not minutos and nota is None:
+                continue                                   # suplente que no entró
+            out.append({
+                'id': j.get('id'), 'nombre': j.get('name'), 'num': sfm.to_int(j.get('shirtNumber')), 'titular': titular,
+                'min': minutos, 'nota': round(float(nota), 1) if nota is not None else None,
+                'goles': sfm.to_int(flat.get('Goals')) or 0, 'asist': sfm.to_int(flat.get('Assists')) or 0,
+                'tiros': sfm.to_int(flat.get('Total shots')), 'xg': sfm.to_num(flat.get('Expected goals (xG)')),
+                'pases': sfm.to_int(flat.get('Accurate passes')),
+            })
+    return out, team.get('formation')
+
+
+def _goles_partido(c):
+    out = []
+    for e in ((c.get('matchFacts') or {}).get('events') or {}).get('events') or []:
+        if e.get('type') != 'Goal':
+            continue
+        sm = e.get('shotmapEvent') or {}
+        asist = (e.get('assistStr') or '').replace('assist by ', '').strip() or None
+        out.append({'min': e.get('time'), 'extra': e.get('overloadTime'), 'equipo': 'local' if e.get('isHome') else 'visitante',
+                    'jugador': e.get('nameStr'), 'asist': asist,
+                    'penal': sm.get('situation') == 'Penalty', 'autogol': bool(e.get('ownGoal') or sm.get('isOwnGoal'))})
+    return out
+
+
+def detalle(nd, p, ronda):
+    c = nd['props']['pageProps']['content']
+    jl, fl = _jugadores(c, 'local')
+    jv, fv = _jugadores(c, 'visitante')
+    mvp = (c.get('matchFacts') or {}).get('playerOfTheMatch') or None
+    mvp_out = None
+    if mvp:
+        nombre = (mvp.get('name') or {})
+        mvp_out = {'id': mvp.get('id'), 'nombre': nombre.get('fullName') if isinstance(nombre, dict) else nombre,
+                   'equipo': 'local' if mvp.get('teamId') == p['local']['id'] else 'visitante',
+                   'nota': _num((mvp.get('rating') or {}).get('num'))}
+    return {
+        'id': p['id'], 'ronda': ronda, 'utcTime': p['utcTime'], 'local': p['local'], 'visitante': p['visitante'],
+        'goles_local': p['goles_local'], 'goles_visitante': p['goles_visitante'],
+        'formacion': {'local': fl, 'visitante': fv},
+        'stats': _stats_equipo(c), 'goles': _goles_partido(c), 'mvp': mvp_out,
+        'jugadores': {'local': jl, 'visitante': jv},
+    }
+
+
+def stats_ultima_fecha(L, urls):
+    """Detalle de cada partido terminado de la última fecha de la competición."""
+    u = L.get('ultima_fecha')
+    res = []
+    for p in (u or {}).get('partidos') or []:
+        if not p['terminado'] or not urls.get(p['id']):
+            continue
+        nd = sfm._next_data_http('https://www.fotmob.com' + urls[p['id']])
+        if not nd:
+            print(f"   ! partido {p['id']} ({p['local']['nombre']}-{p['visitante']['nombre']}): FotMob no respondió")
+            continue
+        try:
+            res.append(detalle(nd, p, u['ronda']))
+        except Exception as e:
+            print(f"   ! partido {p['id']}: {e}")
+        time.sleep(0.5)
+    return {'id': L['id'], 'nombre': L['nombre'], 'ronda': u and u['ronda'], 'partidos': res}
 
 
 def club(cid, liga_meta, fila):
@@ -202,11 +321,16 @@ def main():
     faltantes = '--faltantes' in sys.argv
     (OUT / 'clubes').mkdir(parents=True, exist_ok=True)
     (OUT / 'fixture').mkdir(parents=True, exist_ok=True)
+    (OUT / 'stats').mkdir(parents=True, exist_ok=True)
     ok = err = 0
     tablas = {}
     for meta in metas:
-        L, F = liga(meta)
+        L, F, urls = liga(meta)
         tablas[meta['id']] = L
+        if '--sin-stats' not in sys.argv:
+            S = stats_ultima_fecha(L, urls)
+            (OUT / 'stats' / f"{meta['id']}.json").write_text(json.dumps(S, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
+            print(f"   detalle de {len(S['partidos'])} partidos de la fecha {S['ronda']}")
         (OUT / f"{meta['id']}.json").write_text(json.dumps(L, ensure_ascii=False, indent=1), encoding='utf-8')
         (OUT / 'fixture' / f"{meta['id']}.json").write_text(json.dumps(F, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
         u, p = L['ultima_fecha'], L['proxima_fecha']

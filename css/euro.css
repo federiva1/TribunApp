@@ -35,6 +35,8 @@ a { color: inherit; }
 .header-pill svg { width: 15px; height: 15px; flex-shrink: 0; }
 .header-pill:hover { background: rgba(10,10,26,0.5); border-color: rgba(255,255,255,0.6); color: #fff; }
 .header-pill.on { background: #0d0d1a; border-color: #0d0d1a; color: var(--euro); }
+/* el logo no se achica para hacerle lugar a los botones: si no entran, pasan al ☰ (header-menu.js) */
+body #site-header .logo-wrap { flex-shrink: 0; min-width: auto; }
 /* menú ☰ (js/header-menu.js inyecta su CSS después de este: la especificidad lo hace ganar acá) */
 #site-header .header-menu-btn { background: rgba(10,10,26,0.30); border-color: rgba(255,255,255,0.30); color: #fff; }
 #site-header .header-menu-btn[aria-expanded="true"] { background: #0d0d1a; border-color: #0d0d1a; color: var(--euro); }
@@ -205,3 +207,90 @@ a.tr:hover { background: rgba(255,255,255,0.04); }
 .dt { margin: 14px 16px 0; font-family: 'Barlow Condensed', sans-serif; font-size: 15px; color: rgba(255,255,255,0.7); }
 .dt b { color: #fff; font-weight: 600; }
 .nota { margin: 22px 16px 0; font-family: 'Barlow Condensed', sans-serif; font-size: 12.5px; color: rgba(255,255,255,0.38); text-align: center; }
+
+/* ===== FIXTURE: varias fechas juntas ===== */
+.rhead { margin: 20px 16px 2px; display: flex; align-items: baseline; gap: 8px; font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; font-size: 21px; color: #e8edf7;
+  border-bottom: 1px solid rgba(255,213,79,0.25); padding-bottom: 4px; }
+.rhead small { font-family: 'Barlow Condensed', sans-serif; font-size: 13.5px; letter-spacing: 0.5px; color: var(--euro); }
+
+/* ===== ESTADÍSTICAS ===== */
+.info { margin: 12px 16px 0; font-family: 'Barlow Condensed', sans-serif; font-size: 14px; color: rgba(255,255,255,0.55); }
+.aviso { margin: 12px 16px 0; padding: 10px 12px; border-radius: 10px; border: 1px dashed rgba(255,213,79,0.6); background: rgba(255,213,79,0.08);
+  font-family: 'Barlow Condensed', sans-serif; font-size: 14.5px; color: #ffe9a6; line-height: 1.35; }
+.aviso b { color: var(--euro); font-weight: 600; letter-spacing: 0.5px; }
+.lead3 { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin: 0 16px; }
+@media (min-width: 700px) { .lead3 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.lead, .panel { border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); border-radius: 12px; padding: 10px 12px 6px; min-width: 0; }
+.lead h3, .panel h3 { font-family: 'Bebas Neue', sans-serif; font-weight: 400; letter-spacing: 2px; font-size: 17px; color: var(--euro); margin-bottom: 4px; }
+.lr { display: flex; align-items: center; gap: 7px; padding: 5px 0; border-top: 1px solid rgba(255,255,255,0.05); font-family: 'Barlow Condensed', sans-serif;
+  font-size: 15px; text-decoration: none; }
+.lead h3 + .lr { border-top: 0; }
+.lr .pp { width: 14px; color: rgba(255,255,255,0.4); font-size: 13px; text-align: center; flex: 0 0 auto; }
+.lr img { width: 20px; height: 20px; object-fit: contain; flex: 0 0 auto; }
+.lr .nn { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+.lr .vv { font-family: 'Bebas Neue', sans-serif; font-size: 19px; letter-spacing: 0.5px; }
+.lr .sm { font-size: 12px; color: rgba(255,255,255,0.45); }
+
+.mc { margin: 0 16px 10px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); border-radius: 14px; overflow: hidden; }
+.mc .mt { margin: 0; border: 0; border-radius: 0; background: transparent; padding: 10px 12px 6px; }
+.mc .gl { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 12px 6px; font-family: 'Barlow Condensed', sans-serif; font-size: 13.5px; color: rgba(255,255,255,0.66); line-height: 1.35; }
+.mc .gl div:last-child { text-align: right; }
+.mc .mvp { padding: 0 12px 8px; font-family: 'Barlow Condensed', sans-serif; font-size: 13.5px; color: rgba(255,255,255,0.6); }
+.mc .mvp b { color: var(--euro); font-weight: 600; }
+.mc .bt { display: block; width: 100%; padding: 9px; border: 0; border-top: 1px solid rgba(255,255,255,0.07); background: rgba(255,213,79,0.06); color: var(--euro);
+  font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; font-size: 15px; cursor: pointer; }
+.mc .bt:hover { background: rgba(255,213,79,0.14); }
+.mc .det { border-top: 1px solid rgba(255,255,255,0.07); padding-bottom: 8px; }
+.stabs { display: flex; gap: 6px; padding: 10px 12px 4px; }
+.stabs button { flex: 1; font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; font-size: 15px; padding: 6px 0; border-radius: 9px; cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.55); background: transparent; }
+.stabs button.on { color: #fff; border-color: rgba(255,213,79,0.6); background: rgba(255,213,79,0.14); }
+.sr { padding: 6px 12px; }
+.sr .lb { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-family: 'Barlow Condensed', sans-serif; font-size: 14.5px; }
+.sr .lb b { font-weight: 600; color: #fff; min-width: 70px; }
+.sr .lb b:last-child { text-align: right; }
+.sr .lb span { color: rgba(255,255,255,0.55); text-align: center; flex: 1; }
+.sr .br { display: flex; height: 5px; border-radius: 3px; overflow: hidden; background: rgba(255,255,255,0.08); margin-top: 3px; gap: 2px; }
+.sr .br i { display: block; height: 100%; }
+.sr .br i.a { background: var(--celeste); } .sr .br i.b { background: var(--euro); }
+.sq { display: flex; justify-content: space-between; padding: 4px 12px 0; font-family: 'Bebas Neue', sans-serif; letter-spacing: 1.5px; font-size: 14px; color: rgba(255,255,255,0.7); }
+.sq i { font-style: normal; } .sq i.a { color: var(--celeste); } .sq i.b { color: var(--euro); }
+.tw { overflow-x: auto; padding: 0 8px; }
+.pt { width: 100%; border-collapse: collapse; font-family: 'Barlow Condensed', sans-serif; font-size: 14px; }
+.pt caption { text-align: left; font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; font-size: 16px; padding: 10px 4px 4px; color: #e8edf7; }
+.pt th { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.4); text-align: center; padding: 4px 3px; font-weight: 400; }
+.pt td { padding: 4px 3px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05); white-space: nowrap; color: rgba(255,255,255,0.8); }
+.pt .n1 { text-align: left; }
+.pt td.n1 { font-weight: 600; color: #fff; max-width: 130px; overflow: hidden; text-overflow: ellipsis; }
+.pt tr.sup td { color: rgba(255,255,255,0.6); }
+.nt { display: inline-block; min-width: 32px; border-radius: 6px; padding: 1px 5px; font-weight: 600; color: #06120a; }
+.nt.t1 { background: #2ad572; } .nt.t2 { background: #9be15d; } .nt.t3 { background: #ffd54f; } .nt.t4 { background: #ff9f43; } .nt.t5 { background: #ef5350; color: #fff; }
+@media (max-width: 440px) { .pt .opc { display: none; } }
+
+/* ===== TRIBUNAPP (ejemplo) ===== */
+.mchips { display: flex; gap: 6px; overflow-x: auto; padding: 12px 16px 2px; scrollbar-width: none; }
+.mchips::-webkit-scrollbar { display: none; }
+.mchip { flex: 0 0 auto; display: flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px; cursor: pointer; background: transparent;
+  border: 1px solid rgba(255,255,255,0.12); color: rgba(255,255,255,0.7); font-family: 'Barlow Condensed', sans-serif; font-size: 14px; white-space: nowrap; }
+.mchip img { width: 18px; height: 18px; object-fit: contain; }
+.mchip b { font-family: 'Bebas Neue', sans-serif; font-weight: 400; letter-spacing: 1px; font-size: 16px; color: #fff; }
+.mchip.on { border-color: var(--euro); background: rgba(255,213,79,0.14); color: #fff; }
+.figura { margin: 12px 16px 0; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(255,213,79,0.4); background: rgba(255,213,79,0.07);
+  display: flex; align-items: center; gap: 10px; font-family: 'Barlow Condensed', sans-serif; }
+.figura img { width: 34px; height: 34px; object-fit: contain; }
+.figura .x { flex: 1; min-width: 0; }
+.figura .x small { display: block; font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--euro); }
+.figura .x div { font-size: 19px; font-weight: 600; }
+.figura .v { font-family: 'Bebas Neue', sans-serif; font-size: 30px; letter-spacing: 1px; }
+.cols2 { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; margin: 12px 16px 0; }
+@media (min-width: 700px) { .cols2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.panel h3 { display: flex; align-items: center; gap: 7px; color: #e8edf7; }
+.panel h3 img { width: 22px; height: 22px; object-fit: contain; }
+.panel h4 { font-family: 'Barlow Condensed', sans-serif; font-weight: 400; font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.4); margin: 8px 0 2px; }
+.pn { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-top: 1px solid rgba(255,255,255,0.05); font-family: 'Barlow Condensed', sans-serif; font-size: 15px; }
+.pn .num { width: 20px; text-align: right; color: rgba(255,255,255,0.4); font-size: 13px; flex: 0 0 auto; }
+.pn .nn { flex: 0 0 36%; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+.pn .bar { flex: 1; height: 8px; border-radius: 4px; background: rgba(255,255,255,0.07); overflow: hidden; }
+.pn .bar i { display: block; height: 100%; border-radius: 4px; }
+.pn .v { width: 34px; text-align: right; font-family: 'Bebas Neue', sans-serif; font-size: 19px; letter-spacing: 0.5px; }
+.bar i.t1 { background: #2ad572; } .bar i.t2 { background: #9be15d; } .bar i.t3 { background: #ffd54f; } .bar i.t4 { background: #ff9f43; } .bar i.t5 { background: #ef5350; }
