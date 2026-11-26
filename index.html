@@ -50,7 +50,9 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 }
 .logo-wrap { display: flex; align-items: center; gap: 10px; text-decoration: none; }
 /* Logo del header — MISMO tamaño en todas las páginas de la web (si se cambia, cambiarlo en todas).
-   Logo.png es 1880x836 (ratio 2.25) → a 72px de alto ocupa ~162px de ancho.
+   El header usa logo-header.png (no Logo.png): la misma marca con fondo transparente y sin el
+   margen, así no se ve la caja oscura pegada sobre el degradado. 483x216 (ratio 2.24) → a 72px
+   de alto ocupa ~161px de ancho, igual que antes. Logo.png sigue para og:image y las placas.
    Tamaños previos: 52px (index/fixture/tablas) y 56px (resto, inline). */
 .logo-wrap img { height: 72px; object-fit: contain; }
 @media (max-width: 430px) { .logo-wrap img { height: 60px; } }
@@ -448,7 +450,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 <!-- HEADER -->
 <header id="site-header">
   <a class="logo-wrap" href="index.html">
-    <img src="Logo.png" alt="TribunApp">
+    <img src="logo-header.png" alt="TribunApp">
   </a>
   <div class="header-actions">
     <a class="header-pill" href="fixture.html" data-help="Fixture: todos los partidos por fecha, con resultados y la ficha de cada partido.">
