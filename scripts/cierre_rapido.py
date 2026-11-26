@@ -69,6 +69,10 @@ def candidatos(liga, copas, ahora=None):
             continue
         mins = (ahora - datetime.fromisoformat(st['utcTime'])).total_seconds() / 60
         if DESDE_MIN <= mins <= HASTA_MIN:
+            if not e.get('api_id'):      # partido cargado a mano (data/playoffs.json)
+                print(f"  ! {e['home']['slug']} vs {e['away']['slug']} no tiene api_id: correr "
+                      "fetch_liga_fixtures.py para traer el partido real de la API")
+                continue
             out.append({'comp': 'liga', 'entry': e, 'api_id': str(e['api_id'])})
     for key in ('libertadores', 'sudamericana'):
         for p in ((copas.get(key) or {}).get('partidos')) or []:
