@@ -88,12 +88,12 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .resumen .lin b { color: #fff; }
 
 /* ===== CANCHA ===== */
-#cancha {
+#cancha, .cancha-img {
   margin: 0 16px; border-radius: 10px; overflow: hidden; position: relative;
   background: repeating-linear-gradient(180deg, #2d7a3a 0 46px, #2a7236 46px 92px);
   border: 2px solid rgba(255,255,255,0.18);
 }
-.linea { position: relative; padding: 22px 6px 12px 6px; min-height: 104px; }
+.linea { position: relative; padding: 24px 5px 8px; display: flex; flex-direction: column; gap: 5px; }
 .linea + .linea { border-top: 1.5px solid rgba(255,255,255,0.28); }
 .linea.mitad { border-top: 2px solid rgba(255,255,255,0.55); }
 .linea.mitad::before {
@@ -109,16 +109,24 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   position: absolute; left: 8px; top: 5px; font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 1.5px;
   color: rgba(255,255,255,0.7); background: rgba(0,0,0,0.25); border-radius: 5px; padding: 1px 6px; z-index: 2;
 }
-.linea .chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 4px; position: relative; z-index: 1; }
-.linea.drop { background: rgba(255,255,255,0.12); }
-.linea .vacia { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; color: rgba(255,255,255,0.55); padding: 14px 0; text-align: center; width: 100%; }
+/* html2canvas no pinta repeating-linear-gradient: en la imagen, verde liso con una franja por línea */
+.cancha-img { background: #2d7a3a !important; }
+.cancha-img .linea:nth-child(even) { background: #2a7236; }
+.fila-z { display: flex; gap: 5px; position: relative; z-index: 1; }
+.zona { flex: 1 1 0; min-width: 0; position: relative; border: 1px dashed rgba(255,255,255,0.2); border-radius: 8px; padding: 17px 2px 6px; min-height: 76px; transition: background 0.15s, border-color 0.15s; }
+.zona.chica { flex: 0 0 46%; margin: 0 auto; }
+.zona.ancha { flex: 2 1 0; }
+.zona .zl { position: absolute; left: 0; right: 0; top: 3px; text-align: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 11px; letter-spacing: 0.8px; text-transform: uppercase; color: rgba(255,255,255,0.62); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px; }
+.zona .chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 2px; }
+.zona.drop { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.7); border-style: solid; }
+.zona .vacia { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; color: rgba(255,255,255,0.4); padding: 10px 0 4px; text-align: center; width: 100%; }
 
-.chip { width: 66px; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: grab; touch-action: pan-y; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; position: relative; }
+.chip { width: 60px; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: grab; touch-action: pan-y; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; position: relative; }
 .chip .kit { position: relative; width: 40px; height: 40px; border-radius: 50%; overflow: hidden; border: 2px solid rgba(255,255,255,0.9); box-shadow: 0 2px 5px rgba(0,0,0,0.45); }
 .chip .kit canvas { width: 100%; height: 100%; display: block; }
 .chip .kit span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 19px; color: #fff; line-height: 1; }
-.chip .ap { font-family: 'Barlow Condensed', sans-serif; font-size: 12.5px; font-weight: 600; line-height: 1.05; text-align: center; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.7); max-width: 66px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.chip .badge { position: absolute; top: -4px; right: 7px; width: 18px; height: 18px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.5); z-index: 2; }
+.chip .ap { font-family: 'Barlow Condensed', sans-serif; font-size: 12.5px; font-weight: 600; line-height: 1.05; text-align: center; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.7); max-width: 60px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip .badge { position: absolute; top: -4px; right: 4px; width: 18px; height: 18px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.5); z-index: 2; }
 .chip .badge img { width: 14px; height: 14px; object-fit: contain; }
 .chip .badge.creado { background: var(--gold); color: #111; font-size: 11px; font-weight: 700; }
 .chip.nuevo .kit { border-color: var(--gold); }
@@ -150,8 +158,8 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .hoja .sub { font-family: 'Barlow Condensed', sans-serif; font-size: 13.5px; color: rgba(255,255,255,0.55); margin-bottom: 12px; }
 .hoja label { display: block; font-size: 10px; color: #888; letter-spacing: 1px; text-transform: uppercase; margin: 10px 0 5px; }
 .hoja input { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 10px; color: #fff; font-size: 15px; outline: none; }
-.puestos { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-.puestos button { font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 1px; border-radius: 8px; padding: 9px 0; cursor: pointer; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.8); }
+.puestos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.puestos button { font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 14px; letter-spacing: 0.3px; border-radius: 8px; padding: 9px 0; cursor: pointer; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.8); }
 .puestos button.on { border-color: var(--celeste); background: rgba(79,195,247,0.18); color: #fff; }
 .hoja .fila { display: flex; gap: 8px; margin-top: 14px; }
 .hoja .fila .btn { flex: 1; padding: 11px; font-size: 15px; }
@@ -173,7 +181,7 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
     <img id="club-escudo" src="" alt="" onerror="this.style.display='none'">
   </div>
 
-  <p class="intro">Arrancás con los jugadores que tiene hoy el club. Arrastralos para cambiarlos de puesto o tocalos para descartarlos, y sumá refuerzos de cualquier equipo de la liga con el buscador. Si no está, crealo.</p>
+  <p class="intro">Arrancás con los jugadores que tiene hoy el club, cada uno en su puesto. Arrastralos a otra zona si los ves en otro lugar, tocalos para descartarlos y sumá refuerzos de cualquier equipo de la liga con el buscador. Si no está, crealo.</p>
 
   <div class="buscar">
     <svg class="lupa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.6" y2="16.6"/></svg>
@@ -200,8 +208,6 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 <!-- Hoja: acciones sobre un jugador -->
 <div class="velo" id="velo-jug"><div class="hoja">
   <h3 id="hj-nombre"></h3><div class="sub" id="hj-sub"></div>
-  <label>Puesto</label>
-  <div class="puestos" id="hj-puestos"></div>
   <div class="fila"><button class="btn rojo" id="hj-quitar"></button><button class="btn gris" id="hj-cerrar">CERRAR</button></div>
 </div></div>
 
@@ -225,14 +231,36 @@ const params = new URLSearchParams(location.search);
 const SLUG = (params.get('c') || 'argentinosjuniors').replace(/[^a-z0-9]/gi, '').toLowerCase();
 const CLUB = CLUBES_CONFIG[SLUG];
 const TEMPORADA = '2027';
-const LINEAS = [            // de arriba (ataque) a abajo (arco), como se ve la cancha
-  { k: 'DEL', nombre: 'Delanteros', cls: 'del' },
-  { k: 'MED', nombre: 'Mediocampistas', cls: '' },
-  { k: 'DEF', nombre: 'Defensores', cls: 'mitad' },
-  { k: 'ARQ', nombre: 'Arqueros', cls: 'arq' },
+// Zonas de la cancha. Cada línea tiene filas de zonas, de arriba (ataque) a abajo (arco).
+const ZONAS = {
+  DC:  { nombre: 'Centrodelanteros', corto: 'Centrodelantero', linea: 'DEL' },
+  EXT: { nombre: 'Extremos', corto: 'Extremo', linea: 'DEL' },
+  ENG: { nombre: 'Enganche / organizador', corto: 'Enganche', linea: 'MED', cls: 'chica' },
+  INT: { nombre: 'Internos', corto: 'Interno', linea: 'MED' },
+  VC:  { nombre: 'Volantes centrales', corto: 'Volante central', linea: 'MED' },
+  LI:  { nombre: 'Lateral izq.', corto: 'Lateral izquierdo', linea: 'DEF' },
+  CEN: { nombre: 'Centrales', corto: 'Central', linea: 'DEF', cls: 'ancha' },
+  LD:  { nombre: 'Lateral der.', corto: 'Lateral derecho', linea: 'DEF' },
+  ARQ: { nombre: 'Arqueros', corto: 'Arquero', linea: 'ARQ' },
+};
+const LINEAS = [
+  { k: 'DEL', nombre: 'Delanteros', cls: 'del', filas: [['DC'], ['EXT']] },
+  { k: 'MED', nombre: 'Mediocampistas', cls: '', filas: [['ENG'], ['INT'], ['VC']] },
+  { k: 'DEF', nombre: 'Defensores', cls: 'mitad', filas: [['LI', 'CEN', 'LD']] },
+  { k: 'ARQ', nombre: 'Arqueros', cls: 'arq', filas: [['ARQ']] },
 ];
-const POS_DE = { keepers: 'ARQ', defenders: 'DEF', midfielders: 'MED', attackers: 'DEL' };
-const LS_KEY = `plantel_v1_${SLUG}`;
+// Puesto de FotMob (data/planteles_puestos.json, scripts/fetch_puestos.py) → zona.
+const ZONA_FM = {
+  GK: 'ARQ', RB: 'LD', RWB: 'LD', LB: 'LI', LWB: 'LI', CB: 'CEN',
+  CDM: 'VC', DM: 'VC', CM: 'INT', CAM: 'ENG', AM: 'ENG',
+  LM: 'EXT', RM: 'EXT', LW: 'EXT', RW: 'EXT', ST: 'DC', CF: 'DC',
+};
+// Sin puesto en FotMob: la línea del plantel decide (juveniles, recién llegados).
+const ZONA_LINEA = { keepers: 'ARQ', defenders: 'CEN', midfielders: 'INT', attackers: 'DC' };
+let PUESTOS = {};               // slug -> {fid: "RB"}
+const zonaDe = (p, slug) => ZONA_FM[(PUESTOS[slug] || {})[String(p.fid)]] || ZONA_LINEA[p.position] || 'INT';
+const lineaDe = z => (ZONAS[z] || ZONAS.INT).linea;
+const LS_KEY = `plantel_v2_${SLUG}`;
 const norm = s => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -295,7 +323,7 @@ function apellido(n) {
 function desdePlantel(arr) {
   return arr.map(p => ({
     key: 'p' + p.fid, fid: p.fid, num: String(p.num || ''), name: p.name,
-    pos: POS_DE[p.position] || 'MED', club: SLUG, origen: 'plantel', estado: 'cancha',
+    pos: zonaDe(p, SLUG), club: SLUG, origen: 'plantel', estado: 'cancha',
   }));
 }
 function guardar() { try { localStorage.setItem(LS_KEY, JSON.stringify(ST)); } catch (e) {} }
@@ -327,28 +355,47 @@ function chipEl(j) {
   return d;
 }
 
-function render() {
-  const cancha = document.getElementById('cancha');
+function pintarCancha(cancha, imagen) {
   cancha.innerHTML = '';
   const jug = enCancha();
   LINEAS.forEach(L => {
     const div = document.createElement('div');
-    div.className = 'linea ' + L.cls; div.dataset.pos = L.k;
-    const lista = jug.filter(j => j.pos === L.k).sort(ordenNum);
-    div.innerHTML = `<div class="rot">${L.nombre.toUpperCase()} · ${lista.length}</div>`;
-    const chips = document.createElement('div'); chips.className = 'chips';
-    if (!lista.length) chips.innerHTML = `<div class="vacia">Sin ${L.nombre.toLowerCase()}: arrastrá o sumá alguno</div>`;
-    lista.forEach(j => chips.appendChild(chipEl(j)));
-    div.appendChild(chips);
+    div.className = 'linea ' + L.cls;
+    const nLinea = jug.filter(j => lineaDe(j.pos) === L.k).length;
+    div.innerHTML = `<div class="rot">${L.nombre.toUpperCase()} · ${nLinea}</div>`;
+    L.filas.forEach(fila => {
+      const f = document.createElement('div'); f.className = 'fila-z';
+      fila.forEach(zk => {
+        const Z = ZONAS[zk];
+        const lista = jug.filter(j => j.pos === zk).sort(ordenNum);
+        if (imagen && !lista.length && fila.length === 1) return;          // en la imagen no van zonas vacías
+        const z = document.createElement('div');
+        z.className = 'zona ' + (Z.cls || ''); z.dataset.pos = zk;
+        if (L.filas.length > 1 || fila.length > 1) {                     // una línea de una sola zona ya tiene su rótulo
+          const zl = document.createElement('div'); zl.className = 'zl';
+          zl.textContent = Z.nombre + (lista.length ? ' · ' + lista.length : ''); z.appendChild(zl);
+        } else z.style.paddingTop = '8px';
+        const chips = document.createElement('div'); chips.className = 'chips';
+        if (!lista.length && !imagen) chips.innerHTML = '<div class="vacia">Arrastrá acá</div>';
+        lista.forEach(j => chips.appendChild(chipEl(j)));
+        z.appendChild(chips); f.appendChild(z);
+      });
+      if (f.children.length) div.appendChild(f);
+    });
     cancha.appendChild(div);
   });
+  return jug;
+}
+
+function render() {
+  const jug = pintarCancha(document.getElementById('cancha'), false);
   const des = ST.jugadores.filter(j => j.estado === 'descartado').sort(ordenNum);
   const dc = document.getElementById('descarte-chips');
   dc.innerHTML = '';
   des.forEach(j => dc.appendChild(chipEl(j)));
   document.getElementById('descarte-txt').textContent = des.length
     ? `${des.length} · tocá uno para devolverlo` : 'Arrastrá acá a los que no van más';
-  const cnt = k => jug.filter(j => j.pos === k).length;
+  const cnt = k => jug.filter(j => lineaDe(j.pos) === k).length;
   const nuevos = jug.filter(j => j.origen !== 'plantel').length;
   document.getElementById('resumen').innerHTML =
     `<div class="tot">${jug.length} JUGADORES<small>${nuevos ? nuevos + (nuevos === 1 ? ' refuerzo' : ' refuerzos') : 'plantel ' + TEMPORADA}</small></div>`
@@ -362,12 +409,12 @@ const ghost = document.getElementById('ghost');
 function zonaEn(x, y) {
   const el = document.elementFromPoint(x, y);
   if (!el) return null;
-  const lin = el.closest('.linea'); if (lin) return { tipo: 'pos', pos: lin.dataset.pos, el: lin };
+  const zo = el.closest('.zona'); if (zo) return { tipo: 'pos', pos: zo.dataset.pos, el: zo };
   const des = el.closest('#descarte'); if (des) return { tipo: 'descarte', el: des };
   return null;
 }
 function marcar(z) {
-  document.querySelectorAll('.linea.drop, #descarte.drop').forEach(e => e.classList.remove('drop'));
+  document.querySelectorAll('.zona.drop, #descarte.drop').forEach(e => e.classList.remove('drop'));
   if (z) z.el.classList.add('drop');
 }
 function empezarDrag(st) {
@@ -379,7 +426,7 @@ function empezarDrag(st) {
 }
 function moverGhost(x, y) { ghost.style.left = x + 'px'; ghost.style.top = y + 'px'; marcar(zonaEn(x, y)); }
 document.addEventListener('pointerdown', e => {
-  const el = e.target.closest('.chip'); if (!el || e.button > 0) return;
+  const el = e.target.closest('.chip'); if (!el || !el.dataset.key || e.button > 0) return;
   const st = { el, key: el.dataset.key, x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, activo: false, touch: e.pointerType !== 'mouse' };
   drag = st;
   if (st.touch) st.timer = setTimeout(() => { if (drag === st) empezarDrag(st); }, 260);
@@ -422,13 +469,7 @@ function abrirJugador(key) {
   document.getElementById('hj-nombre').textContent = (j.num ? j.num + ' · ' : '') + j.name;
   const origen = j.origen === 'refuerzo' ? `Refuerzo de ${CLUBES_CONFIG[j.club] ? CLUBES_CONFIG[j.club].nombreCorto : j.club}`
     : j.origen === 'creado' ? 'Jugador creado por vos' : `Plantel actual de ${CLUB.nombreCorto}`;
-  document.getElementById('hj-sub').textContent = des ? origen + ' · descartado' : origen;
-  const pz = document.getElementById('hj-puestos'); pz.innerHTML = '';
-  ['ARQ', 'DEF', 'MED', 'DEL'].forEach(k => {
-    const b = document.createElement('button'); b.textContent = k; if (k === j.pos) b.classList.add('on');
-    b.onclick = () => { j.pos = k; j.estado = 'cancha'; cerrarHoja(); render(); };
-    pz.appendChild(b);
-  });
+  document.getElementById('hj-sub').textContent = `${(ZONAS[j.pos] || ZONAS.INT).corto} · ${origen}` + (des ? ' · descartado' : '');
   const q = document.getElementById('hj-quitar');
   q.textContent = des ? 'VOLVER AL PLANTEL' : j.origen === 'plantel' ? 'DESCARTAR' : 'QUITAR';
   q.className = des ? 'btn' : 'btn rojo';
@@ -483,7 +524,7 @@ async function buscar() {
     const n = document.createElement('span'); n.textContent = p.num || ''; n.style.textShadow = NUM_OUTLINE; n.style.fontSize = '16px'; k.appendChild(n);
     kit.appendChild(k); row.appendChild(kit);
     const nm = document.createElement('div'); nm.className = 'nm';
-    nm.innerHTML = `<div>${esc(p.name)}</div><span><img src="escudos/${s}.png" alt="">${esc(CLUBES_CONFIG[s].nombreCorto)} · <span class="pos-tag">${POS_DE[p.position] || 'MED'}</span></span>`;
+    nm.innerHTML = `<div>${esc(p.name)}</div><span><img src="escudos/${s}.png" alt="">${esc(CLUBES_CONFIG[s].nombreCorto)} · <span class="pos-tag">${ZONAS[zonaDe(p, s)].corto}</span></span>`;
     row.appendChild(nm);
     const b = document.createElement('button');
     if (propio && jPropio) {
@@ -496,7 +537,7 @@ async function buscar() {
       b.textContent = '+ SUMAR';
       b.onclick = () => {
         ST.jugadores.push({ key: 'r' + p.fid, fid: p.fid, num: String(p.num || ''), name: p.name,
-          pos: POS_DE[p.position] || 'MED', club: s, origen: 'refuerzo', estado: 'cancha' });
+          pos: zonaDe(p, s), club: s, origen: 'refuerzo', estado: 'cancha' });
         render(); buscar(); toast(`${apellido(p.name)} se suma desde ${CLUBES_CONFIG[s].nombreCorto}`);
       };
     }
@@ -518,18 +559,18 @@ let tBuscar;
 document.getElementById('q').addEventListener('input', () => { clearTimeout(tBuscar); tBuscar = setTimeout(buscar, 180); });
 
 // ---------- Crear jugador ----------
-let crPos = 'DEL';
+let crPos = 'DC';
 function abrirCrear(nombre) {
   document.getElementById('cr-nombre').value = nombre || '';
   document.getElementById('cr-num').value = '';
-  crPos = 'DEL'; pintarCrPos();
+  crPos = 'DC'; pintarCrPos();
   document.getElementById('velo-crear').classList.add('on');
   setTimeout(() => document.getElementById(nombre ? 'cr-num' : 'cr-nombre').focus(), 50);
 }
 function pintarCrPos() {
   const pz = document.getElementById('cr-puestos'); pz.innerHTML = '';
-  ['ARQ', 'DEF', 'MED', 'DEL'].forEach(k => {
-    const b = document.createElement('button'); b.textContent = k; if (k === crPos) b.classList.add('on');
+  ['DC', 'EXT', 'ENG', 'INT', 'VC', 'LI', 'CEN', 'LD', 'ARQ'].forEach(k => {
+    const b = document.createElement('button'); b.textContent = ZONAS[k].corto; if (k === crPos) b.classList.add('on');
     b.onclick = () => { crPos = k; pintarCrPos(); }; pz.appendChild(b);
   });
 }
@@ -555,10 +596,10 @@ document.getElementById('btn-reiniciar').onclick = () => {
 async function descargar() {
   const btn = document.getElementById('btn-descargar');
   btn.disabled = true; const txt = btn.textContent; btn.textContent = 'GENERANDO…';
-  const W = 540, H = 675;                   // html2canvas scale 2 → 1080 x 1350
+  const W = 540;                            // html2canvas scale 2 → 1080 de ancho; el alto sale del contenido
   const jug = enCancha();
   const wrap = document.createElement('div');
-  wrap.style.cssText = `position:fixed;left:-10000px;top:0;width:${W}px;height:${H}px;background:#0b0f1c;color:#fff;`
+  wrap.style.cssText = `position:fixed;left:-10000px;top:0;width:${W}px;background:#0b0f1c;color:#fff;`
     + `font-family:'Barlow Condensed',sans-serif;display:flex;flex-direction:column;padding:20px 20px 16px;box-sizing:border-box;`;
   const cab = document.createElement('div');
   cab.style.cssText = 'display:flex;align-items:center;gap:12px;margin-bottom:12px;';
@@ -568,24 +609,11 @@ async function descargar() {
     + `<img src="${location.origin}/Logo.png" style="height:40px;object-fit:contain">`;
   wrap.appendChild(cab);
   const ca = document.createElement('div');
-  ca.style.cssText = 'flex:1;border-radius:10px;border:2px solid rgba(255,255,255,.2);overflow:hidden;display:flex;flex-direction:column;'
-    + 'background:#2d7a3a;';
-  LINEAS.forEach((L, i) => {
-    const lista = jug.filter(j => j.pos === L.k).sort(ordenNum);
-    const f = document.createElement('div');
-    f.style.cssText = `flex:${Math.max(1, Math.ceil(lista.length / 7))};position:relative;display:flex;align-items:center;justify-content:center;`
-      + `padding:20px 6px 8px;background:${i % 2 ? '#2a7236' : '#2d7a3a'};` + (i ? `border-top:${i === 2 ? 2 : 1.5}px solid rgba(255,255,255,${i === 2 ? .55 : .28});` : '');
-    f.innerHTML = `<div style="position:absolute;left:8px;top:5px;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1.5px;color:rgba(255,255,255,.75)">${L.nombre.toUpperCase()} · ${lista.length}</div>`;
-    const ch = document.createElement('div');
-    ch.style.cssText = 'display:flex;flex-wrap:wrap;justify-content:center;gap:6px 2px;';
-    lista.forEach(j => {
-      const c = chipEl(j); c.style.width = '68px';
-      c.querySelectorAll('img').forEach(im => { im.src = location.origin + '/' + im.getAttribute('src'); });
-      ch.appendChild(c);
-    });
-    f.appendChild(ch); ca.appendChild(f);
-  });
+  ca.id = 'cancha'; ca.style.margin = '0';
   wrap.appendChild(ca);
+  pintarCancha(ca, true);
+  ca.removeAttribute('id'); ca.className = 'cancha-img';
+  ca.querySelectorAll('img').forEach(im => { im.src = location.origin + '/' + im.getAttribute('src'); });
   const pie = document.createElement('div');
   pie.style.cssText = "font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;text-align:center;margin-top:10px;color:rgba(255,255,255,.8)";
   pie.innerHTML = 'ARMÁ EL TUYO EN <span style="color:#4fc3f7">TRIBUNAPP.COM.AR</span>';
@@ -594,7 +622,7 @@ async function descargar() {
   try {
     try { await document.fonts.ready; } catch (e) {}
     await Promise.all([...wrap.querySelectorAll('img')].map(im => im.complete ? 0 : new Promise(r => { im.onload = im.onerror = r; })));
-    const cv = await html2canvas(wrap, { backgroundColor: '#0b0f1c', scale: 2, useCORS: true, logging: false, width: W, height: H });
+    const cv = await html2canvas(wrap, { backgroundColor: '#0b0f1c', scale: 2, useCORS: true, logging: false, width: W, height: wrap.offsetHeight });
     const a = document.createElement('a');
     a.download = `mi-plantel-${SLUG}-${TEMPORADA}.png`;
     a.href = cv.toDataURL('image/png'); a.click();
@@ -617,6 +645,7 @@ function toast(t) {
   document.getElementById('club-escudo').src = `escudos/${SLUG}.png`;
   document.getElementById('volver').href = `club.html?c=${SLUG}`;
   document.title = `Armá tu plantel · ${CLUB.nombreCorto} — TribunApp`;
+  try { PUESTOS = await (await fetch('data/planteles_puestos.json')).json(); } catch (e) { PUESTOS = {}; }
   try { PLANTEL_ACTUAL = await (await fetch(`data/planteles/${SLUG}.json?t=${Date.now()}`)).json(); } catch (e) { PLANTEL_ACTUAL = []; }
   ST = cargarGuardado() || { jugadores: desdePlantel(PLANTEL_ACTUAL) };
   render();
