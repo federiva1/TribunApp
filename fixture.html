@@ -321,12 +321,11 @@ function fechaAR(utc) { const d = new Date(utc); d.setHours(d.getHours()-3); ret
 
 // Playoffs que la API todavía no publicó: data/playoffs.json (a mano) trae el calendario
 // y los cruces de octavos. Se agregan como partidos "provisorios" (sin horario) solo para
-// las instancias que liga.json todavía no tiene; cuando entran los reales (campo `fase`),
-// esa instancia deja de salir de acá sola. Las rondas siguientes se arman con los
+// las llaves que liga.json todavía no tiene; cuando entra el partido real (campo `fase`),
+// esa llave deja de salir de acá sola. Las rondas siguientes se arman con los
 // ganadores de la anterior (si ya se jugó) o con "Instituto o Huracán" / "Ganador cuartos 1".
 function playoffsProvisorios(po, liga) {
   const out = [];
-  const reales = new Set(liga.filter(p => p.fase).map(p => p.fecha));
   const jugado = (a, b) => liga.find(p => p.fase && ((p.home.slug === a && p.away.slug === b) || (p.home.slug === b && p.away.slug === a)));
   const NOMBRE_RONDA = { 18: 'cuartos', 19: 'semi' };
   let previas = null;              // llaves de la instancia anterior: [{a, b, ganador}]
@@ -350,14 +349,16 @@ function playoffsProvisorios(po, liga) {
       const p = ll.a && ll.b ? jugado(ll.a, ll.b) : null;
       ll.ganador = p && p.status && p.status.finished ? p.winner : null;
     });
-    if (!reales.has(ins.fecha)) {
-      llaves.forEach(ll => out.push({
-        provisorio: true, cuando: ins.cuando, fecha: ins.fecha, fase: ins.fase, round: '', api_id: '',
-        home: { slug: ll.a, name: '', desc: ll.da }, away: { slug: ll.b, name: '', desc: ll.db },
-        home_score: null, away_score: null, home_pen: null, away_pen: null, winner: null,
-        status: { utcTime: '', started: false, finished: false, short: 'TBD', elapsed: null },
-      }));
-    }
+    // Llave por llave: la API publica los cruces de una instancia de a poco (los
+    // cuartos entraron 3 de 4); una llave que ya está en liga.json no se duplica.
+    const enLiga = new Set(liga.filter(p => p.fase && p.fecha === ins.fecha)
+      .flatMap(p => [p.home.slug, p.away.slug]));
+    llaves.filter(ll => !enLiga.has(ll.a) && !enLiga.has(ll.b)).forEach(ll => out.push({
+      provisorio: true, cuando: ins.cuando, fecha: ins.fecha, fase: ins.fase, round: '', api_id: '',
+      home: { slug: ll.a, name: '', desc: ll.da }, away: { slug: ll.b, name: '', desc: ll.db },
+      home_score: null, away_score: null, home_pen: null, away_pen: null, winner: null,
+      status: { utcTime: '', started: false, finished: false, short: 'TBD', elapsed: null },
+    }));
     previas = llaves;
   }
   return out;
@@ -582,7 +583,7 @@ function renderClausura() {
     acc.appendChild(head);
     const body = document.createElement('div');
     body.className = 'fecha-body';
-    porFecha[n].slice().sort((a, b) => (a.status.utcTime||'').localeCompare(b.status.utcTime||''))
+    porFecha[n].slice().sort((a, b) => (a.status.utcTime||'9999').localeCompare(b.status.utcTime||'9999'))
       .forEach(p => body.appendChild(cardLiga(p)));
     acc.appendChild(body);
     return acc;
@@ -619,7 +620,7 @@ function renderClausura() {
   wrap.appendChild(nav);
   const hoja = document.createElement('div');
   hoja.className = 'lista-plana';
-  porFecha[sel].slice().sort((a, b) => (a.status.utcTime||'').localeCompare(b.status.utcTime||''))
+  porFecha[sel].slice().sort((a, b) => (a.status.utcTime||'9999').localeCompare(b.status.utcTime||'9999'))
     .forEach(p => hoja.appendChild(cardLiga(p)));
   wrap.appendChild(hoja);
   const posteriores = fechas.filter(n => fechas.indexOf(n) > idx);
