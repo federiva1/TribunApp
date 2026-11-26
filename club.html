@@ -2318,11 +2318,12 @@ document.getElementById('confirm-btn').addEventListener('click', async () => {
   let jugadores = onPitch.map(p => ({ num: p.num, name: p.name, fid: p.fid, x: Math.round(p.xPct), y: Math.round(p.yPct) }));
   if (gk && gk.yPct < 50) jugadores = jugadores.map(p => ({ ...p, x: Math.round(100 - p.x), y: Math.round(100 - p.y) }));
   try {
-    const payload = { jugadores, rival: RIVAL, club: CLUB_SLUG, device_id: getDeviceId() };
+    const firma = await _firmaVoto();
+    const payload = { jugadores, rival: RIVAL, club: CLUB_SLUG, device_id: getDeviceId(), ...firma.extra };
     if (FECHA_ACTUAL) payload.match_date = FECHA_ACTUAL;
     const res = await fetch(`${SUPABASE_URL}/rest/v1/formaciones`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' },
+      headers: { 'Content-Type': 'application/json', ...firma.headers, 'Prefer': 'return=minimal' },
       body: JSON.stringify(payload)
     });
     if (res.ok || res.status === 201) {
@@ -2693,6 +2694,13 @@ function addGrid(container, players, cols, startRank, avatarSize, noMedal = fals
   container.appendChild(g);
 }
 
+// Firma de un voto: con cuenta (js/cuenta.js) va con user_id + el token del usuario y la base
+// completa equipo_hincha desde el perfil; sin cuenta, el anónimo de siempre.
+async function _firmaVoto() {
+  if (window.TA_CUENTA && TA_CUENTA.firmaVoto) return TA_CUENTA.firmaVoto();
+  return { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }, extra: {} };
+}
+
 document.getElementById('scores-confirm-btn').addEventListener('click', async () => {
   const btn = document.getElementById('scores-confirm-btn');
   if (lsGet(lsScoresKey()) || scoresSent) return;
@@ -2700,9 +2708,10 @@ document.getElementById('scores-confirm-btn').addEventListener('click', async ()
   scoresSent = true;
   btn.textContent = 'Enviando...'; btn.disabled = true;
   try {
-    const scoresPayload = { rival: SCORES_RIVAL, club: CLUB_SLUG, puntajes: userScores };
+    const firma = await _firmaVoto();
+    const scoresPayload = { rival: SCORES_RIVAL, club: CLUB_SLUG, puntajes: userScores, ...firma.extra };
     if (SCORES_MATCH_DATE) scoresPayload.match_date = SCORES_MATCH_DATE;
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/puntajes`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' }, body: JSON.stringify(scoresPayload) });
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/puntajes`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...firma.headers, 'Prefer': 'return=minimal' }, body: JSON.stringify(scoresPayload) });
     if (res.ok || res.status === 201 || res.status === 409) {
       lsSet(lsScoresKey(), '1'); lsSet(lsScoresDataKey(), JSON.stringify(userScores));
       showToast(res.status === 409 ? 'Ya habías puntuado este partido.' : `¡Puntajes enviados! Vamos ${CLUB.nombreCorto} 🔥`);
@@ -4638,6 +4647,7 @@ function _taRenderEquipos(fechas) {
 renderSecondaryRow();
 </script>
 <script src="js/ui-help.js"></script>
+<script src="js/cuenta.js" defer></script>
 <script src="js/header-menu.js" defer></script>
 </body>
 </html>
