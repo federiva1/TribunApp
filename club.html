@@ -190,6 +190,10 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .tile-puntajes     .club-tile-photo { background-image: url('fotos/secciones/puntajes.jpg'); }
 .tile-estadisticas .club-tile-photo { background-image: url('fotos/secciones/estadisticas.jpg'); }
 .tile-tribunapp    .club-tile-photo { background-image: url('fotos/secciones/est-tribunapp.jpg'); }
+.tile-plantel      .club-tile-photo { background-image: url('fotos/secciones/formacion.jpg'); filter: hue-rotate(150deg) saturate(1.1); }
+/* Armá tu plantel (rama pizarra): por ahora solo Argentinos, para probarlo */
+.tile-plantel { display: none; }
+.tile-plantel .tile-nuevo { position: absolute; top: 12px; right: 12px; z-index: 3; font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 1.5px; color: #111; background: #f5c518; border-radius: 6px; padding: 2px 8px; }
 .club-tile-title {
   font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 1.8px;
   color: #fff; line-height: 1.05;
@@ -841,6 +845,15 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
         <div class="club-tile-desc">Elegí los 11 que pondrías vos</div>
       </div>
     </div>
+    <div class="club-tile tile-plantel" id="tile-plantel" onclick="location.href='plantel.html?c='+encodeURIComponent(CLUB_SLUG)">
+      <div class="club-tile-photo"></div>
+      <div class="tile-nuevo">NUEVO</div>
+      <div class="club-tile-body">
+        <div class="club-tile-title">ARMÁ TU PLANTEL</div>
+        <div class="club-tile-sub">Temporada 2027: descartá, sumá refuerzos y creá jugadores</div>
+        <div class="club-tile-desc">El plantel que querés para el año que viene</div>
+      </div>
+    </div>
     <div class="club-tile tile-puntajes" onclick="openSection('scores')">
       <div class="club-tile-photo"></div>
       <div class="club-tile-body">
@@ -1098,6 +1111,12 @@ const _pathSlug = URL_ALIAS[(_pathSegs[0] || '').toLowerCase()] || '';
 const _pathCopa = (_pathSegs[1] || '').toLowerCase();
 const CLUB_SLUG = ((params.get('c') || '').replace(/[^a-z0-9]/gi, '').toLowerCase()) || _pathSlug;
 const _copaRaw  = ((params.get('copa') || '').toLowerCase()) || _pathCopa;
+// Armá tu plantel (plantel.html): en prueba solo con Argentinos en la rama pizarra.
+const PLANTEL_CLUBES = ['argentinosjuniors'];
+document.addEventListener('DOMContentLoaded', () => {
+  const t = document.getElementById('tile-plantel');
+  if (t && PLANTEL_CLUBES.includes(CLUB_SLUG) && !_copaRaw) t.style.display = 'flex';
+});
 const COPA      = (_copaRaw === 'libertadores' || _copaRaw === 'sudamericana') ? _copaRaw : '';
 const CLUB = CLUBES_CONFIG[CLUB_SLUG];
 
