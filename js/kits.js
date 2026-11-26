@@ -48,6 +48,7 @@ var KITS = {
   fluminense:               { type: 'svg', colors: ['#ffffff'], svg: "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='white'/><rect x='0' width='20' height='100' fill='%23861638'/><rect x='40' width='20' height='100' fill='%23107a42'/><rect x='80' width='20' height='100' fill='%23861638'/></svg>" },   // tricolor: graná | blanco | verde
   saopaulo:                 { type: 'svg', colors: ['#ffffff'], svg: "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='white'/><rect y='32' width='100' height='17' fill='%23e2231a'/><rect y='49' width='100' height='17' fill='%23141414'/></svg>" },   // blanco con franjas roja y negra
   corinthians:              { type: 'solid',    colors: ['#ffffff'] },   // titular blanca lisa
+  atleticomg:               { type: 'stripesV', colors: ['#141414', '#ffffff'] },   // Atlético Mineiro: bastones negros y blancos
 };
 
 // Kit del club; si no tiene uno definido, sólido con su color de escudo (club-colors.js).

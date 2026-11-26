@@ -264,11 +264,17 @@ function formChip(c) {
 
 // ---- Fetch standings de una temporada (proxy solo en prod) ----
 async function fetchSeason(season) {
-  const res = await fetch(`/api/apisports/standings?league=${LEAGUE}&season=${season}`, { cache: 'no-store' });
-  if (!res.ok) throw new Error('API ' + res.status);
-  const json = await res.json();
-  const resp = json.response && json.response[0];
-  return (resp && resp.league && resp.league.standings) || [];
+  let groups = [];
+  try {
+    const res = await fetch(`/api/apisports/standings?league=${LEAGUE}&season=${season}`, { cache: 'no-store' });
+    const json = res.ok ? await res.json() : {};
+    const resp = json.response && json.response[0];
+    groups = (resp && resp.league && resp.league.standings) || [];
+  } catch (e) { groups = []; }
+  // sin respuesta de la API: la copia guardada (data/fixtures/standings.json, js/standings-fix.js)
+  if (!groups.length && season === 2026 && typeof sfStandingsRespaldo === 'function') groups = await sfStandingsRespaldo();
+  if (!groups.length) throw new Error('sin tabla');
+  return groups;
 }
 
 // Nombre de grupo → { tour: 'apertura'|'clausura'|'', zona: 'A'|'B'|null }

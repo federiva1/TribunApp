@@ -2846,7 +2846,7 @@ function _shOptsPuntajes(valorPorId, fmt, titulo, pie) {
     marcador: SCORES_MARCADOR || 'VS',
     rivalSlug: SCORES_RIVAL_SLUG,
     rivalEscudo: SCORES_RIVAL_ESCUDO,
-    sub: (SCORES_FECHA_NUM ? `Fecha ${SCORES_FECHA_NUM} · ` : SCORES_INSTANCIA ? `${SCORES_INSTANCIA} · ` : '')
+    sub: (SCORES_FECHA_NUM ? `${etiquetaFecha(SCORES_FECHA_NUM)} · ` : SCORES_INSTANCIA ? `${SCORES_INSTANCIA} · ` : '')
          + `vs ${SCORES_RIVAL}`,
     pie,
     vertical: true,
@@ -4081,9 +4081,9 @@ async function fillTiles() {
   const { proximo, ultimo } = await clubLigaMatches();
   const fSub = document.getElementById('tile-formacion-sub');
   const pSub = document.getElementById('tile-puntaje-sub');
-  if (proximo) { const l = _matchInfo(proximo); fSub.innerHTML = `Fecha ${l.fecha} · <b>vs ${escapeHtml(l.rival)}</b>`; }
+  if (proximo) { const l = _matchInfo(proximo); fSub.innerHTML = `${etiquetaFecha(l.fecha)} · <b>vs ${escapeHtml(l.rival)}</b>`; }
   else if (fSub) fSub.textContent = 'Sin próximo partido';
-  if (ultimo) { const l = _matchInfo(ultimo); pSub.innerHTML = `Fecha ${l.fecha} · <b>vs ${escapeHtml(l.rival)}</b>`; }
+  if (ultimo) { const l = _matchInfo(ultimo); pSub.innerHTML = `${etiquetaFecha(l.fecha)} · <b>vs ${escapeHtml(l.rival)}</b>`; }
   else if (pSub) pSub.textContent = 'Al terminar el partido';
 }
 fillTiles();
@@ -4347,11 +4347,11 @@ async function updateTilesGating() {
   const pSub = document.getElementById('tile-puntaje-sub');
   const badge = open => open ? ' <span style="color:#66bb6a;font-weight:600;">· Abierto</span>' : ' <span style="color:#777;">· Cerrado</span>';
   if (fSub) {
-    if (proximo) { const l = _matchInfo(proximo); fSub.innerHTML = `Fecha ${l.fecha} · vs ${escapeHtml(l.rival)}${badge(FORMACION_OPEN)}`; }
+    if (proximo) { const l = _matchInfo(proximo); fSub.innerHTML = `${etiquetaFecha(l.fecha)} · vs ${escapeHtml(l.rival)}${badge(FORMACION_OPEN)}`; }
     else fSub.textContent = 'Sin próximo partido';
   }
   if (pSub) {
-    if (ultimo) { const l = _matchInfo(ultimo); pSub.innerHTML = `Fecha ${l.fecha} · vs ${escapeHtml(l.rival)}${badge(PUNTAJES_OPEN)}`; }
+    if (ultimo) { const l = _matchInfo(ultimo); pSub.innerHTML = `${etiquetaFecha(l.fecha)} · vs ${escapeHtml(l.rival)}${badge(PUNTAJES_OPEN)}`; }
     else pSub.textContent = 'Al terminar el partido';
   }
 }
@@ -4522,7 +4522,7 @@ async function _taMatchByDate() {
     const { mine } = await clubLigaMatches();
     (mine || []).forEach(m => {
       const utc = m.status && m.status.utcTime; if (!utc) return;
-      add(utc, { fecha: m.fecha, rival: _matchInfo(m).rival, label: `Fecha ${m.fecha}` });
+      add(utc, { fecha: m.fecha, rival: _matchInfo(m).rival, label: etiquetaFecha(m.fecha) });
     });
     return map;
   }

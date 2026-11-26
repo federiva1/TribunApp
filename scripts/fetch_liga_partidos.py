@@ -116,7 +116,8 @@ def already_enriched(out_id: str) -> bool:
 
 
 def competicion_de(round_str: str) -> str:
-    r = (round_str or '').lower()
+    from clubes_map import ronda_liga
+    r = ronda_liga(round_str).lower()
     if 'clausura' in r:
         return 'Clausura 2026'
     if 'apertura' in r:
@@ -343,6 +344,9 @@ def main() -> int:
             if f['fixture']['status']['short'] not in FINISHED:
                 continue
             rnd = f['league'].get('round', '') or ''
+            if not cfg['copa']:
+                from clubes_map import ronda_liga
+                rnd = ronda_liga(rnd)        # playoffs del Clausura: "Round of 16" a secas
             # En liga se filtra por torneo (clausura/apertura); en copa no aplica.
             if not cfg['copa'] and args.torneo != 'all' and args.torneo not in rnd.lower():
                 continue

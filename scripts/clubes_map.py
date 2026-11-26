@@ -104,6 +104,21 @@ def _url_token(s: str) -> str:
     return re.sub(r'[^a-z0-9]', '', n.lower())
 
 
+_PLAYOFF_CLAVES = ('round of 16', 'quarter', 'semi', 'final')
+
+
+def ronda_liga(round_str: str) -> str:
+    """Los playoffs del Clausura 2026 la API los publica SIN el nombre del torneo
+    ("Round of 16"; los del Apertura venían como "Apertura - Round of 16"). Se les
+    antepone "Clausura - " para que los filtros por torneo y las etiquetas los traten
+    como parte del Clausura. Cualquier otra ronda vuelve igual."""
+    r = round_str or ''
+    rl = r.lower()
+    if 'apertura' not in rl and 'clausura' not in rl and any(k in rl for k in _PLAYOFF_CLAVES):
+        return 'Clausura - ' + r
+    return r
+
+
 def puntuar_url(local_slug: str, visitante_slug: str) -> str:
     """URL compartible de la landing de puntajes de un partido (puntuar.html)."""
     return f'https://www.tribunapp.com.ar/puntuar/{_url_token(local_slug)}-{_url_token(visitante_slug)}'

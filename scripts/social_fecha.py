@@ -46,7 +46,7 @@ def partidos_del_dia(fecha):
         ko = datetime.fromisoformat(st['utcTime']).astimezone(AR)
         if ko.strftime('%Y-%m-%d') != fecha:
             continue
-        out.append({'ko': ko, 'fecha_num': p.get('fecha'), 'comp': 'liga',
+        out.append({'ko': ko, 'fecha_num': p.get('fecha'), 'fase': p.get('fase'), 'comp': 'liga',
                     'home': p['home']['slug'], 'away': p['away']['slug'],
                     'home_name': p['home']['name'], 'away_name': p['away']['name'],
                     'hs': p.get('home_score'), 'as': p.get('away_score')})
@@ -130,10 +130,15 @@ def _nombre(slug, fallback):
     return (NOM.get(slug) or fallback or '').upper()
 
 
+def _local_label(m):
+    """'TORNEO LOCAL · FECHA 8', o la instancia en los playoffs ('TORNEO LOCAL · OCTAVOS DE FINAL')."""
+    return f"TORNEO LOCAL · {(m.get('fase') or '').upper() or 'FECHA %s' % m['fecha_num']}"
+
+
 def _torneo_label(m):
     """'TORNEO LOCAL · FECHA 8' o 'COPA LIBERTADORES · CUARTOS DE FINAL · IDA'."""
     if m.get('fecha_num'):
-        return f"TORNEO LOCAL · FECHA {m['fecha_num']}"
+        return _local_label(m)
     base = {'libertadores': 'COPA LIBERTADORES',
             'sudamericana': 'COPA SUDAMERICANA'}.get(m['comp'], 'TORNEO LOCAL')
     partes = [base] + [x.upper() for x in (m.get('ronda'), m.get('pata')) if x]
@@ -221,8 +226,8 @@ RESULTADOS = False   # --resultados: marcador en lugar de "VS" y "FINAL" en luga
 def _html(partidos, fecha, titulo):
     d = datetime.strptime(fecha, '%Y-%m-%d')
     sub = f'{DIAS[d.weekday()]} {d.day} DE {MESES[d.month - 1]}'
-    nums = {m['fecha_num'] for m in partidos if m['fecha_num']}
-    torneo = f'TORNEO LOCAL · FECHA {sorted(nums)[0]}' if len(nums) == 1 else 'TORNEO LOCAL'
+    nums = {_local_label(m) for m in partidos if m['fecha_num']}
+    torneo = nums.pop() if len(nums) == 1 else 'TORNEO LOCAL'
 
     ff = ''.join(
         "@font-face{font-family:'%s';font-weight:%s;src:url(%s) format('woff2');}"
@@ -325,8 +330,8 @@ def _html_columnas(partidos, titulo):
     for m in partidos:
         if m['ko'].date() not in dias:
             dias.append(m['ko'].date())
-    nums = {m['fecha_num'] for m in partidos if m['fecha_num']}
-    torneo = f'TORNEO LOCAL · FECHA {sorted(nums)[0]}' if len(nums) == 1 else 'TORNEO LOCAL'
+    nums = {_local_label(m) for m in partidos if m['fecha_num']}
+    torneo = nums.pop() if len(nums) == 1 else 'TORNEO LOCAL'
 
     ff = ''.join(
         "@font-face{font-family:'%s';font-weight:%s;src:url(%s) format('woff2');}"

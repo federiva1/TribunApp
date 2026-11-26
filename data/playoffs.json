@@ -1,0 +1,26 @@
+{
+  "_leeme": "Calendario de playoffs cargado a mano (la API todavía no publica estos partidos). fixture.html muestra cada instancia que liga.json todavía no tenga (campo fase); cuando entran los partidos reales, esta instancia deja de usarse sola. octavos en el orden del cuadro: cada par consecutivo se cruza en cuartos. El local es el mejor ubicado. Una llave sin definir lleva local o visitante en null y el texto en local_desc o visitante_desc. Con `hora` (oficial), fetch_liga_fixtures.py mete el partido en liga.json mientras la API no lo publique.",
+  "torneo": "Clausura 2026",
+  "instancias": [
+    {"fecha": 17, "fase": "Octavos de final", "cuando": "Sáb 21 o dom 22 nov · horario a confirmar",
+     "partidos": [
+       {"local": "instituto", "visitante": "huracan"},
+       {"local": "riverplate", "visitante": "lanus"},
+       {"local": "argentinosjuniors", "visitante": "independiente"},
+       {"local": "velezsarsfield", "visitante": "belgrano"},
+       {"local": "rosariocentral", "visitante": "gimnasiamendoza"},
+       {"local": "defensayjusticia", "visitante": "barracascentral"},
+       {"local": "bocajuniors", "visitante": "independienterivadavia"},
+       {"local": "gimnasialp", "visitante": "newellsoldboys"}
+     ]},
+    {"fecha": 18, "fase": "Cuartos de final", "cuando": "Sáb 28 o dom 29 nov",
+     "partidos": [
+       {"local": "instituto", "visitante": "riverplate"},
+       {"local": "velezsarsfield", "visitante": "independiente"},
+       {"local": "rosariocentral", "visitante": "barracascentral"},
+       {"local": "bocajuniors", "visitante": "gimnasialp", "hora": "2026-11-29T20:30:00-03:00", "cuando": "Dom 29 Nov · 20:30 hs"}
+     ]},
+    {"fecha": 19, "fase": "Semifinal", "cuando": "Fin de semana del 5 y 6 dic · horario a confirmar"},
+    {"fecha": 20, "fase": "Final", "cuando": "Sáb 12 dic · Estadio Único de La Plata"}
+  ]
+}

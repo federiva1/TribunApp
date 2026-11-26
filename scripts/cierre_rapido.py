@@ -69,6 +69,10 @@ def candidatos(liga, copas, ahora=None):
             continue
         mins = (ahora - datetime.fromisoformat(st['utcTime'])).total_seconds() / 60
         if DESDE_MIN <= mins <= HASTA_MIN:
+            if not e.get('api_id'):      # partido cargado a mano (data/playoffs.json)
+                print(f"  ! {e['home']['slug']} vs {e['away']['slug']} no tiene api_id: correr "
+                      "fetch_liga_fixtures.py para traer el partido real de la API")
+                continue
             out.append({'comp': 'liga', 'entry': e, 'api_id': str(e['api_id'])})
     for key in ('libertadores', 'sudamericana'):
         for p in ((copas.get(key) or {}).get('partidos')) or []:
@@ -104,8 +108,18 @@ def cerrar_liga(entry, fx):
     if gl is None or gv is None:
         return False
     entry['home_score'], entry['away_score'] = gl, gv
-    entry['winner'] = None if gl == gv else (
-        entry['home']['slug'] if gl > gv else entry['away']['slug'])
+    # Playoffs: empate en el alargue → penales. El ganador sale de teams.X.winner
+    # (cubre penales); si la API no lo marca, se compara el marcador.
+    pen = ((fx.get('score') or {}).get('penalty')) or {}
+    entry['home_pen'], entry['away_pen'] = pen.get('home'), pen.get('away')
+    teams = fx.get('teams') or {}
+    if (teams.get('home') or {}).get('winner'):
+        entry['winner'] = entry['home']['slug']
+    elif (teams.get('away') or {}).get('winner'):
+        entry['winner'] = entry['away']['slug']
+    else:
+        entry['winner'] = None if gl == gv else (
+            entry['home']['slug'] if gl > gv else entry['away']['slug'])
     entry['status'].update({'started': True, 'finished': True,
                             'short': st.get('short') or 'FT',
                             'elapsed': st.get('elapsed') or 90})

@@ -170,7 +170,7 @@ def _next_data_http(url: str) -> dict | None:
         })
         with urllib.request.urlopen(req, timeout=30) as r:
             html = r.read().decode('utf-8', 'replace')
-        m = re.search(r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>',
+        m = re.search(r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>',
                       html, re.DOTALL)
         return json.loads(m.group(1)) if m else None
     except Exception:

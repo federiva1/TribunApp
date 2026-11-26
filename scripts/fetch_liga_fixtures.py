@@ -11,6 +11,7 @@ scores, penales, ganador y estado.
 La API key sale de scripts/apikey.py (env var API_SPORTS_KEY o scripts/.apikey).
 """
 import json, re, sys, urllib.request
+from datetime import datetime, timezone
 from pathlib import Path
 from collections import Counter
 
@@ -44,12 +45,32 @@ def get(path):
     with urllib.request.urlopen(req, timeout=25) as r:
         return json.loads(r.read())
 
+# Playoffs: api-sports los nombra "Clausura - Round of 16", "- Quarter-finals",
+# "- Semi-finals", "- Final". Siguen la numeración de las fechas (la fase regular
+# tiene 16) para que el frontend los ordene y agrupe igual; `fase` lleva el nombre
+# y es lo que excluye a esos partidos de la tabla (js/standings-fix.js).
+FASES = (('round of 16', 17, 'Octavos de final'), ('quarter', 18, 'Cuartos de final'),
+         ('semi', 19, 'Semifinal'), ('final', 20, 'Final'))
+
+
+def fecha_y_fase(round_s):
+    """'Clausura - 7' -> (7, None); 'Clausura - Round of 16' -> (17, 'Octavos de final')."""
+    suf = round_s.split('-', 1)[1].strip() if '-' in round_s else round_s
+    if suf.isdigit():
+        return int(suf), None
+    s = suf.lower()
+    for clave, num, nombre in FASES:
+        if clave in s:
+            return num, nombre
+    return None, suf or None
+
+
 def build(f):
     fix, teams, goals = f['fixture'], f['teams'], f['goals']
     score = f.get('score', {}) or {}
     pen = score.get('penalty') or {}
-    round_s = f['league']['round']                 # "Clausura - 7"
-    fecha = int(round_s.split('-')[1].strip()) if '-' in round_s else None
+    round_s = f['league']['round']                 # "Clausura - 7" | "Clausura - Round of 16"
+    fecha, fase = fecha_y_fase(round_s)
     short = fix['status']['short']
     started, finished = STATUS_MAP.get(short, (False, False))
     hid, aid = teams['home']['id'], teams['away']['id']
@@ -59,6 +80,7 @@ def build(f):
     return {
         'round':    round_s,
         'fecha':    fecha,
+        'fase':     fase,
         'api_id':   str(fix['id']),
         'home': {'name': teams['home']['name'], 'id': str(hid), 'slug': SLUG.get(hid, str(hid))},
         'away': {'name': teams['away']['name'], 'id': str(aid), 'slug': SLUG.get(aid, str(aid))},
@@ -130,12 +152,53 @@ def reparar_estados(entries):
     return reparados
 
 
+def agregar_manuales(entries):
+    """Cruces de playoffs con horario OFICIAL que la API todavía no publicó.
+
+    data/playoffs.json: un partido de una instancia con `local`, `visitante` y `hora`
+    (ISO con zona) entra a liga.json como partido sin `api_id` (`manual: true`), así el
+    club tiene próximo partido y la formación se abre. Solo si la API no trae ya ese
+    cruce en esa instancia: cuando lo publica, gana la API y este se deja de agregar.
+    Caso real: Boca–Gimnasia LP (cuartos), que la API publicó días después que los otros 3."""
+    try:
+        po = json.loads((ROOT / 'data' / 'playoffs.json').read_text(encoding='utf-8'))
+    except FileNotFoundError:
+        return []
+    equipos = {}
+    for e in entries:
+        for lado in ('home', 'away'):
+            equipos.setdefault(e[lado]['slug'], {k: e[lado][k] for k in ('name', 'id', 'slug')})
+    presentes = {(e['fecha'], e['home']['slug']) for e in entries} | {(e['fecha'], e['away']['slug']) for e in entries}
+    ronda_api = {17: 'Round of 16', 18: 'Quarter-finals', 19: 'Semi-finals', 20: 'Final'}
+    out = []
+    for ins in po.get('instancias') or []:
+        for m in ins.get('partidos') or []:
+            l, v, hora = m.get('local'), m.get('visitante'), m.get('hora')
+            if not (l and v and hora) or l not in equipos or v not in equipos:
+                continue
+            if (ins['fecha'], l) in presentes or (ins['fecha'], v) in presentes:
+                continue
+            utc = datetime.fromisoformat(hora).astimezone(timezone.utc).isoformat()
+            entries.append({
+                'round': f"Clausura - {ronda_api.get(ins['fecha'], ins.get('fase') or '')}",
+                'fecha': ins['fecha'], 'fase': ins.get('fase'), 'api_id': '', 'manual': True,
+                'home': dict(equipos[l]), 'away': dict(equipos[v]),
+                'home_score': None, 'away_score': None, 'home_pen': None, 'away_pen': None, 'winner': None,
+                'status': {'utcTime': utc, 'started': False, 'finished': False, 'short': 'NS', 'elapsed': None},
+            })
+            out.append(f'{l} vs {v} ({hora})')
+    return out
+
+
 def main():
     print(f'Fetching Liga (league={LEAGUE} season={SEASON})...')
     resp = get(f'/fixtures?league={LEAGUE}&season={SEASON}').get('response', [])
     if not resp:
         print('Sin respuesta de la API'); sys.exit(1)
-    # Solo Clausura
+    # Solo Clausura (con sus playoffs, que la API publica como "Round of 16" a secas)
+    from clubes_map import ronda_liga
+    for f in resp:
+        f['league']['round'] = ronda_liga(f['league']['round'])
     clausura = [f for f in resp if f['league']['round'].startswith('Clausura')]
     entries = [build(f) for f in clausura]
     # Horarios confirmados por la AFA que la API todavía no trae (data/horarios_overrides.json)
@@ -145,6 +208,9 @@ def main():
         if h:
             e['status']['utcTime'] = h
             print(f"  Horario a mano: {e['home']['slug']} vs {e['away']['slug']} -> {h}")
+    agregados = agregar_manuales(entries)
+    for a in agregados:
+        print(f'  Partido a mano (data/playoffs.json, la API todavía no lo publica): {a}')
     # El agregado de api-sports se atrasa al terminar un partido: se completa con
     # lo que ya haya en data/partidos (endpoint por-id, que marca FT al instante).
     reparados = reparar_estados(entries)

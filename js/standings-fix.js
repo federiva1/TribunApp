@@ -26,6 +26,7 @@
       var st = m.status || {};
       if (!st.finished) return;
       if (torneo && _norm(m.round).indexOf(torneo) < 0) return;
+      if (m.fase) return;                      // playoffs: no suman en la tabla
       var esLocal = String((m.home || {}).id) === id;
       if (!esLocal && String((m.away || {}).id) !== id) return;
       if (m.home_score == null || m.away_score == null) return;
@@ -55,6 +56,21 @@
     // La forma se lee de izquierda (más viejo) a derecha, como la manda la API.
     if (forma) row.form = ((row.form || '') + forma).slice(-5);
   }
+
+  // Respaldo de /standings: si la API no devuelve la tabla (caída, o el plan sin acceso a
+  // la temporada — pasó el 2026-11-09: "Free plans do not have access to this season"),
+  // se usa data/fixtures/standings.json, una copia guardada de la misma respuesta. Se le
+  // aplica igual sfCorregirConLiga, así que con liga.json al día la tabla queda completa.
+  async function sfStandingsRespaldo() {
+    try {
+      var r = await fetch('data/fixtures/standings.json?t=' + Date.now());
+      if (!r.ok) return [];
+      var j = await r.json();
+      var resp = j.response && j.response[0];
+      return (resp && resp.league && resp.league.standings) || [];
+    } catch (e) { return []; }
+  }
+  window.sfStandingsRespaldo = sfStandingsRespaldo;
 
   // groups: standings de api-sports (array de grupos). liga: data/fixtures/liga.json.
   function sfCorregirGrupos(groups, liga) {
