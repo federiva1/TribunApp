@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-0DN9D9L127"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-0DN9D9L127');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Ícono (solo el emblema de la cancha) y app instalable -->
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#0d0d1a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="TribunApp">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>Mi cuenta · TribunApp</title>
+<meta name="description" content="Tu cuenta de TribunApp: tu usuario, tu club y tus votos.">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  // Antes de que supabase-js consuma el hash: ¿venimos del link de "olvidé mi contraseña"?
+  window.__TA_RECOVERY = /type=recovery/.test(location.hash);
+  window.__TA_ERROR = (location.hash.match(/error_description=([^&]+)/) || [])[1] || '';
+</script>
+<style>
+:root{--dark:#0d0d1a;--dark2:#13131f;--dark3:#1a1a2e;--acento:#1565c0;--acento-light:#42a5f5;--gold:#f5c518;--rojo:#e53935;--verde:#43a047;}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--dark);color:#fff;overflow-x:hidden;}
+/* HEADER */
+#site-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 20px 10px;
+  background:linear-gradient(180deg,rgba(21,101,192,.15) 0%,transparent 100%);
+  border-bottom:1px solid rgba(255,255,255,.07);
+  position:sticky;top:0;z-index:50;backdrop-filter:blur(10px);gap:12px;
+}
+.logo-wrap{display:flex;align-items:center;gap:10px;text-decoration:none;}
+/* Logo del header — MISMO tamaño en todas las páginas de la web (si se cambia, cambiarlo en todas). */
+.logo-wrap img{height:72px;object-fit:contain;}
+@media (max-width:430px){.logo-wrap img{height:60px;}}
+.logo-titulo{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:#fff;line-height:1;}
+.logo-sub{font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:3px;color:var(--acento-light);text-transform:uppercase;}
+.header-trophy{font-size:28px;line-height:1;}
+.header-chip{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);background:rgba(245,197,24,.12);border:1px solid rgba(245,197,24,.3);border-radius:6px;padding:3px 8px;}
+.header-actions{display:flex;gap:8px;align-items:center;}
+.header-pill{
+  display:flex;align-items:center;gap:7px;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);
+  border-radius:10px;padding:7px 13px;
+  font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:.5px;
+  color:rgba(255,255,255,.85);cursor:pointer;text-decoration:none;
+  transition:background .2s,color .2s,border-color .2s;
+}
+.header-pill svg{width:15px;height:15px;flex-shrink:0;}
+.header-pill:hover{background:rgba(21,101,192,.18);border-color:rgba(21,101,192,.45);color:#fff;}
+.header-pill.primary{background:rgba(21,101,192,.18);border-color:rgba(21,101,192,.45);color:#fff;}
+.header-pill.primary:hover{background:rgba(21,101,192,.3);}
+.header-pill-label{font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:.5px;}
+.header-pill-jugar{background:linear-gradient(135deg,#1565c0,#0d47a1);border-color:#1976d2;color:#fff;}
+.header-pill-jugar:hover{background:linear-gradient(135deg,#1976d2,#1565c0);}
+@media(max-width:560px){
+  .header-pill-label{display:none;}
+  .header-pill{width:36px;height:36px;padding:0;gap:0;justify-content:center;}
+  .header-actions{gap:6px;}
+}
+@media(max-width:430px){.header-chip{display:none;}}
+@media (max-width: 500px) {
+  .header-pill { padding: 6px 10px; gap: 0; }
+}
+
+
+#main{padding:24px 16px 60px;max-width:460px;margin:0 auto;}
+[hidden]{display:none !important;}
+.titulo{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:3px;line-height:1;}
+.sub{font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:1.5px;color:rgba(255,255,255,.45);text-transform:uppercase;margin:4px 0 18px;}
+.card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:18px;margin-bottom:14px;}
+.tabs{display:flex;gap:6px;margin-bottom:16px;background:rgba(255,255,255,.04);padding:4px;border-radius:10px;}
+.tabs button{flex:1;padding:9px;border:0;border-radius:8px;background:transparent;color:rgba(255,255,255,.6);font-family:'Barlow Condensed',sans-serif;font-size:15px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;}
+.tabs button.on{background:var(--acento);color:#fff;}
+.btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:12px;border-radius:10px;border:1px solid transparent;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:600;letter-spacing:1px;cursor:pointer;text-decoration:none;}
+.btn:disabled{opacity:.5;cursor:default;}
+.btn-google{background:#fff;color:#1f1f1f;}
+.btn-google svg{width:18px;height:18px;}
+.btn-pri{background:var(--acento);color:#fff;}
+.btn-pri:hover:not(:disabled){background:#1976d2;}
+.btn-sec{background:transparent;color:rgba(255,255,255,.75);border-color:rgba(255,255,255,.18);}
+.btn-peligro{background:transparent;color:#ff8a80;border-color:rgba(229,57,53,.45);}
+.sep{display:flex;align-items:center;gap:10px;margin:16px 0;color:rgba(255,255,255,.35);font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;}
+.sep::before,.sep::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.1);}
+label.campo{display:block;margin-bottom:12px;}
+label.campo>span{display:block;font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:5px;}
+input[type=email],input[type=password],input[type=text],select{width:100%;padding:11px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:#fff;font-size:15px;font-family:'DM Sans',sans-serif;outline:none;}
+select option{background:#1a1a2e;}
+input:focus,select:focus{border-color:var(--acento-light);}
+.ayuda{font-size:12px;color:rgba(255,255,255,.4);margin-top:4px;min-height:15px;}
+.ayuda.ok{color:#81c784;}.ayuda.mal{color:#ff8a80;}
+.equipo-sel{display:flex;gap:10px;align-items:center;}
+.equipo-sel img{width:38px;height:38px;object-fit:contain;flex:0 0 auto;}
+.toggle{display:flex;align-items:flex-start;gap:12px;padding:12px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);margin-bottom:14px;cursor:pointer;}
+.toggle input{width:20px;height:20px;margin-top:2px;accent-color:var(--gold);flex:0 0 auto;}
+.toggle b{font-family:'Barlow Condensed',sans-serif;font-size:15px;letter-spacing:.5px;}
+.toggle small{display:block;font-size:12px;color:rgba(255,255,255,.45);margin-top:2px;}
+.msg{padding:11px 13px;border-radius:10px;font-size:14px;margin-top:12px;line-height:1.4;}
+.msg.ok{background:rgba(67,160,71,.14);border:1px solid rgba(67,160,71,.4);color:#c8e6c9;}
+.msg.mal{background:rgba(229,57,53,.12);border:1px solid rgba(229,57,53,.4);color:#ffcdd2;}
+.msg button{background:none;border:0;color:var(--acento-light);text-decoration:underline;cursor:pointer;font:inherit;padding:0;}
+.link{background:none;border:0;color:var(--acento-light);cursor:pointer;font-size:13px;margin-top:10px;padding:0;text-decoration:underline;}
+.perfil-top{display:flex;gap:14px;align-items:center;}
+.perfil-top img{width:64px;height:64px;object-fit:contain;}
+.perfil-user{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;line-height:1;word-break:break-all;}
+.perfil-club{font-family:'Barlow Condensed',sans-serif;font-size:15px;color:rgba(255,255,255,.7);margin-top:3px;}
+.perfil-mail{font-size:12px;color:rgba(255,255,255,.4);margin-top:3px;word-break:break-all;}
+.chip{display:inline-block;font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;padding:3px 8px;border-radius:6px;margin-top:6px;}
+.chip.pub{background:rgba(67,160,71,.15);color:#a5d6a7;border:1px solid rgba(67,160,71,.35);}
+.chip.priv{background:rgba(255,255,255,.06);color:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.15);}
+.sec-t{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;margin-bottom:10px;}
+.act-tot{display:flex;gap:10px;margin-bottom:12px;}
+.act-tot div{flex:1;text-align:center;padding:10px;border-radius:10px;background:rgba(255,255,255,.04);}
+.act-tot b{display:block;font-family:'Bebas Neue',sans-serif;font-size:30px;line-height:1;color:var(--gold);}
+.act-tot span{font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.5);}
+.act-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid rgba(255,255,255,.06);}
+.act-row img{width:26px;height:26px;object-fit:contain;}
+.act-row .n{flex:1;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:15px;}
+.act-row .c{font-family:'Barlow Condensed',sans-serif;font-size:13px;color:rgba(255,255,255,.55);white-space:nowrap;}
+.act-row .propio{font-size:10px;letter-spacing:1px;color:var(--gold);margin-left:6px;text-transform:uppercase;}
+.vacio{font-size:14px;color:rgba(255,255,255,.45);}
+.acciones{display:flex;flex-direction:column;gap:8px;}
+</style>
+</head>
+<body>
+
+<header id="site-header">
+  <a class="logo-wrap" href="index.html">
+    <img src="logo-header.png" alt="TribunApp">
+  </a>
+  <div class="header-actions">
+    <a class="header-pill" href="fixture.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span class="header-pill-label">Fixture</span>
+    </a>
+    <a class="header-pill" href="tablas.html" data-help="Tablas: posiciones del torneo en curso, tabla anual y promedios, en tiempo real.">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      <span class="header-pill-label">Tablas</span>
+    </a>
+    <a class="header-pill" href="estadisticas-torneo.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span class="header-pill-label">Estadísticas</span>
+    </a>
+    <a class="header-pill" href="estadisticas-tribunapp.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span class="header-pill-label">TribunApp</span>
+    </a>
+  </div>
+</header>
+
+<main id="main">
+  <div id="v-cargando" class="vacio">Cargando…</div>
+
+  <!-- ===== Ingresar / crear cuenta ===== -->
+  <section id="v-ingreso" hidden>
+    <div class="titulo">Tu cuenta</div>
+    <div class="sub">Opcional · votá con tu usuario y tu club</div>
+    <div class="card">
+      <div class="tabs">
+        <button type="button" data-tab="ingresar" class="on">Ingresar</button>
+        <button type="button" data-tab="crear">Crear cuenta</button>
+      </div>
+      <button type="button" class="btn btn-google" id="b-google">
+        <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>
+        Seguir con Google
+      </button>
+      <div class="sep">o con tu mail</div>
+
+      <form id="f-ingresar" novalidate>
+        <label class="campo"><span>Mail</span><input type="email" name="email" autocomplete="email" required></label>
+        <label class="campo"><span>Contraseña</span><input type="password" name="password" autocomplete="current-password" required></label>
+        <button class="btn btn-pri" type="submit">Ingresar</button>
+        <button type="button" class="link" id="b-olvide">Me olvidé la contraseña</button>
+      </form>
+
+      <form id="f-crear" novalidate hidden>
+        <label class="campo"><span>Mail</span><input type="email" name="email" autocomplete="email" required></label>
+        <label class="campo"><span>Contraseña</span><input type="password" name="password" autocomplete="new-password" minlength="8" required>
+          <div class="ayuda">Mínimo 8 caracteres.</div></label>
+        <div class="bloque-perfil"></div>
+        <button class="btn btn-pri" type="submit">Crear cuenta</button>
+      </form>
+      <div id="m-ingreso"></div>
+    </div>
+  </section>
+
+  <!-- ===== Completar perfil (primer ingreso con Google) ===== -->
+  <section id="v-completar" hidden>
+    <div class="titulo">Completá tu perfil</div>
+    <div class="sub">Un paso más y listo</div>
+    <form class="card" id="f-completar" novalidate>
+      <div class="bloque-perfil"></div>
+      <button class="btn btn-pri" type="submit">Guardar</button>
+      <div id="m-completar"></div>
+      <button type="button" class="link" data-salir>Cerrar sesión</button>
+    </form>
+  </section>
+
+  <!-- ===== Mi perfil ===== -->
+  <section id="v-perfil" hidden>
+    <div class="card">
+      <div class="perfil-top">
+        <img id="p-escudo" alt="">
+        <div style="min-width:0">
+          <div class="perfil-user" id="p-user"></div>
+          <div class="perfil-club" id="p-club"></div>
+          <div class="perfil-mail" id="p-mail"></div>
+          <span class="chip" id="p-vis"></span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="sec-t">Mis votos</div>
+      <div id="p-act" class="vacio">Cargando…</div>
+    </div>
+    <form class="card" id="f-editar" novalidate>
+      <div class="sec-t">Editar perfil</div>
+      <div class="bloque-perfil"></div>
+      <button class="btn btn-pri" type="submit">Guardar cambios</button>
+      <div id="m-editar"></div>
+    </form>
+    <div class="acciones">
+      <a class="btn btn-sec" id="p-link-pub" hidden>Ver mi perfil público</a>
+      <button type="button" class="btn btn-peligro" data-salir>Cerrar sesión</button>
+    </div>
+  </section>
+
+  <!-- ===== Nueva contraseña (link del mail) ===== -->
+  <section id="v-reset" hidden>
+    <div class="titulo">Nueva contraseña</div>
+    <div class="sub">Elegí una contraseña nueva</div>
+    <form class="card" id="f-reset" novalidate>
+      <label class="campo"><span>Contraseña nueva</span><input type="password" name="password" autocomplete="new-password" minlength="8" required>
+        <div class="ayuda">Mínimo 8 caracteres.</div></label>
+      <button class="btn btn-pri" type="submit">Guardar</button>
+      <div id="m-reset"></div>
+    </form>
+  </section>
+
+  <!-- ===== Perfil de otro hincha (?u=usuario) ===== -->
+  <section id="v-publico" hidden>
+    <div class="card" id="pub-card"></div>
+    <div class="card" id="pub-act-card" hidden>
+      <div class="sec-t">Votos</div>
+      <div id="pub-act"></div>
+    </div>
+  </section>
+</main>
+
+<template id="tpl-perfil">
+  <label class="campo"><span>Nombre de usuario</span><input type="text" name="username" autocomplete="username" maxlength="20" required>
+    <div class="ayuda" data-u-ayuda>3 a 20 caracteres: letras, números, punto o guion bajo.</div></label>
+  <label class="campo"><span>¿De qué club sos hincha?</span>
+    <div class="equipo-sel"><select name="equipo" required><option value="">Elegí tu club</option></select><img data-esc alt="" hidden></div></label>
+  <label class="toggle"><input type="checkbox" name="publico" checked>
+    <span><b>Perfil público</b><small>Otros hinchas pueden ver tu usuario, tu club y cuántos votos hiciste. Si lo desactivás, solo lo ves vos.</small></span></label>
+</template>
+
+<script src="js/config.js"></script>
+<script src="js/cuenta.js"></script>
+<script>
+(function () {
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const U_RE = /^[A-Za-z0-9_.]{3,20}$/;
+  const VISTAS = ['v-cargando', 'v-ingreso', 'v-completar', 'v-perfil', 'v-reset', 'v-publico'];
+  const ver = id => VISTAS.forEach(v => { $('#' + v).hidden = v !== id; });
+  const params = new URLSearchParams(location.search);
+  const AQUI = location.origin + location.pathname;
+  let EQUIPOS = [];
+  const nombreClub = slug => (EQUIPOS.find(e => e.slug === slug) || {}).nombre || slug;
+
+  function msg(el, tipo, html) { $(el).innerHTML = html ? `<div class="msg ${tipo}">${html}</div>` : ''; }
+  function traducir(e) {
+    const m = (e && (e.message || e.error_description || e)) + '';
+    if (/Invalid login credentials/i.test(m)) return 'Mail o contraseña incorrectos.';
+    if (/Email not confirmed/i.test(m)) return 'Todavía no confirmaste el mail. Revisá tu bandeja (y el spam).';
+    if (/already registered|already exists/i.test(m)) return 'Ya hay una cuenta con ese mail. Probá ingresar.';
+    if (/Password should be at least|weak/i.test(m)) return 'La contraseña es muy débil: usá al menos 8 caracteres.';
+    if (/rate limit|too many|security purposes/i.test(m)) return 'Demasiados intentos seguidos. Esperá un minuto y probá de nuevo.';
+    if (/valid email|invalid format|Unable to validate email/i.test(m)) return 'El mail no es válido.';
+    if (/perfiles_username_unico|duplicate key/i.test(m)) return 'Ese nombre de usuario ya está tomado.';
+    return 'No se pudo: ' + esc(m);
+  }
+
+  // ---------- bloque de perfil (usuario + club + público), repetido en 3 formularios ----------
+  function armarBloques() {
+    document.querySelectorAll('.bloque-perfil').forEach(b => {
+      b.appendChild($('#tpl-perfil').content.cloneNode(true));
+      const sel = b.querySelector('select');
+      EQUIPOS.forEach(e => sel.insertAdjacentHTML('beforeend', `<option value="${esc(e.slug)}">${esc(e.nombre)}</option>`));
+      const img = b.querySelector('[data-esc]');
+      sel.addEventListener('change', () => { img.hidden = !sel.value; if (sel.value) img.src = `escudos/${sel.value}.png`; });
+      const inp = b.querySelector('[name=username]'), ay = b.querySelector('[data-u-ayuda]');
+      let t;
+      inp.addEventListener('input', () => {
+        clearTimeout(t);
+        const u = inp.value.trim();
+        inp.dataset.ok = '';
+        if (!u) { ay.className = 'ayuda'; ay.textContent = '3 a 20 caracteres: letras, números, punto o guion bajo.'; return; }
+        if (!U_RE.test(u)) { ay.className = 'ayuda mal'; ay.textContent = 'Solo letras, números, punto o guion bajo (3 a 20).'; return; }
+        if (inp.dataset.propio && inp.dataset.propio.toLowerCase() === u.toLowerCase()) { ay.className = 'ayuda ok'; ay.textContent = 'Es tu usuario actual.'; inp.dataset.ok = '1'; return; }
+        ay.className = 'ayuda'; ay.textContent = 'Revisando…';
+        t = setTimeout(async () => {
+          const libre = await disponible(u);
+          if (inp.value.trim() !== u) return;
+          inp.dataset.ok = libre ? '1' : '';
+          ay.className = 'ayuda ' + (libre ? 'ok' : 'mal');
+          ay.textContent = libre ? '¡Disponible!' : 'Ya está tomado, probá otro.';
+        }, 350);
+      });
+    });
+  }
+  function leerBloque(form) {
+    const b = form.querySelector('.bloque-perfil');
+    return {
+      username: b.querySelector('[name=username]').value.trim(),
+      equipo_hincha: b.querySelector('[name=equipo]').value,
+      publico: b.querySelector('[name=publico]').checked,
+    };
+  }
+  function llenarBloque(form, p) {
+    const b = form.querySelector('.bloque-perfil');
+    const inp = b.querySelector('[name=username]');
+    inp.value = p.username || ''; inp.dataset.propio = p.username || '';
+    const sel = b.querySelector('[name=equipo]'); sel.value = p.equipo_hincha || ''; sel.dispatchEvent(new Event('change'));
+    b.querySelector('[name=publico]').checked = p.publico !== false;
+    if (p.username) inp.dispatchEvent(new Event('input'));
+  }
+  async function disponible(u) {
+    const { data, error } = await C().client.rpc('username_disponible', { u });
+    return !error && data === true;
+  }
+  async function validarPerfil(p, propio) {
+    if (!U_RE.test(p.username)) return 'El nombre de usuario tiene que tener de 3 a 20 caracteres: letras, números, punto o guion bajo.';
+    if (!EQUIPOS.some(e => e.slug === p.equipo_hincha)) return 'Elegí de qué club sos hincha.';
+    if (!(propio && propio.toLowerCase() === p.username.toLowerCase()) && !(await disponible(p.username))) return 'Ese nombre de usuario ya está tomado.';
+    return '';
+  }
+  const C = () => window.TA_CUENTA;
+  const ocupado = (form, si) => form.querySelectorAll('button[type=submit]').forEach(b => { b.disabled = si; });
+
+  // ---------- ingresar / crear ----------
+  document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x === b));
+    $('#f-ingresar').hidden = b.dataset.tab !== 'ingresar';
+    $('#f-crear').hidden = b.dataset.tab !== 'crear';
+    msg('#m-ingreso');
+  }));
+
+  $('#b-google').addEventListener('click', async () => {
+    const { error } = await C().client.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: AQUI } });
+    if (error) msg('#m-ingreso', 'mal', traducir(error));
+  });
+
+  $('#f-ingresar').addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const f = ev.target, email = f.email.value.trim(), password = f.password.value;
+    if (!email || !password) return msg('#m-ingreso', 'mal', 'Completá el mail y la contraseña.');
+    ocupado(f, true);
+    const { error } = await C().client.auth.signInWithPassword({ email, password });
+    ocupado(f, false);
+    if (error) {
+      const noConf = /Email not confirmed/i.test(error.message);
+      msg('#m-ingreso', 'mal', traducir(error) + (noConf ? ' <button type="button" id="b-reenviar">Reenviar el mail</button>' : ''));
+      if (noConf) $('#b-reenviar').onclick = () => reenviar(email);
+    }
+    // con éxito, onCambio pinta el perfil
+  });
+
+  async function reenviar(email) {
+    const { error } = await C().client.auth.resend({ type: 'signup', email, options: { emailRedirectTo: AQUI } });
+    msg('#m-ingreso', error ? 'mal' : 'ok', error ? traducir(error) : `Te reenviamos el mail de confirmación a <b>${esc(email)}</b>.`);
+  }
+
+  $('#b-olvide').addEventListener('click', async () => {
+    const email = $('#f-ingresar').email.value.trim();
+    if (!email) return msg('#m-ingreso', 'mal', 'Escribí tu mail arriba y tocá de nuevo "Me olvidé la contraseña".');
+    const { error } = await C().client.auth.resetPasswordForEmail(email, { redirectTo: AQUI });
+    msg('#m-ingreso', error ? 'mal' : 'ok', error ? traducir(error) : `Si hay una cuenta con <b>${esc(email)}</b>, te llega un mail para elegir una contraseña nueva.`);
+  });
+
+  $('#f-crear').addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const f = ev.target, email = f.email.value.trim(), password = f.password.value;
+    const p = leerBloque(f);
+    if (!email) return msg('#m-ingreso', 'mal', 'Completá el mail.');
+    if (password.length < 8) return msg('#m-ingreso', 'mal', 'La contraseña tiene que tener al menos 8 caracteres.');
+    ocupado(f, true);
+    const err = await validarPerfil(p);
+    if (err) { ocupado(f, false); return msg('#m-ingreso', 'mal', err); }
+    const { data, error } = await C().client.auth.signUp({ email, password, options: { data: p, emailRedirectTo: AQUI } });
+    ocupado(f, false);
+    if (error) return msg('#m-ingreso', 'mal', traducir(error));
+    if (data.session) return;   // sin confirmación de mail: ya entró
+    // Supabase no avisa si el mail ya existía (identities vacío) para no filtrar cuentas
+    if (data.user && Array.isArray(data.user.identities) && !data.user.identities.length)
+      return msg('#m-ingreso', 'mal', 'Ya hay una cuenta con ese mail. Probá ingresar (o "Me olvidé la contraseña").');
+    f.reset();
+    msg('#m-ingreso', 'ok', `¡Listo! Te mandamos un mail a <b>${esc(email)}</b>. Tocá el link para confirmar la cuenta y ya quedás adentro.`);
+  });
+
+  // ---------- completar perfil ----------
+  $('#f-completar').addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const f = ev.target, p = leerBloque(f);
+    ocupado(f, true);
+    const err = await validarPerfil(p);
+    if (err) { ocupado(f, false); return msg('#m-completar', 'mal', err); }
+    const { error } = await C().client.from('perfiles').insert({ id: C().user.id, ...p });
+    if (!error) await C().client.auth.updateUser({ data: p }).catch(() => {});
+    ocupado(f, false);
+    if (error) return msg('#m-completar', 'mal', traducir(error));
+    await recargarPerfil();
+  });
+
+  // ---------- editar perfil ----------
+  $('#f-editar').addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const f = ev.target, p = leerBloque(f);
+    ocupado(f, true);
+    const err = await validarPerfil(p, C().perfil.username);
+    if (err) { ocupado(f, false); return msg('#m-editar', 'mal', err); }
+    const { error } = await C().client.from('perfiles').update({ ...p, actualizado_at: new Date().toISOString() }).eq('id', C().user.id);
+    ocupado(f, false);
+    if (error) return msg('#m-editar', 'mal', traducir(error));
+    await recargarPerfil();
+    msg('#m-editar', 'ok', 'Cambios guardados.');
+  });
+
+  async function recargarPerfil() {
+    await C().recargar();   // vuelve a leer el perfil y repinta el header y la vista (onCambio)
+  }
+
+  // ---------- nueva contraseña ----------
+  $('#f-reset').addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const f = ev.target, password = f.password.value;
+    if (password.length < 8) return msg('#m-reset', 'mal', 'Mínimo 8 caracteres.');
+    ocupado(f, true);
+    const { error } = await C().client.auth.updateUser({ password });
+    ocupado(f, false);
+    if (error) return msg('#m-reset', 'mal', traducir(error));
+    window.__TA_RECOVERY = false;
+    msg('#m-reset', 'ok', 'Contraseña actualizada.');
+    setTimeout(pintar, 1200);
+  });
+
+  document.querySelectorAll('[data-salir]').forEach(b => b.addEventListener('click', async () => {
+    await C().client.auth.signOut();
+  }));
+
+  // ---------- actividad (votos por club) ----------
+  async function actividad(userId, propioClub) {
+    const cl = C().client;
+    const [f, p] = await Promise.all([
+      cl.from('formaciones').select('club,match_date').eq('user_id', userId),
+      cl.from('puntajes').select('club,match_date').eq('user_id', userId),
+    ]);
+    const porClub = {};
+    (f.data || []).forEach(r => { (porClub[r.club] = porClub[r.club] || { f: 0, p: 0 }).f++; });
+    (p.data || []).forEach(r => { (porClub[r.club] = porClub[r.club] || { f: 0, p: 0 }).p++; });
+    const nf = (f.data || []).length, np = (p.data || []).length;
+    if (!nf && !np) return '<div class="vacio">Todavía no hay votos. Armá una formación o puntuá a los jugadores después de un partido.</div>';
+    const filas = Object.entries(porClub).sort((a, b) => (b[1].f + b[1].p) - (a[1].f + a[1].p)).map(([club, n]) => {
+      const partes = [];
+      if (n.f) partes.push(`${n.f} formaci${n.f === 1 ? 'ón' : 'ones'}`);
+      if (n.p) partes.push(`${n.p} puntaje${n.p === 1 ? '' : 's'}`);
+      return `<div class="act-row"><img src="escudos/${esc(club)}.png" alt="" onerror="this.style.visibility='hidden'">
+        <span class="n">${esc(nombreClub(club))}${club === propioClub ? '<span class="propio">su club</span>' : ''}</span>
+        <span class="c">${partes.join(' · ')}</span></div>`;
+    }).join('');
+    return `<div class="act-tot"><div><b>${nf}</b><span>Formaciones</span></div><div><b>${np}</b><span>Puntajes</span></div><div><b>${Object.keys(porClub).length}</b><span>Clubes</span></div></div>${filas}`;
+  }
+
+  // ---------- vistas ----------
+  async function pintar() {
+    const c = C();
+    if (params.get('u')) return pintarPublico(params.get('u'));
+    if (window.__TA_RECOVERY && c.user) return ver('v-reset');
+    if (!c.user) {
+      ver('v-ingreso');
+      if (window.__TA_ERROR) { msg('#m-ingreso', 'mal', 'El link no es válido o ya venció: ' + esc(decodeURIComponent(window.__TA_ERROR.replace(/\+/g, ' ')))); window.__TA_ERROR = ''; }
+      return;
+    }
+    if (!c.perfil) {
+      ver('v-completar');
+      const m = c.user.user_metadata || {};
+      const sug = (m.username || (m.full_name || m.name || (c.user.email || '').split('@')[0]) || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9_.]/g, '').slice(0, 20);
+      const f = $('#f-completar');
+      if (!f.dataset.lleno) { llenarBloque(f, { username: sug, equipo_hincha: m.equipo_hincha || '', publico: m.publico !== false }); f.querySelector('[name=username]').dataset.propio = ''; f.querySelector('[name=username]').dispatchEvent(new Event('input')); f.dataset.lleno = '1'; }
+      return;
+    }
+    const p = c.perfil;
+    ver('v-perfil');
+    $('#p-escudo').src = `escudos/${p.equipo_hincha}.png`;
+    $('#p-user').textContent = p.username || 'Sin usuario';
+    $('#p-club').textContent = 'Hincha de ' + nombreClub(p.equipo_hincha);
+    $('#p-mail').textContent = c.user.email || '';
+    $('#p-vis').className = 'chip ' + (p.publico ? 'pub' : 'priv');
+    $('#p-vis').textContent = p.publico ? 'Perfil público' : 'Perfil privado';
+    const lp = $('#p-link-pub'); lp.hidden = !p.publico; lp.href = `cuenta.html?u=${encodeURIComponent(p.username || '')}`;
+    llenarBloque($('#f-editar'), p);
+    $('#p-act').innerHTML = await actividad(c.user.id, p.equipo_hincha);
+  }
+
+  async function pintarPublico(u) {
+    ver('v-publico');
+    const card = $('#pub-card');
+    if (!U_RE.test(u)) { card.innerHTML = '<div class="vacio">Ese usuario no existe.</div>'; return; }
+    const patron = u.replace(/[\\%_]/g, m => '\\' + m);
+    const { data } = await C().client.from('perfiles').select('id,username,equipo_hincha,publico').ilike('username', patron).maybeSingle();
+    if (!data) { card.innerHTML = `<div class="vacio">El perfil de <b>${esc(u)}</b> es privado o no existe.</div>`; return; }
+    card.innerHTML = `<div class="perfil-top"><img src="escudos/${esc(data.equipo_hincha)}.png" alt="">
+      <div style="min-width:0"><div class="perfil-user">${esc(data.username)}</div><div class="perfil-club">Hincha de ${esc(nombreClub(data.equipo_hincha))}</div>
+      ${data.publico ? '' : '<span class="chip priv">Perfil privado · solo lo ves vos</span>'}</div></div>`;
+    $('#pub-act-card').hidden = false;
+    $('#pub-act').innerHTML = await actividad(data.id, data.equipo_hincha);
+  }
+
+  (async () => {
+    try { EQUIPOS = await (await fetch('data/equipos.json')).json(); } catch (e) { EQUIPOS = []; }
+    EQUIPOS.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+    armarBloques();
+    await C().listo;
+    if (!C().client) { ver('v-ingreso'); msg('#m-ingreso', 'mal', 'No se pudo conectar. Revisá tu conexión y recargá la página.'); return; }
+    C().onCambio(pintar);
+    pintar();
+  })();
+})();
+</script>
+<script src="js/header-menu.js" defer></script>
+</body>
+</html>
