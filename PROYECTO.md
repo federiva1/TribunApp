@@ -361,6 +361,8 @@ Configuración del entorno (ícono de nube → engranaje):
 | Rama | Para qué | Estado |
 |---|---|---|
 | `master` | Producción | Fuente de verdad |
+| `login` | **Login opcional** (cuenta con mail/Google, usuario, club, perfil público/privado, votos por usuario), **íconos + app instalable** y **barras fijas de sección** en `club.html`. Sale de `master`; el trabajo de fútbol argentino que dependa de la cuenta sigue ahí | En pruebas (preview de Vercel), pasa a `master` con el OK final de Fede |
+| `eurotribunapp` | **Prototipo Eurotribunapp** (Champions + 5 grandes ligas) con su propio header, kits y votos. Quedó **aparte**: no incluye el login ni el resto de `login` | Congelada, sin mergear |
 | `pizarra` | **Pizarra táctica** (`pizarra.html`: dibujar jugadas, animar por fotogramas, grabar video con micrófono y subtítulos) + botón en el header | En pruebas, no está en producción. Se actualiza mergeándole `master` |
 | `video` | **Demo para un video promocional**: Rosario Central-Gimnasia simulado en vivo + puntajes abiertos (el envío no se guarda) | **Nunca mergear.** Borrar cuando esté el video |
 | `respaldo/local-2026-09-18` | Solo local: lo que la compu tenía sin commitear antes de alinearse con GitHub | No se pushea |
