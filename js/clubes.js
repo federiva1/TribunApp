@@ -3,8 +3,6 @@
 
 const CLUBES_CONFIG = {
   velezsarsfield: {
-    // Mammana (2): lesión → bloqueado en formación, al final del banco
-    injured: ['2'],
     id: 438, nombre: 'Vélez Sarsfield', nombreCorto: 'Vélez',
     color: '#003087', colorSecundario: '#fff',
     colores: ['#fff', '#003087'],
@@ -58,8 +56,6 @@ const CLUBES_CONFIG = {
     squad: []
   },
   independiente: {
-    // De Irastorza (3): lesión grave → bloqueado en formación, al final del banco
-    injured: ['3'],
     id: 453, nombre: 'Independiente', nombreCorto: 'Independiente',
     color: '#e53935', colorSecundario: '#fff',
     colores: ['#e53935'],
