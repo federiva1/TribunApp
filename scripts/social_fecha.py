@@ -120,10 +120,17 @@ def filtrar(partidos, cruces):
 
 
 def _copa_esc(logo_url):
-    """Rival de copa sin slug: escudos/copa/{id}.png (lo baja fetch_escudos_copa)."""
+    """Rival de copa sin slug: escudos/copa/{id}.png (lo baja fetch_escudos_copa). Si existe
+    la versión para redes escudos/placas/copa/{id}.png (con estrellas, ej. la roja de
+    Palmeiras), se usa esa; la web sigue con escudos/copa/."""
     m = re.search(r'/(\d+)\.png', logo_url or '')
-    p = ROOT / 'escudos' / 'copa' / f'{m.group(1)}.png' if m else None
-    return p if (p and p.exists()) else None
+    if not m:
+        return None
+    for p in (ROOT / 'escudos' / 'placas' / 'copa' / f'{m.group(1)}.png',
+              ROOT / 'escudos' / 'copa' / f'{m.group(1)}.png'):
+        if p.exists():
+            return p
+    return None
 
 
 def _nombre(slug, fallback):
