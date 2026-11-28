@@ -288,3 +288,24 @@ function etiquetaFecha(n, corta) {
   if (FASES_PLAYOFF[n]) return corta ? FASES_PLAYOFF_CORTAS[n] : FASES_PLAYOFF[n];
   return corta ? 'F' + n : 'Fecha ' + n;
 }
+
+// Copa terminada: la ronda de copas.json es la Final y todos sus partidos ya tienen
+// ganador. Devuelve { final, campeon, subcampeon, gc, gs, pen } (campeon/subcampeon =
+// {slug, name, logo} de copas.json; gc/gs = goles del campeón y del subcampeón) o null.
+// La usan index.html (tarjeta de campeón en COPAS) y club.html (cierra formación y
+// puntajes de esa copa). Con una final de ida y vuelta el ganador sale de la vuelta.
+// Nombres de api-sports de rivales extranjeros que conviene mostrar en castellano.
+var NOMBRES_COPA = { 'Atletico-MG': 'Atlético Mineiro', 'Sao Paulo': 'San Pablo', 'Atletico Nacional': 'Atlético Nacional' };
+function nombreCopa(name) { return NOMBRES_COPA[name] || name || ''; }
+function copaCampeon(copaObj) {
+  if (!copaObj || !/^final$/i.test(copaObj.ronda || '')) return null;
+  var finales = (copaObj.partidos || []).filter(function (p) { return /^final$/i.test(p.ronda || copaObj.ronda); })
+    .sort(function (a, b) { return (a.utcTime || '').localeCompare(b.utcTime || ''); });
+  if (!finales.length) return null;
+  var f = finales[finales.length - 1];
+  if (f.winner !== 'home' && f.winner !== 'away') return null;
+  var c = f.winner === 'home' ? f.home : f.away, s = f.winner === 'home' ? f.away : f.home;
+  var gc = f.winner === 'home' ? f.home_score : f.away_score, gs = f.winner === 'home' ? f.away_score : f.home_score;
+  var pc = f.winner === 'home' ? f.home_pen : f.away_pen, ps = f.winner === 'home' ? f.away_pen : f.home_pen;
+  return { final: f, campeon: c, subcampeon: s, gc: gc, gs: gs, pen: (pc != null && ps != null) ? [pc, ps] : null };
+}

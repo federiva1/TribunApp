@@ -138,6 +138,18 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
   color: rgba(255,255,255,0.5); margin-top: 5px;
 }
 /* ===== GRID DE 4 SECCIONES (home del club) ===== */
+/* Copa terminada: banner del campeón + tiles de formación/puntajes bloqueados */
+#copa-fin-banner { max-width: 920px; margin: 14px auto 0; padding: 0 16px; }
+#copa-fin-banner[hidden] { display: none; }
+.cfb { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 14px;
+  border: 1px solid rgba(255,213,79,0.5); background: radial-gradient(circle at 12% 50%, rgba(255,213,79,0.22), transparent 55%), rgba(255,255,255,0.04); }
+.cfb img { width: 54px; height: 54px; object-fit: contain; flex: 0 0 auto; filter: drop-shadow(0 3px 10px rgba(0,0,0,0.5)); }
+.cfb-t { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; color: #ffd54f; line-height: 1.05; }
+.cfb-s { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 0.5px; color: rgba(255,255,255,0.65); margin-top: 3px; }
+.club-tile.bloqueado { cursor: not-allowed; filter: grayscale(0.85) brightness(0.7); }
+.club-tile.bloqueado:hover { border-color: rgba(255,255,255,0.08); }
+.club-tile.bloqueado:active { transform: none; }
+.club-tile.bloqueado .club-tile-title::after { content: ' 🔒'; font-size: 0.8em; }
 .club-grid {
   display: grid; grid-template-columns: 1fr; gap: 12px;   /* una sola columna: las fotos se ven completas y grandes */
   padding: 14px; max-width: 560px; margin: 0 auto;
@@ -831,6 +843,8 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
     <div id="club-color-dots" style="display:flex;gap:5px;align-items:center;margin-left:4px;"></div>
   </header>
 
+  <div id="copa-fin-banner" hidden></div>
+
   <!-- MENÚ PRINCIPAL — 4 SECCIONES -->
   <div class="club-grid">
     <div class="club-tile tile-formacion" onclick="openSection('formation')">
@@ -1188,6 +1202,9 @@ let SCORES_FORMACION = '';
 // después se cierran y se abre la formación
 // de la fecha siguiente. Se calcula client-side en applyGating() (no hay archivo de estado).
 let PUNTAJES_OPEN = false, FORMACION_OPEN = true;
+// Copa terminada (copaCampeon de js/clubes.js): con COPA y la final jugada, formación y
+// puntajes de esa copa quedan cerrados y el home del club muestra al campeón.
+let COPA_FIN = null;
 
 // Claves de localStorage scopeadas POR PARTIDO. Antes eran `${CLUB_SLUG}_puntajes`
 // y `${CLUB_SLUG}_formacion`, sin la fecha: el flag de "ya votaste" quedaba puesto
@@ -1286,6 +1303,10 @@ function showToast(msg) { toast.textContent = msg; toast.classList.add('show'); 
 
 // ---- Navegación ----
 function openSection(section) {
+  if (COPA_FIN && (section === 'formation' || section === 'scores') && !_copaFinOverride()) {
+    showToast(`La ${COPA === 'libertadores' ? 'Libertadores' : 'Sudamericana'} ya terminó: no hay más formaciones ni puntajes.`);
+    return;
+  }
   document.getElementById('home-screen').style.display = 'none';
   ['formation', 'scores', 'fechas', 'fixture', 'stats', 'estad', 'tribunapp'].forEach(s => {
     const el = document.getElementById(s + '-screen');
@@ -4118,6 +4139,7 @@ async function resolveMatchContext() {
     }
     await resolveCopaRivalEscudo();
     await resolveCopaScoresContext();
+    await resolveCopaFin();
     applyGating();
     refreshMatchTags();
     updateCopaTiles();
@@ -4231,6 +4253,14 @@ async function resolveCopaScoresContext() {
 // Tiles del home en modo copa: formación → próximo cruce, puntajes → último jugado.
 // (En modo liga los arma fillTiles/updateTilesGating con liga.json.)
 function updateCopaTiles() {
+  const bloq = !!COPA_FIN && !_copaFinOverride();
+  document.querySelectorAll('.tile-formacion, .tile-puntajes').forEach(t => t.classList.toggle('bloqueado', bloq));
+  if (bloq) {
+    ['tile-formacion-sub', 'tile-puntaje-sub'].forEach(id => {
+      const e = document.getElementById(id); if (e) e.innerHTML = '<span style="color:#ffd54f;">Torneo terminado</span>';
+    });
+    return;
+  }
   const badge = open => open ? ' <span style="color:#66bb6a;font-weight:600;">· Abierto</span>' : ' <span style="color:#777;">· Cerrado</span>';
   const copaLbl = COPA === 'libertadores' ? 'Libertadores' : 'Sudamericana';
   const fSub = document.getElementById('tile-formacion-sub');
@@ -4314,6 +4344,32 @@ function applyGating() {
   const extendido = !!hasta && Date.now() < Date.parse(hasta);
   PUNTAJES_OPEN = override || (hasData && (dentroVentana || extendido));
   FORMACION_OPEN = fOverride || !!(RIVAL && RIVAL !== 'Por definir');
+  if (COPA_FIN && !_copaFinOverride()) { PUNTAJES_OPEN = false; FORMACION_OPEN = false; }
+}
+// ?testpuntajes=1 / ?testformacion=1 siguen abriendo todo para probar, aunque la copa haya terminado.
+function _copaFinOverride() {
+  const qs = new URLSearchParams(location.search);
+  return qs.get('testpuntajes') === '1' || qs.get('testformacion') === '1';
+}
+// Copa terminada: lee copas.json, guarda COPA_FIN y arma el banner del campeón.
+async function resolveCopaFin() {
+  const copas = await fetch(`data/fixtures/copas.json?t=${Date.now()}`).then(r => r.ok ? r.json() : null).catch(() => null);
+  COPA_FIN = copaCampeon((copas || {})[COPA]);
+  const el = document.getElementById('copa-fin-banner');
+  if (!el) return;
+  if (!COPA_FIN) { el.hidden = true; return; }
+  const copaLbl = COPA === 'libertadores' ? 'Libertadores' : 'Sudamericana';
+  const c = COPA_FIN.campeon, sc = COPA_FIN.subcampeon;
+  const nom = t => t.slug ? ((CLUBES_CONFIG[t.slug] || {}).nombreCorto || t.name) : nombreCopa(t.name);
+  const esc = t => t.slug ? `escudos/${t.slug}.png` : (_escudoCopaLocal(t.logo) || t.logo || '');
+  const pen = COPA_FIN.pen ? ` (${COPA_FIN.pen[0]}-${COPA_FIN.pen[1]} pen.)` : '';
+  const res = `${escapeHtml(nom(c))} ${COPA_FIN.gc}-${COPA_FIN.gs} ${escapeHtml(nom(sc))}${pen}`;
+  const esCampeon = c.slug === CLUB_SLUG;
+  el.innerHTML = `<div class="cfb"><img src="${esc(c)}" alt="" onerror="this.style.display='none'"><div>` +
+    `<div class="cfb-t">${esCampeon ? `🏆 Campeón de la ${copaLbl} 2026` : `La ${copaLbl} 2026 terminó`}</div>` +
+    `<div class="cfb-s">${esCampeon ? `Final: ${res}` : `Campeón: ${escapeHtml(nom(c))} · Final: ${res}`} · Formación y puntajes cerrados</div>` +
+    `</div></div>`;
+  el.hidden = false;
 }
 
 // Tags de rival: formación = próximo; puntajes = último jugado.

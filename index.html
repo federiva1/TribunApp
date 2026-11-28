@@ -442,6 +442,20 @@ html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: v
 .copa-rival { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; color: rgba(255,255,255,0.4); text-align: center; }
 .copa-ronda-mini { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.45); text-align: center; }
 .copa-result { font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 1px; color: var(--gold); }
+/* Copa terminada: tarjeta del campeón en lugar de los cruces (copaCampeon en js/clubes.js) */
+.copa-campeon { flex: 1 0 100%; position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 22px 14px 18px; border-radius: 16px; text-align: center; border: 1px solid rgba(255,213,79,0.55);
+  background: radial-gradient(circle at 50% 35%, rgba(255,213,79,0.20), transparent 62%), rgba(255,255,255,0.04);
+  box-shadow: 0 0 0 1px rgba(255,213,79,0.12) inset, 0 10px 30px rgba(0,0,0,0.25); }
+.copa-campeon.sud { background: radial-gradient(circle at 50% 35%, rgba(255,167,38,0.24), transparent 62%), rgba(230,81,0,0.07); }
+.copa-campeon.lib { background: radial-gradient(circle at 50% 35%, rgba(102,187,106,0.22), transparent 62%), rgba(27,94,32,0.08); }
+.copa-campeon .cc-copa { font-size: 30px; line-height: 1; filter: drop-shadow(0 2px 6px rgba(255,193,7,0.45)); }
+.copa-campeon .cc-tit { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 4px; color: #ffd54f; line-height: 1; }
+.copa-campeon .escudo-img { width: 86px; height: 86px; object-fit: contain; margin: 6px 0 2px; filter: drop-shadow(0 4px 14px rgba(0,0,0,0.5)); }
+.copa-campeon .cc-nom { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 2px; color: #fff; line-height: 1; }
+.copa-campeon .cc-final { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 1px; color: rgba(255,255,255,0.6); margin-top: 4px; }
+.copa-campeon .cc-final b { color: #fff; font-weight: 600; }
+.copa-campeon .cc-fin { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.35); margin-top: 6px; }
 .copa-empty { text-align: center; padding: 22px 8px; color: rgba(255,255,255,0.3); font-family: 'Barlow Condensed', sans-serif; letter-spacing: 1px; flex: 1 0 100%; }
 .escudo-img { width: 42px; height: 42px; object-fit: contain; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5)); }
 .equipo-nombre {
@@ -660,6 +674,29 @@ function renderCopaGrid(copaObj, cls, gridId, rondaId) {
   const mixtas = rondas.length > 1;
   document.getElementById(rondaId).textContent = mixtas ? '' : (copaObj.ronda || '');
   const fEl = document.getElementById(gridId.replace('-grid', '-fecha'));
+  // Copa terminada → solo el campeón (sin link: formación y puntajes de la copa ya cerraron)
+  const camp = copaCampeon(copaObj);
+  if (camp) {
+    document.getElementById(rondaId).textContent = 'Campeón';
+    if (fEl) { fEl.innerHTML = ''; fEl.hidden = true; }
+    const g = document.getElementById(gridId);
+    const nom = t => t.slug ? nombreCorto(t.slug) : nombreCopa(t.name);
+    const escSrc = t => {
+      if (t.slug) return `escudos/${t.slug}.png`;
+      const m = /\/(\d+)\.png/.exec(t.logo || '');
+      return m ? `escudos/copa/${m[1]}.png` : (t.logo || '');
+    };
+    const d = new Date(camp.final.utcTime);
+    const dia = new Intl.DateTimeFormat('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', day: 'numeric', month: 'long' }).format(d);
+    const pen = camp.pen ? ` (${camp.pen[0]}-${camp.pen[1]} pen.)` : '';
+    g.innerHTML = `<div class="copa-campeon ${cls}">` +
+      `<div class="cc-copa">🏆</div><div class="cc-tit">CAMPEÓN</div>` +
+      `<img class="escudo-img" src="${escSrc(camp.campeon)}" alt="${nom(camp.campeon)}" onerror="this.style.opacity=0.3">` +
+      `<div class="cc-nom">${nom(camp.campeon).toUpperCase()}</div>` +
+      `<div class="cc-final">Final · ${dia} · <b>${nom(camp.campeon)} ${camp.gc}-${camp.gs} ${nom(camp.subcampeon)}</b>${pen}</div>` +
+      `<div class="cc-fin">Torneo finalizado</div></div>`;
+    return;
+  }
   const fTxt = mixtas ? '' : fechaFinalCopa(copaObj);
   if (fEl) { fEl.innerHTML = fTxt; fEl.hidden = !fTxt; }
   const grid = document.getElementById(gridId);
