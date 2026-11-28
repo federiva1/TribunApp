@@ -232,6 +232,7 @@
     corinthians: { primary: '#ffffff', alt: '#141414' },
     fluminense:  { primary: '#7a1330', alt: '#1a6b3a' },
     atleticomg:  { primary: '#141414', alt: '#ffffff' },
+    palmeiras:   { primary: '#006437', alt: '#ffffff' },
   };
   function _matchColors(local, visit) {
     var CC = window.CLUB_COLORS || {};
